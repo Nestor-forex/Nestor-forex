@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Splash from './components/Splash'
 import Auth from './components/Auth'
+import Pendiente from './components/Pendiente'
 import Header from './components/Header'
 import BottomNav from './components/BottomNav'
 import BarridoTab from './components/BarridoTab'
@@ -8,76 +9,122 @@ import TableroCompleto from './components/TableroCompleto'
 import DiarioTab from './components/DiarioTab'
 import CalculadoraTab from './components/CalculadoraTab'
 import MiembrosTab from './components/MiembrosTab'
-import { usuariosFake, tradesFake } from './lib/fakeData'
-import { useLocalStorage } from './lib/useLocalStorage'
+import { firebaseListo } from './lib/firebase'
+import { useAuthUser } from './lib/useAuthUser'
+import { useMembers } from './lib/useMembers'
+import { useTrades } from './lib/useTrades'
 import { useMarketData } from './lib/useMarketData'
 
 const NOMBRE_APP = 'NESTOR FOREX'
-const PIN_ADMIN_DEMO = '2468'
+
+function SinConfigurar() {
+  return (
+    <div style={{ flex: 1, padding: '48px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div className="eyebrow" style={{ fontSize: 11 }}>
+        TRADING · FX
+      </div>
+      <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>{NOMBRE_APP}</h1>
+      <div className="card" style={{ borderColor: 'oklch(0.4 0.06 85)' }}>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+          Esta copia de la app todavía no tiene configuradas las claves de Firebase, así que el ingreso y el registro no van a
+          funcionar. Configura las variables <code>VITE_FIREBASE_*</code> y vuelve a publicar.
+        </p>
+      </div>
+    </div>
+  )
+}
 
 export default function App() {
-  const [session, setSession] = useLocalStorage('nf_session', null)
-  const [usuarios, setUsuarios] = useLocalStorage('nf_users', usuariosFake)
-  const [trades, setTrades] = useLocalStorage('nf_trades', tradesFake)
+  const { authUser, cargandoAuth, perfilEstado, esAdmin, registrar, ingresar, salir } = useAuthUser()
   const mercado = useMarketData()
+  const miembros = useMembers(esAdmin)
+  const diario = useTrades(authUser?.uid)
 
-  const [screen, setScreen] = useState(session ? 'app' : 'splash')
+  const [screen, setScreen] = useState('splash')
   const [tab, setTab] = useState('barrido')
-  const [msg, setMsg] = useState('')
+  const [msgAuth, setMsgAuth] = useState('')
 
-  const esAdmin = session === '__admin__'
+  useEffect(() => {
+    if (authUser) setScreen('app')
+  }, [authUser])
 
-  const registrar = (nombre, email, clave) => {
-    const correo = (email || '').trim().toLowerCase()
-    if (!nombre || !correo || !clave) return setMsg('Completa nombre, correo y clave.')
-    if (usuarios.some((u) => u.email === correo)) return setMsg('Ese correo ya tiene una solicitud.')
-    setUsuarios([...usuarios, { nombre: nombre.trim(), email: correo, clave, estado: 'pendiente' }])
-    setMsg('Solicitud enviada. Podrás entrar cuando Néstor la apruebe.')
+  useEffect(() => {
+    if (perfilEstado === 'retirado') {
+      setMsgAuth('Tu acceso fue retirado. Escríbele a Néstor si crees que es un error.')
+      salir()
+      setScreen('auth')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- salir() no cambia de identidad de forma relevante aquí
+  }, [perfilEstado])
+
+  if (!firebaseListo) {
+    return (
+      <div className="app-frame">
+        <div className="app-screen">
+          <SinConfigurar />
+        </div>
+      </div>
+    )
   }
 
-  const ingresar = (email, clave) => {
-    const correo = (email || '').trim().toLowerCase()
-    const u = usuarios.find((x) => x.email === correo && x.clave === clave)
-    if (!u) return setMsg('Correo o clave incorrectos, o aún no estás inscrito.')
-    if (u.estado !== 'aprobado') return setMsg('Tu solicitud sigue pendiente de aprobación.')
-    setSession(u.email)
-    setMsg('')
-    setScreen('app')
-    setTab('barrido')
+  if (cargandoAuth) {
+    return (
+      <div className="app-frame">
+        <div className="app-screen" style={{ alignItems: 'center', justifyContent: 'center' }}>
+          <div className="mono" style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+            Cargando…
+          </div>
+        </div>
+      </div>
+    )
   }
 
-  const entrarAdmin = (pin) => {
-    if ((pin || '') !== PIN_ADMIN_DEMO) return setMsg('PIN incorrecto.')
-    setSession('__admin__')
-    setMsg('')
-    setScreen('app')
-    setTab('admin')
+  const registrarYSeguir = async (nombre, email, clave) => {
+    const r = await registrar(nombre, email, clave)
+    if (r.ok) setMsgAuth('')
+    return r
   }
 
-  const salir = () => {
-    setSession(null)
+  const ingresarYSeguir = async (email, clave) => {
+    const r = await ingresar(email, clave)
+    if (r.ok) setMsgAuth('')
+    return r
+  }
+
+  const salirYVolver = () => {
+    salir()
     setScreen('splash')
     setTab('barrido')
-  }
-
-  const guardarTrade = (t) => setTrades([...trades, t])
-  const borrarTrade = (index) => setTrades(trades.filter((_, i) => i !== index))
-
-  const aprobarUsuario = (email) => setUsuarios(usuarios.map((u) => (u.email === email ? { ...u, estado: 'aprobado' } : u)))
-  const retirarUsuario = (email, nombre) => {
-    if (confirm(`¿Retirar a ${nombre}?`)) setUsuarios(usuarios.filter((u) => u.email !== email))
   }
 
   return (
     <div className="app-frame">
       <div className="app-screen">
-        {screen === 'splash' && <Splash nombreApp={NOMBRE_APP} onEntrar={() => { setScreen('auth'); setMsg('') }} />}
+        {screen === 'splash' && !authUser && (
+          <Splash
+            nombreApp={NOMBRE_APP}
+            onEntrar={() => {
+              setScreen('auth')
+              setMsgAuth('')
+            }}
+          />
+        )}
 
-        {screen === 'auth' && <Auth nombreApp={NOMBRE_APP} msg={msg} onRegistrar={registrar} onIngresar={ingresar} onEntrarAdmin={entrarAdmin} />}
+        {screen === 'auth' && !authUser && (
+          <Auth nombreApp={NOMBRE_APP} msg={msgAuth} onRegistrar={registrarYSeguir} onIngresar={ingresarYSeguir} />
+        )}
 
-        {screen === 'app' && tab !== 'tablero' && (
+        {authUser && perfilEstado === 'cargando' && (
+          <Pendiente nombreApp={NOMBRE_APP} mensaje="Cargando tu perfil…" onSalir={salirYVolver} />
+        )}
+
+        {authUser && perfilEstado === 'pendiente' && (
+          <Pendiente nombreApp={NOMBRE_APP} mensaje="Tu solicitud queda pendiente hasta que Néstor la autorice." onSalir={salirYVolver} />
+        )}
+
+        {authUser && perfilEstado === 'aprobado' && tab !== 'tablero' && (
           <>
-            <Header nombreApp={NOMBRE_APP} saludo={esAdmin ? 'Administrador' : session || ''} onSalir={salir} />
+            <Header nombreApp={NOMBRE_APP} saludo={esAdmin ? 'Administrador' : authUser.email || ''} onSalir={salirYVolver} />
             <main style={{ flex: 1, padding: '18px 18px 96px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               {tab === 'barrido' && (
                 <BarridoTab
@@ -89,15 +136,19 @@ export default function App() {
                   onVerTablero={() => setTab('tablero')}
                 />
               )}
-              {tab === 'diario' && <DiarioTab trades={trades} onGuardar={guardarTrade} onBorrar={borrarTrade} />}
+              {tab === 'diario' && (
+                <DiarioTab trades={diario.trades} cargando={diario.cargando} onGuardar={diario.guardar} onBorrar={diario.borrar} />
+              )}
               {tab === 'calc' && <CalculadoraTab ratesUSD={mercado.ratesUSD} loadingTasas={mercado.loading} errorTasas={mercado.error} />}
-              {tab === 'admin' && esAdmin && <MiembrosTab usuarios={usuarios} onAprobar={aprobarUsuario} onRetirar={retirarUsuario} />}
+              {tab === 'admin' && esAdmin && (
+                <MiembrosTab usuarios={miembros.usuarios} cargando={miembros.cargando} onAprobar={miembros.aprobar} onRetirar={miembros.retirar} />
+              )}
             </main>
             <BottomNav tab={tab} onTab={setTab} esAdmin={esAdmin} />
           </>
         )}
 
-        {screen === 'app' && tab === 'tablero' && (
+        {authUser && perfilEstado === 'aprobado' && tab === 'tablero' && (
           <TableroCompleto
             onVolver={() => setTab('barrido')}
             loading={mercado.loading}

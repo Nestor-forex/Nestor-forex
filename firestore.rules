@@ -1,0 +1,51 @@
+rules_version = '2';
+
+// Reglas de seguridad de Firestore para Nestor Forex.
+//
+// Cómo funciona el acceso:
+// - Cada persona solo puede leer y crear SU PROPIO documento en `users`.
+// - Solo el administrador (identificado por su correo, más abajo) puede
+//   leer la lista completa de usuarios, aprobar o retirar a alguien.
+// - Nadie puede aprobarse a sí mismo: al crear su solicitud, el estado
+//   queda forzado a 'pendiente', y un usuario normal no puede cambiar su
+//   propio campo `estado`.
+// - Las operaciones del diario (`trades`) de cada usuario solo son
+//   visibles para ese mismo usuario, y solo si su cuenta está aprobada.
+//
+// Para cambiar quién es el administrador, actualiza el correo en
+// ADMIN_EMAIL abajo y vuelve a publicar estas reglas (Firebase Console →
+// Firestore Database → Reglas, o `firebase deploy --only firestore:rules`).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function esAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'nesdian2204@gmail.com';
+    }
+
+    function esPropio(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    match /users/{uid} {
+      allow get: if esPropio(uid) || esAdmin();
+      allow list: if esAdmin();
+
+      allow create: if esPropio(uid)
+        && request.resource.data.estado == 'pendiente'
+        && request.resource.data.email == request.auth.token.email;
+
+      allow update: if esAdmin()
+        || (esPropio(uid)
+            && request.resource.data.estado == resource.data.estado
+            && request.resource.data.email == resource.data.email);
+
+      allow delete: if esAdmin();
+
+      match /trades/{tradeId} {
+        allow read, write: if esPropio(uid)
+          && get(/databases/$(database)/documents/users/$(uid)).data.estado == 'aprobado';
+      }
+    }
+  }
+}

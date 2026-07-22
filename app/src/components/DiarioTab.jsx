@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { PAIR_NAMES } from '../lib/pairs'
 
-export default function DiarioTab({ trades, onGuardar, onBorrar }) {
+export default function DiarioTab({ trades, cargando, onGuardar, onBorrar }) {
   const [par, setPar] = useState(PAIR_NAMES[0])
   const [dir, setDir] = useState('Compra')
   const [lote, setLote] = useState('')
@@ -84,9 +84,15 @@ export default function DiarioTab({ trades, onGuardar, onBorrar }) {
         </button>
       </div>
 
+      {cargando && (
+        <div className="mono" style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+          Cargando operaciones…
+        </div>
+      )}
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {[...trades].reverse().map((t, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, border: '1px solid var(--border)', borderRadius: 8 }}>
+        {trades.map((t) => (
+          <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, border: '1px solid var(--border)', borderRadius: 8 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="mono" style={{ display: 'flex', gap: 8, alignItems: 'baseline', fontSize: 13 }}>
                 <span style={{ fontWeight: 700 }}>{t.par}</span>
@@ -101,7 +107,7 @@ export default function DiarioTab({ trades, onGuardar, onBorrar }) {
               {(t.pl >= 0 ? '+' : '') + t.pl.toFixed(2)}
             </span>
             <button
-              onClick={() => onBorrar(trades.length - 1 - i)}
+              onClick={() => onBorrar(t.id)}
               style={{ minWidth: 44, minHeight: 44, borderRadius: 8, border: '1px solid var(--border-strong)', background: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 15 }}
             >
               ✕
@@ -110,7 +116,7 @@ export default function DiarioTab({ trades, onGuardar, onBorrar }) {
         ))}
       </div>
 
-      {trades.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Aún no has registrado operaciones.</div>}
+      {!cargando && trades.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Aún no has registrado operaciones.</div>}
     </div>
   )
 }
