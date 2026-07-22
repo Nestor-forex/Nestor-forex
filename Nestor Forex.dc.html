@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:oklch(0.13 0.015 255); color:oklch(0.93 0.005 255); font-family:'IBM Plex Sans',sans-serif; }
+  a { color:oklch(0.75 0.1 155); } a:hover { color:oklch(0.85 0.1 155); }
+  input, select, textarea { font-family:'IBM Plex Sans',sans-serif; }
+</style>
+</helmet>
+<div style="min-height:100vh; display:flex; justify-content:center; background:oklch(0.13 0.015 255);">
+<div style="width:100%; max-width:430px; min-height:100vh; position:relative; background:oklch(0.16 0.015 255); display:flex; flex-direction:column;">
+
+  <sc-if value="{{ esSplash }}" hint-placeholder-val="{{ true }}">
+    <div style="position:relative; flex:1; min-height:100vh; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end;">
+      <div style="position:absolute; inset:0; display:flex; align-items:flex-end; gap:6px; padding:0 10px 120px; opacity:0.55;">
+        <sc-for list="{{ velas }}" as="v" hint-placeholder-count="24">
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; margin-bottom:{{ v.mb }};">
+            <div style="width:2px; height:{{ v.mecha }}; background:{{ v.color }};"></div>
+            <div style="width:100%; height:{{ v.cuerpo }}; background:{{ v.color }}; border-radius:1px;"></div>
+            <div style="width:2px; height:{{ v.mechaB }}; background:{{ v.color }};"></div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="position:absolute; inset:0; background:linear-gradient(180deg, oklch(0.13 0.015 255) 0%, oklch(0.13 0.015 255 / 0.35) 40%, oklch(0.13 0.015 255 / 0.92) 78%, oklch(0.13 0.015 255) 100%);"></div>
+      <div style="position:relative; padding:0 28px 56px; display:flex; flex-direction:column; gap:14px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.3em; color:oklch(0.72 0.13 155);">TRADING · FX</div>
+        <h1 style="margin:0; font-size:44px; line-height:1.05; font-weight:700; letter-spacing:0.02em;">{{ nombreApp }}</h1>
+        <p style="margin:0; font-size:15px; color:oklch(0.7 0.02 255); line-height:1.55;">Barrido diario del mercado, diario de operaciones y gestión de riesgo. Acceso solo para miembros autorizados.</p>
+        <button onClick="{{ irAuth }}" style="margin-top:12px; min-height:52px; border:none; border-radius:8px; background:oklch(0.72 0.13 155); color:oklch(0.15 0.01 255); font-size:16px; font-weight:700; font-family:'IBM Plex Sans',sans-serif; cursor:pointer;" style-hover="background:oklch(0.78 0.13 155);">Entrar</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ esAuth }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1; padding:48px 24px 40px; display:flex; flex-direction:column; gap:20px;" onInput="{{ onForm }}">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.3em; color:oklch(0.72 0.13 155);">TRADING · FX</div>
+        <h1 style="margin:6px 0 0; font-size:26px; font-weight:700;">{{ nombreApp }}</h1>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button onClick="{{ modoLogin }}" style="flex:1; min-height:44px; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; border:1px solid {{ tabLoginBorde }}; background:{{ tabLoginFondo }}; color:oklch(0.93 0.005 255);">Ingresar</button>
+        <button onClick="{{ modoRegistro }}" style="flex:1; min-height:44px; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; border:1px solid {{ tabRegBorde }}; background:{{ tabRegFondo }}; color:oklch(0.93 0.005 255);">Inscribirse</button>
+      </div>
+      <sc-if value="{{ esLogin }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <input name="logEmail" type="email" placeholder="Correo" style="min-height:48px; padding:0 14px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:oklch(0.2 0.015 255); color:oklch(0.93 0.005 255); font-size:15px;">
+          <input name="logClave" type="password" placeholder="Clave" style="min-height:48px; padding:0 14px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:oklch(0.2 0.015 255); color:oklch(0.93 0.005 255); font-size:15px;">
+          <button onClick="{{ ingresar }}" style="min-height:50px; border:none; border-radius:8px; background:oklch(0.72 0.13 155); color:oklch(0.15 0.01 255); font-size:16px; font-weight:700; cursor:pointer;">Ingresar</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ esRegistro }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <input name="regNombre" placeholder="Nombre completo" style="min-height:48px; padding:0 14px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:oklch(0.2 0.015 255); color:oklch(0.93 0.005 255); font-size:15px;">
+          <input name="regEmail" type="email" placeholder="Correo" style="min-height:48px; padding:0 14px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:oklch(0.2 0.015 255); color:oklch(0.93 0.005 255); font-size:15px;">
+          <input name="regClave" type="password" placeholder="Crea una clave" style="min-height:48px; padding:0 14px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:oklch(0.2 0.015 255); color:oklch(0.93 0.005 255); font-size:15px;">
+          <button onClick="{{ registrar }}" style="min-height:50px; border:none; border-radius:8px; background:oklch(0.72 0.13 155); color:oklch(0.15 0.01 255); font-size:16px; font-weight:700; cursor:pointer;">Enviar solicitud</button>
+          <p style="margin:0; font-size:13px; color:oklch(0.65 0.02 255); line-height:1.5;">Tu solicitud queda pendiente hasta que Néstor la autorice.</p>
+        </div>
+      </sc-if>
+      <sc-if value="{{ msg }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:12px 14px; border-radius:8px; border:1px solid oklch(0.4 0.06 85); color:oklch(0.8 0.1 85); font-size:14px; line-height:1.5;">{{ msg }}</div>
+      </sc-if>
+      <div style="margin-top:auto; border-top:1px solid oklch(0.28 0.02 255); padding-top:16px; display:flex; flex-direction:column; gap:10px;">
+        <div style="font-size:13px; color:oklch(0.6 0.02 255);">Acceso del administrador</div>
+        <div style="display:flex; gap:8px;">
+          <input name="pin" type="password" placeholder="PIN" style="flex:1; min-height:44px; padding:0 14px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:oklch(0.2 0.015 255); color:oklch(0.93 0.005 255); font-size:15px;">
+          <button onClick="{{ entrarAdmin }}" style="min-height:44px; padding:0 18px; border-radius:8px; border:1px solid oklch(0.45 0.05 155); background:oklch(0.24 0.03 155); color:oklch(0.85 0.08 155); font-size:14px; font-weight:600; cursor:pointer;">Entrar</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ esApp }}" hint-placeholder-val="{{ false }}">
+    <header style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 18px; border-bottom:1px solid oklch(0.28 0.02 255); position:sticky; top:0; background:oklch(0.16 0.015 255); z-index:5;">
+      <div>
+        <div style="font-size:16px; font-weight:700;">{{ nombreApp }}</div>
+        <div style="font-size:12px; color:oklch(0.65 0.02 255); font-family:'IBM Plex Mono',monospace;">{{ saludo }}</div>
+      </div>
+      <button onClick="{{ salir }}" style="min-height:40px; padding:0 14px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:none; color:oklch(0.7 0.02 255); font-size:13px; cursor:pointer;">Salir</button>
+    </header>
+
+    <main style="flex:1; padding:18px 18px 96px; display:flex; flex-direction:column; gap:16px;" onInput="{{ onForm }}">
+
+      <sc-if value="{{ tabBarrido }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; flex-direction:column; gap:16px;" data-screen-label="Barrido">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px;">
+            <h2 style="margin:0; font-size:18px;">Barrido de hoy</h2>
+            <span style="font-size:12px; color:oklch(0.6 0.02 255); font-family:'IBM Plex Mono',monospace;">{{ corte }}</span>
+          </div>
+          <sc-if value="{{ errorDatos }}" hint-placeholder-val="{{ false }}"><div style="padding:12px; border:1px solid oklch(0.62 0.13 25); border-radius:8px; color:oklch(0.8 0.1 25); font-size:13px;">{{ errorDatos }}</div></sc-if>
+          <sc-if value="{{ cargando }}" hint-placeholder-val="{{ true }}"><div style="font-size:13px; color:oklch(0.65 0.02 255); font-family:'IBM Plex Mono',monospace;">Descargando precios…</div></sc-if>
+          <div style="display:flex; flex-direction:column; gap:7px;">
+            <sc-for list="{{ monedas }}" as="m" hint-placeholder-count="8">
+              <div style="display:grid; grid-template-columns:42px 1fr 40px; align-items:center; gap:10px; font-family:'IBM Plex Mono',monospace; font-size:13px;">
+                <span style="font-weight:600;">{{ m.cod }}</span>
+                <div style="height:9px; background:oklch(0.24 0.015 255); border-radius:5px; overflow:hidden;"><div style="height:100%; border-radius:5px; width:{{ m.barW }}; background:{{ m.color }};"></div></div>
+                <span style="text-align:right; color:oklch(0.75 0.02 255);">{{ m.score }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <sc-for list="{{ pares }}" as="p" hint-placeholder-count="10">
+              <div style="display:grid; grid-template-columns:86px 70px 1fr auto; align-items:center; gap:8px; padding:10px 12px; border:1px solid oklch(0.26 0.02 255); border-radius:8px; background:oklch(0.185 0.015 255); font-size:13px;">
+                <span style="font-family:'IBM Plex Mono',monospace; font-weight:600;">{{ p.name }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:12px; color:{{ p.sesgoColor }};">{{ p.sesgo }}</span>
+                <span style="color:{{ p.tendColor }};">{{ p.tend }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace; color:oklch(0.7 0.02 255);">RSI {{ p.rsi }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <p style="margin:0; font-size:12px; color:oklch(0.6 0.02 255); line-height:1.5;">Tasas de referencia BCE, un cierre por día. Análisis educativo, no asesoría financiera. <a href="Barrido Forex Diario.dc.html">Ver tablero completo →</a></p>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ tabDiario }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:16px;" data-screen-label="Diario">
+          <h2 style="margin:0; font-size:18px;">Diario de operaciones</h2>
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;">
+            <div style="border:1px solid oklch(0.26 0.02 255); border-radius:8px; padding:10px; text-align:center;"><div style="font-size:20px; font-weight:700; font-family:'IBM Plex Mono',monospace;">{{ statOps }}</div><div style="font-size:11px; color:oklch(0.6 0.02 255);">Operaciones</div></div>
+            <div style="border:1px solid oklch(0.26 0.02 255); border-radius:8px; padding:10px; text-align:center;"><div style="font-size:20px; font-weight:700; font-family:'IBM Plex Mono',monospace;">{{ statWin }}</div><div style="font-size:11px; color:oklch(0.6 0.02 255);">% ganadas</div></div>
+            <div style="border:1px solid oklch(0.26 0.02 255); border-radius:8px; padding:10px; text-align:center;"><div style="font-size:20px; font-weight:700; font-family:'IBM Plex Mono',monospace; color:{{ statPlColor }};">{{ statPl }}</div><div style="font-size:11px; color:oklch(0.6 0.02 255);">P/L (USD)</div></div>
+          </div>
+          <div ref="{{ tradeBox }}" style="border:1px solid oklch(0.26 0.02 255); border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:10px; background:oklch(0.185 0.015 255);">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <select name="tPar" style="min-height:46px; padding:0 10px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:oklch(0.2 0.015 255); color:oklch(0.93 0.005 255); font-size:14px;">
+                <option>EUR/USD</option><option>GBP/USD</option><option>USD/JPY</option><option>USD/CHF</option><option>USD/CAD</option><option>AUD/USD</option><option>NZD/USD</option><option>EUR/CHF</option><option>EUR/CAD</option><option>EUR/NZD</option><option>GBP/CAD</option><option>GBP/JPY</option><option>NZD/CHF</option><option>NZD/CAD</option>
+              </select>
+              <select name="tDir" style="min-height:46px; padding:0 10px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:oklch(0.2 0.015 255); color:oklch(0.93 0.005 255); font-size:14px;">
+                <option>Compra</option><option>Venta</option>
+              </select>
+              <input name="tLote" type="number" step="0.01" placeholder="Lote (ej. 0.10)" style="min-height:46px; padding:0 12px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:oklch(0.2 0.015 255); color:oklch(0.93 0.005 255); font-size:14px;">
+              <input name="tPl" type="number" step="0.01" placeholder="Resultado USD (±)" style="min-height:46px; padding:0 12px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:oklch(0.2 0.015 255); color:oklch(0.93 0.005 255); font-size:14px;">
+            </div>
+            <input name="tNota" placeholder="Notas (setup, qué aprendiste…)" style="min-height:46px; padding:0 12px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:oklch(0.2 0.015 255); color:oklch(0.93 0.005 255); font-size:14px;">
+            <button onClick="{{ guardarTrade }}" style="min-height:48px; border:none; border-radius:8px; background:oklch(0.72 0.13 155); color:oklch(0.15 0.01 255); font-size:15px; font-weight:700; cursor:pointer;">Guardar operación</button>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <sc-for list="{{ trades }}" as="t" hint-placeholder-count="2">
+              <div style="display:flex; align-items:center; gap:10px; padding:12px; border:1px solid oklch(0.26 0.02 255); border-radius:8px;">
+                <div style="flex:1; min-width:0;">
+                  <div style="display:flex; gap:8px; align-items:baseline; font-family:'IBM Plex Mono',monospace; font-size:13px;">
+                    <span style="font-weight:700;">{{ t.par }}</span>
+                    <span style="color:{{ t.dirColor }}; font-weight:600;">{{ t.dir }}</span>
+                    <span style="color:oklch(0.6 0.02 255);">{{ t.lote }} lote · {{ t.fecha }}</span>
+                  </div>
+                  <div style="font-size:12.5px; color:oklch(0.68 0.02 255); margin-top:3px;">{{ t.nota }}</div>
+                </div>
+                <span style="font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:14px; color:{{ t.plColor }};">{{ t.pl }}</span>
+                <button onClick="{{ t.borrar }}" style="min-width:44px; min-height:44px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:none; color:oklch(0.6 0.02 255); cursor:pointer; font-size:15px;">✕</button>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size:13px; color:oklch(0.6 0.02 255);">{{ diarioVacio }}</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ tabCalc }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:16px;" data-screen-label="Calculadora">
+          <h2 style="margin:0; font-size:18px;">Calculadora de lote y riesgo</h2>
+          <div style="border:1px solid oklch(0.26 0.02 255); border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:10px; background:oklch(0.185 0.015 255);">
+            <input name="cCapital" data-live="1" type="number" placeholder="Capital de la cuenta (USD)" style="min-height:48px; padding:0 12px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:oklch(0.2 0.015 255); color:oklch(0.93 0.005 255); font-size:15px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <input name="cRiesgo" data-live="1" type="number" step="0.5" placeholder="Riesgo % (1–2)" style="min-height:48px; padding:0 12px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:oklch(0.2 0.015 255); color:oklch(0.93 0.005 255); font-size:15px;">
+              <input name="cPips" data-live="1" type="number" placeholder="Stop en pips" style="min-height:48px; padding:0 12px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:oklch(0.2 0.015 255); color:oklch(0.93 0.005 255); font-size:15px;">
+            </div>
+            <select name="cPar" data-live="1" onChange="{{ onForm }}" style="min-height:48px; padding:0 10px; border-radius:8px; border:1px solid oklch(0.32 0.02 255); background:oklch(0.2 0.015 255); color:oklch(0.93 0.005 255); font-size:15px;">
+              <option>EUR/USD</option><option>GBP/USD</option><option>USD/JPY</option><option>USD/CHF</option><option>USD/CAD</option><option>AUD/USD</option><option>NZD/USD</option><option>EUR/CHF</option><option>EUR/CAD</option><option>EUR/NZD</option><option>GBP/CAD</option><option>GBP/JPY</option><option>NZD/CHF</option><option>NZD/CAD</option>
+            </select>
+          </div>
+          <div style="border:1px solid oklch(0.32 0.05 155); border-radius:10px; padding:16px; display:grid; grid-template-columns:auto 1fr; gap:8px 16px; font-family:'IBM Plex Mono',monospace; font-size:14px;">
+            <span style="color:oklch(0.6 0.02 255);">Riesgo USD</span><span>{{ calcRiesgo }}</span>
+            <span style="color:oklch(0.6 0.02 255);">Valor del pip</span><span>{{ calcPip }}</span>
+            <span style="color:oklch(0.6 0.02 255);">Lote sugerido</span><span style="font-size:18px; font-weight:700; color:oklch(0.72 0.13 155);">{{ calcLote }}</span>
+            <span style="color:oklch(0.6 0.02 255);">Equivale a</span><span style="color:oklch(0.75 0.02 255);">{{ calcEq }}</span>
+          </div>
+          <p style="margin:0; font-size:12px; color:oklch(0.6 0.02 255); line-height:1.5;">Valor del pip calculado con la tasa BCE más reciente, por lote estándar (100.000 unidades). Verifica el valor exacto con tu bróker: el spread y el apalancamiento cambian el resultado real.</p>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ tabAdmin }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:16px;" data-screen-label="Admin">
+          <h2 style="margin:0; font-size:18px;">Miembros</h2>
+          <div style="font-size:13px; color:oklch(0.7 0.02 255); line-height:1.5;">Aprueba las solicitudes para dar acceso, o retira a cualquiera cuando quieras. La lista vive en este dispositivo.</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <sc-for list="{{ usuarios }}" as="u" hint-placeholder-count="2">
+              <div style="display:flex; align-items:center; gap:10px; padding:12px; border:1px solid oklch(0.26 0.02 255); border-radius:8px;">
+                <div style="flex:1; min-width:0;">
+                  <div style="font-weight:600; font-size:14px;">{{ u.nombre }}</div>
+                  <div style="font-size:12px; color:oklch(0.6 0.02 255); font-family:'IBM Plex Mono',monospace;">{{ u.email }} · <span style="color:{{ u.estadoColor }};">{{ u.estado }}</span></div>
+                </div>
+                <sc-if value="{{ u.pendiente }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ u.aprobar }}" style="min-height:44px; padding:0 14px; border-radius:8px; border:none; background:oklch(0.72 0.13 155); color:oklch(0.15 0.01 255); font-weight:700; font-size:13px; cursor:pointer;">Aprobar</button>
+                </sc-if>
+                <button onClick="{{ u.retirar }}" style="min-height:44px; padding:0 14px; border-radius:8px; border:1px solid oklch(0.45 0.08 25); background:none; color:oklch(0.7 0.12 25); font-size:13px; cursor:pointer;">Retirar</button>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size:13px; color:oklch(0.6 0.02 255);">{{ adminVacio }}</div>
+        </div>
+      </sc-if>
+    </main>
+
+    <nav style="position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; display:flex; background:oklch(0.14 0.015 255); border-top:1px solid oklch(0.28 0.02 255); padding-bottom:env(safe-area-inset-bottom); z-index:10;">
+      <button onClick="{{ irBarrido }}" style="flex:1; min-height:60px; border:none; background:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:{{ colBarrido }}; font-size:11.5px; font-weight:600;"><span style="font-size:17px; font-family:'IBM Plex Mono',monospace;">▦</span>Barrido</button>
+      <button onClick="{{ irDiario }}" style="flex:1; min-height:60px; border:none; background:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:{{ colDiario }}; font-size:11.5px; font-weight:600;"><span style="font-size:17px; font-family:'IBM Plex Mono',monospace;">≡</span>Diario</button>
+      <button onClick="{{ irCalc }}" style="flex:1; min-height:60px; border:none; background:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:{{ colCalc }}; font-size:11.5px; font-weight:600;"><span style="font-size:17px; font-family:'IBM Plex Mono',monospace;">%</span>Riesgo</button>
+      <sc-if value="{{ esAdmin }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ irAdmin }}" style="flex:1; min-height:60px; border:none; background:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:{{ colAdmin }}; font-size:11.5px; font-weight:600;"><span style="font-size:17px; font-family:'IBM Plex Mono',monospace;">⚙</span>Miembros</button>
+      </sc-if>
+    </nav>
+  </sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:430,&quot;height&quot;:900},&quot;pinAdmin&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;2468&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Acceso&quot;},&quot;nombreApp&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;NESTOR FOREX&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Marca&quot;},&quot;umbralDiferencial&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.1,&quot;min&quot;:0.1,&quot;max&quot;:2,&quot;step&quot;:0.1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Criterios&quot;}}">
+class Component extends DCLogic {
+  state = { screen: 'splash', tab: 'barrido', modo: 'login', msg: '', session: null, data: null, error: null, users: [], trades: [] };
+  constructor(props) {
+    super(props);
+    this.form = {};
+    this.tradeBox = React.createRef();
+    let p = 50; this.velas = [];
+    for (let i = 0; i < 26; i++) {
+      const d = Math.sin(i * 2.7 + 1) * 14 + Math.sin(i * 0.9) * 8;
+      const up = d >= 0;
+      this.velas.push({
+        cuerpo: (10 + Math.abs(d)) + 'px', mecha: (4 + Math.abs(Math.sin(i * 1.3)) * 10) + 'px',
+        mechaB: (4 + Math.abs(Math.cos(i * 1.7)) * 10) + 'px', mb: Math.max(0, p + d) + 'px',
+        color: up ? 'oklch(0.62 0.11 155)' : 'oklch(0.55 0.11 25)'
+      });
+      p = Math.max(6, Math.min(150, p + d));
+    }
+  }
+  componentDidMount() {
+    const users = JSON.parse(localStorage.getItem('nf_users') || '[]');
+    const trades = JSON.parse(localStorage.getItem('nf_trades') || '[]');
+    const session = JSON.parse(localStorage.getItem('nf_session') || 'null');
+    this.setState({ users, trades, session, screen: session ? 'app' : 'splash' });
+    this.cargar();
+  }
+  async cargar() {
+    try {
+      const f = d => d.toISOString().slice(0, 10);
+      const ini = new Date(Date.now() - 220 * 864e5);
+      const r = await fetch(`https://api.frankfurter.dev/v1/${f(ini)}..?base=USD&symbols=EUR,GBP,JPY,CHF,AUD,NZD,CAD`);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json();
+      const fechas = Object.keys(j.rates).sort();
+      const CCY = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'NZD', 'CAD'];
+      const serie = {};
+      CCY.forEach(c => serie[c] = fechas.map(d => c === 'USD' ? 1 : j.rates[d][c]));
+      const L = fechas.length - 1;
+      const px = (b, q, i) => serie[q][i] / serie[b][i];
+      const chg = (b, q, k) => (px(b, q, L) / px(b, q, Math.max(0, L - k)) - 1) * 100;
+      const raw = {};
+      CCY.forEach(b => { let s = 0; CCY.forEach(q => { if (q !== b) s += 0.2 * chg(b, q, 1) + 0.4 * chg(b, q, 5) + 0.4 * chg(b, q, 20); }); raw[b] = s / 7; });
+      const vals = Object.values(raw), mn = Math.min(...vals), mx = Math.max(...vals);
+      const esc = {}; CCY.forEach(c => esc[c] = (raw[c] - mn) / (mx - mn) * 10);
+      const emaLast = (c, p) => { const k = 2 / (p + 1); let e = c.slice(0, p).reduce((a, b) => a + b) / p; for (let i = p; i < c.length; i++) e = c[i] * k + e * (1 - k); return e; };
+      const rsi = c => { const p = 14; let g = 0, l = 0; for (let i = 1; i <= p; i++) { const d = c[i] - c[i - 1]; d > 0 ? g += d : l -= d; } g /= p; l /= p; for (let i = p + 1; i < c.length; i++) { const d = c[i] - c[i - 1]; g = (g * (p - 1) + Math.max(d, 0)) / p; l = (l * (p - 1) + Math.max(-d, 0)) / p; } return l === 0 ? 100 : 100 - 100 / (1 + g / l); };
+      const PAIRS = [['EUR', 'USD'], ['GBP', 'USD'], ['USD', 'JPY'], ['USD', 'CHF'], ['USD', 'CAD'], ['AUD', 'USD'], ['NZD', 'USD'], ['EUR', 'CHF'], ['EUR', 'CAD'], ['EUR', 'NZD'], ['GBP', 'CAD'], ['GBP', 'JPY'], ['NZD', 'CHF'], ['NZD', 'CAD']];
+      const pares = PAIRS.map(([b, q]) => {
+        const closes = fechas.map((_, i) => px(b, q, i));
+        const c = closes[L], e20 = emaLast(closes, 20), e50 = emaLast(closes, 50);
+        const tend = c > e20 && e20 > e50 ? 'Alcista' : c < e20 && e20 < e50 ? 'Bajista' : 'Rango';
+        return { name: b + '/' + q, dif: raw[b] - raw[q], tend, rsiV: rsi(closes.slice(-60)) };
+      });
+      const ultRates = { USD: 1 }; CCY.slice(1).forEach(c => ultRates[c] = j.rates[fechas[L]][c]);
+      this.setState({ data: { esc, pares, ultima: fechas[L], rates: ultRates } });
+    } catch (e) { this.setState({ error: 'No se pudieron obtener los precios (' + e.message + '). Recarga con conexión.' }); }
+  }
+  guardar(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+  setUsers(users) { this.guardar('nf_users', users); this.setState({ users }); }
+  onForm = e => { if (e.target && e.target.name) this.form[e.target.name] = e.target.value; if (e.target && e.target.dataset && e.target.dataset.live) this.forceUpdate(); };
+  pipUSD(par) {
+    const r = this.state.data && this.state.data.rates; if (!r) return null;
+    const [, q] = par.split('/');
+    const pipQuote = q === 'JPY' ? 1000 : 10;
+    return q === 'USD' ? 10 : pipQuote / r[q];
+  }
+  renderVals() {
+    const s = this.state;
+    const verde = 'oklch(0.72 0.13 155)', rojo = 'oklch(0.66 0.13 25)', ambar = 'oklch(0.75 0.13 85)', gris = 'oklch(0.6 0.02 255)';
+    const activo = 'oklch(0.72 0.13 155)', inactivo = 'oklch(0.55 0.02 255)';
+    const esAdmin = s.session === '__admin__';
+    const vals = {
+      nombreApp: this.props.nombreApp ?? 'NESTOR FOREX',
+      esSplash: s.screen === 'splash', esAuth: s.screen === 'auth', esApp: s.screen === 'app',
+      esLogin: s.modo === 'login', esRegistro: s.modo === 'registro', msg: s.msg,
+      tabLoginFondo: s.modo === 'login' ? 'oklch(0.24 0.03 155)' : 'oklch(0.2 0.015 255)',
+      tabLoginBorde: s.modo === 'login' ? 'oklch(0.45 0.05 155)' : 'oklch(0.3 0.02 255)',
+      tabRegFondo: s.modo === 'registro' ? 'oklch(0.24 0.03 155)' : 'oklch(0.2 0.015 255)',
+      tabRegBorde: s.modo === 'registro' ? 'oklch(0.45 0.05 155)' : 'oklch(0.3 0.02 255)',
+      velas: this.velas, esAdmin,
+      saludo: esAdmin ? 'Administrador' : (s.session || ''),
+      tabBarrido: s.tab === 'barrido', tabDiario: s.tab === 'diario', tabCalc: s.tab === 'calc', tabAdmin: s.tab === 'admin',
+      colBarrido: s.tab === 'barrido' ? activo : inactivo, colDiario: s.tab === 'diario' ? activo : inactivo,
+      colCalc: s.tab === 'calc' ? activo : inactivo, colAdmin: s.tab === 'admin' ? activo : inactivo,
+      irAuth: () => this.setState({ screen: 'auth', msg: '' }),
+      modoLogin: () => this.setState({ modo: 'login', msg: '' }),
+      modoRegistro: () => this.setState({ modo: 'registro', msg: '' }),
+      irBarrido: () => this.setState({ tab: 'barrido' }), irDiario: () => this.setState({ tab: 'diario' }),
+      irCalc: () => this.setState({ tab: 'calc' }), irAdmin: () => this.setState({ tab: 'admin' }),
+      tradeBox: this.tradeBox,
+      onForm: this.onForm,
+      salir: () => { this.guardar('nf_session', null); this.setState({ screen: 'splash', session: null, tab: 'barrido' }); },
+      registrar: () => {
+        const { regNombre, regEmail, regClave } = this.form;
+        if (!regNombre || !regEmail || !regClave) return this.setState({ msg: 'Completa nombre, correo y clave.' });
+        if (s.users.some(u => u.email === regEmail.trim().toLowerCase())) return this.setState({ msg: 'Ese correo ya tiene una solicitud.' });
+        this.setUsers([...s.users, { nombre: regNombre.trim(), email: regEmail.trim().toLowerCase(), clave: regClave, estado: 'pendiente' }]);
+        this.setState({ msg: 'Solicitud enviada. Podrás entrar cuando Néstor la apruebe.', modo: 'login' });
+      },
+      ingresar: () => {
+        const { logEmail, logClave } = this.form;
+        const u = s.users.find(x => x.email === (logEmail || '').trim().toLowerCase() && x.clave === logClave);
+        if (!u) return this.setState({ msg: 'Correo o clave incorrectos, o aún no estás inscrito.' });
+        if (u.estado !== 'aprobado') return this.setState({ msg: 'Tu solicitud sigue pendiente de aprobación.' });
+        this.guardar('nf_session', u.email);
+        this.setState({ screen: 'app', session: u.email, msg: '', tab: 'barrido' });
+      },
+      entrarAdmin: () => {
+        if ((this.form.pin || '') !== (this.props.pinAdmin ?? '2468')) return this.setState({ msg: 'PIN incorrecto.' });
+        this.guardar('nf_session', '__admin__');
+        this.setState({ screen: 'app', session: '__admin__', msg: '', tab: 'admin' });
+      },
+      cargando: !s.data && !s.error, errorDatos: s.error,
+      corte: s.data ? 'Cierre ' + s.data.ultima : '…',
+      monedas: [], pares: []
+    };
+    if (s.data) {
+      const { esc, pares } = s.data;
+      vals.monedas = Object.keys(esc).sort((a, b) => esc[b] - esc[a]).map(c => ({
+        cod: c, score: esc[c].toFixed(1), barW: Math.max(3, esc[c] * 10).toFixed(0) + '%',
+        color: esc[c] >= 6.5 ? verde : esc[c] <= 3.5 ? rojo : 'oklch(0.6 0.04 255)'
+      }));
+      const clasif = p => p.dif > 0.5 && p.tend === 'Alcista' ? 'COMPRA' : p.dif < -0.5 && p.tend === 'Bajista' ? 'VENTA' : Math.abs(p.dif) > 0.5 ? 'VIGILAR' : '—';
+      vals.pares = [...pares].sort((a, b) => Math.abs(b.dif) - Math.abs(a.dif)).map(p => {
+        const sesgo = clasif(p);
+        return {
+          name: p.name, sesgo, sesgoColor: sesgo === 'COMPRA' ? verde : sesgo === 'VENTA' ? rojo : sesgo === 'VIGILAR' ? ambar : gris,
+          tend: p.tend, tendColor: p.tend === 'Alcista' ? verde : p.tend === 'Bajista' ? rojo : gris, rsi: p.rsiV.toFixed(0)
+        };
+      });
+    }
+    const trades = s.trades;
+    const wins = trades.filter(t => t.pl > 0).length;
+    const plTot = trades.reduce((a, t) => a + t.pl, 0);
+    vals.statOps = String(trades.length);
+    vals.statWin = trades.length ? (wins / trades.length * 100).toFixed(0) : '—';
+    vals.statPl = (plTot >= 0 ? '+' : '') + plTot.toFixed(0);
+    vals.statPlColor = plTot >= 0 ? verde : rojo;
+    vals.trades = [...trades].reverse().map((t, i) => ({
+      par: t.par, dir: t.dir, dirColor: t.dir === 'Compra' ? verde : rojo, lote: t.lote, fecha: t.fecha,
+      nota: t.nota || '', pl: (t.pl >= 0 ? '+' : '') + t.pl.toFixed(2), plColor: t.pl >= 0 ? verde : rojo,
+      borrar: () => { const nu = trades.filter(x => x !== t); this.guardar('nf_trades', nu); this.setState({ trades: nu }); }
+    }));
+    vals.diarioVacio = trades.length ? '' : 'Aún no has registrado operaciones.';
+    vals.guardarTrade = () => {
+      const f = this.form;
+      const pl = parseFloat(f.tPl), lote = parseFloat(f.tLote);
+      if (!isFinite(pl) || !isFinite(lote)) return;
+      const nu = [...trades, { par: f.tPar || 'EUR/USD', dir: f.tDir || 'Compra', lote, pl, nota: (f.tNota || '').trim(), fecha: new Date().toISOString().slice(0, 10) }];
+      this.guardar('nf_trades', nu); this.setState({ trades: nu });
+      delete this.form.tPl; delete this.form.tLote; delete this.form.tNota;
+      if (this.tradeBox.current) this.tradeBox.current.querySelectorAll('input').forEach(i => i.value = '');
+    };
+    const cap = parseFloat(this.form.cCapital), rp = parseFloat(this.form.cRiesgo), pips = parseFloat(this.form.cPips);
+    const pip = this.pipUSD(this.form.cPar || 'EUR/USD');
+    if (isFinite(cap) && isFinite(rp) && isFinite(pips) && pips > 0 && pip) {
+      const riesgo = cap * rp / 100;
+      const lote = riesgo / (pips * pip);
+      vals.calcRiesgo = '$' + riesgo.toFixed(2);
+      vals.calcPip = '$' + pip.toFixed(2) + ' / lote';
+      vals.calcLote = lote.toFixed(2) + ' lotes';
+      vals.calcEq = (lote * 10).toFixed(1) + ' mini · ' + (lote * 100).toFixed(0) + ' micro';
+    } else {
+      vals.calcRiesgo = '—'; vals.calcPip = pip ? '$' + pip.toFixed(2) + ' / lote' : '—';
+      vals.calcLote = 'Completa los campos'; vals.calcEq = '—';
+    }
+    vals.usuarios = s.users.map(u => ({
+      nombre: u.nombre, email: u.email, estado: u.estado, pendiente: u.estado === 'pendiente',
+      estadoColor: u.estado === 'aprobado' ? verde : ambar,
+      aprobar: () => this.setUsers(s.users.map(x => x.email === u.email ? { ...x, estado: 'aprobado' } : x)),
+      retirar: () => { if (confirm('¿Retirar a ' + u.nombre + '?')) this.setUsers(s.users.filter(x => x.email !== u.email)); }
+    }));
+    vals.adminVacio = s.users.length ? '' : 'Sin solicitudes todavía. Comparte la app para que se inscriban.';
+    return vals;
+  }
+}
+</script>
+</body>
+</html>

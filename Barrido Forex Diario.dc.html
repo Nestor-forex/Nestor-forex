@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:oklch(0.16 0.015 255); color:oklch(0.93 0.005 255); font-family:'IBM Plex Sans',sans-serif; }
+  a { color:oklch(0.75 0.1 155); } a:hover { color:oklch(0.85 0.1 155); }
+</style>
+</helmet>
+<div style="max-width:1180px; margin:0 auto; padding:36px 28px 60px;">
+  <header style="display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:12px; border-bottom:1px solid oklch(0.3 0.02 255); padding-bottom:18px;">
+    <div>
+      <div style="font-size:13px; letter-spacing:0.18em; text-transform:uppercase; color:oklch(0.65 0.02 255); font-family:'IBM Plex Mono',monospace;">Barrido diario · Forex</div>
+      <h1 style="margin:6px 0 0; font-size:30px; font-weight:700;">{{ fecha }}</h1>
+    </div>
+    <div style="text-align:right; font-family:'IBM Plex Mono',monospace; font-size:13px; color:oklch(0.7 0.02 255); display:flex; flex-direction:column; gap:4px;">
+      <div>Sesión activa: <span style="color:oklch(0.93 0.005 255);">{{ sesion }}</span></div>
+      <div>{{ corte }}</div>
+    </div>
+  </header>
+
+  <sc-if value="{{ error }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:20px; padding:14px 18px; border:1px solid oklch(0.62 0.13 25); border-radius:6px; color:oklch(0.8 0.1 25); font-size:14px;">{{ error }}</div>
+  </sc-if>
+  <sc-if value="{{ cargando }}" hint-placeholder-val="{{ true }}">
+    <div style="margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:14px; color:oklch(0.65 0.02 255);">Descargando 7 meses de precios diarios…</div>
+  </sc-if>
+
+  <section style="margin-top:32px; display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:36px; align-items:start;">
+    <div>
+      <h2 style="margin:0 0 14px; font-size:15px; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.7 0.02 255);">Fuerza relativa por divisa</h2>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <sc-for list="{{ monedas }}" as="m" hint-placeholder-count="8">
+          <div style="display:grid; grid-template-columns:44px 1fr 52px; align-items:center; gap:10px; font-family:'IBM Plex Mono',monospace; font-size:13px;">
+            <span style="font-weight:600;">{{ m.cod }}</span>
+            <div style="height:10px; background:oklch(0.24 0.015 255); border-radius:5px; overflow:hidden;">
+              <div style="height:100%; border-radius:5px; width:{{ m.barW }}; background:{{ m.color }};"></div>
+            </div>
+            <span style="text-align:right; color:oklch(0.75 0.02 255);">{{ m.score }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <p style="margin:14px 0 0; font-size:12px; color:oklch(0.6 0.02 255); line-height:1.5;">Promedio ponderado del cambio % de cada divisa contra las otras 7 (1d 20%, 5d 40%, 20d 40%), reescalado 0–10.</p>
+    </div>
+
+    <div>
+      <h2 style="margin:0 0 14px; font-size:15px; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.7 0.02 255);">Pares — sesgo, tendencia y filtros</h2>
+      <div style="overflow-x:auto; display:grid; grid-template-columns:96px 78px 52px 76px 40px 52px; gap:6px 12px; font-family:'IBM Plex Mono',monospace; font-size:13px; align-items:center;">
+        <span style="color:oklch(0.6 0.02 255); font-size:11px;">PAR</span><span style="color:oklch(0.6 0.02 255); font-size:11px;">SESGO</span><span style="color:oklch(0.6 0.02 255); font-size:11px;">DIF</span><span style="color:oklch(0.6 0.02 255); font-size:11px;">TENDENCIA</span><span style="color:oklch(0.6 0.02 255); font-size:11px;">RSI</span><span style="color:oklch(0.6 0.02 255); font-size:11px;">ATR%*</span>
+        <sc-for list="{{ pares }}" as="p" hint-placeholder-count="14">
+          <span style="font-weight:600;">{{ p.name }}</span>
+          <span style="color:{{ p.sesgoColor }}; font-weight:600;">{{ p.sesgo }}</span>
+          <span style="color:oklch(0.75 0.02 255);">{{ p.dif }}</span>
+          <span style="color:{{ p.tendColor }};">{{ p.tend }}</span>
+          <span style="color:{{ p.rsiColor }};">{{ p.rsi }}</span>
+          <span style="color:oklch(0.75 0.02 255);">{{ p.atr }}</span>
+        </sc-for>
+      </div>
+      <p style="margin:12px 0 0; font-size:12px; color:oklch(0.6 0.02 255);">* Volatilidad proxy cierre-a-cierre (tasas de referencia diarias, sin máximos/mínimos intradía).</p>
+    </div>
+  </section>
+
+  <section style="margin-top:40px; display:grid; grid-template-columns:1fr 1fr; gap:28px;">
+    <div style="border:1px solid oklch(0.32 0.05 155); border-radius:8px; padding:18px 20px;">
+      <h2 style="margin:0 0 12px; font-size:15px; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.72 0.13 155);">Mejores para comprar</h2>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <sc-for list="{{ compras }}" as="c" hint-placeholder-count="3">
+          <div style="display:flex; gap:12px; align-items:baseline;">
+            <span style="font-family:'IBM Plex Mono',monospace; font-weight:600; min-width:88px;">{{ c.name }}</span>
+            <span style="font-size:13px; color:oklch(0.75 0.02 255); line-height:1.45;">{{ c.razon }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:13px; color:oklch(0.6 0.02 255);">{{ comprasNota }}</div>
+    </div>
+    <div style="border:1px solid oklch(0.35 0.06 25); border-radius:8px; padding:18px 20px;">
+      <h2 style="margin:0 0 12px; font-size:15px; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.66 0.13 25);">Mejores para vender</h2>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <sc-for list="{{ ventas }}" as="v" hint-placeholder-count="3">
+          <div style="display:flex; gap:12px; align-items:baseline;">
+            <span style="font-family:'IBM Plex Mono',monospace; font-weight:600; min-width:88px;">{{ v.name }}</span>
+            <span style="font-size:13px; color:oklch(0.75 0.02 255); line-height:1.45;">{{ v.razon }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:13px; color:oklch(0.6 0.02 255);">{{ ventasNota }}</div>
+    </div>
+  </section>
+
+  <sc-if value="{{ hayVigilancia }}" hint-placeholder-val="{{ false }}">
+    <section style="margin-top:28px; border:1px solid oklch(0.4 0.06 85); border-radius:8px; padding:18px 20px;">
+      <h2 style="margin:0 0 12px; font-size:15px; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.75 0.13 85);">En vigilancia</h2>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <sc-for list="{{ vigilancia }}" as="w" hint-placeholder-count="2">
+          <div style="display:flex; gap:12px; align-items:baseline;">
+            <span style="font-family:'IBM Plex Mono',monospace; font-weight:600; min-width:88px;">{{ w.name }}</span>
+            <span style="font-size:13px; color:oklch(0.75 0.02 255);">{{ w.razon }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </sc-if>
+
+  <section style="margin-top:40px;">
+    <h2 style="margin:0 0 16px; font-size:15px; letter-spacing:0.12em; text-transform:uppercase; color:oklch(0.7 0.02 255);">Setups del top</h2>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:18px;">
+      <sc-for list="{{ setups }}" as="s" hint-placeholder-count="4">
+        <div style="border:1px solid oklch(0.3 0.02 255); border-radius:8px; padding:16px 18px; background:oklch(0.19 0.015 255);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <span style="font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:16px;">{{ s.name }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; padding:3px 10px; border-radius:4px; color:oklch(0.15 0.01 255); background:{{ s.ladoColor }};">{{ s.lado }}</span>
+          </div>
+          <div style="display:grid; grid-template-columns:auto 1fr; gap:5px 14px; font-size:13px; font-family:'IBM Plex Mono',monospace;">
+            <span style="color:oklch(0.6 0.02 255);">Soporte</span><span>{{ s.sup }}</span>
+            <span style="color:oklch(0.6 0.02 255);">Resistencia</span><span>{{ s.res }}</span>
+            <span style="color:oklch(0.6 0.02 255);">Entrada</span><span>{{ s.entrada }}</span>
+            <span style="color:oklch(0.6 0.02 255);">Stop-loss</span><span>{{ s.sl }}</span>
+            <span style="color:oklch(0.6 0.02 255);">Take-profit</span><span>{{ s.tp }}</span>
+            <span style="color:oklch(0.6 0.02 255);">R/B</span><span style="color:{{ s.rrColor }};">{{ s.rr }}</span>
+          </div>
+          <p style="margin:12px 0 0; font-size:12.5px; color:oklch(0.7 0.02 255); line-height:1.5;">Invalida: {{ s.inval }}</p>
+        </div>
+      </sc-for>
+    </div>
+    <div style="margin-top:10px; font-size:13px; color:oklch(0.6 0.02 255);">{{ setupsNota }}</div>
+  </section>
+
+  <section style="margin-top:40px; border-top:1px solid oklch(0.3 0.02 255); padding-top:20px; display:flex; flex-wrap:wrap; gap:24px; justify-content:space-between; align-items:flex-start;">
+    <div style="max-width:720px; font-size:13px; color:oklch(0.68 0.02 255); line-height:1.6; display:flex; flex-direction:column; gap:8px;">
+      <div><strong style="color:oklch(0.85 0.005 255);">Riesgo:</strong> 1–2% del capital por operación. Varias posiciones en la misma divisa no son operaciones independientes — son una sola apuesta con más tamaño.</div>
+      <div><strong style="color:oklch(0.85 0.005 255);">Limitaciones:</strong> {{ limitaciones }}</div>
+      <div>Análisis educativo, no asesoría financiera personalizada. Operar Forex conlleva riesgo de pérdida.</div>
+    </div>
+    <button onClick="{{ descargarMd }}" style="font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; padding:10px 18px; border-radius:6px; border:1px solid oklch(0.45 0.05 155); background:oklch(0.24 0.03 155); color:oklch(0.85 0.08 155); cursor:pointer; white-space:nowrap;" style-hover="background:oklch(0.3 0.04 155);">↓ Descargar reporte .md</button>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;umbralDiferencial&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.5,&quot;min&quot;:0.1,&quot;max&quot;:2,&quot;step&quot;:0.1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Criterios&quot;},&quot;topSetups&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:3,&quot;min&quot;:1,&quot;max&quot;:5,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Criterios&quot;}}">
+class Component extends DCLogic {
+  state = { data: null, error: null };
+  async componentDidMount() {
+    try {
+      const hoy = new Date();
+      const ini = new Date(hoy.getTime() - 220 * 864e5);
+      const f = d => d.toISOString().slice(0, 10);
+      const r = await fetch(`https://api.frankfurter.dev/v1/${f(ini)}..?base=USD&symbols=EUR,GBP,JPY,CHF,AUD,NZD,CAD`);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json();
+      this.setState({ data: this.computar(Object.keys(j.rates).sort(), j.rates) });
+    } catch (e) {
+      this.setState({ error: 'No se pudieron obtener los precios (' + e.message + '). Revisa la conexión y recarga.' });
+    }
+  }
+  computar(fechas, rates) {
+    const CCY = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'NZD', 'CAD'];
+    const serie = {};
+    CCY.forEach(c => serie[c] = fechas.map(d => c === 'USD' ? 1 : rates[d][c]));
+    const L = fechas.length - 1;
+    const px = (b, q, i) => serie[q][i] / serie[b][i];
+    const chg = (b, q, k) => (px(b, q, L) / px(b, q, Math.max(0, L - k)) - 1) * 100;
+    const raw = {};
+    CCY.forEach(b => {
+      let s = 0;
+      CCY.forEach(q => { if (q !== b) s += 0.2 * chg(b, q, 1) + 0.4 * chg(b, q, 5) + 0.4 * chg(b, q, 20); });
+      raw[b] = s / 7;
+    });
+    const vals = Object.values(raw), mn = Math.min(...vals), mx = Math.max(...vals);
+    const esc = {};
+    CCY.forEach(c => esc[c] = (raw[c] - mn) / (mx - mn) * 10);
+    const emaLast = (c, p) => { const k = 2 / (p + 1); let e = c.slice(0, p).reduce((a, b) => a + b) / p; for (let i = p; i < c.length; i++) e = c[i] * k + e * (1 - k); return e; };
+    const rsi = (c, p = 14) => { let g = 0, l = 0; for (let i = 1; i <= p; i++) { const d = c[i] - c[i - 1]; d > 0 ? g += d : l -= d; } g /= p; l /= p; for (let i = p + 1; i < c.length; i++) { const d = c[i] - c[i - 1]; g = (g * (p - 1) + Math.max(d, 0)) / p; l = (l * (p - 1) + Math.max(-d, 0)) / p; } return l === 0 ? 100 : 100 - 100 / (1 + g / l); };
+    const PAIRS = [['EUR', 'USD'], ['GBP', 'USD'], ['USD', 'JPY'], ['USD', 'CHF'], ['USD', 'CAD'], ['AUD', 'USD'], ['NZD', 'USD'], ['EUR', 'CHF'], ['EUR', 'CAD'], ['EUR', 'NZD'], ['GBP', 'CAD'], ['GBP', 'JPY'], ['NZD', 'CHF'], ['NZD', 'CAD']];
+    const pares = PAIRS.map(([b, q]) => {
+      const closes = fechas.map((_, i) => px(b, q, i));
+      const c = closes[L], e20 = emaLast(closes, 20), e50 = emaLast(closes, 50);
+      let sum = 0;
+      for (let i = L - 13; i <= L; i++) sum += Math.abs(closes[i] - closes[i - 1]) / closes[i - 1];
+      const atrPct = sum / 14 * 100, atrAbs = c * atrPct / 100;
+      const tend = c > e20 && e20 > e50 ? 'Alcista' : c < e20 && e20 < e50 ? 'Bajista' : 'Rango';
+      const last20 = closes.slice(-20), last10 = closes.slice(-10);
+      return {
+        name: b + '/' + q, b, q, c, e20, e50, rsiV: rsi(closes.slice(-60)), atrPct, atrAbs, tend,
+        dif: raw[b] - raw[q], hi20: Math.max(...last20), lo20: Math.min(...last20),
+        hi10: Math.max(...last10), lo10: Math.min(...last10), dec: (b === 'JPY' || q === 'JPY') ? 2 : 4
+      };
+    });
+    return { fechas, ultima: fechas[L], pares, raw, esc };
+  }
+  fmtFecha() {
+    const d = new Date();
+    const s = d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  sesion() {
+    const h = new Date().getUTCHours();
+    if (h >= 12 && h < 16) return 'Solape Londres–Nueva York (máxima liquidez)';
+    if (h >= 8 && h < 12) return 'Londres';
+    if (h >= 16 && h < 21) return 'Nueva York';
+    return 'Asia / Sídney';
+  }
+  renderVals() {
+    const { data, error } = this.state;
+    const verde = 'oklch(0.72 0.13 155)', rojo = 'oklch(0.66 0.13 25)', ambar = 'oklch(0.75 0.13 85)', gris = 'oklch(0.6 0.02 255)';
+    const base = {
+      fecha: this.fmtFecha(), sesion: this.sesion(), error,
+      cargando: !data && !error,
+      corte: data ? 'Datos al cierre del ' + data.ultima + ' · tasas de referencia BCE' : '…',
+      limitaciones: 'Tasas de referencia diarias (un fix por día): ATR y RSI se calculan sobre cierres, sin máximos/mínimos intradía. Sin datos de MT5 no hay tick volume ni spread real del bróker — la liquidez se estima cualitativamente. Sube tu exportación de MT5 si quieres afinar eso.'
+    };
+    if (!data) return base;
+    const thr = this.props.umbralDiferencial ?? 0.5;
+    const topN = this.props.topSetups ?? 3;
+    const monedas = Object.keys(data.esc).sort((a, b) => data.esc[b] - data.esc[a]).map(c => ({
+      cod: c, score: data.esc[c].toFixed(1), barW: Math.max(3, data.esc[c] * 10).toFixed(0) + '%',
+      color: data.esc[c] >= 6.5 ? verde : data.esc[c] <= 3.5 ? rojo : 'oklch(0.6 0.04 255)'
+    }));
+    const clasif = p => {
+      if (p.dif > thr && p.tend === 'Alcista') return 'COMPRA';
+      if (p.dif < -thr && p.tend === 'Bajista') return 'VENTA';
+      if (Math.abs(p.dif) > thr) return 'VIGILAR';
+      return '—';
+    };
+    const pares = data.pares.map(p => {
+      const sesgo = clasif(p);
+      return {
+        name: p.name, sesgo, dif: (p.dif >= 0 ? '+' : '') + p.dif.toFixed(1),
+        sesgoColor: sesgo === 'COMPRA' ? verde : sesgo === 'VENTA' ? rojo : sesgo === 'VIGILAR' ? ambar : gris,
+        tend: p.tend, tendColor: p.tend === 'Alcista' ? verde : p.tend === 'Bajista' ? rojo : gris,
+        rsi: p.rsiV.toFixed(0), rsiColor: p.rsiV > 70 || p.rsiV < 30 ? ambar : 'oklch(0.75 0.02 255)',
+        atr: p.atrPct.toFixed(2)
+      };
+    });
+    const razon = p => {
+      const ext = p.rsiV > 70 || p.rsiV < 30 ? ' — RSI extendido, no perseguir, esperar retroceso' : p.rsiV >= 40 && p.rsiV <= 60 ? ' — RSI en zona de continuación' : '';
+      return `${p.b} (${data.esc[p.b].toFixed(1)}) vs ${p.q} (${data.esc[p.q].toFixed(1)}), EMAs alineadas, RSI ${p.rsiV.toFixed(0)}${ext}`;
+    };
+    const cands = [...data.pares].sort((a, b) => Math.abs(b.dif) - Math.abs(a.dif));
+    const compras = cands.filter(p => clasif(p) === 'COMPRA').slice(0, 5).map(p => ({ name: p.name, razon: razon(p), p }));
+    const ventas = cands.filter(p => clasif(p) === 'VENTA').slice(0, 5).map(p => ({ name: p.name, razon: razon(p), p }));
+    const vigilancia = cands.filter(p => clasif(p) === 'VIGILAR').slice(0, 4).map(p => ({
+      name: p.name,
+      razon: `Diferencial ${(p.dif >= 0 ? '+' : '') + p.dif.toFixed(1)} a favor de ${p.dif > 0 ? p.b : p.q}, pero el par sigue en ${p.tend.toLowerCase()} — fuerza sin confirmación técnica todavía.`
+    }));
+    const mkSetup = (p, lado) => {
+      const d = p.dec, compra = lado === 'COMPRA';
+      const sl = compra ? p.lo10 - 0.5 * p.atrAbs : p.hi10 + 0.5 * p.atrAbs;
+      const tp = compra ? Math.max(p.hi20, p.c + 2 * p.atrAbs) : Math.min(p.lo20, p.c - 2 * p.atrAbs);
+      const rr = Math.abs(tp - p.c) / Math.abs(p.c - sl);
+      return {
+        name: p.name, lado, ladoColor: compra ? verde : rojo,
+        sup: p.lo20.toFixed(d), res: p.hi20.toFixed(d),
+        entrada: `${p.c.toFixed(d)} actual · mejor en retroceso a EMA20 (${p.e20.toFixed(d)})`,
+        sl: sl.toFixed(d) + (compra ? ' (bajo el mínimo de 10 días − ½ ATR)' : ' (sobre el máximo de 10 días + ½ ATR)'),
+        tp: tp.toFixed(d), rr: '1:' + rr.toFixed(1) + (rr < 1.5 ? ' ⚠ por debajo de 1:1.5' : ''),
+        rrColor: rr < 1.5 ? ambar : verde,
+        inval: compra ? `cierre diario por debajo de ${sl.toFixed(d)}, o pérdida de fuerza de ${p.b} en el ranking.` : `cierre diario por encima de ${sl.toFixed(d)}, o recuperación de fuerza de ${p.q}.`,
+        rrNum: rr
+      };
+    };
+    const setups = [...compras.slice(0, topN).map(x => mkSetup(x.p, 'COMPRA')), ...ventas.slice(0, topN).map(x => mkSetup(x.p, 'VENTA'))];
+    const vals = {
+      ...base, monedas, pares, compras, ventas, vigilancia, setups,
+      hayVigilancia: vigilancia.length > 0,
+      comprasNota: compras.length ? '' : 'Hoy no hay compras con fuerza y tendencia alineadas — no forzar entradas.',
+      ventasNota: ventas.length ? '' : 'Hoy no hay ventas con fuerza y tendencia alineadas — no forzar entradas.',
+      setupsNota: setups.length ? '' : 'Sin setups limpios hoy: no hay pares con diferencial de fuerza y tendencia confirmada. No operar también es una decisión.',
+      descargarMd: () => {
+        const blob = new Blob([window.__reporteMd || ''], { type: 'text/markdown' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'reporte-forex-' + data.ultima + '.md';
+        a.click();
+      }
+    };
+    window.__reporteMd = this.generarMd(data, monedas, pares, compras, ventas, vigilancia, setups, base);
+    return vals;
+  }
+  generarMd(data, monedas, pares, compras, ventas, vigilancia, setups, base) {
+    const li = xs => xs.map(x => `- **${x.name}** — ${x.razon}`).join('\n') || '_Ninguno hoy._';
+    return `# Reporte Forex — ${data.ultima}
+
+**Sesión:** ${base.sesion}
+**Corte de datos:** ${base.corte}
+
+## Fuerza relativa (0–10)
+${monedas.map(m => `- ${m.cod}: ${m.score}`).join('\n')}
+
+## Tabla de pares
+| Par | Sesgo | Dif | Tendencia | RSI | ATR%* |
+|---|---|---|---|---|---|
+${pares.map(p => `| ${p.name} | ${p.sesgo} | ${p.dif} | ${p.tend} | ${p.rsi} | ${p.atr} |`).join('\n')}
+
+\\* Volatilidad proxy cierre-a-cierre.
+
+## Mejores para comprar
+${li(compras)}
+
+## Mejores para vender
+${li(ventas)}
+
+## En vigilancia
+${li(vigilancia)}
+
+## Setups
+${setups.map(s => `### ${s.name} — ${s.lado}
+- Soporte: ${s.sup} · Resistencia: ${s.res}
+- Entrada: ${s.entrada}
+- Stop-loss: ${s.sl}
+- Take-profit: ${s.tp} (R/B ${s.rr})
+- Invalida: ${s.inval}`).join('\n\n') || '_Sin setups limpios hoy._'}
+
+## Riesgo
+1–2% del capital por operación. Posiciones múltiples sobre la misma divisa cuentan como una sola apuesta ampliada.
+
+## Limitaciones
+${base.limitaciones}
+
+---
+_Análisis educativo, no asesoría financiera personalizada. El Forex conlleva riesgo de pérdida._
+`;
+  }
+}
+</script>
+</body>
+</html>
