@@ -1,5 +1,5 @@
 import { Fragment, useMemo } from 'react'
-import { monedas, pares, compras, ventas, vigilancia, setups, corteFake, limitaciones } from '../lib/fakeData'
+import { limitaciones } from '../lib/fakeData'
 import { sesgoColor, tendColor, rsiColor, fmtDif } from '../lib/display'
 import { fmtFechaHoy, sesionActiva } from '../lib/format'
 import { generarReporteMd, descargarMd } from '../lib/reporte'
@@ -41,12 +41,12 @@ function RazonList({ items, emptyText }) {
   )
 }
 
-export default function TableroCompleto({ onVolver }) {
+export default function TableroCompleto({ onVolver, loading, error, monedas, pares, compras, ventas, vigilancia, setups, corte }) {
   const fecha = useMemo(fmtFechaHoy, [])
   const sesion = useMemo(sesionActiva, [])
 
   const descargar = () => {
-    const md = generarReporteMd({ fecha, sesion, corte: corteFake, monedas, pares, compras, ventas, vigilancia, setups, limitaciones })
+    const md = generarReporteMd({ fecha, sesion, corte, monedas, pares, compras, ventas, vigilancia, setups, limitaciones })
     descargarMd(md, `reporte-forex-${new Date().toISOString().slice(0, 10)}.md`)
   }
 
@@ -80,10 +80,23 @@ export default function TableroCompleto({ onVolver }) {
             <div>
               Sesión activa: <span style={{ color: 'var(--text)' }}>{sesion}</span>
             </div>
-            <div>{corteFake}</div>
+            <div>{loading ? '…' : corte}</div>
           </div>
         </section>
 
+        {error && (
+          <div style={{ padding: '14px 18px', border: '1px solid oklch(0.62 0.13 25)', borderRadius: 6, color: 'oklch(0.8 0.1 25)', fontSize: 14 }}>
+            {error}
+          </div>
+        )}
+        {loading && (
+          <div className="mono" style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+            Descargando 7 meses de precios diarios…
+          </div>
+        )}
+
+        {!loading && !error && (
+        <>
         <section>
           <h2 className="section-title">Fuerza relativa por divisa</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -186,6 +199,8 @@ export default function TableroCompleto({ onVolver }) {
             ))}
           </div>
         </section>
+        </>
+        )}
 
         <section style={{ borderTop: '1px solid var(--border)', paddingTop: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -198,22 +213,24 @@ export default function TableroCompleto({ onVolver }) {
             </div>
             <div>Análisis educativo, no asesoría financiera personalizada. Operar Forex conlleva riesgo de pérdida.</div>
           </div>
-          <button
-            onClick={descargar}
-            className="mono"
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              padding: '10px 18px',
-              borderRadius: 6,
-              border: '1px solid oklch(0.45 0.05 155)',
-              background: 'oklch(0.24 0.03 155)',
-              color: 'oklch(0.85 0.08 155)',
-              cursor: 'pointer',
-            }}
-          >
-            ↓ Descargar reporte .md
-          </button>
+          {!loading && !error && (
+            <button
+              onClick={descargar}
+              className="mono"
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                padding: '10px 18px',
+                borderRadius: 6,
+                border: '1px solid oklch(0.45 0.05 155)',
+                background: 'oklch(0.24 0.03 155)',
+                color: 'oklch(0.85 0.08 155)',
+                cursor: 'pointer',
+              }}
+            >
+              ↓ Descargar reporte .md
+            </button>
+          )}
         </section>
       </main>
     </div>

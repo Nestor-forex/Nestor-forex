@@ -10,6 +10,7 @@ import CalculadoraTab from './components/CalculadoraTab'
 import MiembrosTab from './components/MiembrosTab'
 import { usuariosFake, tradesFake } from './lib/fakeData'
 import { useLocalStorage } from './lib/useLocalStorage'
+import { useMarketData } from './lib/useMarketData'
 
 const NOMBRE_APP = 'NESTOR FOREX'
 const PIN_ADMIN_DEMO = '2468'
@@ -18,6 +19,7 @@ export default function App() {
   const [session, setSession] = useLocalStorage('nf_session', null)
   const [usuarios, setUsuarios] = useLocalStorage('nf_users', usuariosFake)
   const [trades, setTrades] = useLocalStorage('nf_trades', tradesFake)
+  const mercado = useMarketData()
 
   const [screen, setScreen] = useState(session ? 'app' : 'splash')
   const [tab, setTab] = useState('barrido')
@@ -77,16 +79,38 @@ export default function App() {
           <>
             <Header nombreApp={NOMBRE_APP} saludo={esAdmin ? 'Administrador' : session || ''} onSalir={salir} />
             <main style={{ flex: 1, padding: '18px 18px 96px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {tab === 'barrido' && <BarridoTab onVerTablero={() => setTab('tablero')} />}
+              {tab === 'barrido' && (
+                <BarridoTab
+                  loading={mercado.loading}
+                  error={mercado.error}
+                  monedas={mercado.monedas}
+                  pares={mercado.pares}
+                  corte={mercado.corte}
+                  onVerTablero={() => setTab('tablero')}
+                />
+              )}
               {tab === 'diario' && <DiarioTab trades={trades} onGuardar={guardarTrade} onBorrar={borrarTrade} />}
-              {tab === 'calc' && <CalculadoraTab />}
+              {tab === 'calc' && <CalculadoraTab ratesUSD={mercado.ratesUSD} loadingTasas={mercado.loading} errorTasas={mercado.error} />}
               {tab === 'admin' && esAdmin && <MiembrosTab usuarios={usuarios} onAprobar={aprobarUsuario} onRetirar={retirarUsuario} />}
             </main>
             <BottomNav tab={tab} onTab={setTab} esAdmin={esAdmin} />
           </>
         )}
 
-        {screen === 'app' && tab === 'tablero' && <TableroCompleto onVolver={() => setTab('barrido')} />}
+        {screen === 'app' && tab === 'tablero' && (
+          <TableroCompleto
+            onVolver={() => setTab('barrido')}
+            loading={mercado.loading}
+            error={mercado.error}
+            monedas={mercado.monedas}
+            pares={mercado.pares}
+            compras={mercado.compras}
+            ventas={mercado.ventas}
+            vigilancia={mercado.vigilancia}
+            setups={mercado.setups}
+            corte={mercado.corte}
+          />
+        )}
       </div>
     </div>
   )
