@@ -1,13 +1,14 @@
 import { useState } from 'react'
 
-export default function Auth({ nombreApp, msg, onRegistrar, onIngresar, onEntrarAdmin }) {
+export default function Auth({ nombreApp, onRegistrar, onIngresar }) {
   const [modo, setModo] = useState('login')
   const [logEmail, setLogEmail] = useState('')
   const [logClave, setLogClave] = useState('')
   const [regNombre, setRegNombre] = useState('')
   const [regEmail, setRegEmail] = useState('')
   const [regClave, setRegClave] = useState('')
-  const [pin, setPin] = useState('')
+  const [msg, setMsg] = useState('')
+  const [cargando, setCargando] = useState(false)
 
   const tabStyle = (activo) => ({
     flex: 1,
@@ -21,6 +22,33 @@ export default function Auth({ nombreApp, msg, onRegistrar, onIngresar, onEntrar
     color: 'var(--text)',
   })
 
+  const cambiarModo = (m) => {
+    setModo(m)
+    setMsg('')
+  }
+
+  const ingresar = async () => {
+    setCargando(true)
+    setMsg('')
+    const r = await onIngresar(logEmail, logClave)
+    setCargando(false)
+    if (!r.ok) setMsg(r.msg)
+  }
+
+  const registrar = async () => {
+    setCargando(true)
+    setMsg('')
+    const r = await onRegistrar(regNombre, regEmail, regClave)
+    setCargando(false)
+    if (!r.ok) {
+      setMsg(r.msg)
+      return
+    }
+    setRegNombre('')
+    setRegEmail('')
+    setRegClave('')
+  }
+
   return (
     <div style={{ flex: 1, padding: '48px 24px 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div>
@@ -31,10 +59,10 @@ export default function Auth({ nombreApp, msg, onRegistrar, onIngresar, onEntrar
       </div>
 
       <div style={{ display: 'flex', gap: 8 }}>
-        <button style={tabStyle(modo === 'login')} onClick={() => setModo('login')}>
+        <button style={tabStyle(modo === 'login')} onClick={() => cambiarModo('login')}>
           Ingresar
         </button>
-        <button style={tabStyle(modo === 'registro')} onClick={() => setModo('registro')}>
+        <button style={tabStyle(modo === 'registro')} onClick={() => cambiarModo('registro')}>
           Inscribirse
         </button>
       </div>
@@ -43,8 +71,8 @@ export default function Auth({ nombreApp, msg, onRegistrar, onIngresar, onEntrar
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <input className="field" type="email" placeholder="Correo" value={logEmail} onChange={(e) => setLogEmail(e.target.value)} />
           <input className="field" type="password" placeholder="Clave" value={logClave} onChange={(e) => setLogClave(e.target.value)} />
-          <button className="btn btn-primary" style={{ minHeight: 50, fontSize: 16 }} onClick={() => onIngresar(logEmail, logClave)}>
-            Ingresar
+          <button className="btn btn-primary" style={{ minHeight: 50, fontSize: 16, opacity: cargando ? 0.7 : 1 }} disabled={cargando} onClick={ingresar}>
+            {cargando ? 'Ingresando…' : 'Ingresar'}
           </button>
         </div>
       )}
@@ -53,19 +81,9 @@ export default function Auth({ nombreApp, msg, onRegistrar, onIngresar, onEntrar
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <input className="field" placeholder="Nombre completo" value={regNombre} onChange={(e) => setRegNombre(e.target.value)} />
           <input className="field" type="email" placeholder="Correo" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} />
-          <input className="field" type="password" placeholder="Crea una clave" value={regClave} onChange={(e) => setRegClave(e.target.value)} />
-          <button
-            className="btn btn-primary"
-            style={{ minHeight: 50, fontSize: 16 }}
-            onClick={() => {
-              onRegistrar(regNombre, regEmail, regClave)
-              setRegNombre('')
-              setRegEmail('')
-              setRegClave('')
-              setModo('login')
-            }}
-          >
-            Enviar solicitud
+          <input className="field" type="password" placeholder="Crea una clave (mín. 6 caracteres)" value={regClave} onChange={(e) => setRegClave(e.target.value)} />
+          <button className="btn btn-primary" style={{ minHeight: 50, fontSize: 16, opacity: cargando ? 0.7 : 1 }} disabled={cargando} onClick={registrar}>
+            {cargando ? 'Enviando…' : 'Enviar solicitud'}
           </button>
           <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
             Tu solicitud queda pendiente hasta que Néstor la autorice.
@@ -78,26 +96,6 @@ export default function Auth({ nombreApp, msg, onRegistrar, onIngresar, onEntrar
           {msg}
         </div>
       )}
-
-      <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Acceso del administrador</div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <input className="field" style={{ flex: 1 }} type="password" placeholder="PIN" value={pin} onChange={(e) => setPin(e.target.value)} />
-          <button
-            className="btn-ghost"
-            style={{
-              padding: '0 18px',
-              border: '1px solid oklch(0.45 0.05 155)',
-              background: 'oklch(0.24 0.03 155)',
-              color: 'oklch(0.85 0.08 155)',
-              fontWeight: 600,
-            }}
-            onClick={() => onEntrarAdmin(pin)}
-          >
-            Entrar
-          </button>
-        </div>
-      </div>
     </div>
   )
 }
