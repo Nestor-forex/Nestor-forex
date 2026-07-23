@@ -98,6 +98,14 @@ ideas propuestas ese día, empezando por la del gráfico. Estado:
    si el cierre subió en esos 20 días, rojo si bajó. Solo en el tablero
    completo, no en la pestaña Barrido compacta (a propósito, para no
    saturar esa vista rápida).
+   ⚠️ El usuario probó la app publicada y dijo "no vi muchos cambios" —
+   ya se publicó bien (verificado por captura de pantalla contra un build
+   real antes de fusionar), así que lo más probable es que: (a) haya
+   mirado la pestaña Barrido compacta en vez de entrar a "Ver tablero
+   completo →", donde SÍ está el gráfico, o (b) el service worker de la
+   PWA le haya servido una versión en caché. Si en la próxima sesión
+   sigue sin verlo, confirmar primero con captura de pantalla del usuario
+   antes de asumir que el código está mal.
 2. ⏳ Pendiente: aviso de riesgo correlacionado — si hay varias operaciones
    abiertas en la misma divisa en el Diario, avisar que es "una sola
    apuesta más grande" (el texto legal ya lo dice, falta la lógica).
