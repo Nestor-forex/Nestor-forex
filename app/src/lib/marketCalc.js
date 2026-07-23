@@ -96,6 +96,7 @@ export function computarBarrido(fechas, rates) {
       hi10: Math.max(...last10),
       lo10: Math.min(...last10),
       dec: b === 'JPY' || q === 'JPY' ? 2 : 4,
+      serie20: last20,
     }
   })
 
@@ -163,6 +164,10 @@ export function derivarVista(data, { thr = 0.5, topN = 3 } = {}) {
     tend: p.tend,
     rsi: Math.round(p.rsiV),
     atr: p.atrPct,
+    precio: p.c,
+    dec: p.dec,
+    serie20: p.serie20,
+    cambio20: ((p.serie20.at(-1) - p.serie20[0]) / p.serie20[0]) * 100,
   }))
 
   const cands = [...paresRaw].sort(porDifAbs)

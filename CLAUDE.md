@@ -86,25 +86,31 @@ vez de inyectarse por CI.
 - El ícono/manifest de la PWA (`app/public/pwa-*.png`) es un placeholder
   generado por `app/scripts/make-icons.mjs`, no un diseño de marca real.
 
-## Ideas pendientes para seguir puliendo (ninguna implementada todavía)
+## Ideas para seguir puliendo
 El usuario pidió (2026-07-22) seguir mejorando la app "hasta dejarla
-perfecta para ayuda de inversión en trading". Lista de candidatos que se
-propusieron, sin priorizar todavía — ver la conversación para cuál(es)
-eligió el usuario antes de implementar:
+perfecta para ayuda de inversión en trading" y confirmó que quiere las 4
+ideas propuestas ese día, empezando por la del gráfico. Estado:
 
-1. Gráfico/sparkline de precio por par en el tablero (ya se descargan los
-   cierres históricos en `marketCalc.js`, solo falta visualizarlos).
-2. Aviso de riesgo correlacionado: si hay varias operaciones abiertas en la
-   misma divisa en el Diario, avisar que es "una sola apuesta más grande"
-   (el texto ya lo dice, falta la lógica).
-3. Historial/seguimiento de qué tan bien acertaron los setups sugeridos
-   (mini backtest de las propias señales día a día).
-4. Notificación por correo al admin cuando llega una solicitud nueva
-   (necesitaría una Cloud Function o extensión de Firebase — costo/infra
-   nueva, evaluar si vale la pena para un solo admin).
-5. Pulir PWA: iconos de marca reales, splash screens iOS, mejor manejo
-   offline (cachear el último barrido para verlo sin conexión).
-6. Loaders tipo "skeleton" en vez de texto "Cargando…".
+1. ✅ **Hecho (2026-07-22):** gráfico/sparkline de precio por par + sus
+   números (precio actual y % de cambio en 20 días) en el tablero completo.
+   `Sparkline.jsx` (SVG puro, sin librería), datos vía `serie20`/`cambio20`
+   agregados en `marketCalc.js` (`computarBarrido` y `derivarVista`). Verde
+   si el cierre subió en esos 20 días, rojo si bajó. Solo en el tablero
+   completo, no en la pestaña Barrido compacta (a propósito, para no
+   saturar esa vista rápida).
+2. ⏳ Pendiente: aviso de riesgo correlacionado — si hay varias operaciones
+   abiertas en la misma divisa en el Diario, avisar que es "una sola
+   apuesta más grande" (el texto legal ya lo dice, falta la lógica).
+3. ⏳ Pendiente: explicaciones para quien no sabe de trading — textos
+   cortos in-app sobre qué es RSI, EMA, ATR, etc.
+4. ⏳ Pendiente: pulir apariencia de app instalada — ícono de marca real
+   (hoy es el placeholder de `make-icons.mjs`), mejor pantalla de carga,
+   y que el último barrido se pueda ver aunque no haya internet.
+
+Otras ideas mencionadas pero no elegidas todavía (no implementar sin
+confirmar primero): historial/backtest de los setups sugeridos,
+notificación por correo al admin ante solicitudes nuevas (necesitaría
+Cloud Functions — costo/infra nueva a evaluar).
 7. Explicaciones inline de términos (RSI, EMA, ATR) para quien no sabe de
    trading — tooltips o un glosario corto.
 8. Dominio propio en vez de `nestor-forex.github.io`.
