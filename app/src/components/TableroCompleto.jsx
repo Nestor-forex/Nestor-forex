@@ -1,9 +1,10 @@
-import { Fragment, useMemo } from 'react'
+import { useMemo } from 'react'
 import { limitaciones } from '../lib/fakeData'
 import { sesgoColor, tendColor, rsiColor, fmtDif } from '../lib/display'
 import { fmtFechaHoy, sesionActiva } from '../lib/format'
 import { generarReporteMd, descargarMd } from '../lib/reporte'
 import BarraFuerza from './BarraFuerza'
+import Sparkline from './Sparkline'
 
 function Chip({ children, color }) {
   return (
@@ -110,39 +111,44 @@ export default function TableroCompleto({ onVolver, loading, error, monedas, par
         </section>
 
         <section>
-          <h2 className="section-title">Pares — sesgo, tendencia y filtros</h2>
-          <div style={{ overflowX: 'auto' }}>
-            <div
-              className="mono"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '78px 60px 44px 64px 36px 46px',
-                gap: '6px 10px',
-                fontSize: 12,
-                alignItems: 'center',
-                minWidth: 340,
-              }}
-            >
-              <span style={{ color: 'var(--text-muted)', fontSize: 10.5 }}>PAR</span>
-              <span style={{ color: 'var(--text-muted)', fontSize: 10.5 }}>SESGO</span>
-              <span style={{ color: 'var(--text-muted)', fontSize: 10.5 }}>DIF</span>
-              <span style={{ color: 'var(--text-muted)', fontSize: 10.5 }}>TENDENCIA</span>
-              <span style={{ color: 'var(--text-muted)', fontSize: 10.5 }}>RSI</span>
-              <span style={{ color: 'var(--text-muted)', fontSize: 10.5 }}>ATR%*</span>
-              {pares.map((p) => (
-                <Fragment key={p.name}>
-                  <span style={{ fontWeight: 600 }}>{p.name}</span>
-                  <span style={{ color: sesgoColor(p.sesgo), fontWeight: 600 }}>{p.sesgo}</span>
-                  <span style={{ color: 'var(--text-secondary)' }}>{fmtDif(p.dif)}</span>
+          <h2 className="section-title">Pares — precio, tendencia y filtros</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {pares.map((p) => (
+              <div key={p.name} className="card" style={{ padding: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <span className="mono" style={{ fontWeight: 600, fontSize: 14 }}>
+                    {p.name}
+                  </span>
+                  <span className="mono" style={{ fontSize: 11.5, fontWeight: 700, color: sesgoColor(p.sesgo) }}>
+                    {p.sesgo}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <Sparkline values={p.serie20} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span className="mono" style={{ fontSize: 16, fontWeight: 700 }}>
+                      {p.precio.toFixed(p.dec)}
+                    </span>
+                    <span className="mono" style={{ fontSize: 12, fontWeight: 600, color: p.cambio20 >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                      {p.cambio20 >= 0 ? '+' : ''}
+                      {p.cambio20.toFixed(2)}% · 20d
+                    </span>
+                  </div>
+                </div>
+                <div className="mono" style={{ marginTop: 10, fontSize: 11.5, color: 'var(--text-secondary)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  <span>
+                    Dif <span>{fmtDif(p.dif)}</span>
+                  </span>
                   <span style={{ color: tendColor(p.tend) }}>{p.tend}</span>
-                  <span style={{ color: rsiColor(p.rsi) }}>{p.rsi}</span>
-                  <span style={{ color: 'var(--text-secondary)' }}>{p.atr.toFixed(2)}</span>
-                </Fragment>
-              ))}
-            </div>
+                  <span style={{ color: rsiColor(p.rsi) }}>RSI {p.rsi}</span>
+                  <span>ATR {p.atr.toFixed(2)}%</span>
+                </div>
+              </div>
+            ))}
           </div>
           <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>
-            * Volatilidad proxy cierre-a-cierre (tasas de referencia diarias, sin máximos/mínimos intradía).
+            Gráfico y variación (%) sobre los últimos 20 cierres diarios. ATR: volatilidad proxy cierre-a-cierre (tasas de
+            referencia diarias, sin máximos/mínimos intradía).
           </p>
         </section>
 
