@@ -4,6 +4,13 @@ export function fmtFechaHoy() {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
+export function fmtFecha(iso) {
+  if (!iso) return ''
+  const d = new Date(iso + 'T00:00:00')
+  const s = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })
+  return s
+}
+
 export function sesionActiva() {
   const h = new Date().getUTCHours()
   if (h >= 12 && h < 16) return 'Solape Londres-Nueva York (máxima liquidez)'
