@@ -137,7 +137,7 @@ export default function App() {
                 />
               )}
               {tab === 'diario' && (
-                <DiarioTab trades={diario.trades} cargando={diario.cargando} onGuardar={diario.guardar} onBorrar={diario.borrar} />
+                <DiarioTab trades={diario.trades} cargando={diario.cargando} onGuardar={diario.guardar} onBorrar={diario.borrar} onCerrar={diario.cerrar} />
               )}
               {tab === 'calc' && <CalculadoraTab ratesUSD={mercado.ratesUSD} loadingTasas={mercado.loading} errorTasas={mercado.error} />}
               {tab === 'admin' && esAdmin && (

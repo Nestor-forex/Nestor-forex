@@ -14,3 +14,8 @@ export const PAIR_NAMES = [
   'NZD/CHF',
   'NZD/CAD',
 ]
+
+// ['EUR', 'USD'] a partir de 'EUR/USD'.
+export function monedasDe(par) {
+  return par.split('/')
+}
