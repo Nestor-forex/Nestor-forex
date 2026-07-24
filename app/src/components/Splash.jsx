@@ -7,6 +7,24 @@ const TOP_Y = 60
 
 const TICKER_VALORES = ['70.111', '48.991', '31.010', '1.205', '2.87', '65,10', '20.399', '6.93', '139', '3.011', '11.20', '1.63']
 
+const BOLSAS = [
+  'NYSE',
+  'NASDAQ',
+  'LSE · Londres',
+  'EURONEXT',
+  'DAX · Fráncfort',
+  'SIX · Suiza',
+  'TSX · Toronto',
+  'B3 · São Paulo',
+  'BMV · México',
+  'JPX · Tokio',
+  'SSE · Shanghái',
+  'HKEX · Hong Kong',
+  'NSE · India',
+  'KRX · Corea',
+  'ASX · Sídney',
+]
+
 function generarEscena() {
   const n = 24
   const precios = []
@@ -151,6 +169,27 @@ export default function Splash({ nombreApp, onEntrar }) {
             'linear-gradient(180deg, oklch(0.13 0.015 255) 0%, oklch(0.13 0.015 255 / 0.35) 40%, oklch(0.13 0.015 255 / 0.92) 78%, oklch(0.13 0.015 255) 100%)',
         }}
       />
+
+      <div
+        className="mono"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          padding: '18px 24px 0',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '6px 14px',
+          fontSize: 10.5,
+          letterSpacing: '0.05em',
+          color: 'var(--text-muted)',
+        }}
+      >
+        {BOLSAS.map((b) => (
+          <span key={b}>{b}</span>
+        ))}
+      </div>
 
       <div style={{ position: 'relative', padding: '0 28px 56px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div className="eyebrow">TRADING · FX</div>
