@@ -1,6 +1,10 @@
 rules_version = '2';
 
-// Reglas de seguridad de Firestore para Nestor Forex.
+// Reglas de seguridad de Firestore compartidas por Nestor Forex y su app
+// hermana Nestor Forex Intradía (nestor-forex-intradia) — mismo proyecto de
+// Firebase, mismas cuentas de usuarios/administrador, pero cada app guarda
+// su diario de operaciones en su propia colección para no mezclar
+// estadísticas de swing con las de intradía.
 //
 // Cómo funciona el acceso:
 // - Cada persona solo puede leer y crear SU PROPIO documento en `users`.
@@ -9,7 +13,8 @@ rules_version = '2';
 // - Nadie puede aprobarse a sí mismo: al crear su solicitud, el estado
 //   queda forzado a 'pendiente', y un usuario normal no puede cambiar su
 //   propio campo `estado`.
-// - Las operaciones del diario (`trades`) de cada usuario solo son
+// - Las operaciones del diario de swing (`trades`, esta app) y las de
+//   intradía (`trades_intradia`, la app hermana) de cada usuario solo son
 //   visibles para ese mismo usuario, y solo si su cuenta está aprobada.
 //
 // Para cambiar quién es el administrador, actualiza el correo en
@@ -43,6 +48,11 @@ service cloud.firestore {
       allow delete: if esAdmin();
 
       match /trades/{tradeId} {
+        allow read, write: if esPropio(uid)
+          && get(/databases/$(database)/documents/users/$(uid)).data.estado == 'aprobado';
+      }
+
+      match /trades_intradia/{tradeId} {
         allow read, write: if esPropio(uid)
           && get(/databases/$(database)/documents/users/$(uid)).data.estado == 'aprobado';
       }
