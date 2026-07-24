@@ -106,11 +106,22 @@ ideas propuestas ese día, empezando por la del gráfico. Estado:
    PWA le haya servido una versión en caché. Si en la próxima sesión
    sigue sin verlo, confirmar primero con captura de pantalla del usuario
    antes de asumir que el código está mal.
-2. ⏳ Pendiente: aviso de riesgo correlacionado — si hay varias operaciones
-   abiertas en la misma divisa en el Diario, avisar que es "una sola
-   apuesta más grande" (el texto legal ya lo dice, falta la lógica).
-3. ⏳ Pendiente: explicaciones para quien no sabe de trading — textos
-   cortos in-app sobre qué es RSI, EMA, ATR, etc.
+2. ✅ **Hecho (2026-07-24):** aviso de riesgo correlacionado en el Diario.
+   Cada operación ahora se guarda como "abierta" o "cerrada" (checkbox
+   "Sigue abierta" en el formulario; las abiertas no piden resultado USD
+   todavía). Las operaciones abiertas muestran un botón "Cerrar" que pide
+   el resultado final y las pasa a cerradas (`useTrades.cerrar`, usa
+   `updateDoc`, ya cubierto por las reglas de Firestore existentes — no
+   hubo que tocar `firestore.rules`). Si 2+ operaciones abiertas comparten
+   una divisa (ej. EUR/USD y EUR/CHF comparten EUR), aparece una tarjeta
+   de aviso arriba de la lista explicando que es "una sola apuesta más
+   grande". Estadísticas (% ganadas, P/L) solo cuentan cerradas.
+   `monedasDe()` en `pairs.js`, lógica en `DiarioTab.jsx`.
+3. ✅ **Hecho (2026-07-24):** glosario in-app. Tarjeta colapsable
+   "¿Qué significan estos términos?" (`Glosario.jsx`) al inicio del
+   tablero completo, con definiciones simples de fuerza relativa, sesgo,
+   tendencia, RSI, ATR%, EMA20/50, R/B, soporte/resistencia, stop-loss,
+   take-profit e invalidación. Cerrada por defecto para no estorbar.
 4. ⏳ Pendiente: pulir apariencia de app instalada — ícono de marca real
    (hoy es el placeholder de `make-icons.mjs`), mejor pantalla de carga,
    y que el último barrido se pueda ver aunque no haya internet.

@@ -5,6 +5,7 @@ import { fmtFechaHoy, sesionActiva } from '../lib/format'
 import { generarReporteMd, descargarMd } from '../lib/reporte'
 import BarraFuerza from './BarraFuerza'
 import Sparkline from './Sparkline'
+import Glosario from './Glosario'
 
 function Chip({ children, color }) {
   return (
@@ -84,6 +85,8 @@ export default function TableroCompleto({ onVolver, loading, error, monedas, par
             <div>{loading ? '…' : corte}</div>
           </div>
         </section>
+
+        <Glosario />
 
         {error && (
           <div style={{ padding: '14px 18px', border: '1px solid oklch(0.62 0.13 25)', borderRadius: 6, color: 'oklch(0.8 0.1 25)', fontSize: 14 }}>
