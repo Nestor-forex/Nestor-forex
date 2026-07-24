@@ -1,7 +1,8 @@
 import { sesgoColor, tendColor } from '../lib/display'
+import { fmtFecha } from '../lib/format'
 import BarraFuerza from './BarraFuerza'
 
-export default function BarridoTab({ loading, error, monedas, pares, corte, onVerTablero }) {
+export default function BarridoTab({ loading, error, stale, guardadoEl, monedas, pares, corte, onVerTablero }) {
   const paresOrdenados = [...pares].sort((a, b) => Math.abs(b.dif) - Math.abs(a.dif))
 
   return (
@@ -13,6 +14,11 @@ export default function BarridoTab({ loading, error, monedas, pares, corte, onVe
         </span>
       </div>
 
+      {stale && (
+        <div style={{ padding: 12, border: '1px solid var(--amber)', borderRadius: 8, color: 'var(--amber)', fontSize: 12.5, lineHeight: 1.5 }}>
+          ⚠ Sin conexión — mostrando el barrido guardado del {fmtFecha(guardadoEl)}.
+        </div>
+      )}
       {error && (
         <div style={{ padding: 12, border: '1px solid oklch(0.62 0.13 25)', borderRadius: 8, color: 'oklch(0.8 0.1 25)', fontSize: 13 }}>{error}</div>
       )}

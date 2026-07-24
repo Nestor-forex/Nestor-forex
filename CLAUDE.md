@@ -122,9 +122,27 @@ ideas propuestas ese día, empezando por la del gráfico. Estado:
    tablero completo, con definiciones simples de fuerza relativa, sesgo,
    tendencia, RSI, ATR%, EMA20/50, R/B, soporte/resistencia, stop-loss,
    take-profit e invalidación. Cerrada por defecto para no estorbar.
-4. ⏳ Pendiente: pulir apariencia de app instalada — ícono de marca real
-   (hoy es el placeholder de `make-icons.mjs`), mejor pantalla de carga,
-   y que el último barrido se pueda ver aunque no haya internet.
+4. ✅ **Hecho (2026-07-24):** pulir apariencia de app instalada.
+   - Ícono real: `make-icons.mjs` ahora dibuja 3 barras ascendientes en
+     el verde de la app (motivo de tendencia alcista/velas) en vez del
+     cuadrado sólido de antes. Se le preguntó al usuario si quería pasar
+     su propio logo pero no respondió esa parte del mensaje, así que se
+     hizo este diseño simple por defecto — si más adelante Néstor quiere
+     un logo propio, se reemplaza regenerando `app/public/pwa-*.png` (o
+     encargándole el diseño a alguien y pegando los PNG directo).
+   - Pantalla de carga con marca: `CargandoApp.jsx` (eyebrow + nombre de
+     la app + 3 barritas animadas) reemplaza el texto plano "Cargando…"
+     tanto al abrir la app (mientras Firebase Auth resuelve la sesión)
+     como mientras se carga el perfil de Firestore justo después de
+     iniciar sesión. `Pendiente.jsx` (con su tarjeta ámbar) quedó solo
+     para el estado real de "solicitud pendiente de aprobación".
+   - Barrido visible sin internet: `useMarketData.js` ahora guarda en
+     caché (localStorage) la última descarga exitosa sin importar el
+     día, y si el fetch falla (sin conexión) la reutiliza mostrando un
+     aviso ámbar "Sin conexión — mostrando el barrido guardado del
+     [fecha]" en la pestaña Barrido y en el tablero completo. Antes solo
+     se usaba la caché si era del mismo día; si cambiaba el día sin
+     internet, la app mostraba error en vez de datos.
 
 Otras ideas mencionadas pero no elegidas todavía (no implementar sin
 confirmar primero): historial/backtest de los setups sugeridos,

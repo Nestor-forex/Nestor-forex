@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Splash from './components/Splash'
+import CargandoApp from './components/CargandoApp'
 import Auth from './components/Auth'
 import Pendiente from './components/Pendiente'
 import Header from './components/Header'
@@ -70,10 +71,8 @@ export default function App() {
   if (cargandoAuth) {
     return (
       <div className="app-frame">
-        <div className="app-screen" style={{ alignItems: 'center', justifyContent: 'center' }}>
-          <div className="mono" style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-            Cargando…
-          </div>
+        <div className="app-screen">
+          <CargandoApp nombreApp={NOMBRE_APP} />
         </div>
       </div>
     )
@@ -114,9 +113,7 @@ export default function App() {
           <Auth nombreApp={NOMBRE_APP} msg={msgAuth} onRegistrar={registrarYSeguir} onIngresar={ingresarYSeguir} />
         )}
 
-        {authUser && perfilEstado === 'cargando' && (
-          <Pendiente nombreApp={NOMBRE_APP} mensaje="Cargando tu perfil…" onSalir={salirYVolver} />
-        )}
+        {authUser && perfilEstado === 'cargando' && <CargandoApp nombreApp={NOMBRE_APP} />}
 
         {authUser && perfilEstado === 'pendiente' && (
           <Pendiente nombreApp={NOMBRE_APP} mensaje="Tu solicitud queda pendiente hasta que Néstor la autorice." onSalir={salirYVolver} />
@@ -130,6 +127,8 @@ export default function App() {
                 <BarridoTab
                   loading={mercado.loading}
                   error={mercado.error}
+                  stale={mercado.stale}
+                  guardadoEl={mercado.guardadoEl}
                   monedas={mercado.monedas}
                   pares={mercado.pares}
                   corte={mercado.corte}
@@ -153,6 +152,8 @@ export default function App() {
             onVolver={() => setTab('barrido')}
             loading={mercado.loading}
             error={mercado.error}
+            stale={mercado.stale}
+            guardadoEl={mercado.guardadoEl}
             monedas={mercado.monedas}
             pares={mercado.pares}
             compras={mercado.compras}

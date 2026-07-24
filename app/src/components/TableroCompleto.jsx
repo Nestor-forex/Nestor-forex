@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { limitaciones } from '../lib/fakeData'
 import { sesgoColor, tendColor, rsiColor, fmtDif } from '../lib/display'
-import { fmtFechaHoy, sesionActiva } from '../lib/format'
+import { fmtFechaHoy, fmtFecha, sesionActiva } from '../lib/format'
 import { generarReporteMd, descargarMd } from '../lib/reporte'
 import BarraFuerza from './BarraFuerza'
 import Sparkline from './Sparkline'
@@ -43,7 +43,7 @@ function RazonList({ items, emptyText }) {
   )
 }
 
-export default function TableroCompleto({ onVolver, loading, error, monedas, pares, compras, ventas, vigilancia, setups, corte }) {
+export default function TableroCompleto({ onVolver, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, corte }) {
   const fecha = useMemo(fmtFechaHoy, [])
   const sesion = useMemo(sesionActiva, [])
 
@@ -87,6 +87,12 @@ export default function TableroCompleto({ onVolver, loading, error, monedas, par
         </section>
 
         <Glosario />
+
+        {stale && (
+          <div style={{ padding: '12px 14px', border: '1px solid var(--amber)', borderRadius: 6, color: 'var(--amber)', fontSize: 13, lineHeight: 1.5 }}>
+            ⚠ Sin conexión — mostrando el barrido guardado del {fmtFecha(guardadoEl)}.
+          </div>
+        )}
 
         {error && (
           <div style={{ padding: '14px 18px', border: '1px solid oklch(0.62 0.13 25)', borderRadius: 6, color: 'oklch(0.8 0.1 25)', fontSize: 14 }}>
