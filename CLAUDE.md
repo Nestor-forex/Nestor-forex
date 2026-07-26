@@ -143,6 +143,33 @@ ideas propuestas ese día, empezando por la del gráfico. Estado:
      [fecha]" en la pestaña Barrido y en el tablero completo. Antes solo
      se usaba la caché si era del mismo día; si cambiaba el día sin
      internet, la app mostraba error en vez de datos.
+5. ✅ **Hecho (2026-07-26):** rediseño de la portada + nombre "SWING".
+   El usuario compartió una imagen de referencia nueva (fondo casi negro
+   con velas verdes/rojas, línea celeste y línea dorada, franja superior
+   con bolsas y puntitos de color, título "NESTOR FOREX SWING", botón
+   degradado celeste→verde y "Accede a tu cuenta" debajo). Igual que en
+   el rediseño anterior (PR #6), no fue posible extraer el archivo exacto
+   de la imagen desde este entorno, así que se recreó el mismo estilo en
+   código (`Splash.jsx`, SVG puro).
+   - Franja superior: ahora son 7 bolsas (NYSE, NASDAQ, LSE, TSE, SSE,
+     Euronext, HKEX) con un punto verde/rojo decorativo cada una — es
+     solo estético (fijo, no refleja horario real de apertura), igual
+     que la lista de bolsas anterior.
+   - Fondo: gradientes radiales negro/verde azulado/violeta en vez del
+     lavado rojizo de PR #6; línea de precio ahora celeste en vez de
+     blanca.
+   - Etiquetas flotantes de "+X.XX%" cerca de algunas velas: sí son datos
+     reales (el % de cambio de esa vela dentro de la serie sintética de
+     la portada), no inventados sueltos.
+   - El usuario confirmó que quiere "SWING" en el nombre de la app en
+     todos lados, no solo en la portada: `NOMBRE_APP` en `App.jsx`
+     (afecta también `Header.jsx`, `CargandoApp.jsx`, `Pendiente.jsx` que
+     lo reciben como prop), el `<title>` de `index.html`, y
+     `name`/`short_name` del manifest PWA en `vite.config.js` — todos
+     ahora dicen "Nestor Forex Swing"/"NESTOR FOREX SWING".
+   - Aclaración del usuario: existe una app hermana "Nestor Forex
+     Intradía" en otro repositorio (`nestor-forex/nestor-forex-intradia`,
+     ver PR #7) — no tocar ese repo desde aquí.
 
 Otras ideas mencionadas pero no elegidas todavía (no implementar sin
 confirmar primero): historial/backtest de los setups sugeridos,

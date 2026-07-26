@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'Nestor Forex',
-        short_name: 'Nestor Forex',
+        name: 'Nestor Forex Swing',
+        short_name: 'Nestor Forex Swing',
         description: 'Barrido diario del mercado Forex, diario de operaciones y gestión de riesgo.',
         theme_color: '#23262f',
         background_color: '#23262f',
