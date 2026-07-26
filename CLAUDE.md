@@ -1,9 +1,21 @@
-# Nestor Forex — memoria del proyecto
+# Nestor Forex Swing — memoria del proyecto
 
 App móvil de trading Forex para Néstor (administrador) y miembros invitados.
 Barrido diario del mercado, diario de operaciones y calculadora de riesgo.
 Ver `README.md` para el handoff de diseño original y `app/README.md` para
 el README genérico de Vite.
+
+**Renombrada de "Nestor Forex" a "Nestor Forex Swing" (2026-07-26)** para
+distinguirla de su app hermana **Nestor Forex Intradía**
+(`nestor-forex/nestor-forex-intradia`, repositorio separado): esta es la
+de trading de posición (horas a días, datos del BCE una vez al día), la
+otra es para intradía (velas de 1 hora, precio en vivo). Mismo cambio de
+nombre en `App.jsx` (`NOMBRE_APP`), `index.html` y `vite.config.js`
+(manifest de la PWA). La portada (`Splash.jsx`) ahora usa la imagen real
+`app/public/trading_app_ui_v2.png` (globo + velas 3D) que subió el usuario,
+recortada para mostrar solo el arte del medio — el título y el botón
+"Entrar" son código real (no parte de la imagen) para que funcionen de
+verdad, con paleta cian/blanco/verde a juego con esa imagen.
 
 ## Estado actual: fases 1–3 completas y publicadas
 
