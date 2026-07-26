@@ -16,7 +16,7 @@ import { useMembers } from './lib/useMembers'
 import { useTrades } from './lib/useTrades'
 import { useMarketData } from './lib/useMarketData'
 
-const NOMBRE_APP = 'NESTOR FOREX'
+const NOMBRE_APP = 'NESTOR FOREX SWING'
 
 function SinConfigurar() {
   return (
