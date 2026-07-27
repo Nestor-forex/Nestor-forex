@@ -2,7 +2,7 @@ name: Reporte diario del barrido
 
 on:
   schedule:
-    - cron: '0 13 * * *' # 8:00 a.m. hora de Colombia (UTC-5)
+    - cron: '30 15 * * 1-5' # 10:30 a.m. hora de Colombia (UTC-5), lunes a viernes — después de que el BCE publica el cierre del día
   workflow_dispatch:
 
 jobs:
