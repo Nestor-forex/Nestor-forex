@@ -164,6 +164,83 @@ Cloud Functions — costo/infra nueva a evaluar).
    trading — tooltips o un glosario corto.
 8. Dominio propio en vez de `nestor-forex.github.io`.
 
+## Landing page de venta / suscripción (2026-07-27, en curso)
+
+El usuario pidió una **página web de presentación/venta de las señales**
+(no las señales en sí — esas solo se ven dentro de las apps), publicada
+como un **Artifact** (página HTML autónoma, no parte del repo/deploy de
+GitHub Pages). Esto es un encargo aparte de las apps Swing/Intradía.
+
+### Requisitos del usuario, tal cual los dio
+
+**Mensaje 1 (el pedido original, en sus palabras):** quiere que la página
+explique el beneficio de las dos apps para señales (swing e intradía) que
+llegan "a las 08:00 am y 05:00 pm respectivamente", para que el suscriptor
+copie y entre en la operación. Debe explicar los pasos para pagar la
+mensualidad vía Binance, y que el usuario entienda que **se le retira el
+acceso si no renueva el pago a tiempo**. Presentación profesional, vistosa
+e interesante, con información detallada de qué hacen para dar las mejores
+señales. Por ahora cubren swing e intradía; más adelante ampliarán a otros
+activos y estrategias.
+
+**Mensaje 2 (recomendación "de industria" que el usuario pegó y pidió
+guardar tal cual):** el usuario compartió un análisis (aparentemente de
+otra IA/fuente) recomendando estructura y estilo para la página, y pidió
+explícitamente recordarlo tal cual quedó. Resumen fiel de esos puntos:
+
+- **Estilo visual:** modo oscuro tipo "institucional-tech" (azul marino/negro),
+  acentos vibrantes controlados para CTAs, tipografía sans limpia, gráficos
+  de velas/redes abstractas en vez de fotos de stock.
+- **Estructura de landing:** Hero (titular orientado a beneficio + CTA) →
+  Problema vs. Solución → Beneficios clave (claridad de señales con
+  entrada/SL/TP, doble estrategia, gestión de riesgo con R:B mínimo 1:2) →
+  Explicación detallada de cada app → Precios (plan Intradía, plan Swing,
+  plan Completo con descuento) → Flujo de pago Binance paso a paso →
+  Política de renovación/cancelación como FAQ → Señales de confianza
+  (disclaimer legal de riesgo, aviso de privacidad, contacto visible,
+  transparencia del equipo).
+- **Pago Binance sugerido:** elegir plan → abrir Binance, ir a "Pay" →
+  escanear QR / ingresar ID del merchant → enviar comprobante/hash por
+  WhatsApp/Telegram/correo → activación en menos de 1 hora con credenciales
+  y enlaces de descarga.
+- **Renovación:** ciclo de 30 días desde la confirmación del pago, sin cobro
+  automático; si no se renueva antes del vencimiento el acceso se desactiva
+  solo; recordatorio 3 días antes del vencimiento.
+- **Disclaimer sugerido:** el trading en Forex conlleva alto riesgo, puede
+  no ser adecuado para todos, los análisis son informativos/educativos, y
+  resultados pasados no garantizan resultados futuros.
+
+⚠️ **Contradicción sin resolver entre los dos mensajes:** el mensaje 1 dice
+"señales swing e intradía a las 08:00 am y 05:00 pm respectivamente" (Swing
+= 8am, Intradía = 5pm). El mensaje 2 dice lo contrario: "App 1: Señales
+Intradía (Morning Edition) — 08:00 AM" y "App 2: Señales Swing (Evening
+Edition) — 05:00 PM" (Intradía = 8am, Swing = 5pm). Para la primera versión
+del Artifact se usó el mapeo del mensaje 2 (Intradía=8am/mañana,
+Swing=5pm/tarde) por ser el más reciente y el más detallado, y porque tiene
+más sentido operativo (intradía se publica antes de que abra la sesión del
+día; swing se publica después del cierre diario, cuando las velas
+diarias/semanales ya cerraron). **Si esto no es correcto, hay que
+corregirlo** — confirmar con el usuario cuál horario es el real antes de
+publicar en un canal más permanente.
+
+### Datos que el usuario NO confirmó (se usaron valores por defecto)
+Se preguntó dos veces (precio de los planes, cómo mostrar el pago Binance,
+canal de contacto, si ya existe link de la app Intradía) y no hubo
+respuesta ninguna de las dos veces, así que se avanzó con valores por
+defecto marcados para editar después:
+- **Precios:** placeholders de ejemplo, claramente editables en el código.
+- **Pago Binance:** flujo seguro sin exponer ID/QR real públicamente (se
+  pide escribir por correo/WhatsApp para recibirlo) — evita que se clone
+  un QR falso.
+- **Contacto:** correo `nesdian2204@gmail.com` (el único dato de contacto
+  real disponible).
+- **App Intradía:** marcada como "Próximamente" (no se tiene link
+  publicado); la app Swing sí enlaza a
+  `https://nestor-forex.github.io/Nestor-forex/`.
+
+Estos valores por defecto quedan pendientes de que Néstor los confirme o
+corrija en una próxima sesión.
+
 ## Convenciones de trabajo en este repo
 - Rama de trabajo: `claude/forex-barrido-diario-app-ws3bbu`. Si ya se
   fusionó su PR, reiniciarla desde `main` antes de seguir (no apilar commits
