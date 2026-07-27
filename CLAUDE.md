@@ -231,6 +231,22 @@ no ha cerrado — ya no tiene sentido decir que el barrido llega después
 del cierre del día. Si en el futuro se vuelve a mover el horario de
 Swing, revisar ese mismo texto por la misma razón.
 
+**Comportamiento real de datos en ambas apps (2026-07-27, aclarado por el
+usuario):** cada app busca sus propios datos solo cuando alguien la abre
+(no hay push ni backend empujando datos solo). Además, **Intradía se
+sigue actualizando cada 15 minutos mientras la tienes abierta**, lo que
+la acerca a señales en tiempo real y permite operar a cualquier hora del
+día. Con esto el usuario pidió agregar dos aclaraciones a la landing:
+- Recomendación: cerrar las operaciones antes de que cierre el mercado,
+  aproximadamente a las 3:00 pm.
+- La entrada de las 8:00 am sigue siendo la ideal para abrir operaciones,
+  por el empalme entre las sesiones de Londres y Nueva York — así se
+  aprovecha el arranque/inicio del mercado con las primeras señales de
+  Nestor Forex del día.
+Se agregó como nota destacada en la tarjeta de la app Intradía del
+Artifact, más una línea general aclarando que ambas apps solo buscan
+datos al abrirlas.
+
 ### Datos que el usuario NO confirmó (se usaron valores por defecto)
 Se preguntó dos veces (precio de los planes, cómo mostrar el pago Binance,
 canal de contacto, si ya existe link de la app Intradía) y no hubo
