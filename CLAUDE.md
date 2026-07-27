@@ -220,6 +220,17 @@ en Swing — fuerza relativa entre divisas — pero adaptada a velas de 1
 hora en vez de cierres diarios). Se agregó como viñeta en la tarjeta de
 Intradía del Artifact.
 
+⚠️ **Cambio de horario (2026-07-27, el mismo día):** el usuario pidió mover
+el horario de **Swing de 5:00 pm a 10:30 am** (Intradía se queda igual, a
+las 8:00 am). Ya se actualizó en el Artifact: el arco de 24h (posición del
+marcador teal, gradiente), la tarjeta de la app Swing, el mock de señal,
+los tres planes de precio y la leyenda del arco. También se ajustó el
+texto "con el cierre diario ya confirmado" a "con el cierre del día
+anterior ya confirmado", porque a las 10:30 am el día de trading todavía
+no ha cerrado — ya no tiene sentido decir que el barrido llega después
+del cierre del día. Si en el futuro se vuelve a mover el horario de
+Swing, revisar ese mismo texto por la misma razón.
+
 ### Datos que el usuario NO confirmó (se usaron valores por defecto)
 Se preguntó dos veces (precio de los planes, cómo mostrar el pago Binance,
 canal de contacto, si ya existe link de la app Intradía) y no hubo
