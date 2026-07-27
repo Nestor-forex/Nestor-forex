@@ -247,6 +247,29 @@ Se agregó como nota destacada en la tarjeta de la app Intradía del
 Artifact, más una línea general aclarando que ambas apps solo buscan
 datos al abrirlas.
 
+**Corrección (2026-07-27): Intradía ya está publicada, no es "Próximamente".**
+El usuario aclaró que la app Intradía ya está construida y funcionando
+(la creó en otra sesión de Claude Code, en el repo separado
+`nestor-forex/nestor-forex-intradia`), con este detalle técnico real
+que dio tal cual y que ya quedó reflejado en las tarjetas del Artifact:
+
+| | Nestor Forex Swing | Nestor Forex Intradía |
+|---|---|---|
+| Para qué sirve | Operaciones de horas a días | Abrir y cerrar el mismo día |
+| Fuente de precios | BCE (Frankfurter), 1 cierre oficial al día | Twelve Data, velas de 1 hora |
+| Tendencia | EMA20 / EMA50 | EMA9 / EMA21 (más rápidas) |
+| RSI / ATR | Sobre cierres diarios | Sobre velas de 1 hora |
+| Fuerza relativa | Ventanas de 1, 5 y 20 días | Ventanas de 1, 4 y 24 horas |
+| Extra | — | Puntos pivote de sesión |
+
+Confirmó por `AskUserQuestion` que la app Intradía está publicada en
+GitHub Pages con el mismo patrón que Swing:
+`https://nestor-forex.github.io/nestor-forex-intradia/` — ya se usó ese
+enlace real en la tarjeta "Abrir la app Intradía →" del Artifact, se
+quitó la insignia "Próximamente" y el texto "App en preparación", y se
+actualizaron las viñetas de ambas tarjetas con estos datos técnicos
+reales en vez de descripciones genéricas.
+
 ### Datos que el usuario NO confirmó (se usaron valores por defecto)
 Se preguntó dos veces (precio de los planes, cómo mostrar el pago Binance,
 canal de contacto, si ya existe link de la app Intradía) y no hubo
@@ -258,9 +281,6 @@ defecto marcados para editar después:
   un QR falso.
 - **Contacto:** correo `nesdian2204@gmail.com` (el único dato de contacto
   real disponible).
-- **App Intradía:** marcada como "Próximamente" (no se tiene link
-  publicado); la app Swing sí enlaza a
-  `https://nestor-forex.github.io/Nestor-forex/`.
 
 Estos valores por defecto quedan pendientes de que Néstor los confirme o
 corrija en una próxima sesión.
