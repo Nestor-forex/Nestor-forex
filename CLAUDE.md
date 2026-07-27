@@ -210,18 +210,15 @@ explícitamente recordarlo tal cual quedó. Resumen fiel de esos puntos:
   no ser adecuado para todos, los análisis son informativos/educativos, y
   resultados pasados no garantizan resultados futuros.
 
-⚠️ **Contradicción sin resolver entre los dos mensajes:** el mensaje 1 dice
-"señales swing e intradía a las 08:00 am y 05:00 pm respectivamente" (Swing
-= 8am, Intradía = 5pm). El mensaje 2 dice lo contrario: "App 1: Señales
-Intradía (Morning Edition) — 08:00 AM" y "App 2: Señales Swing (Evening
-Edition) — 05:00 PM" (Intradía = 8am, Swing = 5pm). Para la primera versión
-del Artifact se usó el mapeo del mensaje 2 (Intradía=8am/mañana,
-Swing=5pm/tarde) por ser el más reciente y el más detallado, y porque tiene
-más sentido operativo (intradía se publica antes de que abra la sesión del
-día; swing se publica después del cierre diario, cuando las velas
-diarias/semanales ya cerraron). **Si esto no es correcto, hay que
-corregirlo** — confirmar con el usuario cuál horario es el real antes de
-publicar en un canal más permanente.
+✅ **Horarios confirmados por el usuario (2026-07-27):** Intradía = 08:00 am,
+Swing = 05:00 pm. Coincide con el mapeo del mensaje 2, que es el que ya
+quedó usado en la primera versión del Artifact — no hubo que corregir nada.
+
+El usuario también pidió (2026-07-27) agregar que **la app Intradía
+también tiene el barrido/screener diario de mercado** (la misma idea que
+en Swing — fuerza relativa entre divisas — pero adaptada a velas de 1
+hora en vez de cierres diarios). Se agregó como viñeta en la tarjeta de
+Intradía del Artifact.
 
 ### Datos que el usuario NO confirmó (se usaron valores por defecto)
 Se preguntó dos veces (precio de los planes, cómo mostrar el pago Binance,
