@@ -43,7 +43,7 @@ function RazonList({ items, emptyText }) {
   )
 }
 
-export default function TableroCompleto({ onVolver, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, corte }) {
+export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, corte }) {
   const fecha = useMemo(fmtFechaHoy, [])
   const sesion = useMemo(sesionActiva, [])
 
@@ -210,6 +210,16 @@ export default function TableroCompleto({ onVolver, loading, error, stale, guard
                   <span style={{ color: s.rrOk ? 'var(--green)' : 'var(--amber)' }}>{s.rr}</span>
                 </div>
                 <p style={{ margin: '12px 0 0', fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5 }}>Invalida: {s.inval}</p>
+                {onVerSetup && (
+                  <button
+                    type="button"
+                    className="btn"
+                    style={{ marginTop: 12, width: '100%' }}
+                    onClick={() => onVerSetup(s)}
+                  >
+                    Ver la señal en detalle →
+                  </button>
+                )}
               </div>
             ))}
           </div>
