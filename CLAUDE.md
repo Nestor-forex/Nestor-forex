@@ -49,6 +49,7 @@ app/                          # la app real (React 19 + Vite 8)
   src/
     App.jsx                   # estado raíz: splash/auth/pendiente/app, tabs
     components/                # una pantalla o pieza de UI por archivo
+      SetupDetalle.jsx         # detalle de un setup: gráfico + niveles + R/B (ver idea 5)
     lib/
       firebase.js              # init de Firebase desde import.meta.env
       useAuthUser.js           # sesión + perfil Firestore en vivo, registrar/ingresar/salir
@@ -84,6 +85,12 @@ desplegar desde `main` — un push a cualquier otra rama compila bien pero el
 job `deploy` falla al instante (sin logs) por política de GitHub, no por un
 bug. Eso es normal y esperado; se resuelve fusionando a `main`.
 
+Como la rama de trabajo actual **no** está en esa lista de `branches`, un
+push a ella no dispara ningún workflow: en los PR salen **cero
+verificaciones**, y eso es lo normal aquí, no una falla. La verificación
+hay que hacerla a mano (compilar, y si el cambio es visual, abrirlo en un
+navegador y mirar capturas).
+
 No pude crear "Variables"/"Secrets" del repo desde este entorno (el proxy de
 red de la sesión bloquea esos endpoints de la API de GitHub Actions) — por
 eso la config de Firebase quedó commiteada directo en `.env.production` en
@@ -118,6 +125,14 @@ ideas propuestas ese día, empezando por la del gráfico. Estado:
    PWA le haya servido una versión en caché. Si en la próxima sesión
    sigue sin verlo, confirmar primero con captura de pantalla del usuario
    antes de asumir que el código está mal.
+   📌 **Lección confirmada (2026-07-30):** el mismo "no aparece nada
+   nuevo" volvió a pasar con la pantalla de detalle, y la captura que
+   mandó Néstor lo resolvió en un minuto: estaba en el tablero completo
+   correcto, pero **en la app de Swing buscando algo que solo existía en
+   Intradía**. No era caché ni un bug. Moraleja doble: (a) pedir captura
+   antes de teorizar, y (b) al terminar un cambio, decir explícitamente
+   **en cuál de las dos apps** quedó — son casi idénticas por dentro y
+   Néstor las usa las dos.
 2. ✅ **Hecho (2026-07-24):** aviso de riesgo correlacionado en el Diario.
    Cada operación ahora se guarda como "abierta" o "cerrada" (checkbox
    "Sigue abierta" en el formulario; las abiertas no piden resultado USD
@@ -156,18 +171,71 @@ ideas propuestas ese día, empezando por la del gráfico. Estado:
      se usaba la caché si era del mismo día; si cambiaba el día sin
      internet, la app mostraba error en vez de datos.
 
+5. ✅ **Hecho (2026-07-30):** pantalla de detalle de la señal
+   (`SetupDetalle.jsx`). Cada setup del tablero completo tiene un botón
+   "Ver la señal en detalle →" que abre una pantalla propia con el gráfico
+   de los últimos 20 cierres y los niveles dibujados encima: stop, precio
+   actual y objetivo como pastillas a la derecha; soporte y resistencia
+   como líneas de contexto. El color va por **lo que significa en plata**
+   (rojo el stop, verde el objetivo), no por dirección del precio. Trae la
+   relación riesgo/beneficio como barra proporcional con las distancias en
+   pips (ámbar y con aviso si baja de 1:1.5), el escenario en texto, la
+   tabla de niveles, el porqué (fuerza, RSI, ATR) y la invalidación.
+   "Anotar en el Diario" precarga par, dirección y una nota con los
+   niveles, y la deja como operación abierta (el lote no, porque depende
+   de cuánto se quiera arriesgar).
+   - Se hizo **primero en Intradía** (PR #5 de ese repo) y después se
+     portó aquí (PR #14). Aquí **no lleva la línea del pivote** porque el
+     barrido diario no lo calcula, usa EMA20 en vez de EMA9, y el pie del
+     gráfico habla de días en vez de horas.
+   - `mkSetup` en `marketCalc.js` adjunta un objeto `crudo` con los datos
+     sin formatear. Los campos de texto que ya existían quedan intactos,
+     así que el tablero y el reporte `.md` siguen igual — cambio aditivo.
+   - El setup abierto se guarda por **nombre + lado**, no por objeto, para
+     que la pantalla siga los datos si el barrido se recarga.
+   - A propósito **no dibuja velas** (la fuente da un cierre por día, sin
+     máximo ni mínimo: serían inventadas) y **no tiene botones de
+     comprar/vender** (la app no está conectada a ningún bróker).
+   - Revisar esta pantalla en un navegador de verdad valió la pena: en
+     Intradía sacó a la luz dos errores que el build no ve (etiquetas de
+     soporte/resistencia tachadas por las líneas que se pintan después, y
+     un `id` de degradado fijo que hacía que dos gráficos en la misma
+     página compartieran color — ahora `useId()`). Si se toca esta
+     pantalla, volver a revisarla con capturas, no solo compilar.
+6. ✅ **Hecho (2026-07-30):** arreglada la dirección de arranque del ícono
+   instalable. El manifest tenía `start_url` y `scope` fijos en `'/'`, pero
+   la app se sirve en `/Nestor-forex/`, así que el ícono de la pantalla de
+   inicio abría la raíz del dominio (donde no hay nada) en vez de la app.
+   **La app hermana tenía el mismo error** y se corrigió igual. Ahora
+   ambos campos se **omiten** en `vite.config.js` para que
+   `vite-plugin-pwa` los derive del `base` de Vite (su comportamiento por
+   defecto), que el workflow pasa como `--base=/<nombre-del-repo>/`. Así
+   queda bien en producción y en dev local (donde el base es `/`), sin
+   una ruta escrita a mano que alguien tenga que recordar actualizar.
+   ⚠️ Un ícono ya instalado guarda el `start_url` viejo: hay que
+   **desinstalar y volver a instalar** la app, recargar no basta.
+
 Otras ideas mencionadas pero no elegidas todavía (no implementar sin
-confirmar primero): historial/backtest de los setups sugeridos,
-notificación por correo al admin ante solicitudes nuevas (necesitaría
-Cloud Functions — costo/infra nueva a evaluar).
-7. Explicaciones inline de términos (RSI, EMA, ATR) para quien no sabe de
-   trading — tooltips o un glosario corto.
-8. Dominio propio en vez de `nestor-forex.github.io`.
+confirmar primero):
+- Historial/backtest de los setups sugeridos.
+- Notificación por correo al admin ante solicitudes nuevas (necesitaría
+  Cloud Functions — costo/infra nueva a evaluar).
+- Dominio propio en vez de `nestor-forex.github.io`.
+- (Explicaciones inline de términos para quien no sabe de trading quedó
+  cubierta en buena parte por el glosario de la idea 3; si se retoma,
+  sería para tooltips por término dentro de las tablas.)
 
 ## Convenciones de trabajo en este repo
-- Rama de trabajo: `claude/forex-barrido-diario-app-ws3bbu`. Si ya se
-  fusionó su PR, reiniciarla desde `main` antes de seguir (no apilar commits
-  nuevos sobre historial ya fusionado).
+- Rama de trabajo: **`claude/nestor-forex-review-pnue7l`** (la anterior,
+  `claude/forex-barrido-diario-app-ws3bbu`, es la que sigue nombrada en
+  `preview-pages.yml`). Si ya se fusionó su PR, reiniciarla desde `main`
+  antes de seguir (no apilar commits nuevos sobre historial ya fusionado):
+  `git fetch origin main && git checkout -B <rama> origin/main`.
+  Ojo: los PR se fusionan con **squash**, así que el commit viejo de la
+  rama NO queda como ancestro de `main` y el siguiente push necesita
+  `--force-with-lease`. Antes de forzar, comprobar que la rama remota solo
+  tenga historial ya fusionado (`git diff <tip-remoto> origin/main` sobre
+  los archivos que tocó debe salir vacío).
 - El usuario (Néstor) **no sabe programar** — cada explicación debe ser en
   términos simples, sin jerga, y cada paso que requiera clics en GitHub o
   Firebase debe darse número por número, indicando exactamente dónde hacer
