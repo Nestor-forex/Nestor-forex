@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { computarBarrido, derivarVista } from './marketCalc'
+import { useT } from './i18n'
 
 const CACHE_KEY = 'nf_market_cache_v1'
 const hoyISO = () => new Date().toISOString().slice(0, 10)
@@ -43,6 +44,7 @@ async function obtenerRates() {
 // Descarga (o reutiliza la caché del día) y calcula todo el barrido.
 // thr = umbral de diferencial para clasificar sesgo, topN = setups por lado.
 export function useMarketData({ thr = 0.5, topN = 3 } = {}) {
+  const t = useT()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [data, setData] = useState(null)
@@ -79,7 +81,7 @@ export function useMarketData({ thr = 0.5, topN = 3 } = {}) {
     }
   }, [])
 
-  const vista = data ? derivarVista(data, { thr, topN }) : null
+  const vista = data ? derivarVista(data, { thr, topN, t }) : null
 
   return {
     loading,
