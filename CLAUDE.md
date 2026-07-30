@@ -225,6 +225,127 @@ confirmar primero):
   cubierta en buena parte por el glosario de la idea 3; si se retoma,
   sería para tooltips por término dentro de las tablas.)
 
+## Landing page de venta / suscripción (2026-07-27, en curso)
+
+El usuario pidió una **página web de presentación/venta de las señales**
+(no las señales en sí — esas solo se ven dentro de las apps), publicada
+como un **Artifact** (página HTML autónoma, no parte del repo/deploy de
+GitHub Pages). Esto es un encargo aparte de las apps Swing/Intradía.
+
+### Requisitos del usuario, tal cual los dio
+
+**Mensaje 1 (el pedido original, en sus palabras):** quiere que la página
+explique el beneficio de las dos apps para señales (swing e intradía) que
+llegan "a las 08:00 am y 05:00 pm respectivamente", para que el suscriptor
+copie y entre en la operación. Debe explicar los pasos para pagar la
+mensualidad vía Binance, y que el usuario entienda que **se le retira el
+acceso si no renueva el pago a tiempo**. Presentación profesional, vistosa
+e interesante, con información detallada de qué hacen para dar las mejores
+señales. Por ahora cubren swing e intradía; más adelante ampliarán a otros
+activos y estrategias.
+
+**Mensaje 2 (recomendación "de industria" que el usuario pegó y pidió
+guardar tal cual):** el usuario compartió un análisis (aparentemente de
+otra IA/fuente) recomendando estructura y estilo para la página, y pidió
+explícitamente recordarlo tal cual quedó. Resumen fiel de esos puntos:
+
+- **Estilo visual:** modo oscuro tipo "institucional-tech" (azul marino/negro),
+  acentos vibrantes controlados para CTAs, tipografía sans limpia, gráficos
+  de velas/redes abstractas en vez de fotos de stock.
+- **Estructura de landing:** Hero (titular orientado a beneficio + CTA) →
+  Problema vs. Solución → Beneficios clave (claridad de señales con
+  entrada/SL/TP, doble estrategia, gestión de riesgo con R:B mínimo 1:2) →
+  Explicación detallada de cada app → Precios (plan Intradía, plan Swing,
+  plan Completo con descuento) → Flujo de pago Binance paso a paso →
+  Política de renovación/cancelación como FAQ → Señales de confianza
+  (disclaimer legal de riesgo, aviso de privacidad, contacto visible,
+  transparencia del equipo).
+- **Pago Binance sugerido:** elegir plan → abrir Binance, ir a "Pay" →
+  escanear QR / ingresar ID del merchant → enviar comprobante/hash por
+  WhatsApp/Telegram/correo → activación en menos de 1 hora con credenciales
+  y enlaces de descarga.
+- **Renovación:** ciclo de 30 días desde la confirmación del pago, sin cobro
+  automático; si no se renueva antes del vencimiento el acceso se desactiva
+  solo; recordatorio 3 días antes del vencimiento.
+- **Disclaimer sugerido:** el trading en Forex conlleva alto riesgo, puede
+  no ser adecuado para todos, los análisis son informativos/educativos, y
+  resultados pasados no garantizan resultados futuros.
+
+✅ **Horarios confirmados por el usuario (2026-07-27):** Intradía = 08:00 am,
+Swing = 05:00 pm. Coincide con el mapeo del mensaje 2, que es el que ya
+quedó usado en la primera versión del Artifact — no hubo que corregir nada.
+
+El usuario también pidió (2026-07-27) agregar que **la app Intradía
+también tiene el barrido/screener diario de mercado** (la misma idea que
+en Swing — fuerza relativa entre divisas — pero adaptada a velas de 1
+hora en vez de cierres diarios). Se agregó como viñeta en la tarjeta de
+Intradía del Artifact.
+
+⚠️ **Cambio de horario (2026-07-27, el mismo día):** el usuario pidió mover
+el horario de **Swing de 5:00 pm a 10:30 am** (Intradía se queda igual, a
+las 8:00 am). Ya se actualizó en el Artifact: el arco de 24h (posición del
+marcador teal, gradiente), la tarjeta de la app Swing, el mock de señal,
+los tres planes de precio y la leyenda del arco. También se ajustó el
+texto "con el cierre diario ya confirmado" a "con el cierre del día
+anterior ya confirmado", porque a las 10:30 am el día de trading todavía
+no ha cerrado — ya no tiene sentido decir que el barrido llega después
+del cierre del día. Si en el futuro se vuelve a mover el horario de
+Swing, revisar ese mismo texto por la misma razón.
+
+**Comportamiento real de datos en ambas apps (2026-07-27, aclarado por el
+usuario):** cada app busca sus propios datos solo cuando alguien la abre
+(no hay push ni backend empujando datos solo). Además, **Intradía se
+sigue actualizando cada 15 minutos mientras la tienes abierta**, lo que
+la acerca a señales en tiempo real y permite operar a cualquier hora del
+día. Con esto el usuario pidió agregar dos aclaraciones a la landing:
+- Recomendación: cerrar las operaciones antes de que cierre el mercado,
+  aproximadamente a las 3:00 pm.
+- La entrada de las 8:00 am sigue siendo la ideal para abrir operaciones,
+  por el empalme entre las sesiones de Londres y Nueva York — así se
+  aprovecha el arranque/inicio del mercado con las primeras señales de
+  Nestor Forex del día.
+Se agregó como nota destacada en la tarjeta de la app Intradía del
+Artifact, más una línea general aclarando que ambas apps solo buscan
+datos al abrirlas.
+
+**Corrección (2026-07-27): Intradía ya está publicada, no es "Próximamente".**
+El usuario aclaró que la app Intradía ya está construida y funcionando
+(la creó en otra sesión de Claude Code, en el repo separado
+`nestor-forex/nestor-forex-intradia`), con este detalle técnico real
+que dio tal cual y que ya quedó reflejado en las tarjetas del Artifact:
+
+| | Nestor Forex Swing | Nestor Forex Intradía |
+|---|---|---|
+| Para qué sirve | Operaciones de horas a días | Abrir y cerrar el mismo día |
+| Fuente de precios | BCE (Frankfurter), 1 cierre oficial al día | Twelve Data, velas de 1 hora |
+| Tendencia | EMA20 / EMA50 | EMA9 / EMA21 (más rápidas) |
+| RSI / ATR | Sobre cierres diarios | Sobre velas de 1 hora |
+| Fuerza relativa | Ventanas de 1, 5 y 20 días | Ventanas de 1, 4 y 24 horas |
+| Extra | — | Puntos pivote de sesión |
+
+Confirmó por `AskUserQuestion` que la app Intradía está publicada en
+GitHub Pages con el mismo patrón que Swing:
+`https://nestor-forex.github.io/nestor-forex-intradia/` — ya se usó ese
+enlace real en la tarjeta "Abrir la app Intradía →" del Artifact, se
+quitó la insignia "Próximamente" y el texto "App en preparación", y se
+actualizaron las viñetas de ambas tarjetas con estos datos técnicos
+reales en vez de descripciones genéricas.
+
+### Datos que el usuario NO confirmó (se usaron valores por defecto)
+Se preguntó dos veces (precio de los planes, cómo mostrar el pago Binance,
+canal de contacto, si ya existe link de la app Intradía) y no hubo
+respuesta ninguna de las dos veces, así que se avanzó con valores por
+defecto marcados para editar después:
+- **Precios:** placeholders de ejemplo, claramente editables en el código.
+- **Pago Binance:** flujo seguro sin exponer ID/QR real públicamente (se
+  pide escribir por correo/WhatsApp para recibirlo) — evita que se clone
+  un QR falso.
+- **Contacto:** correo `nesdian2204@gmail.com` (el único dato de contacto
+  real disponible).
+
+Estos valores por defecto quedan pendientes de que Néstor los confirme o
+corrija en una próxima sesión.
+
 ## Convenciones de trabajo en este repo
 - Rama de trabajo: **`claude/nestor-forex-review-pnue7l`** (la anterior,
   `claude/forex-barrido-diario-app-ws3bbu`, es la que sigue nombrada en
