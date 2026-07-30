@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import { limitaciones } from '../lib/fakeData'
 import { sesgoColor, tendColor, rsiColor, fmtDif } from '../lib/display'
-import { fmtFechaHoy, fmtFecha, sesionActiva } from '../lib/format'
+import { fmtFechaHoy, fmtFecha, claveSesionActiva } from '../lib/format'
+import { useIdioma } from '../lib/i18n'
 import { generarReporteMd, descargarMd } from '../lib/reporte'
 import BarraFuerza from './BarraFuerza'
 import Sparkline from './Sparkline'
@@ -44,8 +45,9 @@ function RazonList({ items, emptyText }) {
 }
 
 export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, corte }) {
-  const fecha = useMemo(fmtFechaHoy, [])
-  const sesion = useMemo(sesionActiva, [])
+  const { t, locale } = useIdioma()
+  const fecha = useMemo(() => fmtFechaHoy(locale), [locale])
+  const sesion = t(claveSesionActiva())
 
   const descargar = () => {
     const md = generarReporteMd({ fecha, sesion, corte, monedas, pares, compras, ventas, vigilancia, setups, limitaciones })
@@ -68,10 +70,10 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
         }}
       >
         <button onClick={onVolver} className="btn-ghost" style={{ padding: '0 12px', minHeight: 36, fontSize: 13, flexShrink: 0 }}>
-          ← Volver
+          {t('tablero.volver')}
         </button>
         <div className="mono" style={{ fontSize: 12, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          Barrido diario · Forex
+          {t('barrido.tituloLargo')}
         </div>
       </header>
 
@@ -80,7 +82,7 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
           <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700 }}>{fecha}</h1>
           <div className="mono" style={{ fontSize: 12.5, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 3 }}>
             <div>
-              Sesión activa: <span style={{ color: 'var(--text)' }}>{sesion}</span>
+              {t('tablero.sesionActiva')} <span style={{ color: 'var(--text)' }}>{sesion}</span>
             </div>
             <div>{loading ? '…' : corte}</div>
           </div>
@@ -90,7 +92,7 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
 
         {stale && (
           <div style={{ padding: '12px 14px', border: '1px solid var(--amber)', borderRadius: 6, color: 'var(--amber)', fontSize: 13, lineHeight: 1.5 }}>
-            ⚠ Sin conexión — mostrando el barrido guardado del {fmtFecha(guardadoEl)}.
+            {t('barrido.sinConexion', { fecha: fmtFecha(guardadoEl, locale) })}
           </div>
         )}
 
@@ -101,26 +103,25 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
         )}
         {loading && (
           <div className="mono" style={{ fontSize: 14, color: 'var(--text-muted)' }}>
-            Descargando 7 meses de precios diarios…
+            {t('barrido.descargandoLargo')}
           </div>
         )}
 
         {!loading && !error && (
         <>
         <section>
-          <h2 className="section-title">Fuerza relativa por divisa</h2>
+          <h2 className="section-title">{t('tablero.fuerzaRelativa')}</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {monedas.map((m) => (
               <BarraFuerza key={m.cod} cod={m.cod} score={m.score} />
             ))}
           </div>
           <p style={{ margin: '14px 0 0', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-            Promedio ponderado del cambio % de cada divisa contra las otras 7 (1d 20%, 5d 40%, 20d 40%), reescalado 0-10.
-          </p>
+            {t('tablero.pieFuerza')}</p>
         </section>
 
         <section>
-          <h2 className="section-title">Pares — precio, tendencia y filtros</h2>
+          <h2 className="section-title">{t('tablero.pares')}</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {pares.map((p) => (
               <div key={p.name} className="card" style={{ padding: 12 }}>
@@ -129,7 +130,7 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
                     {p.name}
                   </span>
                   <span className="mono" style={{ fontSize: 11.5, fontWeight: 700, color: sesgoColor(p.sesgo) }}>
-                    {p.sesgo}
+                    {t(`sesgo.${p.sesgo}`)}
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -140,52 +141,50 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
                     </span>
                     <span className="mono" style={{ fontSize: 12, fontWeight: 600, color: p.cambio20 >= 0 ? 'var(--green)' : 'var(--red)' }}>
                       {p.cambio20 >= 0 ? '+' : ''}
-                      {p.cambio20.toFixed(2)}% · 20d
+                      {p.cambio20.toFixed(2)}% · {t('tablero.sufijoVelas')}
                     </span>
                   </div>
                 </div>
                 <div className="mono" style={{ marginTop: 10, fontSize: 11.5, color: 'var(--text-secondary)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <span>
-                    Dif <span>{fmtDif(p.dif)}</span>
+                    {t('tablero.dif')} <span>{fmtDif(p.dif)}</span>
                   </span>
-                  <span style={{ color: tendColor(p.tend) }}>{p.tend}</span>
+                  <span style={{ color: tendColor(p.tend) }}>{t(`tend.${p.tend}`)}</span>
                   <span style={{ color: rsiColor(p.rsi) }}>RSI {p.rsi}</span>
-                  <span>ATR {p.atr.toFixed(2)}%</span>
+                  <span>{t('tablero.atrPorHora', { v: p.atr.toFixed(2) })}</span>
                 </div>
               </div>
             ))}
           </div>
           <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>
-            Gráfico y variación (%) sobre los últimos 20 cierres diarios. ATR: volatilidad proxy cierre-a-cierre (tasas de
-            referencia diarias, sin máximos/mínimos intradía).
-          </p>
+            {t('tablero.pieParesGrafico')}</p>
         </section>
 
         <section className="card" style={{ borderColor: 'oklch(0.32 0.05 155)' }}>
           <h2 className="section-title" style={{ color: 'var(--green)', marginBottom: 12 }}>
-            Mejores para comprar
+            {t('tablero.mejoresComprar')}
           </h2>
-          <RazonList items={compras} emptyText="Hoy no hay compras con fuerza y tendencia alineadas — no forzar entradas." />
+          <RazonList items={compras} emptyText={t('tablero.sinCompras')} />
         </section>
 
         <section className="card" style={{ borderColor: 'oklch(0.35 0.06 25)' }}>
           <h2 className="section-title" style={{ color: 'var(--red)', marginBottom: 12 }}>
-            Mejores para vender
+            {t('tablero.mejoresVender')}
           </h2>
-          <RazonList items={ventas} emptyText="Hoy no hay ventas con fuerza y tendencia alineadas — no forzar entradas." />
+          <RazonList items={ventas} emptyText={t('tablero.sinVentas')} />
         </section>
 
         {vigilancia.length > 0 && (
           <section className="card" style={{ borderColor: 'oklch(0.4 0.06 85)' }}>
             <h2 className="section-title" style={{ color: 'var(--amber)', marginBottom: 12 }}>
-              En vigilancia
+              {t('tablero.enVigilancia')}
             </h2>
             <RazonList items={vigilancia} emptyText="" />
           </section>
         )}
 
         <section>
-          <h2 className="section-title">Setups del top</h2>
+          <h2 className="section-title">{t('tablero.setups')}</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {setups.map((s) => (
               <div key={s.name + s.lado} className="card">
@@ -193,23 +192,23 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
                   <span className="mono" style={{ fontWeight: 600, fontSize: 16 }}>
                     {s.name}
                   </span>
-                  <Chip color={s.lado === 'COMPRA' ? 'var(--green)' : 'var(--red)'}>{s.lado}</Chip>
+                  <Chip color={s.lado === 'COMPRA' ? 'var(--green)' : 'var(--red)'}>{t(`lado.${s.lado}`)}</Chip>
                 </div>
                 <div className="mono" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: 12.5 }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Soporte</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{t('setup.soporte')}</span>
                   <span>{s.sup}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>Resistencia</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{t('setup.resistencia')}</span>
                   <span>{s.res}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>Entrada</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{t('setup.entrada')}</span>
                   <span>{s.entrada}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>Stop-loss</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{t('setup.stopLoss')}</span>
                   <span>{s.sl}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>Take-profit</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{t('setup.takeProfit')}</span>
                   <span>{s.tp}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>R/B</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{t('setup.rb')}</span>
                   <span style={{ color: s.rrOk ? 'var(--green)' : 'var(--amber)' }}>{s.rr}</span>
                 </div>
-                <p style={{ margin: '12px 0 0', fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5 }}>Invalida: {s.inval}</p>
+                <p style={{ margin: '12px 0 0', fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{t('setup.invalida')} {s.inval}</p>
                 {onVerSetup && (
                   <button
                     type="button"
@@ -217,7 +216,7 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
                     style={{ marginTop: 12, width: '100%' }}
                     onClick={() => onVerSetup(s)}
                   >
-                    Ver la señal en detalle →
+                    {t('setup.verDetalle')}
                   </button>
                 )}
               </div>
@@ -230,13 +229,11 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
         <section style={{ borderTop: '1px solid var(--border)', paddingTop: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div>
-              <strong style={{ color: 'var(--text)' }}>Riesgo:</strong> 1-2% del capital por operación. Varias posiciones en la misma
-              divisa no son operaciones independientes — son una sola apuesta con más tamaño.
-            </div>
+              <strong style={{ color: 'var(--text)' }}>{t('tablero.riesgoTitulo')}</strong> {t('tablero.riesgoTexto')}</div>
             <div>
-              <strong style={{ color: 'var(--text)' }}>Limitaciones:</strong> {limitaciones}
+              <strong style={{ color: 'var(--text)' }}>{t('tablero.limitacionesTitulo')}</strong> {t('tablero.limitaciones')}
             </div>
-            <div>Análisis educativo, no asesoría financiera personalizada. Operar Forex conlleva riesgo de pérdida.</div>
+            <div>{t('tablero.educativo')}</div>
           </div>
           {!loading && !error && (
             <button
@@ -253,7 +250,7 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
                 cursor: 'pointer',
               }}
             >
-              ↓ Descargar reporte .md
+              {t('tablero.descargarMd')}
             </button>
           )}
         </section>
