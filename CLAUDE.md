@@ -50,7 +50,9 @@ app/                          # la app real (React 19 + Vite 8)
     App.jsx                   # estado raíz: splash/auth/pendiente/app, tabs
     components/                # una pantalla o pieza de UI por archivo
       SetupDetalle.jsx         # detalle de un setup: gráfico + niveles + R/B (ver idea 5)
+      SelectorIdioma.jsx       # botón de idioma (ver idea 7)
     lib/
+      i18n/                    # idiomas: textos/<codigo>.js, crearT.js, index.jsx, idiomas.js
       firebase.js              # init de Firebase desde import.meta.env
       useAuthUser.js           # sesión + perfil Firestore en vivo, registrar/ingresar/salir
       useMembers.js            # listado en vivo de users/ para el admin
@@ -214,6 +216,50 @@ ideas propuestas ese día, empezando por la del gráfico. Estado:
    una ruta escrita a mano que alguien tenga que recordar actualizar.
    ⚠️ Un ícono ya instalado guarda el `start_url` viejo: hay que
    **desinstalar y volver a instalar** la app, recargar no basta.
+7. ✅ **Hecho (2026-07-30):** botón de idioma con **13 idiomas** (español,
+   inglés, alemán, francés, portugués, italiano, chino, japonés, ruso,
+   árabe, turco, hindi y coreano). Néstor pidió primero 3 idiomas, luego
+   "muchos más", y se cerró en 13 incluyendo el árabe con su diseño
+   volteado. Va en la cabecera, la portada, el ingreso y la pantalla de
+   pendiente. Se hizo primero en Intradía (PR #7 de ese repo) y se portó
+   aquí (PR #15).
+   - `lib/i18n/textos/<codigo>.js`: un diccionario por idioma, 199 claves.
+     `lib/i18n/crearT.js`: el motor, **sin React**, para que
+     `scripts/reporte-diario.mjs` (que corre en Node) traduzca igual.
+     `lib/i18n/index.jsx`: idioma actual, guardado en el dispositivo.
+     `lib/i18n/idiomas.js`: lista de idiomas, cuáles son RTL y el `locale`
+     de cada uno. `components/SelectorIdioma.jsx`: el botón.
+   - El español es la fuente de verdad **y el respaldo, clave por clave**:
+     un idioma incompleto muestra en español solo lo que le falte.
+   - **Los términos de trading no se traducen** (RSI, ATR, EMA, Stop-loss,
+     Take-profit, Pip, Spread, R/B, Forex) y la dirección va BUY/SELL en
+     todos los idiomas menos español, que conserva COMPRA/VENTA.
+   - ⚠️ **Lo que se guarda en Firestore NO se traduce**: `dir` sigue siendo
+     `'Compra'`/`'Venta'` y `estado` sigue siendo `'abierta'`/`'cerrada'`.
+     Solo cambia cómo se muestran. Si se tradujeran, las operaciones ya
+     guardadas dejarían de coincidir. Lo mismo con los valores internos de
+     `clasificar()` (COMPRA/VENTA/VIGILAR) y de `tend`.
+   - Las frases que llevan números dentro son **funciones** en el
+     diccionario, no concatenaciones: cada idioma ordena la frase distinto.
+   - Las fechas usan el `locale` del idioma (`format.js` lo recibe): no
+     basta traducir las palabras, cambia el orden de día y mes.
+   - `sesionActiva()` pasó a llamarse `claveSesionActiva()` y devuelve la
+     **clave**, no el texto: así sigue sirviendo desde Node y desde la app.
+   - Errores que salieron al revisarlo en navegador, ya corregidos: el
+     gráfico heredaba `dir="rtl"` en árabe y el texto de las etiquetas se
+     dibujaba al revés (ahora el SVG se fija en `ltr`); en `DiarioTab` la
+     letra `t` ya era cada operación y chocaba con la de traducir (pasó a
+     `tr`); y `marketCalc.js` importaba sin extensión `.js`, que Vite
+     resuelve pero **Node no** — habría roto el reporte diario.
+   - Hay un script que compara los 13 diccionarios entre sí (mismas claves,
+     mismos tipos, y ningún idioma con texto de otro alfabeto colado). No
+     es paranoia: al escribirlos se coló una palabra rusa en el japonés y
+     un carácter chino en el ruso.
+   - Lo verificado es que **el sistema** funciona en los 13 idiomas, no que
+     cada frase le suene natural a un nativo. Si alguien señala algo raro,
+     se cambia una línea del archivo de ese idioma.
+   - Para agregar un idioma: copiar `textos/es.js`, traducirlo, importarlo
+     en `crearT.js` y añadir su entrada en `idiomas.js`. Nada más.
 
 Otras ideas mencionadas pero no elegidas todavía (no implementar sin
 confirmar primero):
