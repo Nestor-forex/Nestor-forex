@@ -1,0 +1,88 @@
+name: Vigía diario
+
+# Revisa el barrido una vez al día y anota las señales nuevas. Ver el
+# comentario de cabecera de app/scripts/vigia.mjs para el porqué.
+#
+# UNA VEZ AL DÍA, no cada hora como en la app hermana de intradía: los precios
+# vienen del Banco Central Europeo y solo cambian una vez al día, así que
+# pedirlos cada hora sería pedir veinticuatro veces lo mismo.
+#
+# Los datos NO se guardan en esta rama: van a la rama `datos`, para que el
+# historial del código no quede sepultado bajo un commit diario.
+
+on:
+  schedule:
+    # 15:50 UTC de lunes a viernes: el BCE publica sus tasas a eso de las
+    # 16:00 CET, y el reporte diario sale a las 15:40, así que este va
+    # justo después y no se pisan.
+    #
+    # Ojo: el reloj de GitHub es impuntual y se salta horas —medido en la app
+    # hermana: 3 corridas donde tocaban 13—. Para un vigía diario eso importa
+    # menos que para uno por hora, pero si un día no corre, no corrió.
+    - cron: '50 15 * * 1-5'
+  workflow_dispatch:
+
+# El vigía escribe en la rama `datos`, así que necesita permiso de escritura:
+# por defecto el token de Actions es de solo lectura.
+permissions:
+  contents: write
+
+concurrency:
+  group: vigia
+  cancel-in-progress: false
+
+jobs:
+  vigia:
+    runs-on: ubuntu-latest
+    # Red de seguridad: por defecto GitHub deja correr un trabajo seis horas, y
+    # como `concurrency` no cancela la corrida anterior, una atascada dejaría
+    # al vigía sin vigilar días enteros. Lo normal son unos segundos.
+    timeout-minutes: 10
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - name: Traer los datos
+        uses: actions/checkout@v4
+        with:
+          ref: datos
+          path: datos
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Instalar dependencias
+        working-directory: app
+        run: npm ci
+
+      - name: Revisar
+        working-directory: app
+        env:
+          VIGIA_DATOS: ${{ github.workspace }}/datos
+          # Si estos dos secretos no están puestos, el vigía sigue funcionando
+          # igual y solo anota que no pudo avisar: lo que no se puede perder es
+          # el historial de señales.
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node scripts/vigia.mjs
+
+      - name: Guardar lo que vio
+        working-directory: datos
+        run: |
+          git config user.name 'Vigía Nestor Forex Swing'
+          git config user.email 'noreply@anthropic.com'
+          git add estado historial
+          if git diff --cached --quiet; then
+            echo 'Sin cambios que guardar.'
+            exit 0
+          fi
+          git commit -m "Vigía $(date -u +'%Y-%m-%d %H:%M UTC')"
+          for i in 1 2 3; do
+            git pull --rebase origin datos && git push origin HEAD:datos && exit 0
+            sleep $((i * 5))
+          done
+          echo 'No se pudo guardar tras 3 intentos.'
+          exit 1
