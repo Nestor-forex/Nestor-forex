@@ -1,47 +1,65 @@
 import { useEffect, useState } from 'react'
-import { computarBarrido, derivarVista } from './marketCalc'
+import { derivarVista } from './marketCalc'
 import { useT } from './i18n'
 
-const CACHE_KEY = 'nf_market_cache_v1'
-const hoyISO = () => new Date().toISOString().slice(0, 10)
+// De dónde salen los precios.
+//
+// Hasta 2026-08-09 la app le pedía los cierres directamente a Frankfurter
+// (BCE), que es gratis e ilimitado. Ahora usa velas diarias reales de Twelve
+// Data —con máximo y mínimo, no solo el cierre—, y esa fuente sí tiene tope:
+// 8 consultas por minuto y 800 al día. Si cada persona que abre la app pidiera
+// los 14 pares, con un puñado de miembros se acabaría la cuota, y con dos
+// abriéndola a la vez fallaría.
+//
+// Por eso la consulta se hace UNA vez al día, en el vigía, y lo que la app
+// baja es el barrido ya calculado. Sale igual de fresco (las velas diarias
+// cambian una vez al día) y aguanta los miembros que hagan falta.
+//
+// El archivo lo escribe app/scripts/vigia.mjs en la rama `datos`.
+const URL_BARRIDO =
+  'https://raw.githubusercontent.com/Nestor-forex/Nestor-forex/datos/estado/barrido.json'
+
+const CACHE_KEY = 'nf_market_cache_v2'
+const LIMITE_MS = 15_000
 
 function leerCache() {
-  const cacheRaw = localStorage.getItem(CACHE_KEY)
-  if (!cacheRaw) return null
   try {
-    const cache = JSON.parse(cacheRaw)
-    if (cache.fechas && cache.rates && cache.fetchedOn) return cache
+    const cache = JSON.parse(localStorage.getItem(CACHE_KEY))
+    if (cache?.barrido?.pares && cache.guardadoEl) return cache
   } catch {
-    // caché corrupta, se ignora
+    // caché corrupta o bloqueada, se ignora
   }
   return null
 }
 
-// Descarga precios frescos, o si no hay internet reutiliza la última copia
-// guardada (aunque sea de un día anterior) marcándola como "stale".
-async function obtenerRates() {
-  const cache = leerCache()
-  if (cache?.fetchedOn === hoyISO()) {
-    return { fechas: cache.fechas, rates: cache.rates, fetchedOn: cache.fetchedOn, stale: false }
-  }
-
-  const f = (d) => d.toISOString().slice(0, 10)
-  const ini = new Date(Date.now() - 220 * 864e5)
+// Baja el barrido del día. Si no hay internet, reutiliza la última copia
+// guardada —aunque sea de días atrás— marcándola como vieja, para que la app
+// siga sirviendo de algo en el avión o sin señal.
+async function obtenerBarrido() {
   try {
-    const r = await fetch(`https://api.frankfurter.dev/v1/${f(ini)}..?base=USD&symbols=EUR,GBP,JPY,CHF,AUD,NZD,CAD`)
+    const r = await fetch(URL_BARRIDO, {
+      signal: AbortSignal.timeout(LIMITE_MS),
+      cache: 'no-cache',
+    })
     if (!r.ok) throw new Error('HTTP ' + r.status)
-    const j = await r.json()
-    const fechas = Object.keys(j.rates).sort()
-    const fetchedOn = hoyISO()
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ fetchedOn, fechas, rates: j.rates }))
-    return { fechas, rates: j.rates, fetchedOn, stale: false }
+    const barrido = await r.json()
+    if (!barrido?.pares?.length) throw new Error('barrido vacío')
+
+    const guardadoEl = new Date().toISOString().slice(0, 10)
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ guardadoEl, barrido }))
+    } catch {
+      // Sin espacio o en modo privado: da igual, es solo la copia de respaldo.
+    }
+    return { barrido, guardadoEl, stale: false }
   } catch (e) {
-    if (cache) return { fechas: cache.fechas, rates: cache.rates, fetchedOn: cache.fetchedOn, stale: true }
+    const cache = leerCache()
+    if (cache) return { barrido: cache.barrido, guardadoEl: cache.guardadoEl, stale: true }
     throw e
   }
 }
 
-// Descarga (o reutiliza la caché del día) y calcula todo el barrido.
+// Baja (o reutiliza la caché) y arma la vista del barrido.
 // thr = umbral de diferencial para clasificar sesgo, topN = setups por lado.
 export function useMarketData({ thr = 0.5, topN = 3 } = {}) {
   const t = useT()
@@ -55,32 +73,29 @@ export function useMarketData({ thr = 0.5, topN = 3 } = {}) {
     let cancelado = false
     setLoading(true)
     setError(null)
-    obtenerRates()
-      .then(({ fechas, rates, stale, fetchedOn }) => {
+
+    obtenerBarrido()
+      .then(({ barrido, guardadoEl, stale }) => {
         if (cancelado) return
-        setData(computarBarrido(fechas, rates))
+        setData(barrido)
         setStale(stale)
-        setGuardadoEl(fetchedOn)
+        setGuardadoEl(guardadoEl)
       })
       .catch((e) => {
         if (cancelado) return
-        const cache = leerCache()
-        if (cache) {
-          setData(computarBarrido(cache.fechas, cache.rates))
-          setStale(true)
-          setGuardadoEl(cache.fetchedOn)
-        } else {
-          setError('No se pudieron obtener los precios (' + e.message + '). Revisa la conexión y recarga.')
-        }
+        setError('No se pudieron obtener los precios (' + e.message + '). Revisa la conexión y recarga.')
       })
       .finally(() => {
         if (!cancelado) setLoading(false)
       })
+
     return () => {
       cancelado = true
     }
   }, [])
 
+  // `derivarVista` se sigue ejecutando aquí y no en el vigía porque necesita
+  // el idioma de cada persona, y eso el servidor no lo sabe.
   const vista = data ? derivarVista(data, { thr, topN, t }) : null
 
   return {

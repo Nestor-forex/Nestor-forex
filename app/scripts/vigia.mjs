@@ -1,44 +1,42 @@
 // Vigía diario del barrido de swing.
 //
 // Hermano del de Nestor Forex Intradía, con una diferencia de fondo: aquí
-// corre UNA VEZ AL DÍA, no cada hora. Los precios vienen del Banco Central
-// Europeo y solo cambian una vez al día, así que revisarlos cada hora sería
-// pedir lo mismo veinticuatro veces.
+// corre UNA VEZ AL DÍA, no cada hora. Trabaja con velas diarias, así que
+// revisarlas cada hora sería pedir lo mismo veinticuatro veces.
 //
-// Hace dos cosas:
+// Hace tres cosas:
 //   1. Anota las señales NUEVAS respecto a la revisión anterior. Ese archivo
 //      ES el historial: sin él no hay forma de decir si la app acierta.
 //   2. Manda un aviso al celular de quien los tenga activados.
+//   3. Publica el barrido ya calculado, que es lo que lee la app.
+//
+// Lo tercero merece explicación. Antes la app pedía los precios ella misma a
+// Frankfurter, que es gratis e ilimitado. Twelve Data no lo es: 8 consultas
+// por minuto y 800 al día. Si cada persona que abre la app pidiera los 14
+// pares, con un puñado de miembros se acabaría la cuota, y con dos abriéndola
+// a la vez fallaría. Así que la consulta se hace UNA vez al día aquí, y la
+// app lee el resultado. Sale igual de fresco —las velas diarias cambian una
+// vez al día— y aguanta los miembros que hagan falta.
 //
 // Los datos NO se guardan en esta rama: van a la rama `datos`, para que el
 // historial del código no quede sepultado bajo un commit diario.
 
 import { fileURLToPath } from 'node:url'
 import { computarBarrido, derivarVista } from '../src/lib/marketCalc.js'
+import { leerLlave, obtenerVelas } from './lib/velas.mjs'
 import { compararConAnterior, escribir, leerEstado } from './lib/vigia-nucleo.mjs'
 
 const DATOS = process.env.VIGIA_DATOS || fileURLToPath(new URL('../../datos-local', import.meta.url))
 const ESTADO = `${DATOS}/estado/vigia.json`
 const LOG_SENALES = `${DATOS}/historial/senales.jsonl`
 const LOG_CORRIDAS = `${DATOS}/historial/corridas.jsonl`
-
-// Misma descarga que usa el reporte diario. Frankfurter no pide llave.
-async function obtenerRates() {
-  const f = (d) => d.toISOString().slice(0, 10)
-  const ini = new Date(Date.now() - 220 * 864e5)
-  const r = await fetch(
-    `https://api.frankfurter.dev/v1/${f(ini)}..?base=USD&symbols=EUR,GBP,JPY,CHF,AUD,NZD,CAD`,
-    { signal: AbortSignal.timeout(20_000) }
-  )
-  if (!r.ok) throw new Error('HTTP ' + r.status)
-  const j = await r.json()
-  const fechas = Object.keys(j.rates).sort()
-  return { fechas, rates: j.rates }
-}
+// El barrido ya calculado, que es lo que lee la app. Ver el comentario de
+// abajo sobre por qué la app no pide los precios ella misma.
+const BARRIDO = `${DATOS}/estado/barrido.json`
 
 const ahora = new Date()
-const { fechas, rates } = await obtenerRates()
-const data = computarBarrido(fechas, rates)
+const { fechas, rates, rangosPar } = await obtenerVelas(leerLlave())
+const data = computarBarrido(fechas, rates, rangosPar)
 const vista = derivarVista(data, { thr: 0.5, topN: 3 })
 
 const { actuales, nuevas } = compararConAnterior(vista.setups, leerEstado(ESTADO))
@@ -52,9 +50,9 @@ for (const { id, s } of nuevas) {
     JSON.stringify({
       id,
       vistoEl: ahora.toISOString(),
-      // El día de cierre con el que se calculó, no la fecha de hoy: si el BCE
-      // no publicó (fin de semana o festivo), son distintas y confundirlas
-      // desalinearía el historial con los precios.
+      // El día de cierre con el que se calculó, no la fecha de hoy: si el
+      // mercado no cotizó (fin de semana o festivo), son distintas y
+      // confundirlas desalinearía el historial con los precios.
       cierre: data.ultima,
       par: s.name,
       lado: s.lado,
@@ -94,6 +92,25 @@ escribir(
   ) + '\n'
 )
 
+// El barrido que va a leer la app. Se publica lo justo para que pueda pintar
+// sus pantallas: `derivarVista` se sigue ejecutando en el navegador, porque
+// necesita el idioma de cada persona y eso aquí no se sabe.
+//
+// No se guardan las 300 fechas ni las series completas —solo `serie20`, que
+// es lo que dibuja el gráfico—: el archivo lo baja cada miembro cada vez que
+// abre la app, así que conviene que pese poco.
+escribir(
+  BARRIDO,
+  JSON.stringify({
+    generadoEl: ahora.toISOString(),
+    ultima: data.ultima,
+    raw: data.raw,
+    esc: data.esc,
+    pares: data.pares,
+    ratesUSD: data.ratesUSD,
+  }) + '\n'
+)
+
 // Avisos al celular. Va al FINAL y aislado, igual que en la app hermana: para
 // cuando llegamos aquí el historial ya está escrito en disco, así que ni un
 // fallo de red ni una clave mal puesta pueden costarnos esos datos, que son
@@ -111,7 +128,7 @@ if (nuevas.length) {
 
 console.log('---VIGIA-INICIO---')
 console.log(`Corrida: ${ahora.toISOString()}`)
-console.log(`Último cierre del BCE: ${data.ultima}`)
+console.log(`Última vela diaria: ${data.ultima}`)
 console.log(`Señales activas: ${actuales.length} · nuevas en esta revisión: ${nuevas.length}`)
 if (nuevas.length) {
   for (const { s } of nuevas) {

@@ -30,6 +30,38 @@ const emaLast = (c, p) => {
   return e
 }
 
+// El ATR de siempre (Wilder), con el rango real de cada día: el mayor de
+// —cuánto se movió el día, distancia del máximo al cierre anterior, distancia
+// del mínimo al cierre anterior—. Los dos últimos cuentan el hueco entre
+// días, que el método de abajo se pierde entero.
+const atrWilder = (highs, lows, closes, p = 14) => {
+  const tr = []
+  for (let i = 1; i < closes.length; i++) {
+    tr.push(
+      Math.max(
+        highs[i] - lows[i],
+        Math.abs(highs[i] - closes[i - 1]),
+        Math.abs(lows[i] - closes[i - 1])
+      )
+    )
+  }
+  if (tr.length < p) return 0
+  let a = tr.slice(0, p).reduce((x, y) => x + y, 0) / p
+  for (let i = p; i < tr.length; i++) a = (a * (p - 1) + tr[i]) / p
+  return a
+}
+
+// El que se usaba cuando la fuente solo daba cierres. Se queda como respaldo
+// para que la app no se rompa si algún día llegan datos sin máximo ni mínimo,
+// pero subestima el movimiento real casi a la mitad — ver el comentario de
+// `computarBarrido`.
+const atrCierres = (closes) => {
+  const L = closes.length - 1
+  let sum = 0
+  for (let i = L - 13; i <= L; i++) sum += Math.abs(closes[i] - closes[i - 1]) / closes[i - 1]
+  return ((sum / 14) * closes[L])
+}
+
 const rsi = (c, p = 14) => {
   let g = 0
   let l = 0
@@ -49,7 +81,24 @@ const rsi = (c, p = 14) => {
 }
 
 // fechas: array de strings YYYY-MM-DD ordenadas asc. rates: { [fecha]: { EUR, GBP, ... } } (base USD, sin USD).
-export function computarBarrido(fechas, rates) {
+/**
+ * @param fechas    días, ordenados
+ * @param rates     rates[fecha][divisa] = unidades de esa divisa por 1 USD
+ * @param rangosPar rangosPar[fecha][par] = { h, l, c } reales de ese par ese
+ *                  día. Opcional: sin él se cae al método viejo, que solo
+ *                  tenía cierres.
+ *
+ * Sobre `rangosPar`: la app usó hasta 2026-08-09 los cierres del BCE, un
+ * precio por día y sin máximo ni mínimo. Con eso el ATR se calculaba de
+ * cierre a cierre y los soportes salían de los extremos de los CIERRES.
+ * Al medirlo contra velas reales (`scripts/comparar-fuente.mjs`) resultó que
+ * el movimiento real es un 96% mayor —casi el doble—, así que los stops
+ * salían demasiado estrechos: en USD/CAD la app ponía el stop a 12 pips en un
+ * par que se mueve 40 en un día tranquilo. Eso además inflaba la relación
+ * riesgo/beneficio hasta números que no existen (15 a 1), porque el
+ * denominador era ficticio.
+ */
+export function computarBarrido(fechas, rates, rangosPar = null) {
   const serie = {}
   CCY.forEach((c) => (serie[c] = fechas.map((d) => (c === 'USD' ? 1 : rates[d][c]))))
   const L = fechas.length - 1
@@ -71,17 +120,27 @@ export function computarBarrido(fechas, rates) {
   CCY.forEach((c) => (esc[c] = ((raw[c] - mn) / (mx - mn)) * 10))
 
   const pares = PAIRS.map(([b, q]) => {
+    const nombre = b + '/' + q
     const closes = fechas.map((_, i) => px(b, q, i))
+    // Con velas reales, el máximo y el mínimo de cada día. Sin ellas se usa el
+    // cierre como las dos cosas, que es exactamente el comportamiento viejo.
+    const highs = fechas.map((d, i) => rangosPar?.[d]?.[nombre]?.h ?? closes[i])
+    const lows = fechas.map((d, i) => rangosPar?.[d]?.[nombre]?.l ?? closes[i])
+    const conRangos = Boolean(rangosPar)
+
     const c = closes[L]
     const e20 = emaLast(closes, 20)
     const e50 = emaLast(closes, 50)
-    let sum = 0
-    for (let i = L - 13; i <= L; i++) sum += Math.abs(closes[i] - closes[i - 1]) / closes[i - 1]
-    const atrPct = (sum / 14) * 100
-    const atrAbs = (c * atrPct) / 100
+    const atrAbs = conRangos ? atrWilder(highs, lows, closes) : atrCierres(closes)
+    const atrPct = (atrAbs / c) * 100
     const tend = c > e20 && e20 > e50 ? 'Alcista' : c < e20 && e20 < e50 ? 'Bajista' : 'Rango'
-    const last20 = closes.slice(-20)
-    const last10 = closes.slice(-10)
+    // Los soportes y resistencias van con los extremos REALES: es donde el
+    // precio llegó y se devolvió, que es lo que hace que un nivel importe.
+    // Con solo cierres se quedaban cortos y estrechaban el stop.
+    const last20 = highs.slice(-20)
+    const bajos20 = lows.slice(-20)
+    const last10 = highs.slice(-10)
+    const bajos10 = lows.slice(-10)
     return {
       name: b + '/' + q,
       b,
@@ -95,11 +154,13 @@ export function computarBarrido(fechas, rates) {
       tend,
       dif: raw[b] - raw[q],
       hi20: Math.max(...last20),
-      lo20: Math.min(...last20),
+      lo20: Math.min(...bajos20),
       hi10: Math.max(...last10),
-      lo10: Math.min(...last10),
+      lo10: Math.min(...bajos10),
       dec: b === 'JPY' || q === 'JPY' ? 2 : 4,
-      serie20: last20,
+      // El gráfico dibuja CIERRES, no máximos: es la línea del precio, no el
+      // rango. (Antes `last20` eran los cierres y servía para las dos cosas.)
+      serie20: closes.slice(-20),
     }
   })
 
