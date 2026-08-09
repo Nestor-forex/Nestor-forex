@@ -28,7 +28,7 @@ export default {
     retirado: 'Erişimin kaldırıldı. Bunun bir hata olduğunu düşünüyorsan Néstor’a yaz.',
   },
 
-  nav: { barrido: 'Tarama', diario: 'Günlük', riesgo: 'Risk', miembros: 'Üyeler' },
+  nav: { historial: 'Geçmiş', barrido: 'Tarama', diario: 'Günlük', riesgo: 'Risk', miembros: 'Üyeler' },
 
   sesgo: { COMPRA: 'BUY', VENTA: 'SELL', VIGILAR: 'WATCH', '—': '—' },
   tend: { Alcista: 'Yükseliş', Bajista: 'Düşüş', Rango: 'Yatay' },
@@ -252,6 +252,23 @@ export default {
     denegado: 'Bu uygulama için bildirimler engellenmiş. Tarayıcı veya telefon ayarlarından yeniden izin vermen gerekiyor.',
     fallo: 'Bildirimler açılamadı. Lütfen tekrar dene.',
     soloEsteAparato: 'Bildirimler cihaz başına ayarlanır: uygulamayı hem telefonda hem bilgisayarda kullanıyorsan, her birinde aç.',
+  },
+
+  historial: {
+    titulo: 'Sinyal geçmişi',
+    intro: 'Gözcünün bulduğu her sinyal ve sonrasında olanlar.',
+    cargando: 'Geçmiş yükleniyor…',
+    error: 'Geçmiş yüklenemedi. Bağlantını kontrol et.',
+    vacio: 'Henüz sinyal yok.',
+    vacioLargo: 'Gözcü piyasayı günde bir kez kontrol eder ve bulduklarını buraya yazar. İlk sinyal çıkar çıkmaz göreceksin.',
+    acierto: 'İsabet',
+    operaciones: 'İşlem',
+    pips: 'Net pip',
+    sinJuzgar: 'Henüz değerlendirilmedi',
+    ganada: 'Tuttu',
+    perdida: 'Tutmadı',
+    abierta: 'Sürüyor',
+    caducada: 'Veri yok',
   },
 
   errores: {

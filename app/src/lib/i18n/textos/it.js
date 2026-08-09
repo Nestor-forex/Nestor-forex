@@ -28,7 +28,7 @@ export default {
     retirado: 'Il tuo accesso è stato revocato. Scrivi a Néstor se pensi sia un errore.',
   },
 
-  nav: { barrido: 'Scan', diario: 'Diario', riesgo: 'Rischio', miembros: 'Membri' },
+  nav: { historial: 'Storico', barrido: 'Scan', diario: 'Diario', riesgo: 'Rischio', miembros: 'Membri' },
 
   sesgo: { COMPRA: 'BUY', VENTA: 'SELL', VIGILAR: 'WATCH', '—': '—' },
   tend: { Alcista: 'Rialzista', Bajista: 'Ribassista', Rango: 'Laterale' },
@@ -253,6 +253,23 @@ export default {
     denegado: 'Gli avvisi sono bloccati per questa app. Devi consentirli di nuovo dalle impostazioni del browser o del telefono.',
     fallo: 'Non è stato possibile attivare gli avvisi. Riprova.',
     soloEsteAparato: 'Gli avvisi si impostano per dispositivo: se usi l’app sul telefono e sul computer, attivali su entrambi.',
+  },
+
+  historial: {
+    titulo: 'Storico dei segnali',
+    intro: 'Ogni segnale trovato dalla vedetta e cosa è successo dopo.',
+    cargando: 'Caricamento dello storico…',
+    error: 'Impossibile caricare lo storico. Controlla la connessione.',
+    vacio: 'Ancora nessun segnale.',
+    vacioLargo: 'La vedetta controlla il mercato una volta al giorno e annota qui quello che trova. Appena arriva il primo segnale, lo vedrai.',
+    acierto: 'Successo',
+    operaciones: 'Operazioni',
+    pips: 'Pips netti',
+    sinJuzgar: 'Non ancora valutato',
+    ganada: 'Colpito',
+    perdida: 'Mancato',
+    abierta: 'In corso',
+    caducada: 'Senza dati',
   },
 
   errores: {

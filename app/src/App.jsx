@@ -7,6 +7,7 @@ import Header from './components/Header'
 import BottomNav from './components/BottomNav'
 import BarridoTab from './components/BarridoTab'
 import AvisosCard from './components/AvisosCard'
+import HistorialTab from './components/HistorialTab'
 import TableroCompleto from './components/TableroCompleto'
 import SetupDetalle from './components/SetupDetalle'
 import { useT } from './lib/i18n'
@@ -181,6 +182,7 @@ export default function App() {
                   onPrellenado={() => setPrellenarDiario(null)}
                 />
               )}
+              {tab === 'historial' && <HistorialTab />}
               {tab === 'calc' && <CalculadoraTab ratesUSD={mercado.ratesUSD} loadingTasas={mercado.loading} errorTasas={mercado.error} />}
               {tab === 'admin' && esAdmin && (
                 <MiembrosTab usuarios={miembros.usuarios} cargando={miembros.cargando} onAprobar={miembros.aprobar} onRetirar={miembros.retirar} />
