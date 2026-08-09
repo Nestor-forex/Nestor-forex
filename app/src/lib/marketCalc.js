@@ -161,6 +161,17 @@ export function computarBarrido(fechas, rates, rangosPar = null) {
       // El gráfico dibuja CIERRES, no máximos: es la línea del precio, no el
       // rango. (Antes `last20` eran los cierres y servía para las dos cosas.)
       serie20: closes.slice(-20),
+      // Series completas, alineadas con `fechas`. Las usa scripts/lib/
+      // resolver.mjs para saber si una señal llegó a su objetivo o a su stop:
+      // hace falta el recorrido entero, no solo el último valor. Se exponen
+      // desde aquí en vez de recalcularlas fuera para que no puedan quedar
+      // desalineadas con lo que ve el barrido.
+      //
+      // A diferencia de la app hermana de intradía, aquí son EXACTAS en los 14
+      // pares: se piden todos directamente a Twelve Data en vez de derivar los
+      // cruces (ver el comentario de scripts/lib/velas.mjs).
+      highs,
+      lows,
     }
   })
 

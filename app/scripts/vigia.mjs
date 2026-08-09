@@ -24,7 +24,8 @@
 import { fileURLToPath } from 'node:url'
 import { computarBarrido, derivarVista } from '../src/lib/marketCalc.js'
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
-import { compararConAnterior, escribir, leerEstado } from './lib/vigia-nucleo.mjs'
+import { compararConAnterior, escribir, leerEstado, leerJsonl } from './lib/vigia-nucleo.mjs'
+import { resolver, resumir } from './lib/resolver.mjs'
 
 const DATOS = process.env.VIGIA_DATOS || fileURLToPath(new URL('../../datos-local', import.meta.url))
 const ESTADO = `${DATOS}/estado/vigia.json`
@@ -33,6 +34,7 @@ const LOG_CORRIDAS = `${DATOS}/historial/corridas.jsonl`
 // El barrido ya calculado, que es lo que lee la app. Ver el comentario de
 // abajo sobre por qué la app no pide los precios ella misma.
 const BARRIDO = `${DATOS}/estado/barrido.json`
+const LOG_RESULTADOS = `${DATOS}/historial/resultados.jsonl`
 
 const ahora = new Date()
 const { fechas, rates, rangosPar } = await obtenerVelas(leerLlave())
@@ -92,6 +94,13 @@ escribir(
   ) + '\n'
 )
 
+// Juzgar las señales de días anteriores: ¿llegaron a su objetivo o a su stop?
+// Va DESPUÉS de anotar las nuevas (así una recién vista ya entra en la cuenta)
+// y ANTES de los avisos, porque esto sí escribe en disco y los avisos no.
+const yaJuzgadas = new Set(leerJsonl(LOG_RESULTADOS).map((r) => r.clave))
+const { resultados, abiertas, caducadas } = resolver(leerJsonl(LOG_SENALES), data, yaJuzgadas)
+for (const r of resultados) escribir(LOG_RESULTADOS, JSON.stringify(r) + '\n', true)
+
 // El barrido que va a leer la app. Se publica lo justo para que pueda pintar
 // sus pantallas: `derivarVista` se sigue ejecutando en el navegador, porque
 // necesita el idioma de cada persona y eso aquí no se sabe.
@@ -99,6 +108,11 @@ escribir(
 // No se guardan las 300 fechas ni las series completas —solo `serie20`, que
 // es lo que dibuja el gráfico—: el archivo lo baja cada miembro cada vez que
 // abre la app, así que conviene que pese poco.
+//
+// ⚠️ `highs` y `lows` se quitan a propósito. Son 300 números por par y solo
+// los necesita el resolver, que corre aquí mismo. Dejarlos dentro llevaría el
+// archivo de 9 KB a más de medio mega, y lo paga cada miembro cada vez que
+// abre la app.
 escribir(
   BARRIDO,
   JSON.stringify({
@@ -106,7 +120,8 @@ escribir(
     ultima: data.ultima,
     raw: data.raw,
     esc: data.esc,
-    pares: data.pares,
+    // eslint-disable-next-line no-unused-vars -- highs/lows se descartan aquí
+    pares: data.pares.map(({ highs, lows, ...resto }) => resto),
     ratesUSD: data.ratesUSD,
   }) + '\n'
 )
@@ -139,6 +154,18 @@ if (nuevas.length) {
   }
 } else {
   console.log('  (nada nuevo respecto a la revisión anterior)')
+}
+const resumen = resumir(leerJsonl(LOG_RESULTADOS))
+console.log(
+  `Señales juzgadas en esta revisión: ${resultados.length}` +
+    ` · siguen abiertas: ${abiertas}` +
+    (caducadas ? ` · caducadas: ${caducadas}` : '')
+)
+if (resumen.todas.total) {
+  console.log(
+    `Historial: ${resumen.todas.ganadas}/${resumen.todas.total} acertadas` +
+      ` (${resumen.todas.acierto}%), ${resumen.todas.pips >= 0 ? '+' : ''}${resumen.todas.pips} pips`
+  )
 }
 console.log(`Avisos al celular: ${JSON.stringify(avisos)}`)
 console.log('---VIGIA-FIN---')
