@@ -8,8 +8,8 @@ el README genérico de Vite.
 **Renombrada de "Nestor Forex" a "Nestor Forex Swing" (2026-07-26)** para
 distinguirla de su app hermana **Nestor Forex Intradía**
 (`nestor-forex/nestor-forex-intradia`, repositorio separado): esta es la
-de trading de posición (horas a días, datos del BCE una vez al día), la
-otra es para intradía (velas de 1 hora, precio en vivo). Mismo cambio de
+de trading de posición (horas a días, velas diarias), la otra es para
+intradía (velas de 1 hora, precio en vivo). Mismo cambio de
 nombre en `App.jsx` (`NOMBRE_APP`), `index.html` y `vite.config.js`
 (manifest de la PWA). La portada (`Splash.jsx`) ahora usa la imagen real
 `app/public/trading_app_ui_v2.png` (globo + velas 3D) que subió el usuario,
@@ -23,7 +23,7 @@ verdad, con paleta cian/blanco/verde a juego con esa imagen.
   completo del barrido. (PR #1, fusionado)
 - **Fase 2** — Cálculos reales del barrido (fuerza relativa, EMA20/50, RSI
   Wilder, ATR%, setups) portados del prototipo a `app/src/lib/marketCalc.js`,
-  con datos en vivo desde `api.frankfurter.dev` vía `useMarketData.js`.
+  con datos en vivo (entonces Frankfurter; hoy velas de Twelve Data).
   (mismo PR #1)
 - **Fase 3** — Firebase Auth + Firestore reales, en el PR #2 (fusionado).
   Reemplazó el login local y el PIN de admin de prueba.
@@ -57,7 +57,7 @@ app/                          # la app real (React 19 + Vite 8)
       useAuthUser.js           # sesión + perfil Firestore en vivo, registrar/ingresar/salir
       useMembers.js            # listado en vivo de users/ para el admin
       useTrades.js             # diario de operaciones en users/{uid}/trades
-      useMarketData.js         # fetch + caché diaria del barrido (Frankfurter)
+      useMarketData.js         # lee el barrido que publica el vigía (no pide precios)
       marketCalc.js            # los cálculos puros (EMA/RSI/ATR/fuerza/setups)
       calc.js                  # calculadora de lote/riesgo
       reporte.js                # genera el .md descargable del tablero completo
@@ -99,9 +99,10 @@ eso la config de Firebase quedó commiteada directo en `.env.production` en
 vez de inyectarse por CI.
 
 ## Limitaciones conocidas (a propósito, documentadas en la UI)
-- Datos del barrido: tasas de referencia del BCE, **un cierre por día**
-  (vía Frankfurter). No hay intradía, no hay spread/volumen real de bróker.
-  RSI/ATR se calculan sobre esos cierres diarios.
+- Datos del barrido: **velas diarias reales** de Twelve Data (máximo, mínimo
+  y cierre), una vela por día. Desde el 2026-08-09; antes eran los cierres
+  del BCE vía Frankfurter — ver "Cambio de fuente de datos" más abajo. No hay
+  intradía (para eso está la app hermana) ni spread/volumen real de bróker.
 - El PIN de admin de las fases 1–2 ya NO existe; no confundir con nada de
   lo que quede en el historial de commits de esas fases.
 - El ícono/manifest de la PWA (`app/public/pwa-*.png`) es un placeholder
@@ -288,3 +289,169 @@ confirmar primero):
   clic. Confirmar antes de fusionar PRs o tocar configuración compartida.
 - Antes de cada fase/tarea grande, avisar qué se va a hacer y esperar
   confirmación (así se ha trabajado hasta ahora).
+
+---
+
+# Lo que se hizo el 2026-08-09
+
+Tres cosas grandes, en este orden y por esta razón: primero arreglar de dónde
+salen los datos, después medir si acierta. Al revés habría sido medir señales
+calculadas con datos incompletos.
+
+## 1. Avisos push al celular
+
+Portado de la app hermana (`nestor-forex/nestor-forex-intradia`), que lo tenía
+desde el día anterior. Néstor eligió avisos **de la propia app** (Web Push) en
+vez de Telegram o correo, sabiendo que tomaba más días, porque es lo único que
+permite que **cualquier miembro aprobado** active los suyos — no solo él.
+
+Swing no tenía vigía, así que hubo que construírselo: sin algo que detecte
+señales nuevas, no hay nada que avisar. Corre **una vez al día** (15:50 UTC),
+no cada hora como el de intradía: las velas diarias cambian una vez al día.
+
+```
+app/src/sw.js                      # service worker propio: recibe el aviso
+app/src/lib/push/vapid.js          # clave pública, compartida app+vigía
+app/src/lib/push/soporte.js        # ¿puede este aparato?, y si no, por qué
+app/src/lib/push/index.js          # activar/desactivar + guardar en Firestore
+app/src/components/AvisosCard.jsx  # el interruptor, en la pestaña Barrido
+app/scripts/vigia.mjs              # el vigía diario
+app/scripts/lib/push-envio.mjs     # armar el mensaje y mandarlo
+app/scripts/prueba-aviso-real.mjs  # mandar un aviso de prueba a mano
+.github/workflows/vigia.yml
+.github/workflows/prueba-avisos.yml
+```
+
+- Las suscripciones se guardan con `app: 'swing'` en la colección `pushSubs`.
+  Los dos repos comparten proyecto de Firebase, así que **cada vigía solo debe
+  escribirle a los aparatos de su app**. La prueba de avisos toma ese nombre
+  del propio código (`APP`) en vez de tenerlo escrito, para que valga igual en
+  las dos y nadie tenga que acordarse de cambiarlo al portarla.
+- **Las mismas claves VAPID que intradía**, y el mismo JSON de cuenta de
+  servicio. Néstor los pegó como secretos de ESTE repositorio también: los
+  secretos son por repositorio, no por cuenta.
+- ⚠️ **Los tres reportes por bolsa (Asia/Londres/NY) NO se portaron a
+  propósito.** Aquí el precio se actualiza una vez al día, así que los tres
+  llegarían con el texto idéntico. El reporte diario ya cubre eso.
+- `idDe` tolera setups sin `tipo`: swing no tiene modo rango, y sin eso el
+  identificador quedaría con la palabra "undefined" dentro para siempre.
+- **Verificado con un aviso real que le sonó en el celular** (2 de 2
+  entregados). Para volver a probarlo: Actions → "Probar los avisos al
+  celular" → Run workflow. **NO** sirve lanzar el vigía para eso.
+
+## 2. Cambio de fuente de datos: velas diarias reales
+
+El más importante del día, y el que más cerca estuvo de salir mal.
+
+**El problema.** El BCE publica solo el cierre de cada día. Con eso el ATR se
+calculaba de cierre a cierre y los soportes salían de los extremos de los
+CIERRES. Como **el stop se calcula desde el ATR**, salía demasiado estrecho.
+
+**Lo medido** (`app/scripts/comparar-fuente.mjs`, Actions → "Comparar fuente
+de datos"): el movimiento real es un **96% mayor** —mediana, rango +59% a
++171%—. Casi el doble.
+
+| Par | Stop antes | Stop real | R/B que mostraba | R/B real |
+|---|---|---|---|---|
+| USD/CAD | **12 pips** | 40 | **14.99** | 4.70 |
+| EUR/CAD | **12 pips** | 72 | **8.27** | 1.86 |
+| GBP/CAD | **14 pips** | 92 | **8.01** | 1.59 |
+
+Un stop de 12 pips en USD/CAD —que se mueve 40 en un día tranquilo— está
+dentro del ruido normal. Y el denominador ficticio inflaba la relación
+riesgo/beneficio hasta números que no existen en el mercado.
+
+El filtro de R/B **no hubo que tocarlo**: pasan 8 con el método viejo y 7 con
+el nuevo.
+
+### ⚠️ El error que la medición destapó (no repetirlo)
+
+La primera versión derivaba los cruces (EUR/CHF…) a partir de las divisas
+contra el dólar. Para el máximo hay que combinar el máximo de una con el
+mínimo de la otra, o sea **suponer que ambos extremos pasaron en el mismo
+instante**. En velas de una hora (intradía) el error es pequeño; en velas de
+un DÍA se dispara: daba ATR un **400% mayor del real** en los 7 cruces, que
+habría puesto stops disparatados. Peor que lo que había.
+
+Por eso `app/scripts/lib/velas.mjs` **pide los 14 pares DIRECTAMENTE**. Cuesta
+14 créditos al día de los 800 gratis, y van en **dos tandas de 7 con una pausa
+de 65 s**: el plan gratuito da 8 créditos por minuto y pedirlos de golpe daría
+429 siempre.
+
+### La app ya NO pide los precios
+
+Frankfurter era gratis e ilimitado; Twelve Data da 8 consultas por minuto y
+800 al día. Si cada miembro que abre la app pidiera los 14 pares, con un
+puñado de personas se acabaría la cuota y con dos a la vez fallaría.
+
+Ahora **el vigía consulta una vez al día y publica el barrido ya calculado**
+en `estado/barrido.json` de la rama `datos`; `useMarketData.js` lee ese
+archivo. Igual de fresco y aguanta los miembros que hagan falta.
+`derivarVista` se sigue ejecutando en el navegador porque necesita el idioma.
+
+⚠️ **`barrido.json` descarta `highs` y `lows` al publicarse.** Son 300 números
+por par y solo los necesita el resolver, que corre en el propio vigía.
+Dejarlos llevaría el archivo de **9 KB a más de medio mega**, y lo paga cada
+miembro cada vez que abre la app.
+
+### Otras cosas del cambio
+
+- `computarBarrido(fechas, rates, rangosPar)`: `rangosPar` es **opcional**.
+  Sin él se cae al método viejo **idéntico a antes**, y hay una prueba que lo
+  comprueba (`prueba-marketcalc.mjs`) para que el cambio sea aditivo.
+- ⚠️ `serie20` estuvo a punto de quedarse con los MÁXIMOS al reutilizar una
+  variable: el gráfico dibuja **cierres**, no máximos. Tiene prueba propia.
+- Los textos que decían "tasas de referencia BCE" eran falsos tras el cambio:
+  corregidos en los 13 idiomas.
+- Efecto práctico para Néstor: **con stops del doble de ancho, el lote baja a
+  la mitad para arriesgar lo mismo.** La calculadora lo hace sola, pero los
+  tamaños se ven distintos y no es un error.
+
+## 3. Pantalla de historial: ¿acierta la app?
+
+```
+app/scripts/lib/resolver.mjs      # decide ganada/perdida mirando los días siguientes
+app/src/lib/historialCalc.js      # las cuentas (compartido: Node y la app)
+app/src/lib/useHistorial.js       # baja los datos de la rama `datos`
+app/src/components/HistorialTab.jsx  # la pantalla (4ª pestaña)
+app/scripts/prueba-resolver.mjs   # 22 comprobaciones, sin internet
+```
+
+**Aquí el cálculo es EXACTO en los 14 pares**, porque se piden todos directos.
+En intradía los cruces se derivan y su pantalla tiene que separar cuentas
+fiables de aproximadas; aquí esa advertencia sobra y se quitó. Un solo
+porcentaje, y de fiar.
+
+### Decisiones que NO hay que ablandar
+
+- **Si un mismo día toca el stop y el objetivo, cuenta como PERDIDA.** El día
+  solo guarda máximo y mínimo, no el orden. Se elige el peor caso a propósito:
+  un historial que se equivoca a favor propio no sirve para decidir si
+  arriesgar dinero.
+- **El día en que aparece la señal no cuenta**, solo los posteriores: la
+  entrada es a su cierre.
+- Señales identificadas por `id@vistoEl`, no por `id`: la misma combinación
+  par/lado reaparece y cada aparición es una operación distinta.
+- Una señal cuyo día ya no está entre los 300 descargados se marca `caducada`
+  en vez de reintentarse cada día para siempre.
+
+## Estado y qué mirar la próxima vez
+
+Todo verificado y publicado. El vigía corrió por primera vez el 2026-08-09 y
+dejó 6 señales registradas.
+
+⚠️ **Las 6 tenían R/B entre 0.58 y 0.85, o sea por debajo del filtro de 1.5,
+así que ninguna despertó el celular.** Con los datos viejos varias habrían
+mostrado R/B de 6, 8 o 15 —falsos, por el stop estrecho—. Es el filtro
+haciendo su trabajo, pero **hay que vigilarlo**: si se repite que la app
+encuentra señales y ninguna llega a 1.5, nunca sonará el celular. Puede
+significar que el mercado está feo o que la fórmula del objetivo se queda
+corta. El historial lo dirá.
+
+Las tres preguntas abiertas, para revisar con una semana de datos:
+
+1. **¿Acierta?** Ya está acumulando. Es el número que hace falta para vender.
+2. **¿El filtro de 1.5 deja algo o deja seco?** Ver arriba.
+3. **El reloj de GitHub se salta horas.** Medido en la app hermana: 3 corridas
+   donde tocaban 13, con un hueco de 7,6 horas seguidas. Para un vigía diario
+   importa menos que para uno por hora, pero si un día no corre, no corrió.
