@@ -20,13 +20,17 @@
 //   · Y lo que de verdad decide: CUÁNTAS SEÑALES pasan el filtro de R/B 1:1.5
 //     con cada método. Si el número cambia mucho, hay que revisar el umbral
 //     antes de adoptar el cambio.
+//
+// ⚠️ La primera versión de esta medición derivaba los cruces (EUR/CHF…) a
+// partir de las divisas contra el dólar, y daba ATR un 400% mayor del real en
+// ellos: al combinar el máximo de una divisa con el mínimo de la otra se
+// inventa un rango que nunca existió. Ahora `velas.mjs` pide los 14 pares
+// directamente, así que estos números son los de verdad en todos.
 
-import { CCY, PAIRS } from '../src/lib/marketCalc.js'
+import { PAIRS } from '../src/lib/marketCalc.js'
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
 
 const RB_MINIMO = 1.5
-
-// --- las dos formas de medir la volatilidad -------------------------------
 
 // La de hoy: promedio de |cierre − cierre anterior| de los últimos 14 días.
 function atrCierres(closes) {
@@ -56,38 +60,21 @@ function atrWilder(highs, lows, closes, p = 14) {
   return a
 }
 
-// --- el setup, con las mismas fórmulas que la app -------------------------
-
+// Las mismas fórmulas de stop y objetivo que usa la app.
 function niveles({ c, atrAbs, hi20, lo20, hi10, lo10 }, compra) {
   const sl = compra ? lo10 - 0.5 * atrAbs : hi10 + 0.5 * atrAbs
   const tp = compra ? Math.max(hi20, c + 2 * atrAbs) : Math.min(lo20, c - 2 * atrAbs)
-  const rr = Math.abs(tp - c) / Math.abs(c - sl)
-  return { sl, tp, rr }
+  return { sl, tp, rr: Math.abs(tp - c) / Math.abs(c - sl) }
 }
 
 // --------------------------------------------------------------------------
 
-const { barras, rates, rangos } = await obtenerVelas(leerLlave())
-const L = barras.length - 1
-
-const serie = {}
-const serieHi = {}
-const serieLo = {}
-CCY.forEach((c) => {
-  serie[c] = barras.map((t) => (c === 'USD' ? 1 : rates[t][c]))
-  serieHi[c] = barras.map((t, i) => (c === 'USD' ? 1 : (rangos?.[t]?.[c]?.h ?? serie[c][i])))
-  serieLo[c] = barras.map((t, i) => (c === 'USD' ? 1 : (rangos?.[t]?.[c]?.l ?? serie[c][i])))
-})
-
-const px = (b, q, i) => serie[q][i] / serie[b][i]
-// El máximo del par se da con el máximo de la cotizada contra el mínimo de la
-// base. Exacto en los 7 pares contra el dólar (una de las dos es constante);
-// en los cruces es una cota algo más ancha que la real.
-const pxHi = (b, q, i) => serieHi[q][i] / serieLo[b][i]
-const pxLo = (b, q, i) => serieLo[q][i] / serieHi[b][i]
+const { fechas, rangosPar } = await obtenerVelas(leerLlave())
+const L = fechas.length - 1
 
 console.log('---COMPARACION-INICIO---')
-console.log(`Días descargados: ${barras.length} · último: ${barras[L]}`)
+console.log(`Días descargados: ${fechas.length} · último: ${fechas[L]}`)
+console.log('(los 14 pares pedidos directamente: máximos y mínimos reales)')
 console.log('')
 console.log('par        ATR% viejo  ATR% nuevo   cambio   R/B viejo  R/B nuevo   pips riesgo v→n')
 console.log('─'.repeat(88))
@@ -97,9 +84,10 @@ let pasanNuevo = 0
 const cambiosAtr = []
 
 for (const [b, q] of PAIRS) {
-  const closes = barras.map((_, i) => px(b, q, i))
-  const highs = barras.map((_, i) => pxHi(b, q, i))
-  const lows = barras.map((_, i) => pxLo(b, q, i))
+  const nombre = `${b}/${q}`
+  const closes = fechas.map((d) => rangosPar[d][nombre].c)
+  const highs = fechas.map((d) => rangosPar[d][nombre].h)
+  const lows = fechas.map((d) => rangosPar[d][nombre].l)
   const c = closes[L]
   const dec = b === 'JPY' || q === 'JPY' ? 2 : 4
   const pip = dec === 2 ? 0.01 : 0.0001
@@ -134,32 +122,33 @@ for (const [b, q] of PAIRS) {
 
   const atrPctV = (atrV / c) * 100
   const atrPctN = (atrN / c) * 100
-  const cambio = ((atrPctN / atrPctV - 1) * 100).toFixed(0)
-  cambiosAtr.push(Number(cambio))
-
-  const riesgoV = Math.abs(c - nv.sl) / pip
-  const riesgoN = Math.abs(c - nn.sl) / pip
+  const cambio = Math.round((atrPctN / atrPctV - 1) * 100)
+  cambiosAtr.push(cambio)
 
   console.log(
-    `${(b + '/' + q).padEnd(9)} ` +
+    `${nombre.padEnd(9)} ` +
       `${atrPctV.toFixed(3).padStart(10)} ${atrPctN.toFixed(3).padStart(11)} ` +
       `${(cambio > 0 ? '+' : '') + cambio + '%'}`.padStart(9) +
       `${nv.rr.toFixed(2).padStart(11)} ${nn.rr.toFixed(2).padStart(10)}   ` +
-      `${Math.round(riesgoV)} → ${Math.round(riesgoN)}`
+      `${Math.round(Math.abs(c - nv.sl) / pip)} → ${Math.round(Math.abs(c - nn.sl) / pip)}`
   )
 }
 
-const medio = Math.round(cambiosAtr.reduce((a, b) => a + b, 0) / cambiosAtr.length)
+const ordenados = [...cambiosAtr].sort((a, b) => a - b)
+const mediana = ordenados[Math.floor(ordenados.length / 2)]
 
 console.log('─'.repeat(88))
 console.log('')
-console.log(`El ATR real es un ${medio}% mayor de media que el de cierre a cierre.`)
+// Se usa la mediana y no el promedio: un solo par raro desplaza el promedio y
+// haría parecer general lo que es una excepción.
+console.log(`El ATR real es un ${mediana}% mayor que el de cierre a cierre (mediana).`)
+console.log(`Rango del cambio: de ${ordenados[0]}% a ${ordenados.at(-1)}%.`)
+console.log('')
 console.log(`Señales que pasan el filtro R/B ${RB_MINIMO} (lado compra):`)
 console.log(`   con el método de hoy : ${pasanViejo} de ${PAIRS.length}`)
 console.log(`   con velas reales     : ${pasanNuevo} de ${PAIRS.length}`)
 console.log('')
-console.log('Cómo leerlo: si "pips riesgo" sube mucho, los stops de hoy estaban')
-console.log('demasiado ajustados y sacaban operaciones por ruido normal del día.')
-console.log('Si el número de señales que pasan cae en picado, hay que revisar el')
-console.log('umbral de R/B antes de adoptar el cambio.')
+console.log('Cómo leerlo: si "pips riesgo" sube de forma pareja en todos los pares,')
+console.log('los stops de hoy estaban demasiado ajustados. Si algún par se dispara')
+console.log('muy por encima del resto, sospechar de los datos antes que del mercado.')
 console.log('---COMPARACION-FIN---')
