@@ -1,0 +1,23 @@
+name: Comparar fuente de datos
+
+# Mide qué cambiaría al pasar de los cierres del BCE a las velas diarias
+# reales de Twelve Data. NO cambia nada: solo imprime números.
+#
+# Corre aquí y no en el entorno de la sesión de Claude porque ese tiene
+# bloqueado api.twelvedata.com. Solo a mano.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  comparar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Comparar
+        working-directory: app
+        run: node scripts/comparar-fuente.mjs
