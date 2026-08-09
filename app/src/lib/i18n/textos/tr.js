@@ -51,7 +51,7 @@ export default {
     sinConexion: ({ fecha }) => `⚠ Bağlantı yok — ${fecha} tarihli son kaydedilen fiyat gösteriliyor.`,
     descargando: 'Fiyatlar indiriliyor…',
     descargandoLargo: '7 aylık günlük fiyatlar indiriliyor…',
-    pie: 'ECB referans kurları, günde bir kapanış. Eğitim amaçlı analiz, yatırım tavsiyesi değildir.',
+    pie: 'Gerçek günlük mumlar (en yüksek, en düşük ve kapanış). Eğitim amaçlı analiz, yatırım tavsiyesi değildir.',
     verTablero: 'Tam paneli gör →',
     errorPrecios: ({ detalle }) => `Canlı fiyatlar alınamadı (${detalle}). Bağlantını kontrol edip sayfayı yenile.`,
   },
@@ -102,7 +102,7 @@ export default {
       'Bu setup, bu sürümden önce kaydedilmiş bir taramadan geliyor, bu yüzden grafik verisini taşımıyor. Tam görmek için uygulamayı yeniden yükle.',
     pip2: '1 pip = 0.01',
     pip4: '1 pip = 0.0001',
-    granularidad: 'günde bir kapanış',
+    granularidad: 'günde bir mum',
     graficoAria: ({ n, par, precio, sl, tp }) =>
       `${par} son ${n} kapanış. Şu anki fiyat ${precio}, stop-loss ${sl}, hedef ${tp}.`,
     hace: ({ n }) => `${n} gün önce`,

@@ -6,17 +6,8 @@
 // de la sesión de Claude tiene bloqueado el acceso a api.frankfurter.dev.
 
 import { computarBarrido, derivarVista } from '../src/lib/marketCalc.js'
+import { leerLlave, obtenerVelas } from './lib/velas.mjs'
 import { limitaciones } from '../src/lib/fakeData.js'
-
-async function obtenerRates() {
-  const f = (d) => d.toISOString().slice(0, 10)
-  const ini = new Date(Date.now() - 220 * 864e5)
-  const r = await fetch(`https://api.frankfurter.dev/v1/${f(ini)}..?base=USD&symbols=EUR,GBP,JPY,CHF,AUD,NZD,CAD`)
-  if (!r.ok) throw new Error('HTTP ' + r.status)
-  const j = await r.json()
-  const fechas = Object.keys(j.rates).sort()
-  return { fechas, rates: j.rates }
-}
 
 function formatoChat({ fecha, monedas, pares, compras, ventas, vigilancia, setups, corte }) {
   const li = (xs) => (xs.length ? xs.map((x) => `• *${x.name}* — ${x.razon}`).join('\n') : '_Ninguno hoy._')
@@ -48,8 +39,8 @@ ${
 _Riesgo: 1-2% del capital por operación. ${limitaciones}_`
 }
 
-const { fechas, rates } = await obtenerRates()
-const data = computarBarrido(fechas, rates)
+const { fechas, rates, rangosPar } = await obtenerVelas(leerLlave())
+const data = computarBarrido(fechas, rates, rangosPar)
 const vista = derivarVista(data, { thr: 0.5, topN: 3 })
 const fecha = new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
