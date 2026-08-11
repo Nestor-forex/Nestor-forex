@@ -127,7 +127,13 @@ console.log('\n9. En swing todos los pares son exactos')
   const d2 = mundo([1.085, 1.09, 1.09, 1.09], [1.079, 1.069, 1.08, 1.08], { name: 'EUR/CHF' })
 
   const ganada = resolver([senal()], d1).resultados[0]
-  const perdidaCruce = resolver([senal({ par: 'EUR/CHF' })], d2).resultados[0]
+  // El `id` va junto con el par a propósito: `idDe` lo arma como
+  // `par|lado|tipo`, así que dos pares distintos NUNCA comparten clave en la
+  // app real. Cambiar aquí solo `par` dejaba dos señales con la misma clave,
+  // algo que no puede pasar de verdad, y hacía fallar la cuenta ahora que
+  // `resumir` junta las líneas repetidas de una misma señal.
+  const cruce = senal({ par: 'EUR/CHF', id: 'EUR/CHF|COMPRA|tendencia' })
+  const perdidaCruce = resolver([cruce], d2).resultados[0]
 
   // A diferencia de la app hermana de intradía, aquí los 14 pares se piden
   // directamente a Twelve Data, así que el máximo y el mínimo son los reales
@@ -147,6 +153,50 @@ console.log('\n10. Sin nada que juzgar no revienta')
   const r = resolver([], d)
   comprobar(r.resultados.length === 0 && r.abiertas === 0, 'lista vacía → nada')
   comprobar(resumir([]).todas.acierto === null, 'sin operaciones el acierto es null, no 0%')
+}
+
+// El error que dejó el historial de swing en cero durante días. El vigía de
+// swing guarda el día de la señal en un campo llamado `cierre`; el de intradía
+// lo llama `vela`. El resolver leía solo `vela`, así que en swing encontraba
+// undefined, no lo hallaba en la lista de fechas, y marcaba TODAS las señales
+// como "caducada" nada más nacer. Ninguna se juzgaba jamás.
+//
+// No se vio antes porque las pruebas usaban `vela`, igual que intradía: la
+// prueba pasaba y la app estaba rota. Por eso ahora se comprueban los dos
+// nombres, y con el nombre de swing PRIMERO.
+console.log('\n11. El día de la señal se lee venga como venga (swing `cierre`, intradía `vela`)')
+{
+  const alObjetivo = mundo([1.08, 1.11], [1.08, 1.09])
+
+  const comoSwing = { ...senal(), cierre: 't0' }
+  delete comoSwing.vela
+  const rs = resolver([comoSwing], alObjetivo)
+  comprobar(rs.resultados[0]?.resultado === 'ganada', 'con `cierre` (swing) se juzga, no se caduca')
+  comprobar(rs.resultados[0]?.velaEntrada === 't0', 'y guarda bien la vela de entrada')
+
+  const rv = resolver([senal()], alObjetivo)
+  comprobar(rv.resultados[0]?.resultado === 'ganada', 'con `vela` (intradía) sigue funcionando igual')
+
+  // Sin ninguno de los dos sí debe caducar: es el caso real de una señal cuyo
+  // día ya se salió de la ventana de velas descargadas.
+  const sinDia = { ...senal() }
+  delete sinDia.vela
+  comprobar(resolver([sinDia], alObjetivo).resultados[0]?.resultado === 'caducada', 'sin fecha sí caduca')
+}
+
+console.log('\n12. Una "caducada" no es definitiva: si luego se puede juzgar, manda el veredicto')
+{
+  const clave = claveDe(senal())
+  const antes = { clave, resultado: 'caducada', pips: null }
+  const despues = { clave, resultado: 'ganada', pips: 200 }
+
+  // Así es como quedan las dos líneas en el archivo: primero el "no pude",
+  // después el veredicto de verdad. La cuenta debe quedarse con la segunda.
+  const r = resumir([antes, despues])
+  comprobar(r.todas.total === 1, 'la señal cuenta UNA vez, no dos')
+  comprobar(r.todas.acierto === 100 && r.todas.pips === 200, 'gana el veredicto, no el "no pude"')
+
+  comprobar(resumir([antes]).todas.total === 0, 'una caducada sola no suma ni resta')
 }
 
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')
