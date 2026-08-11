@@ -5,3 +5,4 @@
 {"clave":"GBP/JPY|VENTA|tendencia@2026-08-09T04:31:23.669Z","id":"GBP/JPY|VENTA|tendencia","par":"GBP/JPY","lado":"VENTA","vistoEl":"2026-08-09T04:31:23.669Z","resultado":"caducada","resueltoEl":"2026-08-10T18:37:54.510Z"}
 {"clave":"USD/CAD|VENTA|tendencia@2026-08-09T04:31:23.669Z","id":"USD/CAD|VENTA|tendencia","par":"USD/CAD","lado":"VENTA","vistoEl":"2026-08-09T04:31:23.669Z","resultado":"caducada","resueltoEl":"2026-08-10T18:37:54.510Z"}
 {"clave":"GBP/USD|COMPRA|tendencia@2026-08-10T18:36:48.750Z","id":"GBP/USD|COMPRA|tendencia","par":"GBP/USD","lado":"COMPRA","vistoEl":"2026-08-10T18:36:48.750Z","resultado":"caducada","resueltoEl":"2026-08-10T18:37:54.510Z"}
+{"clave":"AUD/USD|COMPRA|tendencia@2026-08-11T18:40:24.938Z","id":"AUD/USD|COMPRA|tendencia","par":"AUD/USD","lado":"COMPRA","vistoEl":"2026-08-11T18:40:24.938Z","resultado":"caducada","resueltoEl":"2026-08-11T18:41:30.361Z"}
