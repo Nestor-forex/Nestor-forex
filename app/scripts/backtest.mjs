@@ -33,7 +33,7 @@
 import { computarBarrido } from '../src/lib/marketCalc.js'
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
 import { generarSenales } from './lib/backtest-nucleo.mjs'
-import { GEOMETRIAS } from './lib/geometrias.mjs'
+import { GEOMETRIAS, simetrica } from './lib/geometrias.mjs'
 import { resolver } from './lib/resolver.mjs'
 
 // Días de arranque que no se juzgan: el EMA50 y el RSI necesitan historia
