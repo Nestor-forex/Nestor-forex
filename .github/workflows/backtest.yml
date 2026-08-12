@@ -1,0 +1,35 @@
+name: Banco de pruebas de las reglas
+
+# Corre las reglas del barrido sobre los últimos ~300 días reales y dice
+# cuánto habrían acertado, comparando varias variantes de los filtros.
+#
+# NO cambia nada ni publica nada: solo imprime números. Está para decidir con
+# medidas en vez de con intuición — ninguna regla debería entrar a la app sin
+# haber pasado por aquí.
+#
+# Corre en Actions y no en el entorno de la sesión de Claude porque ese tiene
+# bloqueado api.twelvedata.com. Solo a mano.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    # Más generoso que los otros: las velas llegan en dos tandas con una pausa
+    # de 65 s en medio (el plan gratuito da 8 consultas por minuto), y encima
+    # hay que recalcular el barrido entero una vez por día medido.
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Primero lo que no necesita internet: si el motor está roto, mejor
+      # saberlo antes de gastar 14 créditos de la cuota diaria.
+      - name: Comprobar el motor del banco de pruebas
+        working-directory: app
+        run: node scripts/prueba-backtest.mjs
+      - name: Medir
+        working-directory: app
+        run: node scripts/backtest.mjs

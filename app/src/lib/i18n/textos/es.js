@@ -314,6 +314,28 @@ export default {
     caducada: 'Sin datos',
   },
 
+  // Precios en vivo del bróker (puente de MetaTrader 5). Ojo: Bid, Ask, Spread
+  // y Pip NO se traducen en ningún idioma — son los nombres que usa cualquier
+  // plataforma de trading, y cambiarlos confundiría más de lo que ayudaría.
+  vivo: {
+    titulo: 'Precios en vivo del bróker',
+    desc: 'Precio de compra y de venta directo de MetaTrader 5, actualizado cada 2 segundos. Es lo único que muestra el spread real que cobra el bróker; el barrido de arriba trabaja con velas diarias y no lo sabe.',
+    conectar: 'Conectar con MetaTrader 5',
+    desconectar: 'Desconectar',
+    conectando: 'Buscando el puente…',
+    enVivo: 'EN VIVO',
+    par: 'Par',
+    bid: 'Bid',
+    ask: 'Ask',
+    spread: 'Spread',
+    pie: 'Spread en pips. En ámbar si pasa de 3.',
+    sinPuente: 'No se pudo conectar con el puente',
+    sinPuenteQue: ({ url }) => `La app intentó pedirle los precios a ${url} y no hubo respuesta.`,
+    sinPuenteLocal:
+      'Esa dirección (127.0.0.1) significa "este mismo aparato". Solo funciona en el computador donde están corriendo MetaTrader 5 y el puente de Python, y con los dos encendidos. Desde el celular, o desde otro computador, nunca va a encontrarlo: para eso el puente tiene que estar publicado en internet con su propia dirección.',
+    error: 'El puente respondió algo que la app no supo leer. Revisa que /quotes devuelva los pares con su bid y su ask.',
+  },
+
   errores: {
     'auth/email-already-in-use': 'Ese correo ya tiene una cuenta. Prueba en "Ingresar".',
     'auth/invalid-email': 'Ese correo no parece válido.',

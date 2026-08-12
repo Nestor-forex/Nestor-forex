@@ -41,7 +41,17 @@ export function resolver(senales, data, resueltas = new Set()) {
     if (resueltas.has(clave)) continue
 
     const par = porNombre.get(s.par)
-    const desde = data.fechas.indexOf(s.vela)
+    // El día con el que se calculó la señal. El vigía de swing lo guarda como
+    // `cierre` y el de intradía como `vela`: se aceptan los dos nombres.
+    //
+    // ⚠️ Esto NO es flexibilidad de adorno, es el arreglo de un error real.
+    // Antes aquí decía solo `s.vela`, que en swing no existe, así que
+    // `indexOf(undefined)` daba -1 y TODAS las señales de swing se marcaban
+    // "caducada" nada más nacer: el historial no podía juzgar ni una. Si
+    // algún día se renombra el campo, hay que tocar los dos vigías y esta
+    // línea a la vez, o vuelve a pasar en silencio.
+    const dia = s.vela ?? s.cierre
+    const desde = data.fechas.indexOf(dia)
 
     // La vela en la que apareció ya no está entre las que descargamos (solo
     // llegan los últimos 300 días). No se puede juzgar y no tiene
@@ -99,7 +109,7 @@ export function resolver(senales, data, resueltas = new Set()) {
       lado: s.lado,
       tipo: s.tipo,
       vistoEl: s.vistoEl,
-      velaEntrada: s.vela,
+      velaEntrada: dia,
       velaFinal,
       resultado: veredicto,
       // Cuántas horas tardó en resolverse. Sirve para saber si los objetivos

@@ -97,9 +97,23 @@ escribir(
 // Juzgar las señales de días anteriores: ¿llegaron a su objetivo o a su stop?
 // Va DESPUÉS de anotar las nuevas (así una recién vista ya entra en la cuenta)
 // y ANTES de los avisos, porque esto sí escribe en disco y los avisos no.
-const yaJuzgadas = new Set(leerJsonl(LOG_RESULTADOS).map((r) => r.clave))
+//
+// Solo "ganada" y "perdida" son definitivas. Una "caducada" NO cierra el caso:
+// significa "hoy no pude juzgarla", y eso puede cambiar mañana. Tratarla como
+// definitiva fue justo lo que dejó el historial de swing en cero — las 8
+// señales quedaron marcadas caducada por un error de nombre de campo y ya
+// nunca se volvían a mirar, ni siquiera después de arreglarlo.
+const previos = leerJsonl(LOG_RESULTADOS)
+const yaJuzgadas = new Set(previos.filter((r) => r.resultado !== 'caducada').map((r) => r.clave))
 const { resultados, abiertas, caducadas } = resolver(leerJsonl(LOG_SENALES), data, yaJuzgadas)
-for (const r of resultados) escribir(LOG_RESULTADOS, JSON.stringify(r) + '\n', true)
+
+// Una caducada que ya estaba anotada no se vuelve a escribir: si no, cada
+// corrida añadiría una línea repetida por cada señal vieja, para siempre.
+const caducadasPrevias = new Set(previos.filter((r) => r.resultado === 'caducada').map((r) => r.clave))
+for (const r of resultados) {
+  if (r.resultado === 'caducada' && caducadasPrevias.has(r.clave)) continue
+  escribir(LOG_RESULTADOS, JSON.stringify(r) + '\n', true)
+}
 
 // El barrido que va a leer la app. Se publica lo justo para que pueda pintar
 // sus pantallas: `derivarVista` se sigue ejecutando en el navegador, porque

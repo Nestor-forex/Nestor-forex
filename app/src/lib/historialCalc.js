@@ -30,7 +30,14 @@ export function resumir(resultados) {
     }
   }
 
-  const juzgadas = (resultados || []).filter(
+  // El archivo puede traer más de una línea por señal: una "caducada" de un
+  // día en que no se pudo juzgar y, más adelante, su veredicto de verdad.
+  // Manda la última, que es la más informada. Sin esto una señal contaría dos
+  // veces, o peor: se quedaría con el "no se pudo" de la primera vez.
+  const ultimaPorClave = new Map()
+  for (const r of resultados || []) ultimaPorClave.set(r.clave, r)
+
+  const juzgadas = [...ultimaPorClave.values()].filter(
     (r) => r.resultado === 'ganada' || r.resultado === 'perdida'
   )
 
