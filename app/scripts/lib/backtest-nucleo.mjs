@@ -15,6 +15,12 @@ import { actual } from './geometrias.mjs'
  * @param geometria  función (crudo, compra) → { sl, tp }. Por defecto la que
  *                   usa la app hoy, para que sin pedir nada esto mida la app
  *                   de verdad. Ver `geometrias.mjs`.
+ * @param invertirVentas  cuando el barrido dice VENDER, apuntar la operación
+ *                   al revés: COMPRAR ese par, con los niveles de compra de la
+ *                   app. Es un diagnóstico, no una propuesta. Una señal que
+ *                   pierde siempre no es una señal sin información: es una con
+ *                   información y el signo cambiado, y eso se arregla distinto
+ *                   que una que acierta a medias. Las compras se dejan igual.
  * @returns lista de señales en el mismo formato que escribe el vigía, lista
  *          para pasarle a `resolver.mjs`.
  */
@@ -22,7 +28,7 @@ export function generarSenales(
   fechas,
   rates,
   rangosPar,
-  { calentamiento = 80, thr = 0.5, topN = 3, geometria = actual } = {}
+  { calentamiento = 80, thr = 0.5, topN = 3, geometria = actual, invertirVentas = false } = {}
 ) {
   const senales = []
   let previas = new Set()
@@ -42,7 +48,12 @@ export function generarSenales(
       if (previas.has(id)) continue
 
       const c = s.crudo
-      const compra = s.lado === 'COMPRA'
+      // El lado que se OPERA. Normalmente el que dice el barrido; con
+      // `invertirVentas`, las ventas se dan la vuelta (ver el comentario de
+      // arriba). El identificador se queda con el lado ORIGINAL para que dos
+      // mediciones de la misma señal se puedan cruzar entre sí.
+      const compra = invertirVentas ? true : s.lado === 'COMPRA'
+      const lado = compra ? 'COMPRA' : 'VENTA'
 
       // El stop y el objetivo se recalculan con la geometría que toque, en vez
       // de usar los que trae `crudo`. Todo lo demás —qué pares, qué lado, qué
@@ -56,7 +67,14 @@ export function generarSenales(
         vistoEl: fechas[i],
         cierre: fechas[i],
         par: s.name,
-        lado: s.lado,
+        lado,
+        // Lo que dijo el barrido, aunque se opere al revés. Sin esto no se
+        // podría separar "las ventas invertidas" de las compras de verdad.
+        ladoOriginal: s.lado,
+        // Divisas del par, para poder mirar si la pérdida se concentra en
+        // vender (o comprar) una divisa concreta.
+        base: c.b,
+        cotizada: c.q,
         tipo: 'tendencia',
         precio: c.precio,
         sl,

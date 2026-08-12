@@ -198,6 +198,119 @@ for (const [nombre, f] of FILTROS) {
 }
 console.log('─'.repeat(86))
 
+// --------------------------------------------------------------------------
+// LAS VENTAS. Pierden con las cinco geometrías, así que el problema no es
+// donde va el stop. Quedan dos explicaciones muy distintas:
+//
+//   (a) El mercado de estos meses no daba para vender. Entonces las ventas
+//       perderían en unos tramos y no en otros, y el arreglo sería saber
+//       cuándo vender no funciona.
+//   (b) La app elige mal QUÉ vender. Entonces perderían en todos los tramos,
+//       y el arreglo sería cómo se eligen.
+//
+// Se mira siempre con la geometría de la app (la A), que es la que gana.
+// --------------------------------------------------------------------------
+
+// La geometría A ya se corrió arriba; se reutiliza en vez de repetir los 219
+// días. Y se llama `app` y no `base` porque las señales traen un campo `base`
+// (la divisa base del par) y tenerlos con el mismo nombre se presta a líos.
+const app = resultadosPorGeometria[0]
+const trimestreDe = (f) => `${f.slice(0, 4)}-T${Math.floor((Number(f.slice(5, 7)) - 1) / 3) + 1}`
+const trimestres = [...new Set(app.senales.map((s) => trimestreDe(s.vistoEl)))].sort()
+
+console.log('')
+console.log('LAS VENTAS, TROCEADAS POR TRIMESTRE')
+console.log('Con las compras al lado como control: si en un tramo las compras')
+console.log('ganan y las ventas pierden, ese tramo fue de mercado subiendo.')
+console.log('')
+console.log('trimestre     COMPRA: ops  acierto   por 1R      VENTA: ops  acierto   por 1R')
+console.log('─'.repeat(86))
+
+let tramosVentaEnPerdida = 0
+for (const tri of trimestres) {
+  const enTri = app.senales.filter((s) => trimestreDe(s.vistoEl) === tri)
+  const c = medir(
+    enTri.filter((s) => s.lado === 'COMPRA'),
+    app.porClave
+  )
+  const v = medir(
+    enTri.filter((s) => s.lado === 'VENTA'),
+    app.porClave
+  )
+  if (v.porRiesgo !== null && v.porRiesgo < 0) tramosVentaEnPerdida++
+  const fmt = (m) =>
+    `${String(m.total).padStart(4)}   ${m.acierto === null ? '   — ' : (m.acierto.toFixed(0) + '%').padStart(5)}   ` +
+    `${(m.porRiesgo === null ? '—' : (m.porRiesgo >= 0 ? '+' : '') + m.porRiesgo.toFixed(2)).padStart(6)}`
+  console.log(`${tri.padEnd(14)}        ${fmt(c)}            ${fmt(v)}`)
+}
+console.log('─'.repeat(86))
+console.log(`Las ventas pierden en ${tramosVentaEnPerdida} de ${trimestres.length} trimestres.`)
+console.log('Si pierden en TODOS, no fue el mercado: la app elige mal qué vender.')
+
+// --- ¿Se concentra la pérdida en alguna divisa? ----------------------------
+//
+// En una VENTA de EUR/USD la app vende euros y compra dólares. Si casi toda la
+// pérdida sale de vender la misma divisa, es una historia de mercado (esa
+// divisa no paró de subir). Si está repartida, es la forma de elegir.
+
+console.log('')
+console.log('LAS VENTAS, POR DIVISA')
+console.log('')
+console.log('divisa    la app la VENDIÓ: ops  acierto   por 1R     la COMPRÓ: ops  acierto   por 1R')
+console.log('─'.repeat(86))
+const ventas = app.senales.filter((s) => s.lado === 'VENTA')
+const divisas = [...new Set(ventas.flatMap((s) => [s.base, s.cotizada]))].sort()
+for (const d of divisas) {
+  // Vender EUR/USD = vender la base (EUR) y comprar la cotizada (USD).
+  const vendida = medir(ventas.filter((s) => s.base === d), app.porClave)
+  const comprada = medir(ventas.filter((s) => s.cotizada === d), app.porClave)
+  if (!vendida.total && !comprada.total) continue
+  const fmt = (m) =>
+    `${String(m.total).padStart(4)}   ${m.acierto === null ? '   — ' : (m.acierto.toFixed(0) + '%').padStart(5)}   ` +
+    `${(m.porRiesgo === null ? '—' : (m.porRiesgo >= 0 ? '+' : '') + m.porRiesgo.toFixed(2)).padStart(6)}`
+  console.log(`${d.padEnd(10)}                 ${fmt(vendida)}              ${fmt(comprada)}`)
+}
+console.log('─'.repeat(86))
+
+// --- ¿Y si hubiéramos hecho lo contrario? ----------------------------------
+//
+// El diagnóstico más duro. Una señal que pierde siempre NO es una señal sin
+// información: es una con información y el signo cambiado. Si al comprar
+// justo lo que la app manda vender el resultado se da la vuelta, entonces la
+// fuerza relativa sí dice algo y lo estamos leyendo al revés.
+//
+// Si al invertirlas TAMBIÉN se pierde, entonces no hay señal ninguna: solo
+// estamos pagando spread y ruido, y eso es un problema mucho más grande.
+
+const invertido = (() => {
+  const senales = generarSenales(fechas, rates, rangosPar, {
+    calentamiento: CALENTAMIENTO,
+    thr: THR,
+    topN: TOP_N,
+    geometria: GEOMETRIAS[0][1],
+    invertirVentas: true,
+  })
+  const { resultados } = resolver(senales, completo)
+  return { senales, porClave: new Map(resultados.map((r) => [r.clave, r])) }
+})()
+
+console.log('')
+console.log('¿Y SI HUBIÉRAMOS HECHO LO CONTRARIO EN LAS VENTAS?')
+console.log('')
+console.log('qué se hizo                                      ops   acierto      pips   por 1R')
+console.log('─'.repeat(86))
+fila('Vender lo que dice vender (lo que hace hoy)', medir(ventas, app.porClave))
+fila(
+  'COMPRAR lo que dice vender (al revés)',
+  medir(
+    invertido.senales.filter((s) => s.ladoOriginal === 'VENTA'),
+    invertido.porClave
+  )
+)
+console.log('─'.repeat(86))
+console.log('Si al revés GANA, la señal sirve y la estamos leyendo con el signo')
+console.log('cambiado. Si al revés también pierde, no hay señal: solo ruido.')
+
 console.log('')
 console.log('Cómo leerlo, y con qué desconfianza:')
 console.log(' · Con menos de ~30 operaciones el porcentaje puede ser suerte.')

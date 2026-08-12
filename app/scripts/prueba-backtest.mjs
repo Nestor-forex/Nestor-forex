@@ -280,5 +280,66 @@ console.log('\n7. El motor usa la geometría que se le pasa')
   comprobar(rrViejos.size > 5, `con la de hoy el R/B sale disparejo (${rrViejos.size} valores distintos): no se decidía, salía`)
 }
 
+// --- 8. Invertir las ventas -------------------------------------------------
+//
+// El diagnóstico de "¿y si hubiéramos hecho lo contrario?". Es fácil que salga
+// mal sin que se note: si al invertir cambiaran también los pares, los días o
+// las compras, estaríamos comparando dos cosas distintas y el resultado no
+// diría nada. Estas comprobaciones son para que eso no pase inadvertido.
+
+console.log('\n8. Invertir las ventas invierte SOLO las ventas')
+{
+  const normal = generarSenales(fechas, rates, rangosPar, { calentamiento: 80 })
+  const alReves = generarSenales(fechas, rates, rangosPar, { calentamiento: 80, invertirVentas: true })
+
+  comprobar(normal.length === alReves.length, 'salen las mismas señales (mismo número)')
+  comprobar(
+    normal.every((a, i) => a.par === alReves[i].par && a.vistoEl === alReves[i].vistoEl && a.precio === alReves[i].precio),
+    'mismo par, mismo día y misma entrada, una a una'
+  )
+
+  const ventasOriginales = normal.filter((s) => s.lado === 'VENTA')
+  comprobar(ventasOriginales.length > 0, `hay ventas que invertir (${ventasOriginales.length})`)
+
+  const invertidas = alReves.filter((s) => s.ladoOriginal === 'VENTA')
+  comprobar(invertidas.length === ventasOriginales.length, 'todas las ventas quedan marcadas como tales')
+  comprobar(
+    invertidas.every((s) => s.lado === 'COMPRA' && s.sl < s.precio && s.tp > s.precio),
+    'y todas pasan a COMPRA, con el stop debajo y el objetivo arriba'
+  )
+
+  // Lo que NO debe cambiar: las compras de verdad.
+  const comprasNormal = normal.filter((s) => s.ladoOriginal === 'COMPRA')
+  const comprasReves = alReves.filter((s) => s.ladoOriginal === 'COMPRA')
+  comprobar(
+    comprasNormal.length === comprasReves.length &&
+      comprasNormal.every((a, i) => a.sl === comprasReves[i].sl && a.tp === comprasReves[i].tp),
+    'las compras de verdad se quedan EXACTAMENTE igual'
+  )
+}
+
+// --- 9. Los datos para trocear por periodo y por divisa ---------------------
+
+console.log('\n9. Cada señal sabe de qué divisas y de qué día es')
+{
+  const s = generarSenales(fechas, rates, rangosPar, { calentamiento: 80 })
+  comprobar(
+    s.every((x) => x.par === `${x.base}/${x.cotizada}`),
+    'la divisa base y la cotizada cuadran con el nombre del par'
+  )
+  comprobar(
+    s.every((x) => /^\d{4}-\d{2}-\d{2}$/.test(x.vistoEl)),
+    'la fecha viene en formato de año-mes-día, que es lo que trocea por trimestre'
+  )
+  comprobar(
+    s.every((x) => x.ladoOriginal === 'COMPRA' || x.ladoOriginal === 'VENTA'),
+    'y todas guardan lo que dijo el barrido'
+  )
+
+  // Sin invertir, lo operado y lo que dijo el barrido tienen que coincidir: si
+  // no, las cuentas normales estarían mezclando las dos cosas.
+  comprobar(s.every((x) => x.lado === x.ladoOriginal), 'sin invertir, lo operado es lo que dijo el barrido')
+}
+
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')
 process.exit(fallos ? 1 : 0)
