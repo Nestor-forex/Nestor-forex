@@ -15,7 +15,13 @@ import { actual } from './geometrias.mjs'
 // `derivarVista` para no reescribir aquí su lógica: si la app cambia, esto
 // cambia con ella y no se separan en silencio.
 function setupsDeLaApp(data, thr, topN) {
-  return derivarVista(data, { thr, topN }).setups
+  // `incluirVentas: true` a propósito. La app tiene las ventas en pausa (ver
+  // src/lib/reglas.js), pero el banco de pruebas TIENE que seguir viéndolas:
+  // si la medición dejara de producirlas, no habría forma de comprobar si
+  // algún día se arreglan, y la pausa se volvería permanente sin que nadie lo
+  // hubiera decidido. Aquí se mide lo que la app PODRÍA hacer, no solo lo que
+  // hace hoy.
+  return derivarVista(data, { thr, topN, incluirVentas: true }).setups
 }
 
 // Las candidatas según una regla propia, para poder probar formas de entrar
