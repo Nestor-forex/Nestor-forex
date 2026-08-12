@@ -341,5 +341,69 @@ console.log('\n9. Cada señal sabe de qué divisas y de qué día es')
   comprobar(s.every((x) => x.lado === x.ladoOriginal), 'sin invertir, lo operado es lo que dijo el barrido')
 }
 
+// --- 10. Los datos de las candidatas de la fase 0 ---------------------------
+//
+// Las dos candidatas para arreglar las ventas se apoyan en datos nuevos: la
+// fuerza de hace 5 días y la media de 100. Si esos datos vinieran mal, la
+// medición diría que una candidata funciona (o que no) por el motivo
+// equivocado, y eso es peor que no medir.
+
+console.log('\n10. Los datos que sostienen las candidatas de la fase 0')
+{
+  const s = generarSenales(fechas, rates, rangosPar, { calentamiento: 80 })
+
+  comprobar(
+    s.every((x) => Number.isFinite(x.e100) && x.e100 > 0),
+    'todas traen la media de 100 días con un número válido'
+  )
+  comprobar(
+    s.every((x) => Number.isFinite(x.fuerzaBase) && Number.isFinite(x.fuerzaCotizada)),
+    'y la fuerza de las dos divisas de hoy'
+  )
+
+  // La fuerza va en una escala de 0 a 10 por construcción (`esc` normaliza
+  // entre la más débil y la más fuerte del día). Si se saliera, es que se
+  // están leyendo números de otra cosa.
+  comprobar(
+    s.every((x) => x.fuerzaBase >= 0 && x.fuerzaBase <= 10 && x.fuerzaCotizada >= 0 && x.fuerzaCotizada <= 10),
+    'la fuerza está entre 0 y 10, como en la app'
+  )
+
+  const conPasado = s.filter((x) => x.fuerzaBaseAntes !== null)
+  comprobar(conPasado.length > 0, `${conPasado.length} de ${s.length} señales tienen fuerza de hace 5 días`)
+  comprobar(
+    conPasado.every((x) => x.fuerzaBaseAntes >= 0 && x.fuerzaBaseAntes <= 10),
+    'y esa fuerza pasada también está en la escala de 0 a 10'
+  )
+
+  // La de hace 5 días tiene que ser DISTINTA de la de hoy. Si salieran
+  // iguales, estaríamos leyendo el mismo día dos veces y el filtro de "la
+  // debilidad viene de antes" no filtraría nada.
+  //
+  // ⚠️ Se excluyen los valores 0 y 10 a propósito. La fuerza se normaliza
+  // entre la divisa más débil y la más fuerte de CADA día, así que la más
+  // fuerte vale exactamente 10 siempre y la más débil exactamente 0. Si una
+  // divisa manda dos días seguidos, su fuerza es 10 en los dos, y eso es
+  // correcto, no un dato repetido. Y como las señales salen justamente de las
+  // divisas de los extremos, ese caso es frecuente: sin excluirlo, la prueba
+  // fallaría por un motivo que no es un fallo.
+  const enMedio = conPasado.filter((x) => x.fuerzaBase > 0 && x.fuerzaBase < 10)
+  const distintas = enMedio.filter((x) => x.fuerzaBaseAntes !== x.fuerzaBase).length
+  comprobar(
+    enMedio.length > 0 && distintas === enMedio.length,
+    `la fuerza de hace 5 días es distinta de la de hoy en las ${enMedio.length} que no están pegadas al tope: no es el mismo día repetido`
+  )
+
+  // Y el filtro tiene que dejar fuera a alguna, o no sería un filtro.
+  const persistente = (x) =>
+    x.fuerzaBaseAntes !== null && x.fuerzaCotizadaAntes !== null && x.fuerzaBaseAntes < x.fuerzaCotizadaAntes
+  const ventas = s.filter((x) => x.lado === 'VENTA')
+  const pasan = ventas.filter(persistente).length
+  comprobar(pasan > 0 && pasan < ventas.length, `el filtro de debilidad persistente deja pasar ${pasan} de ${ventas.length} ventas`)
+
+  const aFavor = ventas.filter((x) => x.precio < x.e100).length
+  comprobar(aFavor > 0 && aFavor < ventas.length, `el filtro de tendencia de fondo deja pasar ${aFavor} de ${ventas.length} ventas`)
+}
+
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')
 process.exit(fallos ? 1 : 0)

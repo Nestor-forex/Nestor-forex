@@ -311,6 +311,70 @@ console.log('─'.repeat(86))
 console.log('Si al revés GANA, la señal sirve y la estamos leyendo con el signo')
 console.log('cambiado. Si al revés también pierde, no hay señal: solo ruido.')
 
+// Y lo mismo, trimestre a trimestre. Un resultado bueno que sale de UN solo
+// tramo no es un descubrimiento, es una casualidad con buena prensa. Si dar la
+// vuelta a las ventas solo gana en un trimestre, no sirve.
+console.log('')
+console.log('  ¿Y aguanta en los tres trimestres?')
+const invertidasVenta = invertido.senales.filter((s) => s.ladoOriginal === 'VENTA')
+for (const tri of trimestres) {
+  const m = medir(
+    invertidasVenta.filter((s) => trimestreDe(s.vistoEl) === tri),
+    invertido.porClave
+  )
+  const acierto = m.acierto === null ? '  — ' : (m.acierto.toFixed(0) + '%').padStart(4)
+  const porR = m.porRiesgo === null ? '—' : (m.porRiesgo >= 0 ? '+' : '') + m.porRiesgo.toFixed(2)
+  console.log(`  ${tri}   ${String(m.total).padStart(4)} ops   acierto ${acierto}   por 1R ${porR.padStart(6)}`)
+}
+
+// --------------------------------------------------------------------------
+// FASE 0: arreglar el lado de las ventas.
+//
+// Se prueban candidatas con una RAZÓN DE MERCADO detrás, no cualquier filtro
+// que recorte la pérdida. La diferencia importa: un filtro sin razón es un
+// número que funcionó en estos 300 días por casualidad, y en cuanto cambie el
+// mercado deja de funcionar — con dinero de suscriptores dentro.
+// --------------------------------------------------------------------------
+
+console.log('')
+console.log('FASE 0 · CANDIDATAS PARA EL LADO DE LAS VENTAS')
+console.log('')
+console.log('candidata                                        ops   acierto      pips   por 1R')
+console.log('─'.repeat(86))
+
+const compras = app.senales.filter((s) => s.lado === 'COMPRA')
+
+// La debilidad de HOY puede ser un susto de un día que se deshace mañana. La
+// de hace una semana ya es una tendencia. Vender solo cuando la divisa débil
+// YA estaba débil evita venderle justo al rebote.
+const debilidadPersistente = (s) =>
+  s.fuerzaBaseAntes !== null && s.fuerzaCotizadaAntes !== null && s.fuerzaBaseAntes < s.fuerzaCotizadaAntes
+
+// No vender contra el movimiento de fondo. Si el precio está por encima de su
+// media de 100 días, el par lleva meses subiendo: venderlo es apostar contra
+// la corriente, por mucho que la fuerza relativa de esta semana diga otra cosa.
+const aFavorDelFondo = (s) => s.precio < s.e100
+
+const CANDIDATAS = [
+  ['V0. Como hoy: comprar y vender', () => true],
+  ['V1. No vender nada (solo compras)', (s) => s.lado === 'COMPRA'],
+  ['V2. Vender solo si la debilidad viene de antes', (s) => s.lado === 'COMPRA' || debilidadPersistente(s)],
+  ['V3. Vender solo a favor del movimiento de fondo', (s) => s.lado === 'COMPRA' || aFavorDelFondo(s)],
+  ['V4. V2 y V3 juntas', (s) => s.lado === 'COMPRA' || (debilidadPersistente(s) && aFavorDelFondo(s))],
+]
+for (const [nombre, f] of CANDIDATAS) fila(nombre, medir(app.senales.filter(f), app.porClave))
+console.log('─'.repeat(86))
+console.log('')
+console.log('Y mirando SOLO las ventas que deja pasar cada una:')
+console.log('')
+console.log('candidata                                        ops   acierto      pips   por 1R')
+console.log('─'.repeat(86))
+for (const [nombre, f] of CANDIDATAS.slice(1)) {
+  fila(nombre, medir(app.senales.filter((s) => s.lado === 'VENTA' && f(s)), app.porClave))
+}
+console.log('─'.repeat(86))
+console.log(`(Para comparar: las compras solas son ${medir(compras, app.porClave).total} ops.)`)
+
 console.log('')
 console.log('Cómo leerlo, y con qué desconfianza:')
 console.log(' · Con menos de ~30 operaciones el porcentaje puede ser suerte.')

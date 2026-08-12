@@ -131,6 +131,10 @@ export function computarBarrido(fechas, rates, rangosPar = null) {
     const c = closes[L]
     const e20 = emaLast(closes, 20)
     const e50 = emaLast(closes, 50)
+    // Tendencia de fondo. No la usa ninguna pantalla todavía: está para que el
+    // banco de pruebas pueda comprobar si exigir que la operación vaya a favor
+    // del movimiento largo arregla las ventas, que es donde la app pierde.
+    const e100 = emaLast(closes, 100)
     const atrAbs = conRangos ? atrWilder(highs, lows, closes) : atrCierres(closes)
     const atrPct = (atrAbs / c) * 100
     const tend = c > e20 && e20 > e50 ? 'Alcista' : c < e20 && e20 < e50 ? 'Bajista' : 'Rango'
@@ -148,6 +152,7 @@ export function computarBarrido(fechas, rates, rangosPar = null) {
       c,
       e20,
       e50,
+      e100,
       rsiV: rsi(closes.slice(-60)),
       atrPct,
       atrAbs,
@@ -242,6 +247,8 @@ const mkSetup = (p, lado, esc = {}, t) => {
       hi10: p.hi10,
       lo10: p.lo10,
       atrAbs: p.atrAbs,
+      e50: p.e50,
+      e100: p.e100,
       serie20: p.serie20,
       rsi: Math.round(p.rsiV),
       atrPct: p.atrPct,

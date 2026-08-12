@@ -32,10 +32,17 @@ export function generarSenales(
 ) {
   const senales = []
   let previas = new Set()
+  // Fuerza de cada divisa día a día. Sirve para preguntar si una divisa ya
+  // estaba débil hace una semana o si acaba de caerse hoy: una debilidad de un
+  // día suele ser un susto que se deshace, y una de una semana es una
+  // tendencia. Es la diferencia entre vender algo que sigue cayendo y vender
+  // justo antes del rebote.
+  const escPorDia = new Map()
 
   for (let i = calentamiento; i < fechas.length; i++) {
     const hasta = fechas.slice(0, i + 1)
     const data = computarBarrido(hasta, rates, rangosPar)
+    escPorDia.set(i, data.esc)
     const { setups } = derivarVista(data, { thr, topN })
 
     const ahora = new Set()
@@ -75,6 +82,17 @@ export function generarSenales(
         // vender (o comprar) una divisa concreta.
         base: c.b,
         cotizada: c.q,
+        // Fuerza de las dos divisas HOY y hace 5 días. Con esto se puede
+        // exigir que la debilidad venga de antes en vez de ser de hoy.
+        // `null` en los primeros días medidos, que no tienen 5 días detrás.
+        fuerzaBase: c.fuerzaB,
+        fuerzaCotizada: c.fuerzaQ,
+        fuerzaBaseAntes: escPorDia.get(i - 5)?.[c.b] ?? null,
+        fuerzaCotizadaAntes: escPorDia.get(i - 5)?.[c.q] ?? null,
+        // Tendencia de fondo del par, para poder exigir que la operación vaya
+        // a favor del movimiento largo y no en su contra.
+        e50: c.e50,
+        e100: c.e100,
         tipo: 'tendencia',
         precio: c.precio,
         sl,
