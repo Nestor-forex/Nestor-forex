@@ -10,6 +10,7 @@
 // Lo que de verdad importa aquí es la comprobación 2: que no mire el futuro.
 
 import { generarSenales } from './lib/backtest-nucleo.mjs'
+import { GEOMETRIAS, actual, atrFijo, estructuraAcotada } from './lib/geometrias.mjs'
 import { resolver } from './lib/resolver.mjs'
 import { computarBarrido } from '../src/lib/marketCalc.js'
 
@@ -167,6 +168,116 @@ console.log('\n5. Los filtros que compara el banco de pruebas')
     senales.filter(conNivel).every((s) => (s.lado === 'COMPRA' ? s.precio < s.res : s.precio > s.sup)),
     'lo que pasa el filtro de nivel tiene un nivel real por delante'
   )
+}
+
+// --- 6. Las geometrías del stop y el objetivo -------------------------------
+//
+// Aquí se comprueban las PROPIEDADES que cada una promete, no sus resultados.
+// Si una geometría dice "el objetivo está al doble del riesgo", eso tiene que
+// cumplirse en los 14 pares y en los dos lados, no de media.
+
+console.log('\n6. Las geometrías cumplen lo que prometen')
+{
+  // Un par de mentira, con el precio a media subida: lo10 lejos por debajo
+  // (como pasa en una tendencia) y el máximo de 20 días pegado por arriba.
+  // Es exactamente la situación que hace que la fórmula de hoy salga al revés.
+  const enTendencia = {
+    precio: 1.2,
+    atrAbs: 0.01,
+    lo10: 1.14, // 6 ATR por debajo
+    hi10: 1.205,
+    sup: 1.13,
+    res: 1.205, // 0.5 ATR por encima
+    dec: 4,
+  }
+
+  const a = actual(enTendencia, true)
+  const riesgoA = enTendencia.precio - a.sl
+  const premioA = a.tp - enTendencia.precio
+  comprobar(
+    riesgoA > premioA,
+    `la fórmula de hoy, en tendencia, arriesga MÁS de lo que busca (${riesgoA.toFixed(4)} vs ${premioA.toFixed(4)})`
+  )
+
+  // Y la propuesta, en la misma situación, no.
+  for (const veces of [1.5, 2, 3]) {
+    const g = estructuraAcotada(enTendencia, true, { veces })
+    const riesgo = enTendencia.precio - g.sl
+    const premio = g.tp - enTendencia.precio
+    comprobar(Math.abs(premio / riesgo - veces) < 1e-9, `estructura acotada → objetivo exactamente ${veces}× el riesgo`)
+  }
+
+  // Las cotas del stop, que son la otra mitad del arreglo.
+  {
+    const g = estructuraAcotada(enTendencia, true)
+    const enATR = (enTendencia.precio - g.sl) / enTendencia.atrAbs
+    comprobar(Math.abs(enATR - 2.5) < 1e-9, 'un stop lejísimos se recorta al máximo (2,5 ATR)')
+  }
+  {
+    // Ahora el caso contrario: mínimo de 10 días pegado al precio, que es lo
+    // que producía stops que tumbaba el ruido y acertaban el 15%.
+    const pegado = { ...enTendencia, lo10: 1.1995 }
+    const g = estructuraAcotada(pegado, true)
+    const enATR = (pegado.precio - g.sl) / pegado.atrAbs
+    comprobar(Math.abs(enATR - 1) < 1e-9, 'un stop pegado al precio se separa al mínimo (1 ATR)')
+    comprobar(actual(pegado, true).sl > g.sl, 'y la fórmula de hoy lo dejaba más cerca todavía')
+  }
+
+  // Simetría: vender debe dar la imagen espejo de comprar. Si no, las ventas
+  // saldrían peor por un fallo de fórmula y no por el mercado, y estaríamos
+  // buscando la explicación donde no está.
+  for (const [nombre, geo] of GEOMETRIAS) {
+    if (geo === actual) continue // la de hoy usa hi10/lo10, no es simétrica por diseño
+    const espejo = { ...enTendencia, hi10: 1.26, lo10: 1.14 }
+    const compra = geo(espejo, true)
+    const venta = geo(espejo, false)
+    const rc = espejo.precio - compra.sl
+    const rv = venta.sl - espejo.precio
+    const pc = compra.tp - espejo.precio
+    const pv = espejo.precio - venta.tp
+    comprobar(
+      Math.abs(pc / rc - pv / rv) < 1e-9,
+      `${nombre.slice(0, 12)}… da la misma relación riesgo/beneficio comprando que vendiendo`
+    )
+  }
+
+  // Nunca al revés: el stop siempre del lado de la pérdida.
+  for (const [nombre, geo] of GEOMETRIAS) {
+    const c = geo(enTendencia, true)
+    const v = geo(enTendencia, false)
+    comprobar(
+      c.sl < enTendencia.precio && c.tp > enTendencia.precio && v.sl > enTendencia.precio && v.tp < enTendencia.precio,
+      `${nombre.slice(0, 12)}… pone stop y objetivo en el lado correcto`
+    )
+  }
+
+  comprobar(atrFijo(enTendencia, true).sl === 1.2 - 1.5 * 0.01, 'el ATR fijo pone el stop donde dice (1,5 ATR)')
+}
+
+// --- 7. El motor respeta la geometría que se le pide ------------------------
+
+console.log('\n7. El motor usa la geometría que se le pasa')
+{
+  const conActual = generarSenales(fechas, rates, rangosPar, { calentamiento: 80 })
+  const conNueva = generarSenales(fechas, rates, rangosPar, {
+    calentamiento: 80,
+    geometria: (c, compra) => estructuraAcotada(c, compra, { veces: 2 }),
+  })
+
+  comprobar(conActual.length === conNueva.length, 'salen las MISMAS señales: la geometría no cambia qué se opera')
+  comprobar(
+    conActual.every((a, i) => a.id === conNueva[i].id && a.vistoEl === conNueva[i].vistoEl && a.precio === conNueva[i].precio),
+    'mismo par, mismo día y misma entrada en las dos'
+  )
+  // Se mira `rr` y no `pipBeneficio / pipRiesgo`: esos dos van redondeados a
+  // pips enteros, así que en un par de pocos pips el cociente se desvía por el
+  // redondeo y no por la geometría. `rr` sale de los precios sin redondear.
+  comprobar(
+    conNueva.every((s) => Math.abs(s.rr - 2) < 1e-9),
+    'y con la nueva, TODAS quedan a 2× el riesgo exacto (antes era una lotería)'
+  )
+  const rrViejos = new Set(conActual.map((s) => s.rr.toFixed(2)))
+  comprobar(rrViejos.size > 5, `con la de hoy el R/B sale disparejo (${rrViejos.size} valores distintos): no se decidía, salía`)
 }
 
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')

@@ -9,12 +9,21 @@
 // los datos que recibe. Es lo único que separa una medición de un cuento.
 
 import { computarBarrido, derivarVista } from '../../src/lib/marketCalc.js'
+import { actual } from './geometrias.mjs'
 
 /**
+ * @param geometria  función (crudo, compra) → { sl, tp }. Por defecto la que
+ *                   usa la app hoy, para que sin pedir nada esto mida la app
+ *                   de verdad. Ver `geometrias.mjs`.
  * @returns lista de señales en el mismo formato que escribe el vigía, lista
  *          para pasarle a `resolver.mjs`.
  */
-export function generarSenales(fechas, rates, rangosPar, { calentamiento = 80, thr = 0.5, topN = 3 } = {}) {
+export function generarSenales(
+  fechas,
+  rates,
+  rangosPar,
+  { calentamiento = 80, thr = 0.5, topN = 3, geometria = actual } = {}
+) {
   const senales = []
   let previas = new Set()
 
@@ -33,6 +42,15 @@ export function generarSenales(fechas, rates, rangosPar, { calentamiento = 80, t
       if (previas.has(id)) continue
 
       const c = s.crudo
+      const compra = s.lado === 'COMPRA'
+
+      // El stop y el objetivo se recalculan con la geometría que toque, en vez
+      // de usar los que trae `crudo`. Todo lo demás —qué pares, qué lado, qué
+      // día— sale igual que en la app: así lo único que cambia entre una
+      // medición y otra es la geometría, que es lo que queremos comparar.
+      const { sl, tp } = geometria(c, compra)
+      const pip = c.dec === 2 ? 0.01 : 0.0001
+
       senales.push({
         id,
         vistoEl: fechas[i],
@@ -41,11 +59,11 @@ export function generarSenales(fechas, rates, rangosPar, { calentamiento = 80, t
         lado: s.lado,
         tipo: 'tendencia',
         precio: c.precio,
-        sl: c.sl,
-        tp: c.tp,
-        rr: c.rr,
-        pipRiesgo: Math.round(c.pipRiesgo),
-        pipBeneficio: Math.round(c.pipBeneficio),
+        sl,
+        tp,
+        rr: Math.abs(tp - c.precio) / Math.abs(c.precio - sl),
+        pipRiesgo: Math.round(Math.abs(c.precio - sl) / pip),
+        pipBeneficio: Math.round(Math.abs(tp - c.precio) / pip),
         rsi: c.rsi,
         // Para la variante de "tierra de nadie": ¿queda algún nivel real por
         // delante, o el precio ya se salió del rango de los últimos 20 días?

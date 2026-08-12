@@ -233,6 +233,15 @@ const mkSetup = (p, lado, esc = {}, t) => {
       pipBeneficio: Math.abs(tp - p.c) / (d === 2 ? 0.01 : 0.0001),
       sup: p.lo20,
       res: p.hi20,
+      // Los extremos de 10 días y el ATR en precio (no en %). No los usa
+      // ninguna pantalla: los necesita `scripts/lib/backtest-nucleo.mjs` para
+      // poder calcular geometrías de stop y objetivo distintas a la de aquí y
+      // compararlas con datos reales. Exponerlos evita que el banco de pruebas
+      // los recalcule por su cuenta y acabe midiendo números que no son los
+      // que ve la app.
+      hi10: p.hi10,
+      lo10: p.lo10,
+      atrAbs: p.atrAbs,
       serie20: p.serie20,
       rsi: Math.round(p.rsiV),
       atrPct: p.atrPct,
