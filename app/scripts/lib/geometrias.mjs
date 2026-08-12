@@ -70,6 +70,25 @@ export function atrFijo(c, compra, { riesgoATR = 1.5, veces = 2 } = {}) {
   }
 }
 
+// Stop y objetivo a la MISMA distancia, y la misma en compra que en venta.
+//
+// No es para usarla de verdad: es una regla de medir. Con 1 a 1, el resultado
+// por unidad de riesgo depende SOLO de cuántas veces se acierta la dirección
+// (2 × aciertos − 1). Nada de "el stop quedó pegado" ni "el objetivo estaba
+// lejísimos": si con esto una señal gana, es porque apunta al lado correcto.
+//
+// Existe por una razón concreta: al comprar un par que viene cayendo, el
+// mínimo reciente queda pegado al precio y el máximo de 20 días lejísimos, así
+// que la geometría de la app infla sola el resultado. Medir la inversión de
+// las ventas con esa geometría era comparar dos cosas distintas.
+export function simetrica(c, compra, { riesgoATR = 1.5 } = {}) {
+  const d = riesgoATR * atrDe(c)
+  return {
+    sl: compra ? c.precio - d : c.precio + d,
+    tp: compra ? c.precio + d : c.precio - d,
+  }
+}
+
 // La propuesta: estructura, pero acotada, y objetivo en veces el riesgo.
 //
 // El stop sigue saliendo del mínimo (o máximo) de 10 días como hoy, porque ahí

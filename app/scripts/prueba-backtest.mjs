@@ -10,7 +10,7 @@
 // Lo que de verdad importa aquí es la comprobación 2: que no mire el futuro.
 
 import { generarSenales } from './lib/backtest-nucleo.mjs'
-import { GEOMETRIAS, actual, atrFijo, estructuraAcotada } from './lib/geometrias.mjs'
+import { GEOMETRIAS, actual, atrFijo, estructuraAcotada, simetrica } from './lib/geometrias.mjs'
 import { resolver } from './lib/resolver.mjs'
 import { computarBarrido } from '../src/lib/marketCalc.js'
 
@@ -403,6 +403,67 @@ console.log('\n10. Los datos que sostienen las candidatas de la fase 0')
 
   const aFavor = ventas.filter((x) => x.precio < x.e100).length
   comprobar(aFavor > 0 && aFavor < ventas.length, `el filtro de tendencia de fondo deja pasar ${aFavor} de ${ventas.length} ventas`)
+}
+
+// --- 11. La geometría simétrica ---------------------------------------------
+//
+// Es la vara con la que se va a decidir si lo de invertir las ventas es real.
+// Si no fuera de verdad simétrica, la comparación seguiría contaminada y
+// llegaríamos a la conclusión contraria sin enterarnos.
+
+console.log('\n11. La geometría simétrica es simétrica de verdad')
+{
+  const p = { precio: 1.2, atrAbs: 0.01, lo10: 1.14, hi10: 1.26, sup: 1.13, res: 1.26, dec: 4 }
+  const c = simetrica(p, true)
+  const v = simetrica(p, false)
+
+  comprobar(Math.abs(p.precio - c.sl - (c.tp - p.precio)) < 1e-12, 'comprando: stop y objetivo a la misma distancia')
+  comprobar(Math.abs(v.sl - p.precio - (p.precio - v.tp)) < 1e-12, 'vendiendo: stop y objetivo a la misma distancia')
+  comprobar(Math.abs(p.precio - c.sl - (v.sl - p.precio)) < 1e-12, 'y la distancia es la MISMA comprando que vendiendo')
+  comprobar(c.sl < p.precio && c.tp > p.precio && v.sl > p.precio && v.tp < p.precio, 'cada uno de su lado')
+
+  // No mira lo10 ni hi20: si los mirara, volvería a colarse el sesgo que
+  // justamente queremos quitar.
+  const otroSitio = simetrica({ ...p, lo10: 0.5, hi10: 2, sup: 0.4, res: 2.5 }, true)
+  comprobar(
+    otroSitio.sl === c.sl && otroSitio.tp === c.tp,
+    'no depende de los máximos ni mínimos: solo del precio y del ATR'
+  )
+}
+
+// --- 12. La regla de entrada propia -----------------------------------------
+
+console.log('\n12. Se puede probar una forma de entrar distinta a la de la app')
+{
+  const soloSubiendo = (p) => (p.c > p.e100 ? 'COMPRA' : null)
+  const propias = generarSenales(fechas, rates, rangosPar, { calentamiento: 80, reglaEntrada: soloSubiendo })
+
+  comprobar(propias.length > 0, `la regla propia produce señales (${propias.length})`)
+  comprobar(
+    propias.every((s) => s.lado === 'COMPRA'),
+    'y solo las que pide la regla: aquí, ninguna venta'
+  )
+  comprobar(
+    propias.every((s) => s.precio > s.e100),
+    'todas cumplen de verdad la condición pedida (precio sobre la media de 100)'
+  )
+  comprobar(
+    propias.every((s) => Number.isFinite(s.sl) && Number.isFinite(s.tp) && s.sl < s.precio && s.tp > s.precio),
+    'y traen stop y objetivo bien puestos'
+  )
+
+  // Lo importante: la regla propia cambia QUÉ se opera. Si saliera lo mismo
+  // que la app, no estaríamos probando nada nuevo.
+  const app = generarSenales(fechas, rates, rangosPar, { calentamiento: 80 })
+  const clavesApp = new Set(app.map((s) => `${s.id}@${s.vistoEl}`))
+  const nuevas = propias.filter((s) => !clavesApp.has(`${s.id}@${s.vistoEl}`)).length
+  comprobar(nuevas > 0, `${nuevas} de ${propias.length} son operaciones que la app NO habría hecho`)
+
+  // Y el corte por top N tiene que respetarse, o el número de operaciones
+  // cambiaría por otra razón y la comparación no valdría.
+  const porDia = new Map()
+  for (const s of propias) porDia.set(s.vistoEl, (porDia.get(s.vistoEl) || 0) + 1)
+  comprobar([...porDia.values()].every((n) => n <= 3), 'nunca más de 3 por día y lado, igual que la app')
 }
 
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')

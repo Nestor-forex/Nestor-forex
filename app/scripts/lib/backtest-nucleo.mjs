@@ -11,6 +11,55 @@
 import { computarBarrido, derivarVista } from '../../src/lib/marketCalc.js'
 import { actual } from './geometrias.mjs'
 
+// Las candidatas del día según el barrido de la app, tal cual. Se le pide a
+// `derivarVista` para no reescribir aquí su lógica: si la app cambia, esto
+// cambia con ella y no se separan en silencio.
+function setupsDeLaApp(data, thr, topN) {
+  return derivarVista(data, { thr, topN }).setups
+}
+
+// Las candidatas según una regla propia, para poder probar formas de entrar
+// que la app hoy NO puede producir.
+//
+// Devuelve objetos con la misma forma que los de la app —{ name, lado, crudo }—
+// para que el resto del motor no note la diferencia. `crudo` se arma con los
+// mismos campos que pone `mkSetup`, porque las geometrías los leen de ahí.
+function porReglaPropia(data, regla, thr, topN) {
+  const salida = []
+  for (const lado of ['COMPRA', 'VENTA']) {
+    const suyos = data.pares
+      .filter((p) => regla(p, data.esc, thr) === lado)
+      // Igual que la app: primero los de mayor diferencia de fuerza.
+      .sort((a, b) => Math.abs(b.dif) - Math.abs(a.dif))
+      .slice(0, topN)
+
+    for (const p of suyos) {
+      salida.push({
+        name: p.name,
+        lado,
+        crudo: {
+          b: p.b,
+          q: p.q,
+          dec: p.dec,
+          precio: p.c,
+          res: p.hi20,
+          sup: p.lo20,
+          hi10: p.hi10,
+          lo10: p.lo10,
+          atrAbs: p.atrAbs,
+          e50: p.e50,
+          e100: p.e100,
+          rsi: Math.round(p.rsiV),
+          tend: p.tend,
+          fuerzaB: data.esc[p.b],
+          fuerzaQ: data.esc[p.q],
+        },
+      })
+    }
+  }
+  return salida
+}
+
 /**
  * @param geometria  función (crudo, compra) → { sl, tp }. Por defecto la que
  *                   usa la app hoy, para que sin pedir nada esto mida la app
@@ -28,7 +77,7 @@ export function generarSenales(
   fechas,
   rates,
   rangosPar,
-  { calentamiento = 80, thr = 0.5, topN = 3, geometria = actual, invertirVentas = false } = {}
+  { calentamiento = 80, thr = 0.5, topN = 3, geometria = actual, invertirVentas = false, reglaEntrada = null } = {}
 ) {
   const senales = []
   let previas = new Set()
@@ -43,10 +92,22 @@ export function generarSenales(
     const hasta = fechas.slice(0, i + 1)
     const data = computarBarrido(hasta, rates, rangosPar)
     escPorDia.set(i, data.esc)
-    const { setups } = derivarVista(data, { thr, topN })
+    // De dónde salen las candidatas del día.
+    //
+    // Sin `reglaEntrada` se usa el barrido de la app tal cual, que es lo que
+    // hay que medir por defecto. Con `reglaEntrada` se puede probar una forma
+    // DISTINTA de decidir qué operar —por ejemplo comprar retrocesos, que la
+    // app hoy no puede porque exige que el precio esté por encima de las dos
+    // medias— sin tocar la app.
+    //
+    // Se ordenan por fuerza y se cortan igual que hace la app (top N por
+    // lado), para que la comparación no cambie por el número de operaciones.
+    const candidatos = reglaEntrada
+      ? porReglaPropia(data, reglaEntrada, thr, topN)
+      : setupsDeLaApp(data, thr, topN)
 
     const ahora = new Set()
-    for (const s of setups) {
+    for (const s of candidatos) {
       const id = `${s.name}|${s.lado}|tendencia`
       ahora.add(id)
       // Solo las NUEVAS, igual que el vigía: una señal que sigue viva tres

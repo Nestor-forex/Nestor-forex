@@ -375,6 +375,114 @@ for (const [nombre, f] of CANDIDATAS.slice(1)) {
 console.log('─'.repeat(86))
 console.log(`(Para comparar: las compras solas son ${medir(compras, app.porClave).total} ops.)`)
 
+// --------------------------------------------------------------------------
+// PRUEBA 1: ¿la inversión aguanta con una geometría neutra?
+//
+// Con la geometría de la app, comprar un par que viene cayendo pone el stop
+// pegado (el mínimo reciente está ahí mismo) y el objetivo lejísimos. Eso solo
+// ya infla el resultado, así que el +0.92 medía dos cosas mezcladas: si la
+// señal apunta bien, y si la geometría regala.
+//
+// Con la simétrica (1 a 1, igual comprando que vendiendo) queda una sola cosa:
+// el resultado por unidad de riesgo es 2 × aciertos − 1. Si aquí la inversión
+// sigue ganando, es porque la señal apunta al lado contrario de verdad.
+// --------------------------------------------------------------------------
+
+const conGeo = (geo, invertir) => {
+  const senales = generarSenales(fechas, rates, rangosPar, {
+    calentamiento: CALENTAMIENTO,
+    thr: THR,
+    topN: TOP_N,
+    geometria: geo,
+    invertirVentas: invertir,
+  })
+  const { resultados } = resolver(senales, completo)
+  return { senales, porClave: new Map(resultados.map((r) => [r.clave, r])) }
+}
+
+console.log('')
+console.log('PRUEBA 1 · ¿AGUANTA LA INVERSIÓN CON UNA GEOMETRÍA NEUTRA?')
+console.log('Stop y objetivo a la misma distancia, igual comprando que vendiendo.')
+console.log('Así el resultado depende SOLO de acertar la dirección.')
+console.log('')
+console.log('qué se hizo                                      ops   acierto      pips   por 1R')
+console.log('─'.repeat(86))
+{
+  const normal = conGeo(simetrica, false)
+  const alReves = conGeo(simetrica, true)
+  fila(
+    'Vender lo que dice vender (1:1)',
+    medir(normal.senales.filter((s) => s.lado === 'VENTA'), normal.porClave)
+  )
+  fila(
+    'COMPRAR lo que dice vender (1:1)',
+    medir(alReves.senales.filter((s) => s.ladoOriginal === 'VENTA'), alReves.porClave)
+  )
+  fila(
+    'Las compras de siempre (1:1), de referencia',
+    medir(normal.senales.filter((s) => s.lado === 'COMPRA'), normal.porClave)
+  )
+  console.log('─'.repeat(86))
+  console.log('Con 1 a 1, acertar por encima del 50% es ganar y por debajo es perder.')
+  console.log('')
+  console.log('  Y trimestre a trimestre, la inversión con geometría neutra:')
+  const inv = alReves.senales.filter((s) => s.ladoOriginal === 'VENTA')
+  for (const tri of trimestres) {
+    const m = medir(inv.filter((s) => trimestreDe(s.vistoEl) === tri), alReves.porClave)
+    const ac = m.acierto === null ? '  — ' : (m.acierto.toFixed(0) + '%').padStart(4)
+    const pr = m.porRiesgo === null ? '—' : (m.porRiesgo >= 0 ? '+' : '') + m.porRiesgo.toFixed(2)
+    console.log(`  ${tri}   ${String(m.total).padStart(4)} ops   acierto ${ac}   por 1R ${pr.padStart(6)}`)
+  }
+}
+
+// --------------------------------------------------------------------------
+// PRUEBA 2: comprar retrocesos (la idea de la propuesta de Néstor).
+//
+// Hoy la app solo compra cuando el precio está por encima de la EMA20 y esta
+// por encima de la EMA50. Cuando eso pasa, el RSI ya viene alto: medido, en
+// 219 días hubo CERO compras con RSI ≤ 50. O sea que la app no puede comprar
+// barato aunque quiera.
+//
+// La idea es cambiar la condición: en vez de exigir que el precio esté
+// disparado, exigir que la tendencia de FONDO sea alcista (por encima de la
+// media de 100 días) y entrar cuando el precio se ha caído un rato (RSI bajo).
+// Es comprar el retroceso dentro de la tendencia, no la punta.
+// --------------------------------------------------------------------------
+
+const conRegla = (regla) => {
+  const senales = generarSenales(fechas, rates, rangosPar, {
+    calentamiento: CALENTAMIENTO,
+    thr: THR,
+    topN: TOP_N,
+    reglaEntrada: regla,
+  })
+  const { resultados } = resolver(senales, completo)
+  return medir(senales, new Map(resultados.map((r) => [r.clave, r])))
+}
+
+// Solo compras: las ventas ya sabemos que están rotas y meterlas aquí
+// mezclaría dos preguntas.
+const retroceso = (rsiMax, exigirFuerza) => (p, esc, thr) => {
+  if (!(p.c > p.e100)) return null // el fondo tiene que ser alcista
+  if (p.rsiV > rsiMax) return null // y el precio tiene que haber retrocedido
+  if (exigirFuerza && !(p.dif > thr)) return null
+  return 'COMPRA'
+}
+
+console.log('')
+console.log('PRUEBA 2 · COMPRAR RETROCESOS EN VEZ DE PUNTAS')
+console.log('Fondo alcista (precio sobre la media de 100 días) + precio retrocedido.')
+console.log('')
+console.log('regla de entrada                                 ops   acierto      pips   por 1R')
+console.log('─'.repeat(86))
+fila('Las compras de la app hoy (referencia)', medir(compras, app.porClave))
+fila('R1. Fondo alcista + RSI<40 + fuerza a favor', conRegla(retroceso(40, true)))
+fila('R2. Fondo alcista + RSI<45 + fuerza a favor', conRegla(retroceso(45, true)))
+fila('R3. Fondo alcista + RSI<40, sin mirar fuerza', conRegla(retroceso(40, false)))
+fila('R4. Fondo alcista + RSI<50 + fuerza a favor', conRegla(retroceso(50, true)))
+console.log('─'.repeat(86))
+console.log('Ojo: si salen pocas operaciones, el porcentaje no significa gran cosa.')
+
 console.log('')
 console.log('Cómo leerlo, y con qué desconfianza:')
 console.log(' · Con menos de ~30 operaciones el porcentaje puede ser suerte.')
