@@ -27,6 +27,15 @@ jobs:
           node-version: 22
       # Primero lo que no necesita internet: si el motor está roto, mejor
       # saberlo antes de gastar 14 créditos de la cuota diaria.
+      #
+      # El lint va el primero de todos y no es un adorno. `backtest.mjs` corre
+      # sin compilador, así que un import que falta no se nota hasta que el
+      # script ya va por la mitad: pasó de verdad —faltaba importar
+      # `simetrica`— y el fallo apareció DESPUÉS de descargar los precios, con
+      # la cuota ya gastada y sin resultados. `no-undef` lo caza en un segundo.
+      - name: Comprobar que no falta ningún import
+        working-directory: app
+        run: npm install --silent && npm run lint
       - name: Comprobar el motor del banco de pruebas
         working-directory: app
         run: node scripts/prueba-backtest.mjs
