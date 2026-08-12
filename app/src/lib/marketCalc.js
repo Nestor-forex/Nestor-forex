@@ -1,5 +1,6 @@
 import { crearT } from './i18n/crearT.js'
 import { IDIOMA_BASE } from './i18n/idiomas.js'
+import { VENTAS_PAUSADAS } from './reglas.js'
 
 // Cálculos del barrido, portados tal cual de los prototipos
 // (Nestor Forex.dc.html / Barrido Forex Diario.dc.html).
@@ -272,7 +273,17 @@ const mkSetup = (p, lado, esc = {}, t) => {
 const porDifAbs = (a, b) => Math.abs(b.dif) - Math.abs(a.dif)
 
 // data: salida de computarBarrido(). Devuelve todo ya formateado para las pantallas.
-export function derivarVista(data, { thr = 0.5, topN = 3, t = crearT(IDIOMA_BASE), locale } = {}) {
+/**
+ * @param incluirVentas  por defecto sigue a `VENTAS_PAUSADAS` (ver reglas.js).
+ *                       El banco de pruebas lo pone en true a propósito: si la
+ *                       medición dejara de ver las ventas, no podríamos volver
+ *                       a comprobar si algún día se arreglan, y la pausa se
+ *                       volvería permanente sin que nadie lo decidiera.
+ */
+export function derivarVista(
+  data,
+  { thr = 0.5, topN = 3, t = crearT(IDIOMA_BASE), locale, incluirVentas = !VENTAS_PAUSADAS } = {}
+) {
   const { esc, pares: paresRaw } = data
 
   const monedas = Object.keys(esc)
@@ -296,7 +307,10 @@ export function derivarVista(data, { thr = 0.5, topN = 3, t = crearT(IDIOMA_BASE
 
   const cands = [...paresRaw].sort(porDifAbs)
   const comprasRaw = cands.filter((p) => clasificar(p, thr) === 'COMPRA').slice(0, 5)
-  const ventasRaw = cands.filter((p) => clasificar(p, thr) === 'VENTA').slice(0, 5)
+  // Con las ventas en pausa no se proponen operaciones de venta. El barrido
+  // sigue calculando qué divisas están débiles —eso es información de mercado
+  // y es correcta—; lo que se deja de hacer es sugerir la operación.
+  const ventasRaw = incluirVentas ? cands.filter((p) => clasificar(p, thr) === 'VENTA').slice(0, 5) : []
   const vigilanciaRaw = cands.filter((p) => clasificar(p, thr) === 'VIGILAR').slice(0, 4)
 
   const compras = comprasRaw.map((p) => ({ name: p.name, razon: razon(p, esc, t) }))

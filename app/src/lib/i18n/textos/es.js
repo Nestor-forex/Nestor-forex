@@ -108,6 +108,10 @@ export default {
     setups: 'Setups del top',
     sinCompras: 'Hoy no hay compras con fuerza y tendencia alineadas — no forzar entradas.',
     sinVentas: 'Hoy no hay ventas con fuerza y tendencia alineadas — no forzar entradas.',
+    // Por qué el barrido ya no sugiere ventas. Sin jerga y sin excusas: se
+    // midió, no funcionaban, se quitaron.
+    ventasPausadas:
+      'De momento la app no sugiere ventas. Medimos las reglas sobre los últimos 10 meses de mercado y las operaciones de venta perdían dinero de forma constante, mientras que las de compra no. Preferimos no sugerirte nada antes que sugerirte algo que sabemos que pierde. El barrido sigue mostrando arriba qué divisas están débiles, que eso sí es información buena.',
     atrPorHora: ({ v }) => `ATR ${v}%`,
     riesgoTitulo: 'Riesgo:',
     riesgoTexto:

@@ -3,6 +3,7 @@ import { limitaciones } from '../lib/fakeData'
 import { sesgoColor, tendColor, rsiColor, fmtDif } from '../lib/display'
 import { fmtFechaHoy, fmtFecha, claveSesionActiva } from '../lib/format'
 import { useIdioma } from '../lib/i18n'
+import { VENTAS_PAUSADAS } from '../lib/reglas'
 import { generarReporteMd, descargarMd } from '../lib/reporte'
 import BarraFuerza from './BarraFuerza'
 import Sparkline from './Sparkline'
@@ -171,7 +172,17 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
           <h2 className="section-title" style={{ color: 'var(--red)', marginBottom: 12 }}>
             {t('tablero.mejoresVender')}
           </h2>
-          <RazonList items={ventas} emptyText={t('tablero.sinVentas')} />
+          {/* Con las ventas en pausa se explica el porqué en vez de dejar la
+              sección vacía: un hueco sin explicación se lee como "la app está
+              rota", y además el usuario tiene derecho a saber que dejamos de
+              sugerir ventas porque medimos que perdían. */}
+          {VENTAS_PAUSADAS ? (
+            <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+              {t('tablero.ventasPausadas')}
+            </p>
+          ) : (
+            <RazonList items={ventas} emptyText={t('tablero.sinVentas')} />
+          )}
         </section>
 
         {vigilancia.length > 0 && (

@@ -7,7 +7,7 @@
 // cambio dejó de ser aditivo y estaría alterando la app en casos donde no
 // debía.
 
-import { computarBarrido } from '../src/lib/marketCalc.js'
+import { computarBarrido, derivarVista } from '../src/lib/marketCalc.js'
 
 let fallos = 0
 const comprobar = (bien, que) => {
@@ -121,6 +121,33 @@ console.log('\n4. Lo demás no se movió')
     'la fuerza relativa de las divisas no cambia'
   )
   comprobar(nuevo.pares.length === 14, 'siguen siendo los 14 pares')
+}
+
+// La pausa de las ventas es una decisión con dinero detrás: las ventas
+// perdían −0,30 por unidad de riesgo y se llevaban el 87% de lo perdido. Si
+// alguien la desactivara sin querer al tocar `derivarVista`, la app volvería a
+// proponer operaciones que sabemos que pierden. Esto lo impide en silencio.
+console.log('\n5. Las ventas están en pausa (ver src/lib/reglas.js)')
+{
+  const data = computarBarrido(fechas, rates, rangosPar)
+
+  const normal = derivarVista(data, { thr: 0 })
+  comprobar(normal.ventas.length === 0, 'el barrido no propone ninguna venta')
+  comprobar(
+    normal.setups.every((s) => s.lado === 'COMPRA'),
+    'y ningún setup es de venta'
+  )
+  comprobar(normal.compras.length >= 0 && Array.isArray(normal.monedas), 'lo demás del barrido sigue saliendo')
+
+  // Pero el banco de pruebas SÍ tiene que poder verlas, o no habría forma de
+  // comprobar si algún día se arreglan y la pausa se volvería permanente sin
+  // que nadie lo decidiera.
+  const midiendo = derivarVista(data, { thr: 0, incluirVentas: true })
+  comprobar(midiendo.ventas.length > 0, `midiendo sí aparecen (${midiendo.ventas.length}): la pausa es reversible`)
+  comprobar(
+    midiendo.setups.some((s) => s.lado === 'VENTA'),
+    'y con sus setups, para poder volver a medirlas'
+  )
 }
 
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')
