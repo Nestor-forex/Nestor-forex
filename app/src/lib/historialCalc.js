@@ -13,6 +13,13 @@
  * En swing no hace falta separar cuentas fiables de aproximadas como en la
  * app hermana: aquí los 14 pares se piden directamente, así que el máximo y
  * el mínimo de cada día son los reales en todos.
+ *
+ * ⚠️ Lo que sí va aparte es `sombra`: las ventas, que están pausadas. El vigía
+ * las sigue anotando para acumular operaciones reales, pero la app no las
+ * propone y nadie recibe aviso de ellas. Por eso NO pueden entrar en `todas`:
+ * el porcentaje que mira Néstor estaría contando operaciones que la app dejó
+ * de proponerle, y dejaría de responder la pregunta que la pantalla dice
+ * responder.
  */
 export function resumir(resultados) {
   const cuenta = (lista) => {
@@ -37,9 +44,15 @@ export function resumir(resultados) {
   const ultimaPorClave = new Map()
   for (const r of resultados || []) ultimaPorClave.set(r.clave, r)
 
-  const juzgadas = [...ultimaPorClave.values()].filter(
+  const todasJuzgadas = [...ultimaPorClave.values()].filter(
     (r) => r.resultado === 'ganada' || r.resultado === 'perdida'
   )
+  // Las de sombra salen de aquí y no vuelven a entrar. Su sitio es `sombra`,
+  // y solo lo lee el vigía.
+  const juzgadas = todasJuzgadas.filter((r) => !r.sombra)
 
-  return { todas: cuenta(juzgadas) }
+  return {
+    todas: cuenta(juzgadas),
+    sombra: cuenta(todasJuzgadas.filter((r) => r.sombra)),
+  }
 }

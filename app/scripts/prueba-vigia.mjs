@@ -11,7 +11,7 @@
 import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { compararConAnterior, escribir, idDe, leerEstado } from './lib/vigia-nucleo.mjs'
+import { compararConAnterior, escribir, esSombra, idDe, leerEstado, separarSombra } from './lib/vigia-nucleo.mjs'
 
 const dir = mkdtempSync(join(tmpdir(), 'vigia-'))
 const ESTADO = join(dir, 'estado/vigia.json')
@@ -70,6 +70,31 @@ console.log('\n8. Lo que se guarda se vuelve a leer igual')
 const guardado = JSON.parse(readFileSync(ESTADO, 'utf8'))
 comprobar('el estado en disco tiene los ids esperados', guardado.senales.every((x) => typeof x === 'string'))
 comprobar('el id se arma como par|lado|tipo', idDe(setup('EUR/USD', 'COMPRA')) === 'EUR/USD|COMPRA|tendencia')
+
+console.log('\n9. Las ventas pausadas se anotan pero NUNCA salen hacia un celular')
+{
+  // Las ventas están pausadas porque se midió que perdían (−0,30 por unidad
+  // de riesgo, el 87% de todo lo perdido). El vigía las sigue anotando para
+  // que la pausa tenga un final posible: sin datos nuevos, no habría con qué
+  // decidir nunca si vuelven. Pero no pueden llegarle a nadie.
+  //
+  // Si esto se rompiera no habría ningún síntoma visible: simplemente
+  // empezarían a salir avisos de operaciones que la app ya no propone.
+  const nuevas = [
+    { id: 'a', s: setup('EUR/USD', 'COMPRA') },
+    { id: 'b', s: setup('GBP/USD', 'VENTA') },
+    { id: 'c', s: setup('USD/JPY', 'VENTA') },
+  ]
+  const { visibles, sombra } = separarSombra(nuevas)
+
+  comprobar('las dos ventas quedan apartadas', sombra.length === 2)
+  comprobar('y ninguna aparece entre las que se avisan', !visibles.some((x) => x.s.lado === 'VENTA'))
+  comprobar('la compra sí se avisa', visibles.length === 1 && visibles[0].id === 'a')
+  comprobar('ninguna se pierde por el camino', visibles.length + sombra.length === nuevas.length)
+  comprobar('es el lado lo que manda', esSombra(setup('AUD/USD', 'VENTA')) === true)
+  comprobar('y una compra nunca es sombra', esSombra(setup('AUD/USD', 'COMPRA')) === false)
+  comprobar('un setup sin lado no revienta', esSombra({}) === false)
+}
 
 console.log(fallos === 0 ? '\nTodas las comprobaciones pasaron.\n' : `\n${fallos} comprobación(es) fallaron.\n`)
 process.exit(fallos === 0 ? 0 : 1)

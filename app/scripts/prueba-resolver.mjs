@@ -199,5 +199,42 @@ console.log('\n12. Una "caducada" no es definitiva: si luego se puede juzgar, ma
   comprobar(resumir([antes]).todas.total === 0, 'una caducada sola no suma ni resta')
 }
 
+// Las ventas están pausadas pero el vigía las sigue anotando, marcadas con
+// `sombra: true`. Si se colaran en el porcentaje, el número que mira Néstor
+// estaría contando operaciones que la app ya no le propone — y encima las que
+// medimos que pierden. Es de los errores que no dan ningún síntoma: el número
+// sigue saliendo, solo que significando otra cosa.
+console.log('\n11. Las ventas en sombra no contaminan el porcentaje')
+{
+  const d = mundo([1.085, 1.09, 1.101, 1.10], [1.079, 1.085, 1.095, 1.099])
+  const dosPares = { ...d, pares: [d.pares[0], { ...d.pares[0], name: 'GBP/USD' }] }
+
+  const compra = senal()
+  const ventaSombra = { ...senal(), id: 'GBP/USD|VENTA|tendencia', par: 'GBP/USD', sombra: true }
+  const { resultados } = resolver([compra, ventaSombra], dosPares)
+
+  comprobar(resultados.length === 2, 'el resolver juzga las dos por igual: la de sombra también se mide')
+  comprobar(
+    resultados.find((r) => r.par === 'GBP/USD')?.sombra === true,
+    'y su resultado se queda marcado como sombra'
+  )
+  comprobar(
+    resultados.find((r) => r.par === 'EUR/USD')?.sombra === undefined,
+    'la compra NO queda marcada: el campo solo aparece cuando es verdad'
+  )
+
+  const r = resumir(resultados)
+  comprobar(r.todas.total === 1, `el porcentaje visible cuenta solo la compra (${r.todas.total} de 2)`)
+  comprobar(r.todas.pips === 200, 'los pips visibles tampoco incluyen los de la sombra')
+  comprobar(r.sombra.total === 1, 'y la de sombra va en su propia casilla')
+
+  // Y el historial ya escrito, de antes de que el campo existiera, tiene que
+  // seguir contando igual que siempre.
+  comprobar(
+    resumir([{ clave: 'x', resultado: 'ganada', pips: 10 }]).todas.total === 1,
+    'una línea vieja, sin el campo, sigue contando'
+  )
+}
+
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')
 process.exit(fallos ? 1 : 0)
