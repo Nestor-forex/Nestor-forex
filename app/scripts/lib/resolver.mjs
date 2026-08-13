@@ -63,6 +63,7 @@ export function resolver(senales, data, resueltas = new Set()) {
         id: s.id,
         par: s.par,
         lado: s.lado,
+        ...(s.sombra ? { sombra: true } : {}),
         vistoEl: s.vistoEl,
         resultado: 'caducada',
         resueltoEl: new Date().toISOString(),
@@ -108,6 +109,10 @@ export function resolver(senales, data, resueltas = new Set()) {
       par: s.par,
       lado: s.lado,
       tipo: s.tipo,
+      // Se arrastra desde la señal para que el resultado se pueda leer solo,
+      // sin cruzarlo otra vez con `senales.jsonl` para saber si contaba o no.
+      // Solo aparece cuando es verdad, igual que en la señal.
+      ...(s.sombra ? { sombra: true } : {}),
       vistoEl: s.vistoEl,
       velaEntrada: dia,
       velaFinal,

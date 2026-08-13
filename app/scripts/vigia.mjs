@@ -24,7 +24,7 @@
 import { fileURLToPath } from 'node:url'
 import { computarBarrido, derivarVista } from '../src/lib/marketCalc.js'
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
-import { compararConAnterior, escribir, leerEstado, leerJsonl } from './lib/vigia-nucleo.mjs'
+import { compararConAnterior, escribir, esSombra, leerEstado, leerJsonl, separarSombra } from './lib/vigia-nucleo.mjs'
 import { resolver, resumir } from './lib/resolver.mjs'
 
 const DATOS = process.env.VIGIA_DATOS || fileURLToPath(new URL('../../datos-local', import.meta.url))
@@ -39,9 +39,29 @@ const LOG_RESULTADOS = `${DATOS}/historial/resultados.jsonl`
 const ahora = new Date()
 const { fechas, rates, rangosPar } = await obtenerVelas(leerLlave())
 const data = computarBarrido(fechas, rates, rangosPar)
-const vista = derivarVista(data, { thr: 0.5, topN: 3 })
+// ⚠️ `incluirVentas` va encendido AQUÍ y solo aquí.
+//
+// Las ventas están pausadas: la app no las propone y nadie recibe aviso de
+// ellas (ver `src/lib/reglas.js`). Pero si el vigía tampoco las anotara, no
+// volveríamos a tener ni un dato nuevo sobre ellas y la pausa se volvería
+// permanente sin que nadie lo decidiera — la única prueba disponible sería
+// el backtest de siempre, sobre los mismos 219 días, para siempre.
+//
+// Así que se anotan en la sombra: se marcan con `sombra: true` y de ahí en
+// adelante no existen para nadie. Solo acumulan operaciones reales hacia
+// adelante, que es exactamente lo que hará falta el día que haya que decidir
+// si vuelven.
+//
+// La app (`derivarVista` sin este parámetro) sigue sin darlas.
+const vista = derivarVista(data, { thr: 0.5, topN: 3, incluirVentas: true })
 
 const { actuales, nuevas } = compararConAnterior(vista.setups, leerEstado(ESTADO))
+
+// Cuáles pueden llegar a un celular y cuáles solo se anotan. La regla está en
+// `vigia-nucleo.mjs`, con su prueba: es la promesa de que una regla pausada
+// no le llega a nadie, y eso no puede depender de que este archivo esté bien
+// escrito hoy.
+const { visibles: nuevasVisibles, sombra: nuevasSombra } = separarSombra(nuevas)
 
 // Una línea por señal nueva, con los niveles tal como se los daríamos a
 // Néstor. Es lo que después se compara contra lo que hizo el precio.
@@ -58,6 +78,10 @@ for (const { id, s } of nuevas) {
       cierre: data.ultima,
       par: s.name,
       lado: s.lado,
+      // Solo va cuando es verdad: así las líneas ya escritas del historial se
+      // siguen leyendo igual (sin el campo = no es de sombra) y no hay que
+      // reescribir nada.
+      ...(esSombra(s) ? { sombra: true } : {}),
       tipo: s.tipo || 'tendencia',
       precio: c.precio,
       sl: c.sl,
@@ -146,10 +170,14 @@ escribir(
 // los que no se pueden recuperar después. El `import` es dinámico por lo
 // mismo: si faltara `web-push`, el vigía tiene que seguir anotando igual.
 let avisos = { estado: 'sin-senales-nuevas' }
-if (nuevas.length) {
+if (nuevasVisibles.length) {
   try {
     const { enviarAvisos } = await import('./lib/push-envio.mjs')
-    avisos = await enviarAvisos(nuevas)
+    // `nuevasVisibles` y no `nuevas`: las de sombra ya quedaron anotadas
+    // arriba y de aquí en adelante no existen. Se filtra en el sitio de la
+    // llamada, no dentro de `enviarAvisos`, para que quien lea esta línea vea
+    // que lo que sale hacia los celulares no es lo mismo que lo que se guarda.
+    avisos = await enviarAvisos(nuevasVisibles)
   } catch (e) {
     avisos = { estado: 'error', detalle: e.message }
   }
@@ -158,12 +186,15 @@ if (nuevas.length) {
 console.log('---VIGIA-INICIO---')
 console.log(`Corrida: ${ahora.toISOString()}`)
 console.log(`Última vela diaria: ${data.ultima}`)
-console.log(`Señales activas: ${actuales.length} · nuevas en esta revisión: ${nuevas.length}`)
+console.log(
+  `Señales activas: ${actuales.length} · nuevas en esta revisión: ${nuevas.length}` +
+    (nuevasSombra.length ? ` (${nuevasSombra.length} en sombra, no se avisan)` : '')
+)
 if (nuevas.length) {
   for (const { s } of nuevas) {
     const c = s.crudo
     console.log(
-      `  • ${s.name} ${s.lado} — entrada ${c.precio.toFixed(c.dec)}, SL ${c.sl.toFixed(c.dec)}, TP ${c.tp.toFixed(c.dec)} (R/B 1:${c.rr.toFixed(1)})`
+      `  • ${s.name} ${s.lado}${esSombra(s) ? ' [SOMBRA]' : ''} — entrada ${c.precio.toFixed(c.dec)}, SL ${c.sl.toFixed(c.dec)}, TP ${c.tp.toFixed(c.dec)} (R/B 1:${c.rr.toFixed(1)})`
     )
   }
 } else {
@@ -179,6 +210,16 @@ if (resumen.todas.total) {
   console.log(
     `Historial: ${resumen.todas.ganadas}/${resumen.todas.total} acertadas` +
       ` (${resumen.todas.acierto}%), ${resumen.todas.pips >= 0 ? '+' : ''}${resumen.todas.pips} pips`
+  )
+}
+// Las de sombra van en su propia línea y NUNCA sumadas a las de arriba: si se
+// mezclaran, el porcentaje que mira Néstor incluiría ventas que la app dejó
+// de proponerle. Esta línea es el contador de la espera: es el dato que hará
+// falta el día que haya que decidir si las ventas vuelven.
+if (resumen.sombra.total) {
+  console.log(
+    `Ventas en sombra (pausadas, se miden pero no se avisan): ${resumen.sombra.ganadas}/${resumen.sombra.total}` +
+      ` (${resumen.sombra.acierto}%), ${resumen.sombra.pips >= 0 ? '+' : ''}${resumen.sombra.pips} pips`
   )
 }
 console.log(`Avisos al celular: ${JSON.stringify(avisos)}`)
