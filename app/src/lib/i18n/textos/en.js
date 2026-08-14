@@ -61,6 +61,8 @@ export default {
   },
 
   tablero: {
+    ventasPausadas:
+      'For now the app does not suggest sells. We measured the rules over the last 10 months of market data and the sell trades lost money consistently, while the buys did not. We would rather suggest nothing than suggest something we know loses. The scan still shows which currencies are weak up above — that part is good information.',
     volver: '← Back',
     sesionActiva: 'Active session:',
     fuerzaRelativa: 'Relative strength by currency',
@@ -246,7 +248,30 @@ export default {
     fuenteCierre: 'Twelve Data',
   },
 
+  vivo: {
+    titulo: 'Live broker prices',
+    desc:
+      'Bid and ask straight from MetaTrader 5, refreshed every 2 seconds. It is the only place showing the real spread the broker charges; the scan above works on daily candles and does not know it.',
+    conectar: 'Connect to MetaTrader 5',
+    desconectar: 'Disconnect',
+    conectando: 'Looking for the bridge…',
+    enVivo: 'LIVE',
+    par: 'Pair',
+    bid: 'Bid',
+    ask: 'Ask',
+    spread: 'Spread',
+    pie: 'Spread in pips. Amber above 3.',
+    sinPuente: 'Could not reach the bridge',
+    sinPuenteQue: ({ url }) => `The app asked ${url} for prices and got no answer.`,
+    sinPuenteLocal:
+      'That address (127.0.0.1) means "this very device". It only works on the computer where MetaTrader 5 and the Python bridge are running, and only while both are on. From your phone, or from another computer, it will never find it: for that the bridge has to be published on the internet with its own address.',
+    error:
+      'The bridge answered something the app could not read. Check that /quotes returns the pairs with their bid and ask.',
+  },
   avisos: {
+    pausados: 'Alerts paused while we review the signals',
+    pausadosPorque:
+      'We measured the app rules over the last 10 months of market data, and the signals that reached the alert stage were not accurate enough. We would rather tell you nothing than tell you something that makes you lose money. The app still shows the scan and still records every signal to check how accurate it is; alerts come back when the numbers support it.',
     titulo: 'Phone alerts',
     desc: 'We alert you as soon as the watcher spots a new signal, even with the app closed.',
     activar: 'Turn on alerts',

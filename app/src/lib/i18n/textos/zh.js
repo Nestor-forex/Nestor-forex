@@ -56,6 +56,8 @@ export default {
   },
 
   tablero: {
+    ventasPausadas:
+      '目前应用不再给出卖出建议。我们用最近 10 个月的行情复核了规则：卖出交易持续亏钱，买入则没有。与其建议一个我们已知会亏的方向，不如什么都不建议。上方的扫描仍会显示哪些货币偏弱，那部分信息是可靠的。',
     volver: '← 返回',
     sesionActiva: '当前时段：',
     fuerzaRelativa: '各货币相对强度',
@@ -237,7 +239,30 @@ export default {
     fuenteCierre: 'Twelve Data',
   },
 
+  vivo: {
+    titulo: '经纪商实时报价',
+    desc:
+      '直接来自 MetaTrader 5 的买价与卖价，每 2 秒刷新一次。只有这里能看到经纪商实际收取的点差；上面的扫描用的是日线，并不知道这个数字。',
+    conectar: '连接 MetaTrader 5',
+    desconectar: '断开连接',
+    conectando: '正在寻找桥接程序…',
+    enVivo: '实时',
+    par: '货币对',
+    bid: 'Bid',
+    ask: 'Ask',
+    spread: 'Spread',
+    pie: '点差单位为 pip。超过 3 显示为琥珀色。',
+    sinPuente: '无法连接到桥接程序',
+    sinPuenteQue: ({ url }) => `应用向 ${url} 请求报价，但没有得到回应。`,
+    sinPuenteLocal:
+      '这个地址（127.0.0.1）的意思是"本机"。它只在运行 MetaTrader 5 和 Python 桥接程序的那台电脑上有效，而且两者都必须开着。从手机或另一台电脑访问，永远都找不到它：要做到那一点，桥接程序必须发布到互联网上并拥有自己的地址。',
+    error:
+      '桥接程序返回了应用无法解析的内容。请检查 /quotes 是否返回了各货币对及其 bid 和 ask。',
+  },
   avisos: {
+    pausados: '提醒已暂停，我们正在复核信号',
+    pausadosPorque:
+      '我们用最近 10 个月的行情复核了应用的规则，能触发提醒的那些信号准确率不够。与其提醒你一个会让你亏钱的信号，我们宁愿什么都不提醒。应用仍会显示市场扫描，也仍会记录每一个信号以核对准确率；等数据站得住脚时，提醒就会回来。',
     titulo: '手机提醒',
     desc: '哨兵一发现新信号就通知你，即使应用已关闭。',
     activar: '开启提醒',

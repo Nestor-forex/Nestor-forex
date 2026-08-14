@@ -57,6 +57,8 @@ export default {
   },
 
   tablero: {
+    ventasPausadas:
+      'Per ora l’app non suggerisce vendite. Abbiamo misurato le regole sugli ultimi 10 mesi di mercato: le operazioni di vendita perdevano denaro in modo costante, quelle di acquisto no. Preferiamo non suggerirti nulla piuttosto che suggerirti qualcosa che sappiamo perdente. La panoramica continua a mostrare sopra quali valute sono deboli, e quella sì è buona informazione.',
     volver: '← Indietro',
     sesionActiva: 'Sessione attiva:',
     fuerzaRelativa: 'Forza relativa per valuta',
@@ -242,7 +244,30 @@ export default {
     fuenteCierre: 'Twelve Data',
   },
 
+  vivo: {
+    titulo: 'Prezzi in diretta del broker',
+    desc:
+      'Prezzo di acquisto e di vendita direttamente da MetaTrader 5, aggiornato ogni 2 secondi. È l’unico punto che mostra lo spread reale applicato dal broker; la panoramica qui sopra lavora su candele giornaliere e non lo conosce.',
+    conectar: 'Connetti a MetaTrader 5',
+    desconectar: 'Disconnetti',
+    conectando: 'Cerco il ponte…',
+    enVivo: 'IN DIRETTA',
+    par: 'Coppia',
+    bid: 'Bid',
+    ask: 'Ask',
+    spread: 'Spread',
+    pie: 'Spread in pip. In ambra se supera 3.',
+    sinPuente: 'Non è stato possibile connettersi al ponte',
+    sinPuenteQue: ({ url }) => `L’app ha chiesto i prezzi a ${url} e non ha ricevuto risposta.`,
+    sinPuenteLocal:
+      'Quell’indirizzo (127.0.0.1) significa "questo stesso dispositivo". Funziona solo sul computer dove sono in esecuzione MetaTrader 5 e il ponte in Python, e solo con entrambi accesi. Dal telefono, o da un altro computer, non lo troverà mai: per questo il ponte deve essere pubblicato su internet con un indirizzo proprio.',
+    error:
+      'Il ponte ha risposto qualcosa che l’app non ha saputo leggere. Controlla che /quotes restituisca le coppie con il loro bid e il loro ask.',
+  },
   avisos: {
+    pausados: 'Avvisi in pausa mentre controlliamo i segnali',
+    pausadosPorque:
+      'Abbiamo misurato le regole dell’app sugli ultimi 10 mesi di mercato, e i segnali che arrivavano fino all’avviso non erano abbastanza precisi. Preferiamo non avvisarti di nulla piuttosto che avvisarti di qualcosa che ti faccia perdere denaro. L’app continua a mostrare la panoramica e a registrare ogni segnale per verificarne la precisione; gli avvisi torneranno quando i numeri lo giustificheranno.',
     titulo: 'Avvisi sul telefono',
     desc: 'Ti avvisiamo appena la vedetta trova un segnale nuovo, anche con l’app chiusa.',
     activar: 'Attiva gli avvisi',
