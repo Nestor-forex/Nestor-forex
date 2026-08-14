@@ -150,5 +150,53 @@ console.log('\n5. Las ventas están en pausa (ver src/lib/reglas.js)')
   )
 }
 
+// La reversión es la idea de la app AL REVÉS: compra lo débil en vez de lo
+// fuerte. Midió mejor que la app sobre 5 años, pero encenderla la convertiría
+// en otro producto, y esa decisión no es de un backtest. Si se colara
+// encendida, la app empezaría a proponer justo lo contrario de lo que dice
+// proponer, sin que nadie lo hubiera decidido.
+console.log('\n6. La reversión está apagada y no se pisa con las señales de siempre')
+{
+  const data = computarBarrido(fechas, rates, rangosPar)
+
+  const normal = derivarVista(data, { thr: 0 })
+  comprobar(!normal.reversiones?.length, 'la app no propone ninguna reversión')
+  comprobar(
+    normal.setups.every((s) => s.tipo !== 'reversion'),
+    'y ningún setup es de reversión'
+  )
+
+  // Encendida sí aparecen, y encenderla no puede tocar lo que ya había: solo
+  // añade una lista.
+  const midiendo = derivarVista(data, { thr: 0, incluirVentas: true, incluirReversion: true })
+  const conVentas = derivarVista(data, { thr: 0, incluirVentas: true })
+  const revs = midiendo.setups.filter((s) => s.tipo === 'reversion')
+  comprobar(revs.length > 0, `encendida sí aparecen (${revs.length}): se puede medir`)
+  comprobar(
+    midiendo.setups.filter((s) => s.tipo !== 'reversion').length === conVentas.setups.length,
+    'encenderla no toca ninguna de las señales que ya daba'
+  )
+
+  // Una reversión compra cuando `dif` es muy NEGATIVA y la app compra cuando
+  // es muy POSITIVA: son condiciones opuestas sobre el mismo número, así que
+  // el mismo par no puede salir en las dos listas con el mismo lado.
+  const yaEstaban = new Set(conVentas.setups.map((s) => `${s.name}|${s.lado}`))
+  const choques = revs.filter((s) => yaEstaban.has(`${s.name}|${s.lado}`))
+  comprobar(choques.length === 0, `ninguna reversión repite par y lado de otra señal (${choques.length} choques)`)
+
+  // El stop y el objetivo van a la misma distancia a propósito: es la
+  // geometría con la que se midió. Si alguien la cambiara, lo que el vigía
+  // anote en la sombra dejaría de ser comparable con la medición.
+  const simetricas = revs.every((s) => {
+    const c = s.crudo
+    return Math.abs(Math.abs(c.tp - c.precio) - Math.abs(c.precio - c.sl)) < 1e-9
+  })
+  comprobar(simetricas, 'sus niveles son 1:1, como la vara con la que se midió')
+  comprobar(
+    revs.every((s) => (s.lado === 'COMPRA' ? s.crudo.sl < s.crudo.precio : s.crudo.sl > s.crudo.precio)),
+    'y el stop cae del lado que le toca'
+  )
+}
+
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')
 process.exit(fallos ? 1 : 0)

@@ -218,6 +218,10 @@ export default {
   },
 
   calc_barrido: {
+    reversionCompra: ({ b, fb, q, fq, rsi }) =>
+      `${b}（${fb}）弱于 ${q}（${fq}），且价格向下拉伸过度，RSI ${rsi}：买的是反弹，不是趋势。`,
+    reversionVenta: ({ b, fb, q, fq, rsi }) =>
+      `${b}（${fb}）强于 ${q}（${fq}），且价格向上拉伸过度，RSI ${rsi}：卖的是回调，不是趋势。`,
     razon: ({ b, fb, q, fq, rsi, extra }) => `${b}（${fb}）对 ${q}（${fq}），EMA 已对齐，RSI ${rsi}${extra}`,
     rsiExtendido: ' — RSI 过度延伸，不要追，等回调',
     rsiContinuacion: ' — RSI 处于延续区间',

@@ -16,25 +16,27 @@ import { VENTAS_PAUSADAS } from '../../src/lib/reglas.js'
 export const idDe = (s) => `${s.name}|${s.lado}|${s.tipo || 'tendencia'}`
 
 // ────────────────────────────────────────────────────────────────────────
-// LA SOMBRA: cómo una regla pausada sigue midiéndose.
+// LA SOMBRA: cómo se mide una regla que no le llega a nadie.
 //
-// Las ventas están pausadas (ver `src/lib/reglas.js`), y eso dejaba un
-// agujero silencioso: si el vigía dejara de anotarlas, no volveríamos a
-// tener ni un dato nuevo sobre ellas, y la pausa se volvería permanente sin
-// que nadie lo hubiera decidido. La única prueba disponible sería el
-// backtest de siempre, sobre los mismos 219 días, para siempre.
+// El vigía las ANOTA con `sombra: true`, y a partir de ahí no existen para
+// nadie —ni avisos, ni pantalla de Historial, ni porcentaje de acierto—.
+// Solo suman operaciones reales hacia adelante, que es lo que hará falta el
+// día que haya que decidir sobre ellas.
 //
-// La salida es la misma que en la app hermana: el vigía las ANOTA con
-// `sombra: true`, y a partir de ahí no existen para nadie —ni avisos, ni
-// pantalla de Historial, ni porcentaje de acierto—. Solo suman operaciones
-// reales hacia adelante, que es lo que hará falta el día que haya que
-// decidir si vuelven.
+// Dos cosas van en la sombra hoy:
 //
-// Va atado a `VENTAS_PAUSADAS` y no escrito aparte: el día que las ventas se
-// reactiven, dejan de ser sombra solas. Dos interruptores para lo mismo es
-// como quedan encendidas a medias.
-// ────────────────────────────────────────────────────────────────────────
-export const esSombra = (s) => VENTAS_PAUSADAS && s?.lado === 'VENTA'
+//   · Las VENTAS, mientras estén pausadas. Se anotan para que la pausa pueda
+//     terminar algún día con un número y no con una corazonada.
+//   · Las señales de REVERSIÓN, que son la idea de la app al revés. Midieron
+//     mejor que la app sobre 5 años, pero encenderlas la convertiría en otro
+//     producto, y eso lo decide Néstor. Mientras tanto corren en paralelo sin
+//     que nadie las vea.
+//
+// Lo de las ventas va atado a `VENTAS_PAUSADAS`: el día que se reactiven,
+// dejan de ser sombra solas. Dos interruptores para lo mismo es como quedan
+// encendidas a medias.
+export const esSombra = (s) =>
+  (VENTAS_PAUSADAS && s?.lado === 'VENTA') || s?.tipo === 'reversion'
 
 // Parte las señales nuevas en las que pueden salir hacia un celular y las que
 // solo se anotan. Devuelve las dos listas en vez de filtrar por dentro para

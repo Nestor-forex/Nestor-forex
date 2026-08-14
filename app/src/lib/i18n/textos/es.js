@@ -268,6 +268,10 @@ export default {
 
   // Textos que arma marketCalc con los números del barrido metidos dentro.
   calc_barrido: {
+    reversionCompra: ({ b, fb, q, fq, rsi }) =>
+      `${b} (${fb}) está por debajo de ${q} (${fq}) y el precio se estiró a la baja con RSI ${rsi}: se compra el rebote, no la tendencia.`,
+    reversionVenta: ({ b, fb, q, fq, rsi }) =>
+      `${b} (${fb}) está por encima de ${q} (${fq}) y el precio se estiró al alza con RSI ${rsi}: se vende la corrección, no la tendencia.`,
     razon: ({ b, fb, q, fq, rsi, extra }) => `${b} (${fb}) vs ${q} (${fq}), EMAs alineadas, RSI ${rsi}${extra}`,
     rsiExtendido: ' — RSI extendido, no perseguir, esperar retroceso',
     rsiContinuacion: ' — RSI en zona de continuación',

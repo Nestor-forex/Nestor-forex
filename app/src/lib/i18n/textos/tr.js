@@ -221,6 +221,10 @@ export default {
   },
 
   calc_barrido: {
+    reversionCompra: ({ b, fb, q, fq, rsi }) =>
+      `${b} (${fb}), ${q} (${fq}) karşısında zayıf ve fiyat aşağı yönde fazla uzamış, RSI ${rsi}: alınan tepki yükselişi, trend değil.`,
+    reversionVenta: ({ b, fb, q, fq, rsi }) =>
+      `${b} (${fb}), ${q} (${fq}) karşısında güçlü ve fiyat yukarı yönde fazla uzamış, RSI ${rsi}: satılan düzeltme, trend değil.`,
     razon: ({ b, fb, q, fq, rsi, extra }) => `${b} (${fb}) - ${q} (${fq}), EMA’lar hizalı, RSI ${rsi}${extra}`,
     rsiExtendido: ' — RSI aşırı uzamış, peşinden koşma, geri çekilme bekle',
     rsiContinuacion: ' — RSI devam bölgesinde',

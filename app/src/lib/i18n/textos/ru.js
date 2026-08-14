@@ -222,6 +222,10 @@ export default {
   },
 
   calc_barrido: {
+    reversionCompra: ({ b, fb, q, fq, rsi }) =>
+      `${b} (${fb}) слабее ${q} (${fq}), и цена слишком растянута вниз при RSI ${rsi}: покупаем отскок, а не тренд.`,
+    reversionVenta: ({ b, fb, q, fq, rsi }) =>
+      `${b} (${fb}) сильнее ${q} (${fq}), и цена слишком растянута вверх при RSI ${rsi}: продаём откат, а не тренд.`,
     razon: ({ b, fb, q, fq, rsi, extra }) => `${b} (${fb}) против ${q} (${fq}), EMA выстроены, RSI ${rsi}${extra}`,
     rsiExtendido: ' — RSI перегрет, не догонять, ждать отката',
     rsiContinuacion: ' — RSI в зоне продолжения',
