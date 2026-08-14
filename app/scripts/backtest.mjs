@@ -63,8 +63,14 @@ const completo = computarBarrido(fechas, rates, rangosPar)
 
 // --------------------------------------------------------------------------
 
+// Lo que cobra el bróker por abrir y cerrar, se gane o se pierda. Es un coste
+// FIJO en pips, así que pesa más cuanto más corto sea el objetivo. En swing los
+// objetivos son de decenas de pips, así que duele menos que en intradía — pero
+// no es cero, y una regla que solo gana por menos de esto no gana.
+const SPREAD_PIPS = 1.5
+
 // Mide una lista de señales ya generadas.
-function medir(senales, porClave) {
+function medir(senales, porClave, { conSpread = false } = {}) {
   let ganadas = 0
   let perdidas = 0
   let pips = 0
@@ -81,16 +87,20 @@ function medir(senales, porClave) {
       sinJuzgar++
       continue
     }
+    // El spread se paga siempre, gane o pierda. En "veces el riesgo" cuesta
+    // menos cuanto más ancho sea el stop de esa operación concreta, así que se
+    // calcula por operación y no como un descuento global al final.
+    const coste = conSpread ? SPREAD_PIPS / s.pipRiesgo : 0
     if (r.resultado === 'ganada') {
       ganadas++
       // Ganó: se llevó exactamente su relación riesgo/beneficio.
-      sumaR += s.pipBeneficio / s.pipRiesgo
+      sumaR += s.pipBeneficio / s.pipRiesgo - coste
     } else {
       perdidas++
       // Perdió: se fue al stop, o sea exactamente 1 riesgo.
-      sumaR -= 1
+      sumaR -= 1 + coste
     }
-    pips += r.pips
+    pips += r.pips - (conSpread ? SPREAD_PIPS : 0)
   }
 
   const total = ganadas + perdidas
@@ -113,12 +123,13 @@ function medir(senales, porClave) {
 }
 
 // Genera y juzga con una geometría dada.
-function correr(geometria) {
+function correr(geometria, reglaEntrada = null) {
   const senales = generarSenales(fechas, rates, rangosPar, {
     calentamiento: CALENTAMIENTO,
     thr: THR,
     topN: TOP_N,
     geometria,
+    reglaEntrada,
   })
   const { resultados } = resolver(senales, completo)
   return { senales, porClave: new Map(resultados.map((r) => [r.clave, r])) }
@@ -545,6 +556,108 @@ fila('R3. Fondo alcista + RSI<40, sin mirar fuerza', conRegla(retroceso(40, fals
 fila('R4. Fondo alcista + RSI<50 + fuerza a favor', conRegla(retroceso(50, true)))
 console.log('─'.repeat(86))
 console.log('Ojo: si salen pocas operaciones, el porcentaje no significa gran cosa.')
+
+console.log('')
+// --------------------------------------------------------------------------
+// LA REGLA DE REVERSIÓN, ESCRITA DE FRENTE.
+//
+// Medir "la app al revés" dio +0,08 por unidad de riesgo sobre 876
+// operaciones. Pero eso NO es una estrategia: es un diagnóstico con un signo
+// cambiado. Las señales invertidas arrastran las condiciones de TENDENCIA de
+// la app (medias alineadas, precio por fuera), que se pusieron ahí para
+// perseguir un movimiento — justo lo contrario de lo que hace una regla de
+// reversión. Si la reversión funciona, tiene que funcionar dicha de frente y
+// con sus propias condiciones.
+//
+// Eso es lo que se mide aquí. Cuatro versiones, de la más simple a la más
+// exigente, y una de control:
+//
+//   M1  Comprar el par cuya divisa base está DÉBIL, y vender el contrario.
+//       Nada más. Es la reversión pura: comprar lo que se cayó.
+//   M2  M1 pero solo cuando además el RSI está estirado (≤35 al comprar).
+//       Un movimiento exagerado tiene más razones para devolverse.
+//   M3  M1 pero solo cuando el precio está por debajo de su media de 20 días.
+//       La misma idea con otra vara: distancia en vez de RSI.
+//   M4  CONTROL: la inversión de antes, escrita de frente (débil + tendencia
+//       bajista). Tiene que dar aproximadamente lo mismo que la inversión —si
+//       no, es que esta parte del código no mide lo que dice medir.
+//
+// Todo con la regla de medir NEUTRA (1:1), con y sin spread, y partido en dos
+// mitades. Una regla que solo gana en una mitad no es un descubrimiento.
+// --------------------------------------------------------------------------
+
+// `dif` es la fuerza de la divisa base menos la de la cotizada. La app compra
+// cuando es MUY POSITIVA (base fuerte). Estas reglas hacen lo contrario.
+const REGLAS_REVERSION = [
+  ['M1. Comprar lo débil, vender lo fuerte', (p, esc, thr) => (p.dif < -thr ? 'COMPRA' : p.dif > thr ? 'VENTA' : null)],
+  [
+    'M2. …y solo con el RSI estirado',
+    (p, esc, thr) => (p.dif < -thr && p.rsiV <= 35 ? 'COMPRA' : p.dif > thr && p.rsiV >= 65 ? 'VENTA' : null),
+  ],
+  [
+    'M3. …y solo lejos de la media de 20',
+    (p, esc, thr) => (p.dif < -thr && p.c < p.e20 ? 'COMPRA' : p.dif > thr && p.c > p.e20 ? 'VENTA' : null),
+  ],
+  [
+    'M4. CONTROL: la inversión de antes',
+    (p, esc, thr) => (p.dif < -thr && p.tend === 'Bajista' ? 'COMPRA' : p.dif > thr && p.tend === 'Alcista' ? 'VENTA' : null),
+  ],
+]
+
+const corteRev = fechas[Math.floor(fechas.length / 2)]
+
+console.log('')
+console.log('LA REGLA DE REVERSIÓN, DE FRENTE (regla de medir neutra)')
+console.log('Comprar lo que se cayó en vez de lo que subió. No es la app al revés:')
+console.log('es la idea escrita con sus propias condiciones.')
+console.log('')
+console.log('regla                                    ops  acierto   por 1R   CON SPREAD')
+console.log('─'.repeat(86))
+const revCorridas = []
+for (const [nombre, regla] of REGLAS_REVERSION) {
+  const r = correr(simetrica, regla)
+  revCorridas.push({ nombre, r })
+  const m = medir(r.senales, r.porClave)
+  const ms = medir(r.senales, r.porClave, { conSpread: true })
+  const num = (x) => (x === null ? '   —  ' : (x >= 0 ? '+' : '') + x.toFixed(2)).padStart(7)
+  console.log(
+    `${nombre.padEnd(40)} ${String(m.total).padStart(5)}   ` +
+      `${m.acierto === null ? '  — ' : (m.acierto.toFixed(0) + '%').padStart(4)}   ${num(m.porRiesgo)}   ${num(ms.porRiesgo)}`
+  )
+}
+console.log('─'.repeat(86))
+console.log('Para comparar, las COMPRAS de la app hoy, con la misma vara:')
+{
+  const m = medir(neutraPartida.senales.filter((s) => s.lado === 'COMPRA'), neutraPartida.porClave)
+  const ms = medir(neutraPartida.senales.filter((s) => s.lado === 'COMPRA'), neutraPartida.porClave, { conSpread: true })
+  const num = (x) => (x === null ? '   —  ' : (x >= 0 ? '+' : '') + x.toFixed(2)).padStart(7)
+  console.log(
+    `${'   la app tal cual (solo compras)'.padEnd(40)} ${String(m.total).padStart(5)}   ` +
+      `${(m.acierto.toFixed(0) + '%').padStart(4)}   ${num(m.porRiesgo)}   ${num(ms.porRiesgo)}`
+  )
+}
+console.log('')
+console.log(`Y partidas en dos mitades (corte en ${corteRev}), CON spread:`)
+console.log('')
+console.log('regla                                 1ª mitad: ops  acierto  por 1R    2ª mitad: ops  acierto  por 1R')
+console.log('─'.repeat(104))
+for (const { nombre, r } of revCorridas) {
+  const cel = (primera) => {
+    const m = medir(
+      r.senales.filter((s) => (primera ? s.vistoEl < corteRev : s.vistoEl >= corteRev)),
+      r.porClave,
+      { conSpread: true }
+    )
+    return (
+      `${String(m.total).padStart(4)}   ${m.acierto === null ? '   — ' : (m.acierto.toFixed(0) + '%').padStart(5)}   ` +
+      `${(m.porRiesgo === null ? '—' : (m.porRiesgo >= 0 ? '+' : '') + m.porRiesgo.toFixed(2)).padStart(6)}`
+    )
+  }
+  console.log(`${nombre.padEnd(37)}     ${cel(true)}             ${cel(false)}`)
+}
+console.log('─'.repeat(104))
+console.log('Si una regla gana en la primera mitad y se cae en la segunda, era')
+console.log('casualidad. Lo que hay que buscar es que aguante en las dos.')
 
 console.log('')
 console.log('Cómo leerlo, y con qué desconfianza:')
