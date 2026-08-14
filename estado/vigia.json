@@ -1,11 +1,11 @@
 {
-  "actualizadoEl": "2026-08-13T18:42:05.631Z",
-  "cierre": "2026-08-13",
+  "actualizadoEl": "2026-08-14T18:35:29.135Z",
+  "cierre": "2026-08-14",
   "senales": [
-    "EUR/CHF|COMPRA|tendencia",
-    "EUR/USD|COMPRA|tendencia",
     "GBP/USD|COMPRA|tendencia",
-    "USD/JPY|VENTA|tendencia",
-    "USD/CAD|VENTA|tendencia"
+    "EUR/USD|COMPRA|tendencia",
+    "EUR/CHF|COMPRA|tendencia",
+    "USD/CAD|VENTA|tendencia",
+    "USD/JPY|VENTA|tendencia"
   ]
 }
