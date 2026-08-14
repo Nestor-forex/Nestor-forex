@@ -45,7 +45,20 @@ const CALENTAMIENTO = 80
 const THR = 0.5
 const TOP_N = 3
 
-const { fechas, rates, rangosPar } = await obtenerVelas(leerLlave())
+// Cuántos días se miden. Antes eran los 300 de la app (unos 14 meses), y con
+// eso las ventas salieron a 120 operaciones: suficiente para ver que perdían,
+// insuficiente para casi todo lo demás.
+//
+// El problema de fondo con 300 días no es el tamaño de la muestra, es que son
+// UN SOLO humor de mercado. Estos meses el dólar ha caído casi sin pausa, así
+// que una regla puede parecer buena solo porque el dólar cayó. Con varios años
+// entran tramos de dólar subiendo, cayendo y quieto — y una regla que solo
+// gana en uno de los tres no es una estrategia, es una apuesta disfrazada.
+//
+// No cuesta un crédito más: Twelve Data cobra por consulta, no por vela.
+const VELAS = Number(process.env.VELAS || 1500)
+
+const { fechas, rates, rangosPar } = await obtenerVelas(leerLlave(), { velas: VELAS })
 const completo = computarBarrido(fechas, rates, rangosPar)
 
 // --------------------------------------------------------------------------
@@ -217,6 +230,56 @@ console.log('─'.repeat(86))
 const app = resultadosPorGeometria[0]
 const trimestreDe = (f) => `${f.slice(0, 4)}-T${Math.floor((Number(f.slice(5, 7)) - 1) / 3) + 1}`
 const trimestres = [...new Set(app.senales.map((s) => trimestreDe(s.vistoEl)))].sort()
+
+// --------------------------------------------------------------------------
+// LA MITAD QUE NO SE MIRÓ.
+//
+// El peligro de medir sobre muchos años no es tener pocos datos: es tener
+// tantos que siempre se pueda encontrar ALGUNA regla que gane, por pura
+// casualidad. Con suficientes intentos, el azar produce ganadores.
+//
+// La defensa clásica es partir el tiempo en dos: se mira la primera mitad
+// para decidir y se comprueba en la segunda, que no se tocó. Si un resultado
+// aparece en la primera y se evapora en la segunda, era casualidad.
+//
+// Aquí se imprimen las dos mitades una al lado de la otra para todo lo que
+// importa. No es una prueba automática —nadie puede impedir mirar la segunda
+// mitad— pero deja el número a la vista, que es lo que hace falta para no
+// engañarse solo.
+//
+// Con la regla de medir NEUTRA (1:1), donde el resultado depende solo de
+// acertar la dirección.
+// --------------------------------------------------------------------------
+
+const neutraPartida = correr(simetrica)
+const corte = fechas[Math.floor(fechas.length / 2)]
+const enMitad = (s, primera) => (primera ? s.vistoEl < corte : s.vistoEl >= corte)
+
+console.log('')
+console.log('LAS DOS MITADES DEL TIEMPO (regla de medir neutra)')
+console.log(`Corte en ${corte}. Un resultado que solo aparece en una mitad no es`)
+console.log('un descubrimiento: es una casualidad con buena prensa.')
+console.log('')
+console.log('qué                        1ª mitad: ops  acierto   por 1R    2ª mitad: ops  acierto   por 1R')
+console.log('─'.repeat(96))
+for (const [nombre, filtro] of [
+  ['Todo junto', () => true],
+  ['Solo COMPRAS', (s) => s.lado === 'COMPRA'],
+  ['Solo VENTAS', (s) => s.lado === 'VENTA'],
+]) {
+  const cel = (primera) => {
+    const m = medir(
+      neutraPartida.senales.filter((s) => filtro(s) && enMitad(s, primera)),
+      neutraPartida.porClave
+    )
+    return (
+      `${String(m.total).padStart(4)}   ${m.acierto === null ? '   — ' : (m.acierto.toFixed(0) + '%').padStart(5)}   ` +
+      `${(m.porRiesgo === null ? '—' : (m.porRiesgo >= 0 ? '+' : '') + m.porRiesgo.toFixed(2)).padStart(6)}`
+    )
+  }
+  console.log(`${nombre.padEnd(26)}     ${cel(true)}              ${cel(false)}`)
+}
+console.log('─'.repeat(96))
 
 console.log('')
 console.log('LAS VENTAS, TROCEADAS POR TRIMESTRE')
