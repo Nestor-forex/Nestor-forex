@@ -226,6 +226,10 @@ export default {
   },
 
   calc_barrido: {
+    reversionCompra: ({ b, fb, q, fq, rsi }) =>
+      `${b} (${fb}) está abaixo de ${q} (${fq}) e o preço se esticou para baixo com RSI ${rsi}: compra-se o repique, não a tendência.`,
+    reversionVenta: ({ b, fb, q, fq, rsi }) =>
+      `${b} (${fb}) está acima de ${q} (${fq}) e o preço se esticou para cima com RSI ${rsi}: vende-se a correção, não a tendência.`,
     razon: ({ b, fb, q, fq, rsi, extra }) => `${b} (${fb}) vs ${q} (${fq}), EMAs alinhadas, RSI ${rsi}${extra}`,
     rsiExtendido: ' — RSI esticado, não persiga, espere um recuo',
     rsiContinuacion: ' — RSI na zona de continuação',

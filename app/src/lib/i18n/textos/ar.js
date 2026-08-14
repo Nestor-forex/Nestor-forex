@@ -222,6 +222,10 @@ export default {
   },
 
   calc_barrido: {
+    reversionCompra: ({ b, fb, q, fq, rsi }) =>
+      `${b} (${fb}) أضعف من ${q} (${fq}) والسعر امتد هبوطًا أكثر من اللازم عند RSI ${rsi}: نشتري الارتداد لا الاتجاه.`,
+    reversionVenta: ({ b, fb, q, fq, rsi }) =>
+      `${b} (${fb}) أقوى من ${q} (${fq}) والسعر امتد صعودًا أكثر من اللازم عند RSI ${rsi}: نبيع التصحيح لا الاتجاه.`,
     razon: ({ b, fb, q, fq, rsi, extra }) => `${b} (${fb}) مقابل ${q} (${fq})، EMA متوافقة، RSI ${rsi}${extra}`,
     rsiExtendido: ' — RSI ممتد، لا تلاحق السعر، انتظر ارتدادًا',
     rsiContinuacion: ' — RSI في منطقة الاستمرار',

@@ -221,6 +221,10 @@ export default {
   },
 
   calc_barrido: {
+    reversionCompra: ({ b, fb, q, fq, rsi }) =>
+      `${b}（${fb}）が ${q}（${fq}）を下回り、価格は下方向に伸びすぎています。RSI ${rsi}：狙うのは戻りであって、トレンドではありません。`,
+    reversionVenta: ({ b, fb, q, fq, rsi }) =>
+      `${b}（${fb}）が ${q}（${fq}）を上回り、価格は上方向に伸びすぎています。RSI ${rsi}：狙うのは押しであって、トレンドではありません。`,
     razon: ({ b, fb, q, fq, rsi, extra }) => `${b}（${fb}）対 ${q}（${fq}）、EMA が同方向、RSI ${rsi}${extra}`,
     rsiExtendido: ' — RSI が行き過ぎ、追いかけずに押し目・戻りを待つ',
     rsiContinuacion: ' — RSI は継続の水準',

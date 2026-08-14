@@ -63,10 +63,10 @@ async function pedir(url, reintentos = 2) {
   return r
 }
 
-async function bajarTanda(simbolos, apiKey) {
+async function bajarTanda(simbolos, apiKey, velas) {
   const r = await pedir(
     `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(simbolos.join(','))}` +
-      `&interval=1day&outputsize=300&timezone=UTC&apikey=${apiKey}`
+      `&interval=1day&outputsize=${velas}&timezone=UTC&apikey=${apiKey}`
   )
   const j = await r.json()
 
@@ -91,11 +91,23 @@ async function bajarTanda(simbolos, apiKey) {
   return salida
 }
 
-export async function obtenerVelas(apiKey, { minBarras = 60 } = {}) {
+/**
+ * @param velas cuántos DÍAS se piden. 300 es lo que usan el vigía y el reporte
+ *              diario, y es lo que ve la app en producción (unos 14 meses de
+ *              mercado). El banco de pruebas pide muchos más.
+ *
+ *              No cuesta un crédito extra: Twelve Data cobra por CONSULTA, no
+ *              por vela, así que pedir 1500 días vale lo mismo que pedir 300.
+ *              El tope de la API son 5000, que en velas diarias son casi 20
+ *              años. (En la app hermana, con velas de una hora, esos mismos
+ *              5000 son solo 7 meses — por eso allí hace falta pedir por
+ *              tramos de fechas y aquí no.)
+ */
+export async function obtenerVelas(apiKey, { minBarras = 60, velas = 300 } = {}) {
   const porPar = {}
   for (let i = 0; i < PARES.length; i += POR_TANDA) {
     if (i > 0) await esperar(PAUSA_MS)
-    Object.assign(porPar, await bajarTanda(PARES.slice(i, i + POR_TANDA), apiKey))
+    Object.assign(porPar, await bajarTanda(PARES.slice(i, i + POR_TANDA), apiKey, velas))
   }
 
   // Solo los días que trajeron dato en LOS 14, para no dejar huecos si alguno

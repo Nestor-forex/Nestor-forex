@@ -226,6 +226,10 @@ export default {
   },
 
   calc_barrido: {
+    reversionCompra: ({ b, fb, q, fq, rsi }) =>
+      `${b} (${fb}) liegt unter ${q} (${fq}) und der Kurs ist nach unten überdehnt, RSI ${rsi}: gekauft wird die Gegenbewegung, nicht der Trend.`,
+    reversionVenta: ({ b, fb, q, fq, rsi }) =>
+      `${b} (${fb}) liegt über ${q} (${fq}) und der Kurs ist nach oben überdehnt, RSI ${rsi}: verkauft wird die Korrektur, nicht der Trend.`,
     razon: ({ b, fb, q, fq, rsi, extra }) => `${b} (${fb}) vs ${q} (${fq}), EMAs ausgerichtet, RSI ${rsi}${extra}`,
     rsiExtendido: ' — RSI überdehnt, nicht hinterherlaufen, Rücksetzer abwarten',
     rsiContinuacion: ' — RSI in der Fortsetzungszone',

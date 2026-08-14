@@ -96,5 +96,21 @@ console.log('\n9. Las ventas pausadas se anotan pero NUNCA salen hacia un celula
   comprobar('un setup sin lado no revienta', esSombra({}) === false)
 }
 
+console.log('\n10. Las reversiones tampoco salen hacia un celular')
+{
+  // La reversión es la idea de la app al revés. Corre en la sombra mientras
+  // se decide si vale, así que no puede avisarle a nadie — ni siquiera el día
+  // que las ventas se reactiven y dejen de ser sombra por su cuenta.
+  const nuevas = [
+    { id: 'a', s: setup('EUR/USD', 'COMPRA') },
+    { id: 'b', s: setup('GBP/USD', 'COMPRA', 'reversion') },
+    { id: 'c', s: setup('USD/JPY', 'VENTA', 'reversion') },
+  ]
+  const { visibles, sombra } = separarSombra(nuevas)
+  comprobar('las dos reversiones quedan apartadas', sombra.length === 2)
+  comprobar('solo se avisa la compra normal', visibles.length === 1 && visibles[0].id === 'a')
+  comprobar('una reversión de COMPRA también es sombra', esSombra(setup('X/Y', 'COMPRA', 'reversion')) === true)
+}
+
 console.log(fallos === 0 ? '\nTodas las comprobaciones pasaron.\n' : `\n${fallos} comprobación(es) fallaron.\n`)
 process.exit(fallos === 0 ? 0 : 1)

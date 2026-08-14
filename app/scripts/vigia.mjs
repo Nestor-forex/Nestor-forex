@@ -53,7 +53,10 @@ const data = computarBarrido(fechas, rates, rangosPar)
 // si vuelven.
 //
 // La app (`derivarVista` sin este parámetro) sigue sin darlas.
-const vista = derivarVista(data, { thr: 0.5, topN: 3, incluirVentas: true })
+// `incluirVentas` para que la pausa pueda terminar con datos, e
+// `incluirReversion` para ver correr en paralelo la regla contraria. Las dos
+// se anotan en la sombra: no se enseñan, no se avisan, solo acumulan.
+const vista = derivarVista(data, { thr: 0.5, topN: 3, incluirVentas: true, incluirReversion: true })
 
 const { actuales, nuevas } = compararConAnterior(vista.setups, leerEstado(ESTADO))
 
@@ -78,6 +81,7 @@ for (const { id, s } of nuevas) {
       cierre: data.ultima,
       par: s.name,
       lado: s.lado,
+      tipo: s.tipo,
       // Solo va cuando es verdad: así las líneas ya escritas del historial se
       // siguen leyendo igual (sin el campo = no es de sombra) y no hay que
       // reescribir nada.

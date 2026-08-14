@@ -226,6 +226,10 @@ export default {
   },
 
   calc_barrido: {
+    reversionCompra: ({ b, fb, q, fq, rsi }) =>
+      `${b} (${fb}) is below ${q} (${fq}) and price is stretched to the downside with RSI ${rsi}: buying the bounce, not the trend.`,
+    reversionVenta: ({ b, fb, q, fq, rsi }) =>
+      `${b} (${fb}) is above ${q} (${fq}) and price is stretched to the upside with RSI ${rsi}: selling the pullback, not the trend.`,
     razon: ({ b, fb, q, fq, rsi, extra }) => `${b} (${fb}) vs ${q} (${fq}), EMAs aligned, RSI ${rsi}${extra}`,
     rsiExtendido: ' — RSI extended, do not chase, wait for a pullback',
     rsiContinuacion: ' — RSI in the continuation zone',

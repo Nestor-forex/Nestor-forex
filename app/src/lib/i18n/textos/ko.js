@@ -221,6 +221,10 @@ export default {
   },
 
   calc_barrido: {
+    reversionCompra: ({ b, fb, q, fq, rsi }) =>
+      `${b}(${fb})가 ${q}(${fq})보다 약하고 가격이 아래로 과하게 늘어났습니다. RSI ${rsi}: 노리는 것은 반등이지 추세가 아닙니다.`,
+    reversionVenta: ({ b, fb, q, fq, rsi }) =>
+      `${b}(${fb})가 ${q}(${fq})보다 강하고 가격이 위로 과하게 늘어났습니다. RSI ${rsi}: 노리는 것은 눌림이지 추세가 아닙니다.`,
     razon: ({ b, fb, q, fq, rsi, extra }) => `${b}(${fb}) 대 ${q}(${fq}), EMA 정렬됨, RSI ${rsi}${extra}`,
     rsiExtendido: ' — RSI 과열, 추격하지 말고 되돌림을 기다릴 것',
     rsiContinuacion: ' — RSI가 지속 구간에 있음',

@@ -211,15 +211,78 @@ const razon = (p, esc, t) => {
   })
 }
 
-const mkSetup = (p, lado, esc = {}, t) => {
+// ---------------------------------------------------------------- reversión
+//
+// LA REGLA CONTRARIA A LA DE LA APP, Y POR ESO ESTÁ APAGADA.
+//
+// La app compra lo FUERTE y vende lo DÉBIL. Medido sobre 5 años y 3 meses de
+// velas diarias reales, con la vara neutra y descontando spread, eso da −0,05
+// por unidad de riesgo: pierde. Hacer lo contrario —comprar el par cuya divisa
+// base está débil, cuando además el precio se estiró— da +0,07.
+//
+// Y no es un número suelto: se barrieron los umbrales vecinos del RSI (25, 30,
+// 35, 40, 45 y 50) y TODOS salen positivos, en las dos mitades del tiempo, con
+// spread. Además la tabla tiene la forma correcta: cuanto más estirado se
+// exige el precio, más gana cada operación y menos operaciones hay. Un número
+// ajustado a mano no se ordenaría así.
+//
+// Se usa 40 (y su espejo 60) y no el 35 que salió mejor en el total: 40 tiene
+// casi el doble de operaciones —1.568 contra 860— y aguanta mejor la segunda
+// mitad del periodo (+0,08 contra +0,07). Entre dos números buenos se elige el
+// que descansa sobre más datos, no el más bonito.
+//
+// ⚠️ ARRANCA APAGADA (`incluirReversion`). Esto no es un ajuste de la app: es
+// su idea al revés. Encenderla convertiría a Swing en otro producto, y esa es
+// una decisión de Néstor, no una consecuencia de una medición. Por ahora el
+// vigía la anota en la sombra —sin enseñarla y sin avisar a nadie— para ver
+// los dos números correr en paralelo con dinero real de por medio en ninguno.
+const RSI_REVERSION = 40
+
+const clasificarReversion = (p, thr, { rsiMax = RSI_REVERSION } = {}) => {
+  if (p.dif < -thr && p.rsiV <= rsiMax) return 'COMPRA'
+  if (p.dif > thr && p.rsiV >= 100 - rsiMax) return 'VENTA'
+  return null
+}
+
+const razonReversion = (p, esc, t) =>
+  t(clasificarReversion(p, 0) === 'COMPRA' ? 'calc_barrido.reversionCompra' : 'calc_barrido.reversionVenta', {
+    b: p.b,
+    fb: esc[p.b].toFixed(1),
+    q: p.q,
+    fq: esc[p.q].toFixed(1),
+    rsi: p.rsiV.toFixed(0),
+  })
+
+// ⚠️ El stop y el objetivo van a la MISMA distancia (1,5 ATR a cada lado), y
+// eso es a propósito aunque dé una relación riesgo/beneficio de 1:1, que la
+// app marcaría como baja.
+//
+// El motivo: es EXACTAMENTE la geometría con la que se midió la regla. Todos
+// los números de arriba salen de una vara 1:1. Si aquí le pusiera un objetivo
+// más ambicioso, lo que el vigía anote en la sombra ya no sería comparable con
+// lo medido, y la espera no serviría para nada — estaríamos midiendo otra cosa
+// y creyendo que confirmamos esta.
+const ATR_REVERSION = 1.5
+const nivelesReversion = (p, compra) => ({
+  sl: compra ? p.c - ATR_REVERSION * p.atrAbs : p.c + ATR_REVERSION * p.atrAbs,
+  tp: compra ? p.c + ATR_REVERSION * p.atrAbs : p.c - ATR_REVERSION * p.atrAbs,
+})
+
+const mkSetup = (p, lado, esc = {}, t, tipo = 'tendencia') => {
   const d = p.dec
   const compra = lado === 'COMPRA'
-  const sl = compra ? p.lo10 - 0.5 * p.atrAbs : p.hi10 + 0.5 * p.atrAbs
-  const tp = compra ? Math.max(p.hi20, p.c + 2 * p.atrAbs) : Math.min(p.lo20, p.c - 2 * p.atrAbs)
+  const esReversion = tipo === 'reversion'
+  const { sl, tp } = esReversion
+    ? nivelesReversion(p, compra)
+    : {
+        sl: compra ? p.lo10 - 0.5 * p.atrAbs : p.hi10 + 0.5 * p.atrAbs,
+        tp: compra ? Math.max(p.hi20, p.c + 2 * p.atrAbs) : Math.min(p.lo20, p.c - 2 * p.atrAbs),
+      }
   const rr = Math.abs(tp - p.c) / Math.abs(p.c - sl)
   return {
     name: p.name,
     lado,
+    tipo,
     // Los campos de abajo son texto ya armado, que es lo que consumen el
     // tablero y el reporte .md. `crudo` lleva los mismos datos sin formatear,
     // para la pantalla de detalle, que necesita dibujarlos y no solo leerlos.
@@ -279,10 +342,22 @@ const porDifAbs = (a, b) => Math.abs(b.dif) - Math.abs(a.dif)
  *                       medición dejara de ver las ventas, no podríamos volver
  *                       a comprobar si algún día se arreglan, y la pausa se
  *                       volvería permanente sin que nadie lo decidiera.
+ * @param incluirReversion enciende la regla contraria a la de la app (ver
+ *                       `clasificarReversion`). APAGADA por defecto: no es un
+ *                       ajuste, es la idea de la app al revés, y encenderla es
+ *                       una decisión de Néstor. Hoy solo la enciende el vigía,
+ *                       para anotarla en la sombra sin enseñársela a nadie.
  */
 export function derivarVista(
   data,
-  { thr = 0.5, topN = 3, t = crearT(IDIOMA_BASE), locale, incluirVentas = !VENTAS_PAUSADAS } = {}
+  {
+    thr = 0.5,
+    topN = 3,
+    t = crearT(IDIOMA_BASE),
+    locale,
+    incluirVentas = !VENTAS_PAUSADAS,
+    incluirReversion = false,
+  } = {}
 ) {
   const { esc, pares: paresRaw } = data
 
@@ -324,9 +399,28 @@ export function derivarVista(
     }),
   }))
 
-  const setups = [...comprasRaw.slice(0, topN).map((p) => mkSetup(p, 'COMPRA', esc, t)), ...ventasRaw.slice(0, topN).map((p) => mkSetup(p, 'VENTA', esc, t))]
+  // Reversión. Apagada por defecto: sin `incluirReversion` esta lista queda
+  // vacía y la app se comporta exactamente como antes de que existiera.
+  //
+  // Una reversión no puede coincidir con una compra o una venta de la app: la
+  // app compra cuando `dif` es muy POSITIVA y esta compra cuando es muy
+  // NEGATIVA. Son condiciones opuestas sobre el mismo número, así que el mismo
+  // par no puede estar en las dos listas con el mismo lado.
+  const clsRev = (p) => (incluirReversion ? clasificarReversion(p, thr) : null)
+  const reversionesRaw = incluirReversion ? cands.filter((p) => clsRev(p)).slice(0, topN) : []
+  const reversiones = reversionesRaw.map((p) => ({
+    name: p.name,
+    lado: clsRev(p),
+    razon: razonReversion(p, esc, t),
+  }))
+
+  const setups = [
+    ...comprasRaw.slice(0, topN).map((p) => mkSetup(p, 'COMPRA', esc, t)),
+    ...ventasRaw.slice(0, topN).map((p) => mkSetup(p, 'VENTA', esc, t)),
+    ...reversionesRaw.map((p) => mkSetup(p, clsRev(p), esc, t, 'reversion')),
+  ]
 
   const corte = t('calc_barrido.corte', { fecha: data.ultima })
 
-  return { monedas, pares, compras, ventas, vigilancia, setups, corte }
+  return { monedas, pares, compras, ventas, vigilancia, reversiones, setups, corte }
 }

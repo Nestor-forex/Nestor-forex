@@ -45,13 +45,32 @@ const CALENTAMIENTO = 80
 const THR = 0.5
 const TOP_N = 3
 
-const { fechas, rates, rangosPar } = await obtenerVelas(leerLlave())
+// Cuántos días se miden. Antes eran los 300 de la app (unos 14 meses), y con
+// eso las ventas salieron a 120 operaciones: suficiente para ver que perdían,
+// insuficiente para casi todo lo demás.
+//
+// El problema de fondo con 300 días no es el tamaño de la muestra, es que son
+// UN SOLO humor de mercado. Estos meses el dólar ha caído casi sin pausa, así
+// que una regla puede parecer buena solo porque el dólar cayó. Con varios años
+// entran tramos de dólar subiendo, cayendo y quieto — y una regla que solo
+// gana en uno de los tres no es una estrategia, es una apuesta disfrazada.
+//
+// No cuesta un crédito más: Twelve Data cobra por consulta, no por vela.
+const VELAS = Number(process.env.VELAS || 1500)
+
+const { fechas, rates, rangosPar } = await obtenerVelas(leerLlave(), { velas: VELAS })
 const completo = computarBarrido(fechas, rates, rangosPar)
 
 // --------------------------------------------------------------------------
 
+// Lo que cobra el bróker por abrir y cerrar, se gane o se pierda. Es un coste
+// FIJO en pips, así que pesa más cuanto más corto sea el objetivo. En swing los
+// objetivos son de decenas de pips, así que duele menos que en intradía — pero
+// no es cero, y una regla que solo gana por menos de esto no gana.
+const SPREAD_PIPS = 1.5
+
 // Mide una lista de señales ya generadas.
-function medir(senales, porClave) {
+function medir(senales, porClave, { conSpread = false } = {}) {
   let ganadas = 0
   let perdidas = 0
   let pips = 0
@@ -68,16 +87,20 @@ function medir(senales, porClave) {
       sinJuzgar++
       continue
     }
+    // El spread se paga siempre, gane o pierda. En "veces el riesgo" cuesta
+    // menos cuanto más ancho sea el stop de esa operación concreta, así que se
+    // calcula por operación y no como un descuento global al final.
+    const coste = conSpread ? SPREAD_PIPS / s.pipRiesgo : 0
     if (r.resultado === 'ganada') {
       ganadas++
       // Ganó: se llevó exactamente su relación riesgo/beneficio.
-      sumaR += s.pipBeneficio / s.pipRiesgo
+      sumaR += s.pipBeneficio / s.pipRiesgo - coste
     } else {
       perdidas++
       // Perdió: se fue al stop, o sea exactamente 1 riesgo.
-      sumaR -= 1
+      sumaR -= 1 + coste
     }
-    pips += r.pips
+    pips += r.pips - (conSpread ? SPREAD_PIPS : 0)
   }
 
   const total = ganadas + perdidas
@@ -100,12 +123,13 @@ function medir(senales, porClave) {
 }
 
 // Genera y juzga con una geometría dada.
-function correr(geometria) {
+function correr(geometria, reglaEntrada = null) {
   const senales = generarSenales(fechas, rates, rangosPar, {
     calentamiento: CALENTAMIENTO,
     thr: THR,
     topN: TOP_N,
     geometria,
+    reglaEntrada,
   })
   const { resultados } = resolver(senales, completo)
   return { senales, porClave: new Map(resultados.map((r) => [r.clave, r])) }
@@ -217,6 +241,56 @@ console.log('─'.repeat(86))
 const app = resultadosPorGeometria[0]
 const trimestreDe = (f) => `${f.slice(0, 4)}-T${Math.floor((Number(f.slice(5, 7)) - 1) / 3) + 1}`
 const trimestres = [...new Set(app.senales.map((s) => trimestreDe(s.vistoEl)))].sort()
+
+// --------------------------------------------------------------------------
+// LA MITAD QUE NO SE MIRÓ.
+//
+// El peligro de medir sobre muchos años no es tener pocos datos: es tener
+// tantos que siempre se pueda encontrar ALGUNA regla que gane, por pura
+// casualidad. Con suficientes intentos, el azar produce ganadores.
+//
+// La defensa clásica es partir el tiempo en dos: se mira la primera mitad
+// para decidir y se comprueba en la segunda, que no se tocó. Si un resultado
+// aparece en la primera y se evapora en la segunda, era casualidad.
+//
+// Aquí se imprimen las dos mitades una al lado de la otra para todo lo que
+// importa. No es una prueba automática —nadie puede impedir mirar la segunda
+// mitad— pero deja el número a la vista, que es lo que hace falta para no
+// engañarse solo.
+//
+// Con la regla de medir NEUTRA (1:1), donde el resultado depende solo de
+// acertar la dirección.
+// --------------------------------------------------------------------------
+
+const neutraPartida = correr(simetrica)
+const corte = fechas[Math.floor(fechas.length / 2)]
+const enMitad = (s, primera) => (primera ? s.vistoEl < corte : s.vistoEl >= corte)
+
+console.log('')
+console.log('LAS DOS MITADES DEL TIEMPO (regla de medir neutra)')
+console.log(`Corte en ${corte}. Un resultado que solo aparece en una mitad no es`)
+console.log('un descubrimiento: es una casualidad con buena prensa.')
+console.log('')
+console.log('qué                        1ª mitad: ops  acierto   por 1R    2ª mitad: ops  acierto   por 1R')
+console.log('─'.repeat(96))
+for (const [nombre, filtro] of [
+  ['Todo junto', () => true],
+  ['Solo COMPRAS', (s) => s.lado === 'COMPRA'],
+  ['Solo VENTAS', (s) => s.lado === 'VENTA'],
+]) {
+  const cel = (primera) => {
+    const m = medir(
+      neutraPartida.senales.filter((s) => filtro(s) && enMitad(s, primera)),
+      neutraPartida.porClave
+    )
+    return (
+      `${String(m.total).padStart(4)}   ${m.acierto === null ? '   — ' : (m.acierto.toFixed(0) + '%').padStart(5)}   ` +
+      `${(m.porRiesgo === null ? '—' : (m.porRiesgo >= 0 ? '+' : '') + m.porRiesgo.toFixed(2)).padStart(6)}`
+    )
+  }
+  console.log(`${nombre.padEnd(26)}     ${cel(true)}              ${cel(false)}`)
+}
+console.log('─'.repeat(96))
 
 console.log('')
 console.log('LAS VENTAS, TROCEADAS POR TRIMESTRE')
@@ -484,12 +558,166 @@ console.log('─'.repeat(86))
 console.log('Ojo: si salen pocas operaciones, el porcentaje no significa gran cosa.')
 
 console.log('')
+// --------------------------------------------------------------------------
+// LA REGLA DE REVERSIÓN, ESCRITA DE FRENTE.
+//
+// Medir "la app al revés" dio +0,08 por unidad de riesgo sobre 876
+// operaciones. Pero eso NO es una estrategia: es un diagnóstico con un signo
+// cambiado. Las señales invertidas arrastran las condiciones de TENDENCIA de
+// la app (medias alineadas, precio por fuera), que se pusieron ahí para
+// perseguir un movimiento — justo lo contrario de lo que hace una regla de
+// reversión. Si la reversión funciona, tiene que funcionar dicha de frente y
+// con sus propias condiciones.
+//
+// Eso es lo que se mide aquí. Cuatro versiones, de la más simple a la más
+// exigente, y una de control:
+//
+//   M1  Comprar el par cuya divisa base está DÉBIL, y vender el contrario.
+//       Nada más. Es la reversión pura: comprar lo que se cayó.
+//   M2  M1 pero solo cuando además el RSI está estirado (≤35 al comprar).
+//       Un movimiento exagerado tiene más razones para devolverse.
+//   M3  M1 pero solo cuando el precio está por debajo de su media de 20 días.
+//       La misma idea con otra vara: distancia en vez de RSI.
+//   M4  CONTROL: la inversión de antes, escrita de frente (débil + tendencia
+//       bajista). Tiene que dar aproximadamente lo mismo que la inversión —si
+//       no, es que esta parte del código no mide lo que dice medir.
+//
+// Todo con la regla de medir NEUTRA (1:1), con y sin spread, y partido en dos
+// mitades. Una regla que solo gana en una mitad no es un descubrimiento.
+// --------------------------------------------------------------------------
+
+// `dif` es la fuerza de la divisa base menos la de la cotizada. La app compra
+// cuando es MUY POSITIVA (base fuerte). Estas reglas hacen lo contrario.
+const REGLAS_REVERSION = [
+  ['M1. Comprar lo débil, vender lo fuerte', (p, esc, thr) => (p.dif < -thr ? 'COMPRA' : p.dif > thr ? 'VENTA' : null)],
+  [
+    'M2. …y solo con el RSI estirado',
+    (p, esc, thr) => (p.dif < -thr && p.rsiV <= 35 ? 'COMPRA' : p.dif > thr && p.rsiV >= 65 ? 'VENTA' : null),
+  ],
+  [
+    'M3. …y solo lejos de la media de 20',
+    (p, esc, thr) => (p.dif < -thr && p.c < p.e20 ? 'COMPRA' : p.dif > thr && p.c > p.e20 ? 'VENTA' : null),
+  ],
+  [
+    'M4. CONTROL: la inversión de antes',
+    (p, esc, thr) => (p.dif < -thr && p.tend === 'Bajista' ? 'COMPRA' : p.dif > thr && p.tend === 'Alcista' ? 'VENTA' : null),
+  ],
+]
+
+const corteRev = fechas[Math.floor(fechas.length / 2)]
+
+console.log('')
+console.log('LA REGLA DE REVERSIÓN, DE FRENTE (regla de medir neutra)')
+console.log('Comprar lo que se cayó en vez de lo que subió. No es la app al revés:')
+console.log('es la idea escrita con sus propias condiciones.')
+console.log('')
+console.log('regla                                    ops  acierto   por 1R   CON SPREAD')
+console.log('─'.repeat(86))
+const revCorridas = []
+for (const [nombre, regla] of REGLAS_REVERSION) {
+  const r = correr(simetrica, regla)
+  revCorridas.push({ nombre, r })
+  const m = medir(r.senales, r.porClave)
+  const ms = medir(r.senales, r.porClave, { conSpread: true })
+  const num = (x) => (x === null ? '   —  ' : (x >= 0 ? '+' : '') + x.toFixed(2)).padStart(7)
+  console.log(
+    `${nombre.padEnd(40)} ${String(m.total).padStart(5)}   ` +
+      `${m.acierto === null ? '  — ' : (m.acierto.toFixed(0) + '%').padStart(4)}   ${num(m.porRiesgo)}   ${num(ms.porRiesgo)}`
+  )
+}
+console.log('─'.repeat(86))
+console.log('Para comparar, las COMPRAS de la app hoy, con la misma vara:')
+{
+  const m = medir(neutraPartida.senales.filter((s) => s.lado === 'COMPRA'), neutraPartida.porClave)
+  const ms = medir(neutraPartida.senales.filter((s) => s.lado === 'COMPRA'), neutraPartida.porClave, { conSpread: true })
+  const num = (x) => (x === null ? '   —  ' : (x >= 0 ? '+' : '') + x.toFixed(2)).padStart(7)
+  console.log(
+    `${'   la app tal cual (solo compras)'.padEnd(40)} ${String(m.total).padStart(5)}   ` +
+      `${(m.acierto.toFixed(0) + '%').padStart(4)}   ${num(m.porRiesgo)}   ${num(ms.porRiesgo)}`
+  )
+}
+console.log('')
+console.log(`Y partidas en dos mitades (corte en ${corteRev}), CON spread:`)
+console.log('')
+console.log('regla                                 1ª mitad: ops  acierto  por 1R    2ª mitad: ops  acierto  por 1R')
+console.log('─'.repeat(104))
+for (const { nombre, r } of revCorridas) {
+  const cel = (primera) => {
+    const m = medir(
+      r.senales.filter((s) => (primera ? s.vistoEl < corteRev : s.vistoEl >= corteRev)),
+      r.porClave,
+      { conSpread: true }
+    )
+    return (
+      `${String(m.total).padStart(4)}   ${m.acierto === null ? '   — ' : (m.acierto.toFixed(0) + '%').padStart(5)}   ` +
+      `${(m.porRiesgo === null ? '—' : (m.porRiesgo >= 0 ? '+' : '') + m.porRiesgo.toFixed(2)).padStart(6)}`
+    )
+  }
+  console.log(`${nombre.padEnd(37)}     ${cel(true)}             ${cel(false)}`)
+}
+console.log('─'.repeat(104))
+console.log('Si una regla gana en la primera mitad y se cae en la segunda, era')
+console.log('casualidad. Lo que hay que buscar es que aguante en las dos.')
+
+// --------------------------------------------------------------------------
+// LOS UMBRALES VECINOS: ¿es real o lo ajusté yo?
+//
+// M2 usa "RSI ≤ 35 al comprar, ≥ 65 al vender". Ese 35 lo elegí a mano, y ahí
+// está el peligro: si uno prueba diez números y se queda con el que mejor
+// salió, no descubrió nada — ajustó una curva a un pasado concreto y la va a
+// ver desmoronarse en cuanto llegue un mercado nuevo.
+//
+// La forma de distinguir una cosa de la otra es mirar la VECINDAD. Un efecto
+// real es ancho: si comprar con RSI ≤ 35 funciona porque el precio se estiró
+// demasiado, entonces 30 y 40 tienen que funcionar también, y el resultado
+// debe subir y bajar suavemente al moverse. Un pico solitario en 35, con 30 y
+// 40 planos o negativos, no es un descubrimiento: es una casualidad de estos
+// 5 años y no hay ninguna razón para que se repita.
+//
+// Se barre de 25 a 50 (con el espejo 75..50 del lado de las ventas), todo con
+// spread descontado y partido en las dos mitades. Lo que hay que mirar no es
+// cuál gana más, sino si TODA la fila es positiva y cambia poco a poco.
+// --------------------------------------------------------------------------
+
+console.log('')
+console.log('¿ES REAL EL 35 DEL RSI, O LO AJUSTÉ YO? (con spread, regla neutra)')
+console.log('Un efecto real es ancho: los vecinos tienen que acompañar.')
+console.log('Un pico solitario es una curva ajustada al pasado.')
+console.log('')
+console.log('RSI ≤ (compra) / ≥ (venta)     ops  acierto   por 1R    1ª mitad   2ª mitad')
+console.log('─'.repeat(86))
+for (const u of [25, 30, 35, 40, 45, 50]) {
+  const regla = (p, esc, thr) =>
+    p.dif < -thr && p.rsiV <= u ? 'COMPRA' : p.dif > thr && p.rsiV >= 100 - u ? 'VENTA' : null
+  const r = correr(simetrica, regla)
+  const m = medir(r.senales, r.porClave, { conSpread: true })
+  const mitad = (primera) => {
+    const x = medir(
+      r.senales.filter((s) => (primera ? s.vistoEl < corteRev : s.vistoEl >= corteRev)),
+      r.porClave,
+      { conSpread: true }
+    )
+    return (x.porRiesgo === null ? '   —' : (x.porRiesgo >= 0 ? '+' : '') + x.porRiesgo.toFixed(2)).padStart(7)
+  }
+  const marca = u === 35 ? '  ← el elegido' : ''
+  console.log(
+    `RSI ${String(u).padStart(2)} / ${100 - u}${' '.repeat(20)} ${String(m.total).padStart(5)}   ` +
+      `${m.acierto === null ? '  — ' : (m.acierto.toFixed(0) + '%').padStart(4)}   ` +
+      `${(m.porRiesgo === null ? '   —' : (m.porRiesgo >= 0 ? '+' : '') + m.porRiesgo.toFixed(2)).padStart(7)}   ` +
+      `${mitad(true)}    ${mitad(false)}${marca}`
+  )
+}
+console.log('─'.repeat(86))
+console.log('Si toda la columna es positiva y sube/baja suave, el efecto es real.')
+console.log('Si solo el 35 destaca y los vecinos se caen, lo ajusté yo y no sirve.')
+
+console.log('')
 console.log('Cómo leerlo, y con qué desconfianza:')
 console.log(' · Con menos de ~30 operaciones el porcentaje puede ser suerte.')
 console.log(' · Los filtros solo QUITAN operaciones, así que siempre es posible')
-console.log('   encontrar uno que borre justo las malas de ESTOS 300 días sin que')
-console.log('   sirva de nada en el futuro. Vale la pena un filtro cuando además')
-console.log('   tiene una razón de mercado detrás, no solo un número bonito.')
+console.log(`   encontrar uno que borre justo las malas de ESTOS ${fechas.length} días sin`)
+console.log('   que sirva de nada en el futuro. Vale la pena un filtro cuando')
+console.log('   además tiene una razón de mercado detrás, no un número bonito.')
 console.log(' · Los pips no descuentan el spread del bróker.')
-console.log(' · Son 10 meses. Un mercado distinto puede dar la vuelta a esto.')
+console.log(` · Son ${fechas[0]} a ${fechas.at(-1)}. Un mercado distinto puede dar la vuelta a esto.`)
 console.log('---BACKTEST-FIN---')

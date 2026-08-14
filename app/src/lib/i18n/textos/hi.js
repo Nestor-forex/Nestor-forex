@@ -221,6 +221,10 @@ export default {
   },
 
   calc_barrido: {
+    reversionCompra: ({ b, fb, q, fq, rsi }) =>
+      `${b} (${fb}) ${q} (${fq}) से कमज़ोर है और भाव नीचे की ओर बहुत खिंच गया है, RSI ${rsi}: खरीद उछाल की है, रुझान की नहीं।`,
+    reversionVenta: ({ b, fb, q, fq, rsi }) =>
+      `${b} (${fb}) ${q} (${fq}) से मज़बूत है और भाव ऊपर की ओर बहुत खिंच गया है, RSI ${rsi}: बिक्री गिरावट की है, रुझान की नहीं।`,
     razon: ({ b, fb, q, fq, rsi, extra }) => `${b} (${fb}) बनाम ${q} (${fq}), EMA एक दिशा में, RSI ${rsi}${extra}`,
     rsiExtendido: ' — RSI अति-विस्तारित, पीछे मत भागें, गिरावट का इंतज़ार करें',
     rsiContinuacion: ' — RSI निरंतरता के क्षेत्र में',
