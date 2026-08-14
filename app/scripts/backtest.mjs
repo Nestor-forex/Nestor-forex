@@ -659,6 +659,58 @@ console.log('─'.repeat(104))
 console.log('Si una regla gana en la primera mitad y se cae en la segunda, era')
 console.log('casualidad. Lo que hay que buscar es que aguante en las dos.')
 
+// --------------------------------------------------------------------------
+// LOS UMBRALES VECINOS: ¿es real o lo ajusté yo?
+//
+// M2 usa "RSI ≤ 35 al comprar, ≥ 65 al vender". Ese 35 lo elegí a mano, y ahí
+// está el peligro: si uno prueba diez números y se queda con el que mejor
+// salió, no descubrió nada — ajustó una curva a un pasado concreto y la va a
+// ver desmoronarse en cuanto llegue un mercado nuevo.
+//
+// La forma de distinguir una cosa de la otra es mirar la VECINDAD. Un efecto
+// real es ancho: si comprar con RSI ≤ 35 funciona porque el precio se estiró
+// demasiado, entonces 30 y 40 tienen que funcionar también, y el resultado
+// debe subir y bajar suavemente al moverse. Un pico solitario en 35, con 30 y
+// 40 planos o negativos, no es un descubrimiento: es una casualidad de estos
+// 5 años y no hay ninguna razón para que se repita.
+//
+// Se barre de 25 a 50 (con el espejo 75..50 del lado de las ventas), todo con
+// spread descontado y partido en las dos mitades. Lo que hay que mirar no es
+// cuál gana más, sino si TODA la fila es positiva y cambia poco a poco.
+// --------------------------------------------------------------------------
+
+console.log('')
+console.log('¿ES REAL EL 35 DEL RSI, O LO AJUSTÉ YO? (con spread, regla neutra)')
+console.log('Un efecto real es ancho: los vecinos tienen que acompañar.')
+console.log('Un pico solitario es una curva ajustada al pasado.')
+console.log('')
+console.log('RSI ≤ (compra) / ≥ (venta)     ops  acierto   por 1R    1ª mitad   2ª mitad')
+console.log('─'.repeat(86))
+for (const u of [25, 30, 35, 40, 45, 50]) {
+  const regla = (p, esc, thr) =>
+    p.dif < -thr && p.rsiV <= u ? 'COMPRA' : p.dif > thr && p.rsiV >= 100 - u ? 'VENTA' : null
+  const r = correr(simetrica, regla)
+  const m = medir(r.senales, r.porClave, { conSpread: true })
+  const mitad = (primera) => {
+    const x = medir(
+      r.senales.filter((s) => (primera ? s.vistoEl < corteRev : s.vistoEl >= corteRev)),
+      r.porClave,
+      { conSpread: true }
+    )
+    return (x.porRiesgo === null ? '   —' : (x.porRiesgo >= 0 ? '+' : '') + x.porRiesgo.toFixed(2)).padStart(7)
+  }
+  const marca = u === 35 ? '  ← el elegido' : ''
+  console.log(
+    `RSI ${String(u).padStart(2)} / ${100 - u}${' '.repeat(20)} ${String(m.total).padStart(5)}   ` +
+      `${m.acierto === null ? '  — ' : (m.acierto.toFixed(0) + '%').padStart(4)}   ` +
+      `${(m.porRiesgo === null ? '   —' : (m.porRiesgo >= 0 ? '+' : '') + m.porRiesgo.toFixed(2)).padStart(7)}   ` +
+      `${mitad(true)}    ${mitad(false)}${marca}`
+  )
+}
+console.log('─'.repeat(86))
+console.log('Si toda la columna es positiva y sube/baja suave, el efecto es real.')
+console.log('Si solo el 35 destaca y los vecinos se caen, lo ajusté yo y no sirve.')
+
 console.log('')
 console.log('Cómo leerlo, y con qué desconfianza:')
 console.log(' · Con menos de ~30 operaciones el porcentaje puede ser suerte.')
