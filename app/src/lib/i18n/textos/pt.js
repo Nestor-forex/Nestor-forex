@@ -61,6 +61,8 @@ export default {
   },
 
   tablero: {
+    ventasPausadas:
+      'Por enquanto o app não sugere vendas. Medimos as regras sobre os últimos 10 meses de mercado e as operações de venda perdiam dinheiro de forma constante, enquanto as de compra não. Preferimos não sugerir nada a sugerir algo que sabemos que perde. A varredura continua mostrando acima quais moedas estão fracas, e isso sim é informação boa.',
     volver: '← Voltar',
     sesionActiva: 'Sessão ativa:',
     fuerzaRelativa: 'Força relativa por moeda',
@@ -246,7 +248,30 @@ export default {
     fuenteCierre: 'Twelve Data',
   },
 
+  vivo: {
+    titulo: 'Preços ao vivo da corretora',
+    desc:
+      'Preço de compra e de venda direto do MetaTrader 5, atualizado a cada 2 segundos. É o único lugar que mostra o spread real cobrado pela corretora; a varredura acima trabalha com velas diárias e não sabe disso.',
+    conectar: 'Conectar ao MetaTrader 5',
+    desconectar: 'Desconectar',
+    conectando: 'Procurando a ponte…',
+    enVivo: 'AO VIVO',
+    par: 'Par',
+    bid: 'Bid',
+    ask: 'Ask',
+    spread: 'Spread',
+    pie: 'Spread em pips. Em âmbar se passar de 3.',
+    sinPuente: 'Não foi possível conectar à ponte',
+    sinPuenteQue: ({ url }) => `O app pediu os preços a ${url} e não houve resposta.`,
+    sinPuenteLocal:
+      'Esse endereço (127.0.0.1) significa "este mesmo aparelho". Só funciona no computador onde o MetaTrader 5 e a ponte de Python estão rodando, e com os dois ligados. Do celular, ou de outro computador, nunca vai encontrá-lo: para isso a ponte precisa estar publicada na internet com endereço próprio.',
+    error:
+      'A ponte respondeu algo que o app não soube ler. Verifique se /quotes devolve os pares com seu bid e seu ask.',
+  },
   avisos: {
+    pausados: 'Avisos em pausa enquanto revisamos os sinais',
+    pausadosPorque:
+      'Medimos as regras do app sobre os últimos 10 meses de mercado, e os sinais que chegavam a virar aviso não acertavam o suficiente. Preferimos não avisar nada a avisar algo que faça você perder dinheiro. O app continua mostrando a varredura e registrando cada sinal para conferir o acerto; os avisos voltam quando os números apoiarem.',
     titulo: 'Avisos no celular',
     desc: 'Avisamos assim que o vigia detectar um sinal novo, mesmo com o app fechado.',
     activar: 'Ativar avisos',

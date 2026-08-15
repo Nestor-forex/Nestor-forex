@@ -57,6 +57,8 @@ export default {
   },
 
   tablero: {
+    ventasPausadas:
+      'Şimdilik uygulama satış önermiyor. Kuralları piyasanın son 10 ayı üzerinde ölçtük: satış işlemleri sürekli para kaybederken alışlar kaybetmiyordu. Kaybettiğini bildiğimiz bir şeyi önermektense hiçbir şey önermemeyi tercih ederiz. Tarama yukarıda hangi para birimlerinin zayıf olduğunu göstermeye devam ediyor, o bilgi sağlam.',
     volver: '← Geri',
     sesionActiva: 'Aktif seans:',
     fuerzaRelativa: 'Para birimine göre göreli güç',
@@ -241,7 +243,30 @@ export default {
     fuenteCierre: 'Twelve Data',
   },
 
+  vivo: {
+    titulo: 'Aracı kurumun canlı fiyatları',
+    desc:
+      'Alış ve satış fiyatı doğrudan MetaTrader 5’ten, 2 saniyede bir yenilenir. Aracı kurumun aldığı gerçek spreadi gösteren tek yer burasıdır; yukarıdaki tarama günlük mumlarla çalışır ve bunu bilmez.',
+    conectar: 'MetaTrader 5’e bağlan',
+    desconectar: 'Bağlantıyı kes',
+    conectando: 'Köprü aranıyor…',
+    enVivo: 'CANLI',
+    par: 'Parite',
+    bid: 'Bid',
+    ask: 'Ask',
+    spread: 'Spread',
+    pie: 'Spread pip cinsinden. 3’ü geçerse kehribar renginde.',
+    sinPuente: 'Köprüye bağlanılamadı',
+    sinPuenteQue: ({ url }) => `Uygulama ${url} adresinden fiyat istedi ve yanıt alamadı.`,
+    sinPuenteLocal:
+      'Bu adres (127.0.0.1) «tam da bu cihaz» demektir. Yalnızca MetaTrader 5 ile Python köprüsünün çalıştığı bilgisayarda ve ikisi de açıkken işe yarar. Telefondan ya da başka bir bilgisayardan asla bulunamaz: bunun için köprünün kendi adresiyle internete yayınlanmış olması gerekir.',
+    error:
+      'Köprü, uygulamanın okuyamadığı bir şey döndürdü. /quotes adresinin pariteleri bid ve ask değerleriyle döndürdüğünü kontrol et.',
+  },
   avisos: {
+    pausados: 'Sinyalleri gözden geçirirken bildirimler duraklatıldı',
+    pausadosPorque:
+      'Uygulamanın kurallarını piyasanın son 10 ayı üzerinde ölçtük ve bildirime kadar ulaşan sinyaller yeterince isabetli değildi. Sana para kaybettirecek bir şey bildirmektense hiçbir şey bildirmemeyi tercih ederiz. Uygulama piyasa taramasını göstermeye ve doğruluğu ölçmek için her sinyali kaydetmeye devam ediyor; rakamlar destekleyince bildirimler geri gelecek.',
     titulo: 'Telefon bildirimleri',
     desc: 'Gözcü yeni bir sinyal bulur bulmaz, uygulama kapalı olsa bile sana haber veririz.',
     activar: 'Bildirimleri aç',

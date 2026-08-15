@@ -61,6 +61,8 @@ export default {
   },
 
   tablero: {
+    ventasPausadas:
+      'Pour l’instant l’application ne propose pas de ventes. Nous avons mesuré les règles sur les 10 derniers mois de marché : les ventes perdaient de l’argent de façon constante, les achats non. Nous préférons ne rien proposer plutôt que de proposer ce que nous savons perdant. Le balayage continue de montrer plus haut quelles devises sont faibles, et cela reste une bonne information.',
     volver: '← Retour',
     sesionActiva: 'Session active :',
     fuerzaRelativa: 'Force relative par devise',
@@ -246,7 +248,30 @@ export default {
     fuenteCierre: 'Twelve Data',
   },
 
+  vivo: {
+    titulo: 'Prix en direct du courtier',
+    desc:
+      'Prix acheteur et vendeur directement depuis MetaTrader 5, actualisés toutes les 2 secondes. C’est le seul endroit qui montre le spread réel prélevé par le courtier ; le balayage ci-dessus travaille sur des bougies journalières et l’ignore.',
+    conectar: 'Se connecter à MetaTrader 5',
+    desconectar: 'Déconnecter',
+    conectando: 'Recherche du pont…',
+    enVivo: 'EN DIRECT',
+    par: 'Paire',
+    bid: 'Bid',
+    ask: 'Ask',
+    spread: 'Spread',
+    pie: 'Spread en pips. En ambre au-delà de 3.',
+    sinPuente: 'Impossible de joindre le pont',
+    sinPuenteQue: ({ url }) => `L’application a demandé les prix à ${url} et n’a reçu aucune réponse.`,
+    sinPuenteLocal:
+      'Cette adresse (127.0.0.1) signifie "cet appareil-ci". Elle ne fonctionne que sur l’ordinateur où tournent MetaTrader 5 et le pont Python, et seulement tant que les deux sont allumés. Depuis le téléphone, ou depuis un autre ordinateur, elle ne le trouvera jamais : pour cela le pont doit être publié sur internet avec sa propre adresse.',
+    error:
+      'Le pont a répondu quelque chose que l’application n’a pas su lire. Vérifiez que /quotes renvoie les paires avec leur bid et leur ask.',
+  },
   avisos: {
+    pausados: 'Alertes en pause pendant que nous vérifions les signaux',
+    pausadosPorque:
+      'Nous avons mesuré les règles de l’application sur les 10 derniers mois de marché, et les signaux qui arrivaient jusqu’à l’alerte n’étaient pas assez justes. Nous préférons ne rien vous annoncer plutôt que de vous annoncer quelque chose qui vous ferait perdre de l’argent. L’application continue d’afficher le balayage et d’enregistrer chaque signal pour en mesurer la justesse ; les alertes reviendront quand les chiffres le permettront.',
     titulo: 'Alertes sur le téléphone',
     desc: 'On te prévient dès que la vigie repère un nouveau signal, même si l’app est fermée.',
     activar: 'Activer les alertes',

@@ -61,6 +61,8 @@ export default {
   },
 
   tablero: {
+    ventasPausadas:
+      'Vorerst schlägt die App keine Verkäufe vor. Wir haben die Regeln über die letzten 10 Monate Marktdaten gemessen: die Verkaufsgeschäfte verloren durchgehend Geld, die Käufe nicht. Uns ist lieber, gar nichts vorzuschlagen, als etwas, von dem wir wissen, dass es verliert. Der Überblick zeigt oben weiterhin, welche Währungen schwach sind — das ist gute Information.',
     volver: '← Zurück',
     sesionActiva: 'Aktive Session:',
     fuerzaRelativa: 'Relative Stärke je Währung',
@@ -246,7 +248,30 @@ export default {
     fuenteCierre: 'Twelve Data',
   },
 
+  vivo: {
+    titulo: 'Live-Kurse des Brokers',
+    desc:
+      'Geld- und Briefkurs direkt aus MetaTrader 5, alle 2 Sekunden aktualisiert. Nur hier ist der echte Spread des Brokers zu sehen; der Überblick oben rechnet mit Tageskerzen und kennt ihn nicht.',
+    conectar: 'Mit MetaTrader 5 verbinden',
+    desconectar: 'Trennen',
+    conectando: 'Suche die Brücke…',
+    enVivo: 'LIVE',
+    par: 'Paar',
+    bid: 'Bid',
+    ask: 'Ask',
+    spread: 'Spread',
+    pie: 'Spread in Pips. Ab 3 in Bernstein.',
+    sinPuente: 'Die Brücke war nicht erreichbar',
+    sinPuenteQue: ({ url }) => `Die App hat ${url} nach Kursen gefragt und keine Antwort bekommen.`,
+    sinPuenteLocal:
+      'Diese Adresse (127.0.0.1) bedeutet "genau dieses Gerät". Sie funktioniert nur auf dem Computer, auf dem MetaTrader 5 und die Python-Brücke laufen, und nur solange beide an sind. Vom Handy oder von einem anderen Computer aus wird sie nie gefunden: dafür muss die Brücke mit einer eigenen Adresse im Internet veröffentlicht sein.',
+    error:
+      'Die Brücke hat etwas geantwortet, das die App nicht lesen konnte. Prüfe, ob /quotes die Paare mit Geld- und Briefkurs zurückgibt.',
+  },
   avisos: {
+    pausados: 'Hinweise pausiert, während wir die Signale überprüfen',
+    pausadosPorque:
+      'Wir haben die Regeln der App über die letzten 10 Monate Marktdaten gemessen, und die Signale, die es bis zum Hinweis geschafft haben, trafen nicht oft genug zu. Uns ist lieber, dir gar nichts zu melden, als etwas, das dich Geld kostet. Die App zeigt weiterhin den Marktüberblick und zeichnet jedes Signal auf, um die Trefferquote zu prüfen; die Hinweise kommen zurück, wenn die Zahlen es hergeben.',
     titulo: 'Benachrichtigungen aufs Handy',
     desc: 'Wir melden uns, sobald der Wächter ein neues Signal entdeckt – auch bei geschlossener App.',
     activar: 'Benachrichtigungen aktivieren',
