@@ -75,11 +75,11 @@ export default {
       "1-2% del capitale per operazione. Più posizioni sulla stessa valuta non sono operazioni indipendenti — sono un'unica scommessa, solo più grande.",
     limitacionesTitulo: 'Limiti:',
     limitaciones:
-      "Tassi di riferimento giornalieri (un fixing al giorno): ATR e RSI si calcolano sulle chiusure, senza massimi/minimi intraday. Senza dati MT5 non c'è tick volume né spread reale del broker — la liquidità è stimata qualitativamente.",
+      "Candele giornaliere reali con massimo, minimo e chiusura: l'ATR è un vero ATR di Wilder e i supporti e le resistenze derivano dai massimi e minimi reali. Una candela al giorno, senza intraday. Senza dati MT5 non c'è tick volume né spread reale del broker — la liquidità è stimata qualitativamente.",
     educativo: 'Analisi didattica, non consulenza finanziaria personalizzata. Fare trading sul Forex comporta rischio di perdita.',
     descargarMd: '↓ Scarica il report .md',
     pieFuerza: 'Media ponderata della variazione % di ogni valuta contro le altre 7 (1g 20%, 5g 40%, 20g 40%), riscalata 0-10.',
-    pieParesGrafico: 'Grafico e variazione (%) sulle ultime 20 chiusure giornaliere. ATR: proxy di volatilità da chiusura a chiusura (tassi di riferimento giornalieri, senza massimi/minimi intraday).',
+    pieParesGrafico: 'Grafico e variazione (%) sulle ultime 20 chiusure giornaliere. ATR: ATR di Wilder su candele giornaliere reali (massimo, minimo e chiusura).',
     dif: 'Diff',
     pivoteLinea: ({ p, s1, r1 }) => `Pivot ${p} · S1 ${s1} · R1 ${r1}`,
     sufijoVelas: '20d',

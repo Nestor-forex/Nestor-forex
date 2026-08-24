@@ -73,11 +73,11 @@ export default {
     riesgoTexto: '每笔交易占用资金的 1-2%。同一货币上的多个仓位不是独立交易 — 它们是同一笔更大的押注。',
     limitacionesTitulo: '局限：',
     limitaciones:
-      '每日参考汇率（每天一次定盘）：ATR 和 RSI 基于收盘价计算，没有日内最高/最低价。没有 MT5 数据就没有 tick volume，也没有券商的真实 spread — 流动性只能定性估计。',
+      '真实的日线K线，含最高价、最低价和收盘价：ATR 是真正的 Wilder ATR，支撑位和阻力位来自真实的最高价与最低价。每天一根K线，没有日内数据。没有 MT5 数据就没有 tick volume，也没有券商的真实 spread — 流动性只能定性估计。',
     educativo: '教学分析，非个性化投资建议。外汇交易存在亏损风险。',
     descargarMd: '↓ 下载 .md 报告',
     pieFuerza: '每种货币对其他 7 种货币涨跌幅的加权平均（1d 20%、5d 40%、20d 40%），重新缩放到 0-10。',
-    pieParesGrafico: '图表与涨跌幅（%）基于最近 20 个每日收盘价。ATR：收盘价间波动率近似值（每日参考汇率，无日内最高/最低价）。',
+    pieParesGrafico: '图表与涨跌幅（%）基于最近 20 个每日收盘价。ATR：基于真实日线K线（最高价、最低价和收盘价）的 Wilder ATR。',
     dif: '差值',
     pivoteLinea: ({ p, s1, r1 }) => `枢轴 ${p} · S1 ${s1} · R1 ${r1}`,
     sufijoVelas: '20d',
