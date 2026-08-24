@@ -1,14 +1,13 @@
 {
-  "actualizadoEl": "2026-08-21T17:04:56.411Z",
-  "cierre": "2026-08-21",
+  "actualizadoEl": "2026-08-24T16:16:44.251Z",
+  "cierre": "2026-08-24",
   "senales": [
-    "AUD/USD|COMPRA|tendencia",
-    "NZD/USD|COMPRA|tendencia",
     "GBP/JPY|COMPRA|tendencia",
+    "AUD/USD|COMPRA|tendencia",
+    "GBP/USD|COMPRA|tendencia",
     "USD/CAD|VENTA|tendencia",
-    "EUR/NZD|VENTA|tendencia",
+    "GBP/JPY|VENTA|reversion",
     "AUD/USD|VENTA|reversion",
-    "NZD/USD|VENTA|reversion",
-    "USD/CAD|COMPRA|reversion"
+    "GBP/USD|VENTA|reversion"
   ]
 }
