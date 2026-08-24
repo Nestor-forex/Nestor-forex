@@ -79,11 +79,11 @@ export default {
       '1-2% of capital per trade. Several positions in the same currency are not independent trades — they are a single, larger bet.',
     limitacionesTitulo: 'Limitations:',
     limitaciones:
-      'Daily reference rates (one fix per day): ATR and RSI are computed on closes, without intraday highs/lows. Without MT5 data there is no tick volume or real broker spread — liquidity is estimated qualitatively.',
+      'Real daily candles with high, low and close: the ATR is a true Wilder ATR and supports and resistances come from real highs and lows. One candle per day, no intraday. Without MT5 data there is no tick volume or real broker spread — liquidity is estimated qualitatively.',
     educativo: 'Educational analysis, not personalized financial advice. Trading Forex carries risk of loss.',
     descargarMd: '↓ Download .md report',
     pieFuerza: "Weighted average of each currency's % change against the other 7 (1d 20%, 5d 40%, 20d 40%), rescaled 0-10.",
-    pieParesGrafico: 'Chart and change (%) over the last 20 daily closes. ATR: close-to-close volatility proxy (daily reference rates, no intraday high/low).',
+    pieParesGrafico: 'Chart and change (%) over the last 20 daily closes. ATR: Wilder ATR over real daily candles (high, low and close).',
     dif: 'Diff',
     pivoteLinea: ({ p, s1, r1 }) => `Pivot ${p} · S1 ${s1} · R1 ${r1}`,
     sufijoVelas: '20d',

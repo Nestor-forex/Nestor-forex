@@ -79,11 +79,11 @@ export default {
       '1-2 % des Kapitals pro Trade. Mehrere Positionen in derselben Währung sind keine unabhängigen Trades — sie sind eine einzige, größere Wette.',
     limitacionesTitulo: 'Einschränkungen:',
     limitaciones:
-      'Tägliche Referenzkurse (ein Fixing pro Tag): ATR und RSI werden auf Schlusskursen berechnet, ohne Intraday-Hochs/-Tiefs. Ohne MT5-Daten gibt es kein Tick-Volumen und keinen echten Broker-Spread — die Liquidität wird qualitativ geschätzt.',
+      'Echte Tageskerzen mit Hoch, Tief und Schlusskurs: Der ATR ist ein echter Wilder-ATR, und Unterstützungen und Widerstände stammen aus den realen Hochs und Tiefs. Eine Kerze pro Tag, kein Intraday. Ohne MT5-Daten gibt es kein Tick-Volumen und keinen echten Broker-Spread — die Liquidität wird qualitativ geschätzt.',
     educativo: 'Bildungsanalyse, keine persönliche Finanzberatung. Forex-Handel birgt Verlustrisiko.',
     descargarMd: '↓ Bericht als .md herunterladen',
     pieFuerza: 'Gewichteter Durchschnitt der prozentualen Veränderung jeder Währung gegenüber den anderen 7 (1T 20%, 5T 40%, 20T 40%), auf 0-10 skaliert.',
-    pieParesGrafico: 'Chart und Veränderung (%) über die letzten 20 Tagesschlusskurse. ATR: Volatilitätsnäherung von Schluss zu Schluss (Tages-Referenzkurse, ohne Intraday-Hoch/-Tief).',
+    pieParesGrafico: 'Chart und Veränderung (%) über die letzten 20 Tagesschlusskurse. ATR: Wilder-ATR über echte Tageskerzen (Hoch, Tief und Schlusskurs).',
     dif: 'Diff',
     pivoteLinea: ({ p, s1, r1 }) => `Pivot ${p} · S1 ${s1} · R1 ${r1}`,
     sufijoVelas: '20d',

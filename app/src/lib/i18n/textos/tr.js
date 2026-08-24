@@ -75,11 +75,11 @@ export default {
       'İşlem başına sermayenin %1-2’si. Aynı para biriminde birden fazla pozisyon bağımsız işlem değildir — tek ve daha büyük bir bahistir.',
     limitacionesTitulo: 'Sınırlar:',
     limitaciones:
-      'Günlük referans kurları (günde bir fixing): ATR ve RSI kapanışlar üzerinden hesaplanır, gün içi en yüksek/en düşük olmadan. MT5 verisi olmadan tick volume ve aracı kurumun gerçek spread’i yoktur — likidite niteliksel olarak tahmin edilir.',
+      'Yüksek, düşük ve kapanış içeren gerçek günlük mumlar: ATR gerçek bir Wilder ATR’ıdır ve destek ile direnç seviyeleri gerçek yüksek ve düşük değerlerden gelir. Günde bir mum, gün içi veri yok. MT5 verisi olmadan tick volume ve aracı kurumun gerçek spread’i yoktur — likidite niteliksel olarak tahmin edilir.',
     educativo: 'Eğitim amaçlı analiz, kişiye özel yatırım tavsiyesi değildir. Forex işlemleri zarar riski taşır.',
     descargarMd: '↓ .md raporunu indir',
     pieFuerza: 'Her para biriminin diğer 7’sine karşı yüzde değişiminin ağırlıklı ortalaması (1g %20, 5g %40, 20g %40), 0-10 aralığına ölçeklenmiş.',
-    pieParesGrafico: 'Grafik ve değişim (%) son 20 günlük kapanış üzerinden. ATR: kapanıştan kapanışa volatilite yaklaşımı (günlük referans kurları, gün içi en yüksek/en düşük yok).',
+    pieParesGrafico: 'Grafik ve değişim (%) son 20 günlük kapanış üzerinden. ATR: gerçek günlük mumlar (yüksek, düşük ve kapanış) üzerinde Wilder ATR.',
     dif: 'Fark',
     pivoteLinea: ({ p, s1, r1 }) => `Pivot ${p} · S1 ${s1} · R1 ${r1}`,
     sufijoVelas: '20d',
