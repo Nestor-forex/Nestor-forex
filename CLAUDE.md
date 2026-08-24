@@ -256,9 +256,9 @@ que dio tal cual y que ya quedó reflejado en las tarjetas del Artifact:
 | | Nestor Forex Swing | Nestor Forex Intradía |
 |---|---|---|
 | Para qué sirve | Operaciones de horas a días | Abrir y cerrar el mismo día |
-| Fuente de precios | BCE (Frankfurter), 1 cierre oficial al día | Twelve Data, velas de 1 hora |
+| Fuente de precios | Twelve Data, 1 vela diaria (máximo, mínimo y cierre) | Twelve Data, velas de 1 hora |
 | Tendencia | EMA20 / EMA50 | EMA9 / EMA21 (más rápidas) |
-| RSI / ATR | Sobre cierres diarios | Sobre velas de 1 hora |
+| RSI / ATR | ATR de Wilder sobre velas diarias; RSI sobre cierres | Sobre velas de 1 hora |
 | Fuerza relativa | Ventanas de 1, 5 y 20 días | Ventanas de 1, 4 y 24 horas |
 | Extra | — | Puntos pivote de sesión |
 
@@ -284,6 +284,29 @@ defecto marcados para editar después:
 
 Estos valores por defecto quedan pendientes de que Néstor los confirme o
 corrija en una próxima sesión.
+
+### ⚠️ Al desempolvar esto (nota del 2026-08-24)
+
+Este bloque se escribió el 2026-07-27 y quedó sin fusionar casi un mes. Se
+fusiona ahora porque es el ÚNICO sitio donde están escritos los requisitos
+que dio Néstor para la landing; sin él se perderían. Pero la app cambió
+debajo mientras tanto, así que antes de construir nada con esto hay que
+comprobar contra el estado de hoy. Lo que ya se sabe que cambió:
+
+- **La fuente de datos de Swing.** El 2026-08-09 pasó del BCE (un cierre
+  por día, sin máximo ni mínimo) a velas diarias reales de Twelve Data. La
+  tabla comparativa de arriba ya está corregida; cualquier texto de venta
+  que hable de "tasas de referencia del BCE" para Swing es falso.
+- **Los horarios de envío.** Aquí quedaron en Intradía 8:00 am y Swing
+  10:30 am. Hoy quien manda avisos es el vigía de cada app, y el de Swing
+  corre a las 15:50 UTC. Confirmar con Néstor antes de prometer una hora.
+- **Los precios y el flujo de pago** siguen siendo valores de ejemplo. No
+  publicar la landing sin que él los confirme.
+- **Lo que la landing NO puede prometer todavía:** no hay ningún número de
+  acierto verificado. Sobre 3 años, Intradía no tiene ventaja después de
+  costes en ninguna de sus reglas, y en Swing lo único que mide positivo
+  corre en la sombra sin enseñarse. Vender "señales con resultados
+  positivos" antes de tener ese número sería vender algo que no existe.
 
 ## Convenciones de trabajo en este repo
 - Rama de trabajo: `claude/forex-barrido-diario-app-ws3bbu`. Si ya se
