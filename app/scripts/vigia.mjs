@@ -81,12 +81,14 @@ for (const { id, s } of nuevas) {
       cierre: data.ultima,
       par: s.name,
       lado: s.lado,
-      tipo: s.tipo,
+      // El `|| 'tendencia'` va aquí igual que en `idDe`: swing no tiene modo
+      // rango, así que sus setups no traen `tipo` y sin esto quedaría `null`
+      // en el historial para siempre.
+      tipo: s.tipo || 'tendencia',
       // Solo va cuando es verdad: así las líneas ya escritas del historial se
       // siguen leyendo igual (sin el campo = no es de sombra) y no hay que
       // reescribir nada.
       ...(esSombra(s) ? { sombra: true } : {}),
-      tipo: s.tipo || 'tendencia',
       precio: c.precio,
       sl: c.sl,
       tp: c.tp,
