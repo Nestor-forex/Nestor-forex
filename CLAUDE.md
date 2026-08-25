@@ -666,3 +666,86 @@ que es la firma de un efecto real y no de una curva ajustada.
 van en dirección contraria a lo medido. Por eso sigue en la sombra: hasta que
 acumule 150-200 operaciones reales, el backtest y la realidad no se han puesto
 de acuerdo.
+
+---
+
+# El objetivo, el stop, y el espejismo que NO era (2026-08-25)
+
+Néstor vio su Historial en 89% de acierto con +252 pips sobre 9 operaciones y
+pidió que se midiera con objetividad. Salieron dos respuestas, y una de ellas
+desmiente lo que yo había predicho.
+
+## 1. La pantalla de Historial NO engaña. Mi hipótesis era falsa
+
+Yo dije que el número estaría inflado por una razón mecánica: como el objetivo
+está más cerca que el stop, las ganadas se resolverían rápido y las perdidas se
+quedarían colgadas en "en curso", así que la pantalla siempre enseñaría de más
+las ganadoras.
+
+**Medido sobre 1.768 operaciones en 5 años, eso no pasa:**
+
+| | Ops | Mediana | Media |
+|---|---:|---:|---:|
+| Ganadas | 971 | 12 días | 19,0 |
+| Perdidas | 797 | 13 días | 17,6 |
+
+Tardan prácticamente lo mismo. Y simulando la pantalla en **216 fechas**
+repartidas por los 5 años:
+
+| | |
+|---|---|
+| Lo que habría MOSTRADO el Historial | 54,3% |
+| Lo que esas señales acabaron dando | 54,5% |
+| **El espejismo** | **−0,2 puntos** |
+
+Cero. La pantalla dice la verdad.
+
+⚠️ **Esto queda escrito porque yo presenté la hipótesis con seguridad antes de
+medirla.** El razonamiento sonaba impecable —objetivo cerca, stop lejos, luego
+sesgo— y era falso. La lección es la misma de siempre y sigue costando: un
+mecanismo que suena convincente no es un resultado hasta que se mide.
+
+**Consecuencia práctica:** el 89% de Néstor no es un artefacto de la pantalla.
+Es simplemente una muestra de 9. Con 9 operaciones, un 89% real y un 55% real
+no se distinguen — sacar 8 o 9 aciertos de 9 con una moneda al 55% tiene un 3,9%
+de probabilidad, una de cada 26.
+
+## 2. Mover el stop y el objetivo NO salva a la app
+
+Doce combinaciones, mismas señales, mismos días, mismos pares. Con spread.
+
+| Stop | Objetivo | Ops | Acierto | Por 1R | Hace falta |
+|---|---|---:|---:|---:|---:|
+| 1× ATR | 0,75× riesgo | 1.790 | 55% | −0,07 | 57% |
+| 1× ATR | 1× | 1.789 | 47% | −0,08 | 50% |
+| 1× ATR | 1,5× | 1.787 | 38% | −0,07 | 40% |
+| 1× ATR | 2× | 1.787 | 31% | −0,09 | 33% |
+| 1,5× ATR | 0,75× | 1.788 | 54% | −0,06 | 57% |
+| 1,5× ATR | 1× | 1.785 | 48% | −0,06 | 50% |
+| 1,5× ATR | 1,5× | 1.783 | 38% | −0,07 | 40% |
+| 1,5× ATR | 2× | 1.773 | 31% | −0,07 | 33% |
+| **2× ATR** | **0,75×** | 1.784 | **55%** | **−0,04** | 57% |
+| 2× ATR | 1× | 1.778 | 48% | −0,05 | 50% |
+| 2× ATR | 1,5× | 1.763 | 38% | −0,05 | 40% |
+| 2× ATR | 2× | 1.751 | 30% | −0,12 | 33% |
+
+**Las doce pierden, y las doce se quedan por debajo de su acierto de
+equilibrio.** La mejor (−0,04) es peor que la geometría que la app ya usa
+(−0,03).
+
+La columna "hace falta" es la que evita el autoengaño: con el objetivo al 0,75
+del riesgo hay que acertar el **57%** solo para empatar. Un acierto del 55% con
+el objetivo cerca no es ganar dinero, y sin esa columna al lado es facilísimo
+confundir las dos cosas.
+
+## Lo que esto cierra
+
+**El problema de Swing no es dónde se ponen los niveles.** No hay colocación
+que rescate un sistema que acierta el 48% con la vara neutra. Mover el stop y el
+objetivo reparte el resultado entre acierto y tamaño, pero no crea ventaja donde
+no la hay.
+
+⚠️ **No volver a proponer "ajustar el stop" o "alargar el objetivo" para Swing.**
+Está medido en rejilla completa. Lo que falta no es geometría: es acertar la
+dirección más del 50% con una vara honesta, y eso solo lo tiene, por ahora, la
+regla de reversión que corre en la sombra.
