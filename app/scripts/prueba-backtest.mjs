@@ -466,5 +466,66 @@ console.log('\n12. Se puede probar una forma de entrar distinta a la de la app')
   comprobar([...porDia.values()].every((n) => n <= 3), 'nunca más de 3 por día y lado, igual que la app')
 }
 
+console.log('\n13. El filtro de "no perseguir" (RSI) está apagado y es simétrico')
+{
+  const base = generarSenales(fechas, rates, rangosPar, { calentamiento: 80 })
+  const nulo = generarSenales(fechas, rates, rangosPar, { calentamiento: 80, vista: { rsiMax: null } })
+  const r70 = generarSenales(fechas, rates, rangosPar, { calentamiento: 80, vista: { rsiMax: 70 } })
+  const r60 = generarSenales(fechas, rates, rangosPar, { calentamiento: 80, vista: { rsiMax: 60 } })
+
+  // a) Apagado = no existe. Mientras esto pase, el filtro no ha cambiado la app.
+  comprobar(base.length === nulo.length, `apagado, el filtro no existe (${base.length} = ${nulo.length})`)
+  comprobar(
+    base.every((x, i) => x.id === nulo[i].id && x.sl === nulo[i].sl),
+    'y no solo el número: las señales son las mismas una por una'
+  )
+
+  // b) El filtro REEMPLAZA, no solo quita. Y eso hay que dejarlo escrito.
+  //
+  // La app se queda con los 5 mejores por lado y con `topN` setups. Cuando el
+  // filtro rechaza un par extendido, el siguiente de la lista SUBE a ese hueco.
+  // O sea que aparecen señales que sin el filtro no existían — aquí, la mayoría.
+  //
+  // No es un fallo: es lo que uno querría. Sigues recibiendo sugerencias, solo
+  // que no las estiradas. Pero cambia lo que significa la medición: no se está
+  // midiendo "la app menos las malas", sino "la app con otras señales". Escribir
+  // "solo quita, nunca añade" habría sido cómodo y falso.
+  comprobar(r70.length < base.length, `en total quedan menos (${r70.length} vs ${base.length})`)
+  comprobar(r60.length <= r70.length, `y con 60 quedan menos todavía (${r60.length})`)
+  {
+    const antes = new Set(base.map((x) => `${x.id}@${x.vistoEl}`))
+    const promovidas = r70.filter((x) => !antes.has(`${x.id}@${x.vistoEl}`)).length
+    comprobar(promovidas > 0, `y entran ${promovidas} señales promovidas al hueco que dejan las rechazadas`)
+  }
+
+  // c) LA IMPORTANTE: la simetría.
+  //
+  // Si el filtro solo mirara el RSI alto, recortaría las COMPRAS y dejaría las
+  // VENTAS intactas. El resultado subiría —porque en esta app las ventas miden
+  // peor que las compras— y parecería que el filtro funciona, cuando lo que
+  // habría pasado es que la app opera menos de un lado. Es la misma forma del
+  // error que en intradía tuvo el ADX gobernando dos cosas opuestas.
+  const lado = (l, d) => l.filter((x) => x.ladoOriginal === d).length
+  const quitaC = lado(base, 'COMPRA') - lado(r60, 'COMPRA')
+  const quitaV = lado(base, 'VENTA') - lado(r60, 'VENTA')
+  comprobar(quitaC > 0 && quitaV > 0, `recorta los dos lados (${quitaC} compras y ${quitaV} ventas menos)`)
+
+  // d) Y que quita las extendidas y no otras cualesquiera.
+  //
+  // ⚠️ El margen de un punto no es pereza. El filtro compara el RSI de verdad
+  // (`rsiV`, con decimales) pero la señal guarda `Math.round(rsiV)`. Un RSI de
+  // 69,6 pasa el filtro —correctamente, 69,6 < 70— y queda anotado como 70.
+  // Exigir "ninguna con 70" haría fallar la prueba por el redondeo, no por el
+  // filtro.
+  comprobar(
+    r70.filter((x) => x.lado === 'COMPRA').every((x) => x.rsi <= 70),
+    'ninguna compra superviviente entra con el RSI por encima de 70'
+  )
+  comprobar(
+    r70.filter((x) => x.lado === 'VENTA').every((x) => x.rsi >= 30),
+    'ninguna venta superviviente entra con el RSI por debajo de 30'
+  )
+}
+
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')
 process.exit(fallos ? 1 : 0)
