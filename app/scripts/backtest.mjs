@@ -33,7 +33,7 @@
 import { computarBarrido } from '../src/lib/marketCalc.js'
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
 import { generarSenales } from './lib/backtest-nucleo.mjs'
-import { GEOMETRIAS, simetrica, actual } from './lib/geometrias.mjs'
+import { GEOMETRIAS, simetrica, actual, atrFijo } from './lib/geometrias.mjs'
 import { resolver } from './lib/resolver.mjs'
 
 // Días de arranque que no se juzgan: el EMA50 y el RSI necesitan historia
@@ -770,6 +770,125 @@ for (const u of [25, 30, 35, 40, 45, 50]) {
 console.log('─'.repeat(86))
 console.log('Si toda la columna es positiva y sube/baja suave, el efecto es real.')
 console.log('Si solo el 35 destaca y los vecinos se caen, lo ajusté yo y no sirve.')
+
+// ==========================================================================
+// EL ESPEJISMO DE LA PANTALLA DE HISTORIAL
+//
+// Néstor mira el Historial y ve 89% de acierto sobre 9 operaciones, con otras
+// 8 "en curso". La pregunta es si ese número dice la verdad.
+//
+// Hay una razón MECÁNICA para que no la diga, y no tiene nada que ver con la
+// suerte. La app pone el objetivo MÁS CERCA que el stop (R/B por debajo de 1
+// en casi todas). Un objetivo cercano se toca antes que un stop lejano, así
+// que las GANADAS se resuelven rápido y las PERDIDAS se quedan abiertas más
+// tiempo.
+//
+// Consecuencia: en cualquier momento que mires la pantalla, las que ya
+// terminaron están llenas de ganadoras y las perdedoras todavía están en la
+// lista de "en curso", sin contar. El porcentaje sube solo, sin que la app
+// acierte más.
+//
+// Esto se mide de dos formas:
+//   1. Cuántos días tarda una ganada contra una perdida.
+//   2. Simulando la pantalla: en 200 fechas repartidas por los 5 años, qué
+//      habría mostrado el Historial ESE día, contra lo que de verdad acabaron
+//      dando esas mismas señales.
+// ==========================================================================
+
+{
+  const r = correr(actual)
+  const conFecha = r.senales
+    .map((x) => ({ s: x, res: r.porClave.get(`${x.id}@${x.vistoEl}`) }))
+    .filter((x) => x.res && (x.res.resultado === 'ganada' || x.res.resultado === 'perdida'))
+
+  const gan = conFecha.filter((x) => x.res.resultado === 'ganada')
+  const per = conFecha.filter((x) => x.res.resultado === 'perdida')
+  const mediana = (a) => {
+    const v = a.map((x) => x.res.diasTardados).sort((p, q) => p - q)
+    return v.length ? v[Math.floor(v.length / 2)] : null
+  }
+  const media = (a) => (a.length ? a.reduce((t, x) => t + x.res.diasTardados, 0) / a.length : null)
+
+  console.log('')
+  console.log('¿DICE LA VERDAD LA PANTALLA DE HISTORIAL?')
+  console.log('')
+  console.log('1) Cuánto tarda cada una en resolverse (geometría real de la app)')
+  console.log('─'.repeat(86))
+  console.log(`   ganadas   ${String(gan.length).padStart(4)} ops   mediana ${String(mediana(gan)).padStart(3)} días   media ${media(gan).toFixed(1).padStart(5)}`)
+  console.log(`   perdidas  ${String(per.length).padStart(4)} ops   mediana ${String(mediana(per)).padStart(3)} días   media ${media(per).toFixed(1).padStart(5)}`)
+  console.log('─'.repeat(86))
+  console.log('   Si las perdidas tardan MÁS, la pantalla siempre enseña de más las')
+  console.log('   ganadoras: las perdedoras todavía están en "en curso", sin contar.')
+
+  // 2) La simulación de la pantalla.
+  const fin = (x) => x.res.velaFinal
+  const fechasObs = []
+  for (let i = CALENTAMIENTO + 60; i < fechas.length; i += Math.max(1, Math.floor((fechas.length - CALENTAMIENTO - 60) / 200))) {
+    fechasObs.push(fechas[i])
+  }
+  let sumaVista = 0
+  let sumaReal = 0
+  let n = 0
+  let peor = { dif: -1 }
+  for (const T of fechasObs) {
+    const nacidas = conFecha.filter((x) => x.s.vistoEl <= T)
+    const yaCerradas = nacidas.filter((x) => fin(x) <= T)
+    if (yaCerradas.length < 20) continue
+    const vista = yaCerradas.filter((x) => x.res.resultado === 'ganada').length / yaCerradas.length
+    const real = nacidas.filter((x) => x.res.resultado === 'ganada').length / nacidas.length
+    sumaVista += vista
+    sumaReal += real
+    n++
+    if (vista - real > peor.dif) peor = { dif: vista - real, T, vista, real, cerradas: yaCerradas.length, abiertas: nacidas.length - yaCerradas.length }
+  }
+  console.log('')
+  console.log(`2) La pantalla simulada en ${n} fechas repartidas por los ${fechas.length} días`)
+  console.log('─'.repeat(86))
+  console.log(`   lo que habría MOSTRADO el Historial (media)   ${((sumaVista / n) * 100).toFixed(1)}%`)
+  console.log(`   lo que esas mismas señales acabaron dando     ${((sumaReal / n) * 100).toFixed(1)}%`)
+  console.log(`   diferencia — el espejismo                     ${(((sumaVista - sumaReal) / n) * 100).toFixed(1)} puntos de más`)
+  console.log(`   el día que más engañó: ${peor.T} → mostraba ${(peor.vista * 100).toFixed(0)}% con ${peor.cerradas} cerradas`)
+  console.log(`   y ${peor.abiertas} en curso; la verdad de ese grupo era ${(peor.real * 100).toFixed(0)}%`)
+  console.log('─'.repeat(86))
+}
+
+// ==========================================================================
+// LA REJILLA: ¿ESTÁ EL OBJETIVO DEMASIADO CERCA?
+//
+// Las mismas señales, los mismos días, los mismos pares. Lo ÚNICO que cambia
+// es a qué distancia se ponen el stop y el objetivo.
+//
+// La app de hoy da R/B por debajo de 1 casi siempre: arriesga 156 pips para
+// buscar 101. Eso NO es malo por sí solo —con acertar mucho se compensa— pero
+// significa que una perdida borra vez y media una ganada, y que hace falta
+// acertar más del 60% solo para empatar.
+//
+// "por 1R" con spread es la única columna que decide.
+// ==========================================================================
+
+console.log('')
+console.log('¿ESTÁ EL OBJETIVO DEMASIADO CERCA? (mismas señales, con spread)')
+console.log('')
+console.log('stop      objetivo        ops   acierto   por 1R   hace falta acertar')
+console.log('─'.repeat(86))
+for (const riesgoATR of [1, 1.5, 2]) {
+  for (const veces of [0.75, 1, 1.5, 2]) {
+    const r = correr((c, compra) => atrFijo(c, compra, { riesgoATR, veces }))
+    const m = medir(r.senales, r.porClave, { conSpread: true })
+    const ac = m.acierto === null ? '  — ' : (m.acierto.toFixed(0) + '%').padStart(4)
+    const pr = m.porRiesgo === null ? '   —  ' : ((m.porRiesgo >= 0 ? '+' : '') + m.porRiesgo.toFixed(2)).padStart(6)
+    // El acierto de equilibrio: con objetivo = veces × riesgo, empatas cuando
+    // aciertas 1/(1+veces). Es la vara contra la que hay que leer el acierto.
+    const equilibrio = (100 / (1 + veces)).toFixed(0)
+    console.log(
+      `${(riesgoATR + '× ATR').padEnd(10)}${(veces + '× el riesgo').padEnd(15)} ${String(m.total).padStart(5)}    ${ac}   ${pr}   ${equilibrio}%   ${m.acierto > 100 / (1 + veces) ? '✓ lo supera' : '✗ no llega'}`
+    )
+  }
+}
+console.log('─'.repeat(86))
+console.log('La columna "hace falta acertar" es el acierto de equilibrio: con el')
+console.log('objetivo al 0,75 del riesgo hay que acertar el 57% solo para empatar.')
+console.log('Un acierto alto con el objetivo cerca no es lo mismo que ganar dinero.')
 
 console.log('')
 console.log('Cómo leerlo, y con qué desconfianza:')
