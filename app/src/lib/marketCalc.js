@@ -187,9 +187,32 @@ export function computarBarrido(fechas, rates, rangosPar = null) {
   return { fechas, ultima: fechas[L], raw, esc, pares, ratesUSD }
 }
 
-const clasificar = (p, thr) => {
-  if (p.dif > thr && p.tend === 'Alcista') return 'COMPRA'
-  if (p.dif < -thr && p.tend === 'Bajista') return 'VENTA'
+// EL FILTRO DE "NO PERSEGUIR", APAGADO HASTA QUE SE MIDA AQUÍ.
+//
+// `null` = apagado, y la app se comporta EXACTAMENTE igual que sin este
+// código. Con un número N, una COMPRA se rechaza si el RSI ya está en N o más,
+// y una VENTA si está en 100−N o menos: no se entra cuando el movimiento ya
+// se hizo.
+//
+// ⚠️ VIENE DE LA APP HERMANA, PERO NO SE HEREDA SU NÚMERO. En intradía se
+// encendió en 70 el 2026-08-25 después de medirlo sobre 35 meses. Aquí NO
+// puede copiarse esa decisión: son velas diarias y no de una hora, otras medias
+// (EMA20/50 en vez de EMA9/21) y otro horizonte. El RSI de un día no significa
+// lo mismo que el de una hora.
+//
+// Y ojo con lo que se aprendió allí: los troceos a posteriori decían que
+// entrar extendido daba 12% de acierto contra 50%. Medido de frente sobre
+// 7.340 operaciones el efecto era de UN punto (46% → 47%). La idea era buena
+// y el número era ruido de 17 operaciones. Aquí el barrido de umbrales y las
+// dos mitades del tiempo dirán qué hay, si es que hay algo.
+const RSI_MAX = null
+
+const clasificar = (p, thr, { rsiMax = RSI_MAX } = {}) => {
+  // "Extendido" es simétrico: comprar con el RSI arriba y vender con el RSI
+  // abajo son el mismo error visto en el espejo.
+  const estirado = rsiMax !== null && (p.dif > 0 ? p.rsiV >= rsiMax : p.rsiV <= 100 - rsiMax)
+  if (p.dif > thr && p.tend === 'Alcista' && !estirado) return 'COMPRA'
+  if (p.dif < -thr && p.tend === 'Bajista' && !estirado) return 'VENTA'
   if (Math.abs(p.dif) > thr) return 'VIGILAR'
   return '—'
 }
@@ -342,6 +365,10 @@ const porDifAbs = (a, b) => Math.abs(b.dif) - Math.abs(a.dif)
  *                       medición dejara de ver las ventas, no podríamos volver
  *                       a comprobar si algún día se arreglan, y la pausa se
  *                       volvería permanente sin que nadie lo decidiera.
+ * @param rsiMax       filtro de "no perseguir": rechaza la COMPRA si el RSI ya
+ *                       está en `rsiMax` o más, y la VENTA si está en
+ *                       `100 - rsiMax` o menos. `undefined`/`null` = apagado,
+ *                       que es como corre la app hoy (ver `RSI_MAX`).
  * @param incluirReversion enciende la regla contraria a la de la app (ver
  *                       `clasificarReversion`). APAGADA por defecto: no es un
  *                       ajuste, es la idea de la app al revés, y encenderla es
@@ -357,8 +384,12 @@ export function derivarVista(
     locale,
     incluirVentas = !VENTAS_PAUSADAS,
     incluirReversion = false,
+    rsiMax,
   } = {}
 ) {
+  // Un solo sitio donde se decide, para que las cuatro llamadas de abajo no
+  // puedan quedar con criterios distintos entre sí.
+  const cls = (p) => clasificar(p, thr, { rsiMax })
   const { esc, pares: paresRaw } = data
 
   const monedas = Object.keys(esc)
@@ -370,7 +401,7 @@ export function derivarVista(
     b: p.b,
     q: p.q,
     dif: p.dif,
-    sesgo: clasificar(p, thr),
+    sesgo: cls(p),
     tend: p.tend,
     rsi: Math.round(p.rsiV),
     atr: p.atrPct,
@@ -381,12 +412,12 @@ export function derivarVista(
   }))
 
   const cands = [...paresRaw].sort(porDifAbs)
-  const comprasRaw = cands.filter((p) => clasificar(p, thr) === 'COMPRA').slice(0, 5)
+  const comprasRaw = cands.filter((p) => cls(p) === 'COMPRA').slice(0, 5)
   // Con las ventas en pausa no se proponen operaciones de venta. El barrido
   // sigue calculando qué divisas están débiles —eso es información de mercado
   // y es correcta—; lo que se deja de hacer es sugerir la operación.
-  const ventasRaw = incluirVentas ? cands.filter((p) => clasificar(p, thr) === 'VENTA').slice(0, 5) : []
-  const vigilanciaRaw = cands.filter((p) => clasificar(p, thr) === 'VIGILAR').slice(0, 4)
+  const ventasRaw = incluirVentas ? cands.filter((p) => cls(p) === 'VENTA').slice(0, 5) : []
+  const vigilanciaRaw = cands.filter((p) => cls(p) === 'VIGILAR').slice(0, 4)
 
   const compras = comprasRaw.map((p) => ({ name: p.name, razon: razon(p, esc, t) }))
   const ventas = ventasRaw.map((p) => ({ name: p.name, razon: razon(p, esc, t) }))

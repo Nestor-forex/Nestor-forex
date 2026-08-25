@@ -14,14 +14,18 @@ import { actual } from './geometrias.mjs'
 // Las candidatas del día según el barrido de la app, tal cual. Se le pide a
 // `derivarVista` para no reescribir aquí su lógica: si la app cambia, esto
 // cambia con ella y no se separan en silencio.
-function setupsDeLaApp(data, thr, topN) {
+function setupsDeLaApp(data, thr, topN, vista = {}) {
   // `incluirVentas: true` a propósito. La app tiene las ventas en pausa (ver
   // src/lib/reglas.js), pero el banco de pruebas TIENE que seguir viéndolas:
   // si la medición dejara de producirlas, no habría forma de comprobar si
   // algún día se arreglan, y la pausa se volvería permanente sin que nadie lo
   // hubiera decidido. Aquí se mide lo que la app PODRÍA hacer, no solo lo que
   // hace hoy.
-  return derivarVista(data, { thr, topN, incluirVentas: true }).setups
+  // `vista` deja mover los umbrales de la app —hoy solo el del RSI— SIN
+  // duplicar aquí su lógica de selección. Si la copiara, un día las dos
+  // versiones dirían cosas distintas y no sabríamos cuál creer. Vacío = la app
+  // tal cual.
+  return derivarVista(data, { thr, topN, incluirVentas: true, ...vista }).setups
 }
 
 // Las candidatas según una regla propia, para poder probar formas de entrar
@@ -83,7 +87,15 @@ export function generarSenales(
   fechas,
   rates,
   rangosPar,
-  { calentamiento = 80, thr = 0.5, topN = 3, geometria = actual, invertirVentas = false, reglaEntrada = null } = {}
+  {
+    calentamiento = 80,
+    thr = 0.5,
+    topN = 3,
+    geometria = actual,
+    invertirVentas = false,
+    reglaEntrada = null,
+    vista = {},
+  } = {}
 ) {
   const senales = []
   let previas = new Set()
@@ -110,7 +122,7 @@ export function generarSenales(
     // lado), para que la comparación no cambie por el número de operaciones.
     const candidatos = reglaEntrada
       ? porReglaPropia(data, reglaEntrada, thr, topN)
-      : setupsDeLaApp(data, thr, topN)
+      : setupsDeLaApp(data, thr, topN, vista)
 
     const ahora = new Set()
     for (const s of candidatos) {

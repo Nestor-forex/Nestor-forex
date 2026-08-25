@@ -33,7 +33,7 @@
 import { computarBarrido } from '../src/lib/marketCalc.js'
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
 import { generarSenales } from './lib/backtest-nucleo.mjs'
-import { GEOMETRIAS, simetrica } from './lib/geometrias.mjs'
+import { GEOMETRIAS, simetrica, actual } from './lib/geometrias.mjs'
 import { resolver } from './lib/resolver.mjs'
 
 // Días de arranque que no se juzgan: el EMA50 y el RSI necesitan historia
@@ -123,13 +123,14 @@ function medir(senales, porClave, { conSpread = false } = {}) {
 }
 
 // Genera y juzga con una geometría dada.
-function correr(geometria, reglaEntrada = null) {
+function correr(geometria, reglaEntrada = null, vista = {}) {
   const senales = generarSenales(fechas, rates, rangosPar, {
     calentamiento: CALENTAMIENTO,
     thr: THR,
     topN: TOP_N,
     geometria,
     reglaEntrada,
+    vista,
   })
   const { resultados } = resolver(senales, completo)
   return { senales, porClave: new Map(resultados.map((r) => [r.clave, r])) }
@@ -265,6 +266,65 @@ const trimestres = [...new Set(app.senales.map((s) => trimestreDe(s.vistoEl)))].
 const neutraPartida = correr(simetrica)
 const corte = fechas[Math.floor(fechas.length / 2)]
 const enMitad = (s, primera) => (primera ? s.vistoEl < corte : s.vistoEl >= corte)
+
+// --------------------------------------------------------------------------
+// EL FILTRO DE "NO PERSEGUIR" (RSI), MEDIDO DE FRENTE.
+//
+// Viene de la app hermana de intradía, donde se midió el 2026-08-25 y se
+// encendió en 70. AQUÍ NO SE HEREDA ESE NÚMERO: son velas diarias y no de una
+// hora, otras medias (EMA20/50 en vez de EMA9/21) y otro horizonte. El RSI de
+// un día no significa lo mismo que el de una hora, así que hay que medirlo.
+//
+// Y hay una razón concreta para mirarlo en Swing: en los reportes diarios
+// salen compras con el RSI en 74 y 77 con la nota "no perseguir" — la app lo
+// AVISA pero no lo IMPIDE.
+//
+// LA LECCIÓN QUE TRAE DE ALLÁ, que es más valiosa que el filtro:
+// los troceos a posteriori decían que entrar extendido daba 12% de acierto
+// contra 50%. Medido de frente sobre 7.340 operaciones el efecto era de UN
+// punto. La idea era buena y el número era ruido de 17 operaciones. Por eso
+// aquí se mide con barrido de umbrales Y en las dos mitades del tiempo desde
+// el principio, no al revés.
+// --------------------------------------------------------------------------
+
+{
+  const corteRsi = fechas[Math.floor((CALENTAMIENTO + fechas.length) / 2)]
+  console.log('')
+  console.log('EL FILTRO DE "NO PERSEGUIR" (RSI), MEDIDO DE FRENTE')
+  console.log('Regla de medir neutra 1:1 y spread descontado. 50% es la moneda al aire.')
+  console.log(`Las dos mitades se parten en ${corteRsi}.`)
+  console.log('')
+  console.log('umbral                  ops   acierto   por 1R  │   1ª mitad   │   2ª mitad')
+  console.log('─'.repeat(88))
+  for (const u of [null, 80, 75, 70, 65, 60]) {
+    const r = correr(simetrica, null, { rsiMax: u })
+    const m = medir(r.senales, r.porClave, { conSpread: true })
+    const m1 = medir(r.senales.filter((s) => s.vistoEl < corteRsi), r.porClave, { conSpread: true })
+    const m2 = medir(r.senales.filter((s) => s.vistoEl >= corteRsi), r.porClave, { conSpread: true })
+    const ac = (x) => (x === null ? '  — ' : (x.toFixed(0) + '%').padStart(4))
+    const pr = (x) => (x === null ? '   —  ' : ((x >= 0 ? '+' : '') + x.toFixed(2)).padStart(6))
+    console.log(
+      `${(u === null ? 'sin filtro (hoy)' : `rechaza si RSI ≥ ${u}`).padEnd(22)} ` +
+        `${String(m.total).padStart(4)}    ${ac(m.acierto)}   ${pr(m.porRiesgo)}  │ ` +
+        `${String(m1.total).padStart(4)} ${ac(m1.acierto)} ${pr(m1.porRiesgo)} │ ` +
+        `${String(m2.total).padStart(4)} ${ac(m2.acierto)} ${pr(m2.porRiesgo)}`
+    )
+  }
+  console.log('─'.repeat(88))
+  console.log('Qué tiene que pasar para encenderlo: que mejore en VARIOS umbrales')
+  console.log('seguidos, en las DOS mitades, y que siga dejando señales de sobra.')
+  console.log('Si solo mejora en uno, o solo en una mitad, es una coincidencia.')
+
+  console.log('')
+  console.log('EL MISMO, CON LA GEOMETRÍA REAL DE LA APP (con spread)')
+  console.log('filtro                                           ops   acierto      pips   por 1R')
+  console.log('─'.repeat(86))
+  for (const u of [null, 75, 70, 65]) {
+    const r = correr(actual, null, { rsiMax: u })
+    fila(u === null ? 'sin filtro (hoy)' : `rechaza si RSI ≥ ${u}`, medir(r.senales, r.porClave, { conSpread: true }))
+  }
+  console.log('─'.repeat(86))
+}
 
 console.log('')
 console.log('LAS DOS MITADES DEL TIEMPO (regla de medir neutra)')
