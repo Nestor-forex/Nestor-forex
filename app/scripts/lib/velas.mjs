@@ -53,11 +53,38 @@ const esperar = (ms) => new Promise((res) => setTimeout(res, ms))
 const POR_TANDA = 7
 const PAUSA_MS = 65_000
 
-async function pedir(url, reintentos = 2) {
-  const r = await fetch(url, { signal: AbortSignal.timeout(30_000) })
+// Dos fallos distintos, dos esperas distintas.
+//
+//   · 429 = nos pasamos de la cuota por minuto. Hay que esperar a que pase el
+//     minuto entero, así que la espera es larga.
+//   · 5xx o un error de red = el servidor de Twelve Data se cayó un momento.
+//     Eso se pasa en segundos, y esperar un minuto sería tirar el tiempo.
+//
+// Hasta el 2026-08-25 SOLO se reintentaba el 429. Una corrida del banco de
+// pruebas se cayó entera con un HTTP 522 (el servidor no respondió) DESPUÉS de
+// haber bajado la primera tanda, o sea con créditos ya gastados y sin ningún
+// número a cambio. Es exactamente el final que este archivo intenta evitar.
+const ESPERAS_CORTAS_MS = [4_000, 15_000, 45_000]
+
+async function pedir(url, reintentos = 2, intentoCorto = 0) {
+  let r
+  try {
+    r = await fetch(url, { signal: AbortSignal.timeout(30_000) })
+  } catch (e) {
+    // Ni siquiera hubo respuesta: se cayó la red o venció el tiempo de espera.
+    if (intentoCorto < ESPERAS_CORTAS_MS.length) {
+      await esperar(ESPERAS_CORTAS_MS[intentoCorto])
+      return pedir(url, reintentos, intentoCorto + 1)
+    }
+    throw e
+  }
   if (r.status === 429 && reintentos > 0) {
     await esperar(PAUSA_MS)
-    return pedir(url, reintentos - 1)
+    return pedir(url, reintentos - 1, intentoCorto)
+  }
+  if (r.status >= 500 && intentoCorto < ESPERAS_CORTAS_MS.length) {
+    await esperar(ESPERAS_CORTAS_MS[intentoCorto])
+    return pedir(url, reintentos, intentoCorto + 1)
   }
   if (!r.ok) throw new Error('HTTP ' + r.status + (r.status === 429 ? ' (límite de consultas por minuto)' : ''))
   return r
