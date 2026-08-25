@@ -599,3 +599,70 @@ Las tres preguntas abiertas, para revisar con una semana de datos:
 3. **El reloj de GitHub se salta horas.** Medido en la app hermana: 3 corridas
    donde tocaban 13, con un hueco de 7,6 horas seguidas. Para un vigía diario
    importa menos que para uno por hora, pero si un día no corre, no corrió.
+
+---
+
+# El filtro del RSI en Swing (2026-08-25): NO funciona aquí
+
+Medido de frente sobre 1.436 días (2021-06-09 a 2026-08-25), solo señales de
+la app, vara neutra 1:1, spread descontado. Las mitades parten en 2024-05-07.
+
+| Umbral | Ops | Acierto | Por 1R | 1ª mitad | 2ª mitad |
+|---|---:|---:|---:|---:|---:|
+| **Sin filtro (hoy)** | 1.785 | 48% | **−0,06** | −0,10 | −0,02 |
+| Rechaza si RSI ≥ 80 | 1.828 | 47% | −0,07 | −0,11 | −0,03 |
+| Rechaza si RSI ≥ 75 | 1.929 | 47% | −0,08 | −0,12 | −0,05 |
+| Rechaza si RSI ≥ 70 | 2.108 | 47% | −0,08 | −0,10 | −0,05 |
+| Rechaza si RSI ≥ 65 | 2.246 | 48% | −0,06 | −0,09 | −0,04 |
+| Rechaza si RSI ≥ 60 | 1.859 | 47% | −0,08 | −0,06 | −0,09 |
+
+**Ningún umbral mejora nada.** Sin filtro da −0,06 y con filtro va de −0,06 a
+−0,08. Con la geometría real de la app, igual: −0,03 sin filtro contra −0,03 y
+−0,04 con él.
+
+`RSI_MAX` se queda en `null`. **Apagado.**
+
+## Por qué esto era importante medirlo aparte
+
+En intradía el mismo filtro sí mejora algo (−0,12 → −0,10) y se encendió en
+70. Era tentador copiar el número. **Habría sido un error**: aquí son velas
+diarias, otras medias y otro horizonte, y el RSI de un día no significa lo
+mismo que el de una hora.
+
+⚠️ **Regla para la próxima vez: lo que se mide en una app no vale para la
+otra.** Son casi idénticas por dentro y por eso es tan fácil colar un número
+prestado.
+
+## El detalle que hay que entender antes de leer esta tabla
+
+**Con el filtro salen MÁS operaciones, no menos** (1.785 → 2.108). Suena
+imposible para un filtro, y no lo es: la app se queda con los 5 mejores por
+lado. Cuando el filtro rechaza un par extendido, el siguiente de la lista SUBE
+a ese hueco, y como entra y sale en fechas distintas, cuenta como operación
+nueva.
+
+O sea que el filtro **no quita señales: las cambia por otras**. La medición no
+es "la app menos las malas" sino "la app con otras señales", y aquí las otras
+no son mejores.
+
+Esto se destapó al portar la prueba desde intradía, donde una comprobación
+afirmaba "solo quita, nunca añade" y pasaba solo porque el mercado sintético
+dejaba una sola señal. Está corregido en los dos repos.
+
+## Lo que sigue siendo lo mejor medido en Swing
+
+La regla de **reversión** (comprar lo débil, vender lo fuerte, con el RSI
+estirado), que corre en la sombra:
+
+| | Ops | Acierto | Por 1R con spread | 1ª mitad | 2ª mitad |
+|---|---:|---:|---:|---:|---:|
+| M2. Reversión con RSI estirado | 870 | 55% | **+0,09** | +0,14 | +0,05 |
+| Las compras de la app | 917 | 49% | −0,03 | — | — |
+
+Y el barrido de umbrales vecinos sale positivo en los seis (de +0,15 a +0,01),
+que es la firma de un efecto real y no de una curva ajustada.
+
+⚠️ **Pero en el historial REAL va 0 de 5.** Cinco operaciones no son nada, y
+van en dirección contraria a lo medido. Por eso sigue en la sombra: hasta que
+acumule 150-200 operaciones reales, el backtest y la realidad no se han puesto
+de acuerdo.
