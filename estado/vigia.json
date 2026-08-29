@@ -1,9 +1,9 @@
 {
-  "actualizadoEl": "2026-08-28T00:36:41.417Z",
-  "cierre": "2026-08-28",
+  "actualizadoEl": "2026-08-29T00:07:42.401Z",
+  "cierre": "2026-08-29",
   "senales": [
-    "AUD/USD|COMPRA|tendencia",
     "GBP/JPY|COMPRA|tendencia",
+    "AUD/USD|COMPRA|tendencia",
     "AUD/USD|VENTA|reversion"
   ]
 }
