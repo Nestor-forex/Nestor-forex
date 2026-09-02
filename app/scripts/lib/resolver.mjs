@@ -51,12 +51,61 @@ export function resolver(senales, data, resueltas = new Set()) {
     // algún día se renombra el campo, hay que tocar los dos vigías y esta
     // línea a la vez, o vuelve a pasar en silencio.
     const dia = s.vela ?? s.cierre
-    const desde = data.fechas.indexOf(dia)
 
-    // La vela en la que apareció ya no está entre las que descargamos (solo
-    // llegan los últimos 300 días). No se puede juzgar y no tiene
-    // sentido volver a intentarlo cada hora para siempre.
-    if (!par || desde === -1) {
+    // DESDE QUÉ VELA SE EMPIEZA A JUZGAR.
+    //
+    // Lo natural sería buscar la vela exacta con la que se calculó la señal y
+    // empezar por la siguiente. Y eso se hace primero. Pero exigir la fecha
+    // EXACTA resultó ser frágil, y costó 8 señales reales:
+    //
+    // El vigía anota como `cierre` la última fecha que traía la descarga de
+    // ese momento. El 9 de agosto de 2026 —domingo— esa fecha fue
+    // '2026-08-09', porque la fuente entrega una vela de domingo cuando el
+    // mercado abre el domingo por la tarde. Días después esa vela ya no
+    // estaba en la serie (las fuentes la consolidan o la descartan), así que
+    // `indexOf` devolvía -1 y las 6 señales de ese día quedaron marcadas
+    // "caducada" para siempre, junto a otras 2 de días vecinos.
+    //
+    // O sea: la operación existió, el mercado la resolvió, y el historial la
+    // tiró a la basura por un detalle del calendario de la fuente de datos.
+    // Sobre 18 señales visibles, perder 8 no es un detalle: es la diferencia
+    // entre un porcentaje de acierto que significa algo y uno que no.
+    //
+    // Ahora, si la fecha exacta no está, se busca LA PRIMERA VELA POSTERIOR.
+    // Es lo mismo que se hacía antes (`desde + 1`), solo que sin depender de
+    // que la vela de la señal siga existiendo.
+    //
+    // ⚠️ Estrictamente POSTERIOR, nunca la del día ni una anterior. Empezar
+    // antes significaría juzgar con precios que ya habían pasado cuando la
+    // señal nació: inventaría ganancias que nadie pudo tomar. Por eso la
+    // comparación es `>` y no `>=`.
+    const exacta = data.fechas.indexOf(dia)
+    const hallada = exacta !== -1 ? exacta + 1 : data.fechas.findIndex((f) => f > dia)
+    // `findIndex` devuelve -1 en dos situaciones OPUESTAS, y confundirlas
+    // rompería el historial en la dirección contraria:
+    //
+    //   · la señal es MÁS VIEJA que la primera vela descargada → caducada de
+    //     verdad, nunca vamos a saber qué pasó;
+    //   · la señal es MÁS NUEVA que la última vela → simplemente todavía no
+    //     ha pasado nada. Está ABIERTA, y marcarla caducada la mataría el
+    //     mismo día en que nace, que es justo el error que este arreglo viene
+    //     a reparar.
+    //
+    // Se distinguen mirando si la señal cae antes del principio de la serie.
+    const masViejaQueLaSerie = data.fechas.length > 0 && dia < data.fechas[0]
+    const primeraPosterior = hallada === -1 ? data.fechas.length : hallada
+
+    // Y una tercera: una señal SIN día. No debería existir —el vigía siempre
+    // escribe `cierre`— pero si un día se renombra el campo o una línea llega
+    // a medias, `dia` sería `undefined` y todas las comparaciones de arriba
+    // darían false: la señal se quedaría abierta para siempre, sin juzgar y
+    // sin avisar. Ese silencio es peor que caducarla, porque nadie lo nota.
+    const sinDia = !dia
+
+    // Caduca solo si de verdad no hay nada que mirar ni nunca lo habrá: o el
+    // par ya no se sigue, o la señal quedó fuera de los 300 días que se
+    // descargan, o no dice de qué día es.
+    if (!par || masViejaQueLaSerie || sinDia) {
       caducadas++
       resultados.push({
         clave,
@@ -75,7 +124,7 @@ export function resolver(senales, data, resueltas = new Set()) {
     let veredicto = null
     let velaFinal = null
 
-    for (let i = desde + 1; i < data.fechas.length; i++) {
+    for (let i = primeraPosterior; i < data.fechas.length; i++) {
       const alto = par.highs[i]
       const bajo = par.lows[i]
 
@@ -117,9 +166,13 @@ export function resolver(senales, data, resueltas = new Set()) {
       velaEntrada: dia,
       velaFinal,
       resultado: veredicto,
-      // Cuántas horas tardó en resolverse. Sirve para saber si los objetivos
+      // Cuántas velas tardó en resolverse. Sirve para saber si los objetivos
       // son realistas o si se quedan colgados días.
-      diasTardados: data.fechas.indexOf(velaFinal) - desde,
+      //
+      // Se cuenta desde la primera vela que se miró, no desde la de la señal:
+      // resolverse en la vela siguiente es 1 día, y así sale igual tanto si la
+      // vela de la señal seguía en la serie como si desapareció.
+      diasTardados: data.fechas.indexOf(velaFinal) - primeraPosterior + 1,
       // Lo que se habría ganado o perdido, en pips, según los niveles que la
       // app dio en su momento.
       pips: veredicto === 'ganada' ? s.pipBeneficio : -s.pipRiesgo,
