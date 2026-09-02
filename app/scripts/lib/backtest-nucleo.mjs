@@ -1,3 +1,4 @@
+import { costeEnPips } from './costes.mjs'
 // El motor del banco de pruebas: qué señales habría dado la app cada día.
 //
 // Va aparte de `backtest.mjs` para poder comprobarlo sin internet: el script
@@ -190,4 +191,70 @@ export function generarSenales(
   }
 
   return senales
+}
+
+
+// Cuenta el resultado de una lista de señales ya resueltas.
+//
+// Vive aquí y no en backtest.mjs porque de esta función salen TODOS los
+// números con los que se decide si una regla se enciende o se apaga. Mientras
+// estuvo dentro del script no se podía probar sin internet ni sin gastar
+// créditos de la API: o sea que la cuenta que más pesa era la única sin
+// comprobar. Ahora `prueba-backtest.mjs` la mide directamente.
+export function medir(senales, porClave, { conSpread = false, swapPipsNoche = 0 } = {}) {
+  let ganadas = 0
+  let perdidas = 0
+  let pips = 0
+  let sinJuzgar = 0
+  // Suma de resultados medidos en "veces el riesgo de ESA operación". Se
+  // acumula operación por operación, no dividiendo el total de pips entre un
+  // riesgo promedio: con riesgos distintos en cada par, el promedio daría un
+  // número parecido pero no el correcto.
+  let sumaR = 0
+
+  for (const s of senales) {
+    const r = porClave.get(`${s.id}@${s.vistoEl}`)
+    if (!r || (r.resultado !== 'ganada' && r.resultado !== 'perdida')) {
+      sinJuzgar++
+      continue
+    }
+    // Los costes se pagan siempre, gane o pierda. En "veces el riesgo" pesan
+    // menos cuanto más ancho sea el stop de esa operación concreta, así que se
+    // calculan por operación y no como un descuento global al final.
+    //
+    // Las noches salen del resolver (`diasTardados`): una operación que se
+    // resolvió al día siguiente pagó una noche, una que tardó tres semanas
+    // pagó veintiuna. Por eso el swap castiga sobre todo a las que se quedan
+    // colgadas, que es exactamente como funciona en la cuenta real.
+    const costePips = conSpread ? costeEnPips(s.par, r.diasTardados ?? 0, swapPipsNoche) : 0
+    const coste = costePips / s.pipRiesgo
+    if (r.resultado === 'ganada') {
+      ganadas++
+      // Ganó: se llevó exactamente su relación riesgo/beneficio.
+      sumaR += s.pipBeneficio / s.pipRiesgo - coste
+    } else {
+      perdidas++
+      // Perdió: se fue al stop, o sea exactamente 1 riesgo.
+      sumaR -= 1 + coste
+    }
+    pips += r.pips - costePips
+  }
+
+  const total = ganadas + perdidas
+  return {
+    total,
+    ganadas,
+    sinJuzgar,
+    pips: Math.round(pips),
+    acierto: total ? (ganadas / total) * 100 : null,
+    // Lo que de verdad importa: cuánto se gana o se pierde POR CADA UNIDAD DE
+    // RIESGO. Los pips sueltos engañan —100 pips en GBP/JPY no son 100 pips en
+    // EUR/CHF— y además dos geometrías con riesgos distintos no se pueden
+    // comparar en pips. Esto sí: es el número que dice si el sistema gana.
+    //
+    // Y es lo que Néstor nota en la cuenta: como el lote se calcula para
+    // arriesgar siempre el mismo dinero, +0.20 por operación significa ganar
+    // un 20% de lo que se arriesga en cada una, sea el par que sea.
+    porRiesgo: total ? sumaR / total : null,
+  }
 }
