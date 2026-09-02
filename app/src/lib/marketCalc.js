@@ -24,7 +24,15 @@ export const PAIRS = [
   ['NZD', 'CAD'],
 ]
 
-const emaLast = (c, p) => {
+// Los tres indicadores se EXPORTAN solo para poder probarlos contra valores de
+// referencia publicados (scripts/prueba-indicadores.mjs). Ninguna pantalla los
+// usa directamente: el barrido los consume aquí dentro.
+//
+// Se exportan a propósito y no "por si acaso": mientras estuvieron privados
+// nada comprobaba que el RSI siguiera siendo el RSI. Estaban bien, pero por
+// buen trabajo, no por protección — cualquiera podía romperlos sin que nada
+// avisara. Son la base de la que salen el stop, el objetivo y las señales.
+export const emaLast = (c, p) => {
   const k = 2 / (p + 1)
   let e = c.slice(0, p).reduce((a, b) => a + b) / p
   for (let i = p; i < c.length; i++) e = c[i] * k + e * (1 - k)
@@ -35,7 +43,7 @@ const emaLast = (c, p) => {
 // —cuánto se movió el día, distancia del máximo al cierre anterior, distancia
 // del mínimo al cierre anterior—. Los dos últimos cuentan el hueco entre
 // días, que el método de abajo se pierde entero.
-const atrWilder = (highs, lows, closes, p = 14) => {
+export const atrWilder = (highs, lows, closes, p = 14) => {
   const tr = []
   for (let i = 1; i < closes.length; i++) {
     tr.push(
@@ -63,7 +71,7 @@ const atrCierres = (closes) => {
   return ((sum / 14) * closes[L])
 }
 
-const rsi = (c, p = 14) => {
+export const rsi = (c, p = 14) => {
   let g = 0
   let l = 0
   for (let i = 1; i <= p; i++) {
