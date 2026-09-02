@@ -111,7 +111,7 @@ export default class RedDeSeguridad extends Component {
           justifyContent: 'center',
           gap: 16,
           padding: '32px 24px',
-          background: 'var(--bg, #0d1117)',
+          background: 'var(--bg-page, #0d1117)',
           color: 'var(--text, #e6edf3)',
           fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
@@ -134,8 +134,12 @@ export default class RedDeSeguridad extends Component {
             borderRadius: 10,
             border: 'none',
             cursor: 'pointer',
-            background: 'var(--accent, #2ea043)',
-            color: '#fff',
+            // Verde con letra OSCURA, igual que `.btn-primary` en index.css.
+            // El verde de la app es claro: con letra blanca encima no se leería.
+            // Se pone en línea en vez de usar la clase para no depender de que
+            // la hoja de estilos haya cargado bien.
+            background: 'var(--green, #4ade80)',
+            color: 'oklch(0.15 0.01 255)',
           }}
         >
           {txt.boton}
