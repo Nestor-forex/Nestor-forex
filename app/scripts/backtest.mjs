@@ -30,9 +30,10 @@
 // bloqueado api.twelvedata.com:
 //   Actions → "Banco de pruebas de las reglas" → Run workflow
 
+import { costeEnPips, NIVELES_SWAP } from './lib/costes.mjs'
 import { computarBarrido } from '../src/lib/marketCalc.js'
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
-import { generarSenales } from './lib/backtest-nucleo.mjs'
+import { generarSenales, medir } from './lib/backtest-nucleo.mjs'
 import { GEOMETRIAS, simetrica, actual, atrFijo } from './lib/geometrias.mjs'
 import { resolver } from './lib/resolver.mjs'
 
@@ -63,64 +64,21 @@ const completo = computarBarrido(fechas, rates, rangosPar)
 
 // --------------------------------------------------------------------------
 
-// Lo que cobra el bróker por abrir y cerrar, se gane o se pierda. Es un coste
-// FIJO en pips, así que pesa más cuanto más corto sea el objetivo. En swing los
-// objetivos son de decenas de pips, así que duele menos que en intradía — pero
-// no es cero, y una regla que solo gana por menos de esto no gana.
-const SPREAD_PIPS = 1.5
+// Lo que cuesta operar sale de scripts/lib/costes.mjs: spread por par (no uno
+// solo para los 14, que hacía parecer baratos los cruces) y swap por noche.
+//
+// ⚠️ EL SWAP NO SE CONTABA HASTA AHORA, NI UN PIP. En intradía daría igual,
+// pero aquí las operaciones duran una MEDIANA DE 12 O 13 DÍAS. A medio pip por
+// noche son 6 pips por operación; a dos pips, 25. Sobre un sistema que mide
+// −0,06 por unidad de riesgo, eso puede ser la diferencia entre "pierde
+// poquito" y "pierde bastante".
+//
+// No se elige UN número de swap porque no lo sé: depende del diferencial de
+// tipos de cada momento y del margen de cada bróker, y no tengo su histórico
+// de cinco años. Se mide a varios niveles y se enseña a partir de cuál cambia
+// la conclusión.
 
 // Mide una lista de señales ya generadas.
-function medir(senales, porClave, { conSpread = false } = {}) {
-  let ganadas = 0
-  let perdidas = 0
-  let pips = 0
-  let sinJuzgar = 0
-  // Suma de resultados medidos en "veces el riesgo de ESA operación". Se
-  // acumula operación por operación, no dividiendo el total de pips entre un
-  // riesgo promedio: con riesgos distintos en cada par, el promedio daría un
-  // número parecido pero no el correcto.
-  let sumaR = 0
-
-  for (const s of senales) {
-    const r = porClave.get(`${s.id}@${s.vistoEl}`)
-    if (!r || (r.resultado !== 'ganada' && r.resultado !== 'perdida')) {
-      sinJuzgar++
-      continue
-    }
-    // El spread se paga siempre, gane o pierda. En "veces el riesgo" cuesta
-    // menos cuanto más ancho sea el stop de esa operación concreta, así que se
-    // calcula por operación y no como un descuento global al final.
-    const coste = conSpread ? SPREAD_PIPS / s.pipRiesgo : 0
-    if (r.resultado === 'ganada') {
-      ganadas++
-      // Ganó: se llevó exactamente su relación riesgo/beneficio.
-      sumaR += s.pipBeneficio / s.pipRiesgo - coste
-    } else {
-      perdidas++
-      // Perdió: se fue al stop, o sea exactamente 1 riesgo.
-      sumaR -= 1 + coste
-    }
-    pips += r.pips - (conSpread ? SPREAD_PIPS : 0)
-  }
-
-  const total = ganadas + perdidas
-  return {
-    total,
-    ganadas,
-    sinJuzgar,
-    pips: Math.round(pips),
-    acierto: total ? (ganadas / total) * 100 : null,
-    // Lo que de verdad importa: cuánto se gana o se pierde POR CADA UNIDAD DE
-    // RIESGO. Los pips sueltos engañan —100 pips en GBP/JPY no son 100 pips en
-    // EUR/CHF— y además dos geometrías con riesgos distintos no se pueden
-    // comparar en pips. Esto sí: es el número que dice si el sistema gana.
-    //
-    // Y es lo que Néstor nota en la cuenta: como el lote se calcula para
-    // arriesgar siempre el mismo dinero, +0.20 por operación significa ganar
-    // un 20% de lo que se arriesga en cada una, sea el par que sea.
-    porRiesgo: total ? sumaR / total : null,
-  }
-}
 
 // Genera y juzga con una geometría dada.
 function correr(geometria, reglaEntrada = null, vista = {}) {
@@ -890,6 +848,81 @@ console.log('La columna "hace falta acertar" es el acierto de equilibrio: con el
 console.log('objetivo al 0,75 del riesgo hay que acertar el 57% solo para empatar.')
 console.log('Un acierto alto con el objetivo cerca no es lo mismo que ganar dinero.')
 
+
+// --------------------------------------------------------------------------
+// ¿CUÁNTO SE COME EL SWAP?
+//
+// El coste que hasta hoy no se contaba, ni un pip. En intradía daría igual
+// porque se cierra el mismo día; aquí las operaciones duran una MEDIANA DE 12
+// O 13 DÍAS, y cada noche abierta se paga.
+//
+// No se elige un número de swap porque no se sabe: depende del diferencial de
+// tipos de cada momento y del margen de cada bróker, y no hay histórico de
+// cinco años. Lo que sí se puede contestar honestamente es la pregunta que
+// importa: ¿A PARTIR DE QUÉ SWAP CAMBIA LA CONCLUSIÓN?
+//
+// Néstor mira el swap real de su bróker, busca su fila, y ya sabe dónde está.
+// --------------------------------------------------------------------------
+
+console.log('')
+console.log('══════════════════════════════════════════════════════════════════')
+console.log('¿CUÁNTO SE COME EL SWAP? (mismas señales, regla neutra 1:1)')
+console.log('══════════════════════════════════════════════════════════════════')
+console.log('')
+console.log('El swap es lo que el bróker cobra por cada NOCHE con la operación')
+console.log('abierta. Hasta hoy el banco de pruebas lo ignoraba por completo.')
+console.log('')
+
+{
+  const neutro = generarSenales(completo, { thr: 0.5, topN: 3, geometria: simetrica })
+  const dias = neutro.senales
+    .map((x) => neutro.porClave.get(`${x.id}@${x.vistoEl}`)?.diasTardados)
+    .filter((d) => typeof d === 'number')
+    .sort((a, b) => a - b)
+  const mediana = dias.length ? dias[Math.floor(dias.length / 2)] : 0
+  const medio = dias.length ? dias.reduce((a, b) => a + b, 0) / dias.length : 0
+  console.log(`Cuánto duran las operaciones: mediana ${mediana} días, media ${medio.toFixed(1)}.`)
+  console.log(`Eso son las noches que se pagan en cada una.`)
+  console.log('')
+
+  console.log('swap/noche      ops  acierto   por 1R   coste medio')
+  console.log('─────────────────────────────────────────────────────')
+  const sinCostes = medir(neutro.senales, neutro.porClave)
+  console.log(
+    `sin costes    ${String(sinCostes.total).padStart(5)}` +
+      `  ${(sinCostes.acierto ?? 0).toFixed(0).padStart(5)}%` +
+      `  ${(sinCostes.porRiesgo ?? 0).toFixed(3).padStart(7)}` +
+      `        —`
+  )
+  for (const nivel of NIVELES_SWAP) {
+    const m = medir(neutro.senales, neutro.porClave, { conSpread: true, swapPipsNoche: nivel })
+    // Cuánto cuesta de media una operación a este nivel, en pips.
+    let sumaCoste = 0
+    let n = 0
+    for (const x of neutro.senales) {
+      const r = neutro.porClave.get(`${x.id}@${x.vistoEl}`)
+      if (!r || (r.resultado !== 'ganada' && r.resultado !== 'perdida')) continue
+      sumaCoste += costeEnPips(x.par, r.diasTardados ?? 0, nivel)
+      n++
+    }
+    const etiqueta = nivel === 0 ? 'solo spread' : `+ ${nivel.toFixed(2)} pips`
+    console.log(
+      `${etiqueta.padEnd(13)} ${String(m.total).padStart(5)}` +
+        `  ${(m.acierto ?? 0).toFixed(0).padStart(5)}%` +
+        `  ${(m.porRiesgo ?? 0).toFixed(3).padStart(7)}` +
+        `  ${n ? (sumaCoste / n).toFixed(1).padStart(6) : '     —'} pips`
+    )
+  }
+  console.log('')
+  console.log('El acierto NO cambia entre filas: los costes no mueven si el precio')
+  console.log('llegó al objetivo o al stop, solo lo que queda después. Lo que hay')
+  console.log('que mirar es la columna "por 1R".')
+  console.log('')
+  console.log('Y ojo con la trampa de leer esto al revés: que el swap empeore poco')
+  console.log('NO quiere decir que el sistema esté bien. Quiere decir que ya perdía')
+  console.log('antes de contarlo.')
+}
+
 console.log('')
 console.log('Cómo leerlo, y con qué desconfianza:')
 console.log(' · Con menos de ~30 operaciones el porcentaje puede ser suerte.')
@@ -897,6 +930,6 @@ console.log(' · Los filtros solo QUITAN operaciones, así que siempre es posibl
 console.log(`   encontrar uno que borre justo las malas de ESTOS ${fechas.length} días sin`)
 console.log('   que sirva de nada en el futuro. Vale la pena un filtro cuando')
 console.log('   además tiene una razón de mercado detrás, no un número bonito.')
-console.log(' · Los pips no descuentan el spread del bróker.')
+console.log(' · Donde dice "con costes" ya van descontados spread por par y swap.')
 console.log(` · Son ${fechas[0]} a ${fechas.at(-1)}. Un mercado distinto puede dar la vuelta a esto.`)
 console.log('---BACKTEST-FIN---')

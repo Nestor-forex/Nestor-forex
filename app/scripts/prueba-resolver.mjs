@@ -105,10 +105,20 @@ console.log('\n7. Señales viejas y ya juzgadas')
 {
   const d = mundo([1.085, 1.09, 1.101, 1.10], [1.079, 1.085, 1.095, 1.099])
 
-  const vieja = senal({ vela: 'vela-que-ya-no-descargamos' })
-  const r1 = resolver([vieja], d)
-  comprobar(r1.caducadas === 1, 'una señal fuera de las velas descargadas se marca caducada')
-  comprobar(r1.resultados[0].resultado === 'caducada', 'y no se reintenta para siempre')
+  // Una señal a la que le falta el día. No debería existir, pero si el vigía
+  // cambia de campo o una línea llega a medias, hay que caducarla: dejarla
+  // "abierta" para siempre sería un silencio que nadie nota.
+  //
+  // (Antes aquí iba una etiqueta inventada, 'vela-que-ya-no-descargamos'. Con
+  // la lógica actual el resolver ya no exige que el día exista en la serie
+  // —busca la primera vela posterior—, así que una etiqueta suelta ya no
+  // prueba nada: lo que se comprueba ahora es el caso de verdad, que es que
+  // NO haya día. Que sea de un día fuera de la ventana se comprueba con
+  // fechas reales en el bloque 15.)
+  const sinDia = senal({ vela: undefined })
+  const r1 = resolver([sinDia], d)
+  comprobar(r1.caducadas === 1, 'una señal sin día se marca caducada')
+  comprobar(r1.resultados[0].resultado === 'caducada', 'y no se queda abierta en silencio')
 
   const r2 = resolver([senal()], d, new Set([claveDe(senal())]))
   comprobar(r2.resultados.length === 0, 'una ya juzgada no se vuelve a juzgar')
@@ -233,6 +243,82 @@ console.log('\n11. Las ventas en sombra no contaminan el porcentaje')
   comprobar(
     resumir([{ clave: 'x', resultado: 'ganada', pips: 10 }]).todas.total === 1,
     'una línea vieja, sin el campo, sigue contando'
+  )
+}
+
+
+// --- 13. La vela de la señal desapareció de la serie -----------------------
+//
+// EL CASO QUE COSTÓ 8 SEÑALES REALES.
+//
+// El vigía anota como día de la señal la última fecha que traía la descarga.
+// El 9 de agosto de 2026 (domingo) esa fecha fue '2026-08-09', porque la
+// fuente entrega una vela de domingo cuando el mercado abre esa tarde. Días
+// después la vela ya no estaba, `indexOf` daba -1, y seis señales de ese día
+// quedaron marcadas "caducada" para siempre — junto a otras dos de días
+// vecinos. Operaciones que el mercado sí resolvió, tiradas a la basura por un
+// detalle del calendario de la fuente.
+
+console.log('\n13. Si la vela exacta de la señal ya no está, se juzga igual')
+{
+  // Fechas reales, sin el domingo: exactamente lo que ve el resolver hoy.
+  const conFechas = (fechas, highs, lows) => ({
+    fechas,
+    pares: [{ name: 'EUR/USD', highs, lows }],
+  })
+  const habiles = ['2026-08-07', '2026-08-10', '2026-08-11', '2026-08-12']
+  const s = senal({ vela: undefined, cierre: '2026-08-09' })
+
+  // El objetivo (1.10) se toca el 11.
+  const r = resolver([s], conFechas(habiles, [1.08, 1.09, 1.11, 1.12], [1.075, 1.085, 1.09, 1.10]))
+  comprobar(r.resultados.length === 1, 'la juzga en vez de darla por perdida para siempre')
+  comprobar(r.resultados[0]?.resultado === 'ganada', 'y el veredicto es el correcto (ganada)')
+  comprobar(r.caducadas === 0, 'ya no la marca caducada')
+
+  // ⚠️ Lo que NO puede pasar: empezar a mirar ANTES del día de la señal. Si
+  // el objetivo solo se tocó el 7 —dos días antes de que la señal naciera—
+  // no es una ganancia, es una vela del pasado.
+  const soloAntes = resolver(
+    [senal({ vela: undefined, cierre: '2026-08-09' })],
+    conFechas(habiles, [1.11, 1.09, 1.09, 1.09], [1.08, 1.085, 1.085, 1.085])
+  )
+  comprobar(
+    soloAntes.resultados.length === 0 && soloAntes.abiertas === 1,
+    'NO cuenta como ganada un objetivo tocado antes de que la señal existiera'
+  )
+}
+
+// --- 14. Una señal más nueva que la última vela sigue ABIERTA --------------
+//
+// El otro lado del mismo arreglo, y el que podría romperlo. Si al no
+// encontrar la fecha se diera todo por caducado, una señal recién nacida
+// —cuya vela todavía no ha cerrado— moriría el mismo día. Sería cambiar un
+// error por otro peor.
+
+console.log('\n14. Una señal más nueva que la última vela queda abierta, no caducada')
+{
+  const mundoCorto = {
+    fechas: ['2026-08-10', '2026-08-11'],
+    pares: [{ name: 'EUR/USD', highs: [1.09, 1.09], lows: [1.085, 1.085] }],
+  }
+  const r = resolver([senal({ vela: undefined, cierre: '2026-08-12' })], mundoCorto)
+  comprobar(r.abiertas === 1, 'la cuenta como abierta')
+  comprobar(r.caducadas === 0, 'y NO la da por caducada')
+  comprobar(r.resultados.length === 0, 'no escribe ningún veredicto todavía')
+}
+
+// --- 15. Lo verdaderamente viejo sí caduca --------------------------------
+
+console.log('\n15. Una señal anterior a todas las velas sí caduca')
+{
+  const r = resolver(
+    [senal({ vela: undefined, cierre: '2025-01-01' })],
+    { fechas: ['2026-08-10', '2026-08-11'], pares: [{ name: 'EUR/USD', highs: [1.2, 1.2], lows: [1.0, 1.0] }] }
+  )
+  comprobar(r.caducadas === 1, 'la marca caducada')
+  comprobar(
+    r.resultados[0]?.resultado === 'caducada',
+    'y no se inventa un veredicto con velas que no le corresponden'
   )
 }
 

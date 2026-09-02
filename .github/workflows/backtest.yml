@@ -36,9 +36,19 @@ jobs:
       - name: Comprobar que no falta ningún import
         working-directory: app
         run: npm install --silent && npm run lint
+      # Todas las comprobaciones que NO necesitan internet van antes de la
+      # descarga, por la misma razón que el linter de arriba: si algo está
+      # roto, es mucho mejor enterarse en dos segundos y gratis que después de
+      # gastar los créditos del día.
       - name: Comprobar el motor del banco de pruebas
         working-directory: app
         run: node scripts/prueba-backtest.mjs
+      - name: Comprobar los indicadores contra la referencia
+        working-directory: app
+        run: node scripts/prueba-indicadores.mjs
+      - name: Comprobar el modelo de costes
+        working-directory: app
+        run: node scripts/prueba-costes.mjs
       - name: Medir
         working-directory: app
         run: node scripts/backtest.mjs
