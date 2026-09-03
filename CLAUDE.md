@@ -1045,3 +1045,90 @@ Lint, build y **todas** las pruebas sin internet en los dos repos. Y en
 idioma cada una guarda con **su** prefijo (`nfs_idioma` / `nfi_idioma`) — que
 era exactamente lo que podía romperse al extraer la identidad — con cero
 errores de consola.
+
+
+---
+
+# Fase 4 (2026-09-03): la reversión SÍ aguanta el swap. Me equivoqué otra vez
+
+## Lo primero: un error mío, dicho antes que el resultado
+
+Antes de medir escribí, con seguridad, que el swap probablemente se comería la
+ventaja de la regla de reversión. El razonamiento parecía sólido: «las
+operaciones de Swing duran 12-13 días de mediana, o sea doce noches pagando; a
+0,5 pips por noche son 6 pips, y sobre un riesgo de 60 eso es 0,10 — más que de
+sobra para borrar un +0,08».
+
+**Era falso, y el fallo estaba en el dato de partida.** Esos 12-13 días son con
+la geometría REAL de la app. Con la vara neutra 1:1, que es con la que se mide,
+las operaciones duran **5 días de mediana**. La mitad de noches, la mitad de
+coste.
+
+⚠️ **Es la SEGUNDA vez que presento un mecanismo convincente y resulta falso**
+(la primera fue el espejismo de la pantalla de Historial, el 2026-08-25). Las
+dos veces el razonamiento sonaba impecable. La lección, otra vez: **un
+mecanismo que suena bien no es un resultado hasta que se mide** — y conviene
+comprobar de dónde sale cada número que se mete en la estimación.
+
+## El número
+
+Medido sobre 1.436 días (2021-06-22 a 2026-09-03), vara neutra 1:1, spread por
+par de la Fase 2, y el swap barrido a cinco niveles.
+
+**M2 — reversión con el RSI estirado, 872 ops, duran 5 días de mediana:**
+
+| swap/noche | acierto | por 1R | coste medio |
+|---|---:|---:|---:|
+| sin costes | 55% | **+0,103** | — |
+| solo spread | 55% | **+0,085** | 1,9 pips |
+| + 0,25 | 55% | **+0,068** | 3,8 pips |
+| + 0,50 | 55% | **+0,051** | 5,7 pips |
+| + 1,00 | 55% | **+0,016** | 9,5 pips |
+| + 2,00 | 55% | −0,052 | 17,1 pips |
+
+**→ Deja de ganar por encima de 1 pip de swap por noche.**
+
+Y las otras tres, para comparar — **ninguna aguanta**:
+
+| regla | aguanta hasta |
+|---|---|
+| M1. Comprar lo débil, vender lo fuerte | 0 pips (se cae con cualquier swap) |
+| M3. …y lejos de la media de 20 | 0 pips |
+| M4. CONTROL: la inversión de antes | 0,25 pips |
+| **M2. …y solo con el RSI estirado** | **1 pip** |
+
+**La única que aguanta es la que lleva el filtro de RSI.** Eso refuerza que ese
+filtro aporta algo real y no es un adorno.
+
+Para situarlo: el swap típico de un par mayor está entre 0,2 y 1 pip por noche
+según el par y la dirección, y en una de las dos direcciones a veces se COBRA
+en vez de pagarse. O sea que 1 pip es el lado caro de lo normal. M2 llega justo
+hasta ahí.
+
+## Lo que esto NO autoriza a hacer
+
+⚠️ **Sigue siendo un backtest.** Tres cosas frenan cualquier entusiasmo:
+
+1. **Se debilita en la segunda mitad**: +0,13 en la primera y +0,04 en la
+   segunda (con spread, sin swap). Positivo en las dos, pero decreciente.
+2. **En el historial REAL va 0 de 5.** Cinco operaciones no son nada, pero van
+   en dirección contraria a lo medido.
+3. **A 0,5 pips de swap queda en +0,051.** Es positivo y es poco. No es un
+   sistema del que se pueda decir «esto gana dinero» sin más.
+
+Lo que sí cambia: **hay algo real que perseguir**, y ya no es una corazonada
+sino un número que ha sobrevivido al spread por par, al swap, al barrido de
+umbrales vecinos (positivo en los seis) y al troceo en dos mitades.
+
+## Y la app tal cual, para no perder la perspectiva
+
+| swap/noche | acierto | por 1R |
+|---|---:|---:|
+| sin costes | 48% | −0,050 |
+| solo spread | 48% | −0,069 |
+| + 0,50 | 48% | −0,101 |
+| + 2,00 | 48% | −0,198 |
+
+Lo que la app le enseña hoy a Néstor pierde en todos los niveles, y el swap
+solo lo empeora. **La distancia entre lo que la app da y lo que la reversión
+mide es la Fase 4 entera.**
