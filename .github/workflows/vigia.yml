@@ -65,6 +65,9 @@ jobs:
           # Si estos dos secretos no están puestos, el vigía sigue funcionando
           # igual y solo anota que no pudo avisar: lo que no se puede perder es
           # el historial de señales.
+          # La llave de Twelve Data. Si el secreto no está puesto todavía,
+          # velas.mjs se cae a la de .env.production y todo sigue igual.
+          TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: node scripts/vigia.mjs
