@@ -866,12 +866,16 @@ Era **la misma llave en los dos**, y comparten los 800 créditos del día. Por e
 no bastaba con sacarla de uno: mientras siguiera publicada en el otro, seguía a
 la vista de cualquiera.
 
-### Cómo se comprobó que el secreto servía ANTES de borrar nada
+### Cómo se comprobó, antes y después
 
-En el log del workflow sale `TWELVEDATA_KEY: ***` — GitHub solo enmascara así
-un secreto que **existe y no está vacío**— y el reporte salió con precios
-reales. Como `leerLlave` usa **primero** el secreto, la llave que funcionó fue
-la del secreto, no la del archivo.
+**Antes de borrar nada:** en el log del workflow sale `TWELVEDATA_KEY: ***`
+—GitHub solo enmascara así un secreto que **existe y no está vacío**— y el
+reporte salió con precios reales. Como `leerLlave` usa **primero** el secreto,
+la llave que funcionó fue la del secreto, no la del archivo.
+
+**Después de borrarla:** se lanzó el reporte otra vez sobre el commit que ya no
+tiene la llave, y salió completo con precios reales en 65 segundos. Lo mismo se
+hizo en Intradía con el publicador del barrido.
 
 ⚠️ **SI SE AÑADE UN WORKFLOW NUEVO** que llame a estos guiones, hay que pasarle
 el secreto o fallará:
@@ -893,11 +897,23 @@ llave, no solo los que uno recuerda.**
 correr un trabajo hasta **6 horas**. Los de Intradía sí lo tienen (el vigía, 10
 minutos). Si un día uno se cuelga, bloquea la cola media jornada.
 
-⚠️ **La API de estado de GitHub miente, y bastante.** Durante 10 minutos dijo
-`in_progress` de un trabajo que había terminado en 65 segundos. Ya había pasado
-antes (el 2026-08-28) y volvió a pasar. **Para saber si algo terminó, pedir los
-LOGS, no el estado**: los logs dan 404 mientras corre de verdad y aparecen en
-cuanto termina. Eso sí es fiable.
+⚠️ **TODA la API de GitHub Actions va con retraso, no solo el estado.**
+
+El estado dijo `in_progress` durante 10 minutos de un trabajo que había
+terminado en 65 segundos. Ya había pasado el 2026-08-28.
+
+📌 **Y aquí me equivoqué en el momento, así que queda escrito:** al ver que los
+logs daban 404 mientras el estado decía `in_progress`, concluí que *los logs sí
+eran fiables* —404 mientras corre, disponibles al terminar— y lo di por bueno.
+**Es falso.** En la corrida siguiente los logs dieron 404 durante **13 minutos**
+de un trabajo que también había terminado en 65 segundos. El 404 no distingue
+«sigue corriendo» de «el log todavía no está publicado».
+
+**Lo que hay que hacer, entonces:** no deducir nada de que algo tarde en
+aparecer. Esperar, reintentar, y **fijarse en las marcas de tiempo DENTRO del
+log** cuando por fin llegue — ahí sí está la verdad de cuándo empezó y cuándo
+terminó. Un reporte de Swing tarda ~65 s (dos tandas con una pausa de 65 s en
+medio); si el log dice más, entonces sí pasó algo.
 
 ## Comprobaciones nuevas
 
