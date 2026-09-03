@@ -33,7 +33,7 @@
 import { costeEnPips, NIVELES_SWAP } from './lib/costes.mjs'
 import { computarBarrido } from '../src/lib/marketCalc.js'
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
-import { generarSenales, medir } from './lib/backtest-nucleo.mjs'
+import { generarSenales, medir, barridoSwap } from './lib/backtest-nucleo.mjs'
 import { GEOMETRIAS, simetrica, actual, atrFijo } from './lib/geometrias.mjs'
 import { resolver } from './lib/resolver.mjs'
 
@@ -678,6 +678,64 @@ console.log('Si una regla gana en la primera mitad y se cae en la segunda, era')
 console.log('casualidad. Lo que hay que buscar es que aguante en las dos.')
 
 // --------------------------------------------------------------------------
+// LA REVERSIÓN, PAGANDO SWAP.
+//
+// ⚠️ ESTA TABLA FALTABA, Y ES LA QUE DECIDE.
+//
+// Hasta ahora la reversión se medía con spread pero SIN swap, y el swap se
+// medía solo sobre las señales de la app. O sea que la única regla candidata a
+// ganar dinero nunca se había medido pagando las noches que se pasa abierta.
+//
+// Y aquí eso pesa mucho: una operación de swing dura una docena de días, o sea
+// que paga una docena de noches. A 0,5 pips por noche son unos 6 pips, y sobre
+// un riesgo típico de unos 60 pips eso es 0,10 por unidad de riesgo — más que
+// de sobra para borrar un +0,09.
+//
+// La columna que importa es "por 1R". Si se vuelve negativa a un nivel de swap
+// realista, la regla no sirve por mucho que el acierto siga siendo bonito.
+// --------------------------------------------------------------------------
+
+console.log('')
+console.log('LA MISMA REVERSIÓN, PERO PAGANDO LAS NOCHES')
+console.log('')
+
+for (const { nombre, r } of revCorridas) {
+  const b = barridoSwap(r.senales, r.porClave)
+  if (!b.total) {
+    console.log(`${nombre} — sin operaciones resueltas`)
+    continue
+  }
+  console.log(`${nombre}  (${b.total} ops · duran ${b.mediana} días de mediana, ${b.media.toFixed(1)} de media)`)
+  console.log('   swap/noche      acierto   por 1R   coste medio')
+  const sinNada = medir(r.senales, r.porClave)
+  console.log(
+    `   sin costes       ${(sinNada.acierto ?? 0).toFixed(0).padStart(5)}%` +
+      `  ${(sinNada.porRiesgo ?? 0).toFixed(3).padStart(7)}         —`
+  )
+  for (const { nivel, medicion: m, costeMedio } of b.filas) {
+    const etiqueta = nivel === 0 ? 'solo spread' : `+ ${nivel.toFixed(2)} pips`
+    console.log(
+      `   ${etiqueta.padEnd(15)} ${(m.acierto ?? 0).toFixed(0).padStart(5)}%` +
+        `  ${(m.porRiesgo ?? 0).toFixed(3).padStart(7)}   ${costeMedio.toFixed(1).padStart(6)} pips`
+    )
+  }
+  // El nivel a partir del cual la regla deja de ganar. Es la pregunta
+  // práctica: no "¿cuánto gana?" sino "¿cuánto aguanta antes de no ganar?".
+  const ultimoBueno = [...b.filas].reverse().find((f) => (f.medicion.porRiesgo ?? -1) > 0)
+  if (!ultimoBueno) {
+    console.log('   → PIERDE ya solo con el spread. El swap ni hace falta.')
+  } else if (ultimoBueno.nivel === b.filas.at(-1).nivel) {
+    console.log(`   → aguanta hasta ${ultimoBueno.nivel} pips de swap por noche, el nivel más caro que se mide.`)
+  } else {
+    console.log(`   → deja de ganar por encima de ${ultimoBueno.nivel} pips de swap por noche.`)
+  }
+  console.log('')
+}
+console.log('El swap real depende del par, de la dirección y del momento: a veces se')
+console.log('cobra y a veces se paga. Por eso lo que importa no es una fila sino a')
+console.log('PARTIR DE CUÁL la conclusión cambia.')
+
+// --------------------------------------------------------------------------
 // LOS UMBRALES VECINOS: ¿es real o lo ajusté yo?
 //
 // M2 usa "RSI ≤ 35 al comprar, ≥ 65 al vender". Ese 35 lo elegí a mano, y ahí
@@ -873,15 +931,27 @@ console.log('El swap es lo que el bróker cobra por cada NOCHE con la operación
 console.log('abierta. Hasta hoy el banco de pruebas lo ignoraba por completo.')
 console.log('')
 
+// ⚠️ ESTA SECCIÓN ESTUVO ROTA DESDE QUE SE ESCRIBIÓ, Y NADIE LO SUPO.
+//
+// Llamaba a `generarSenales(completo, {...})` — con el barrido ya calculado
+// en vez de con (barras, rates, rangos), que es lo que esa función espera.
+// Devolvía `undefined` y el script se caía con "Cannot read properties of
+// undefined" al llegar aquí.
+//
+// El linter no lo veía, porque los dos nombres existen. Y como esto es lo
+// último del informe y hay que descargar miles de velas para llegar, el fallo
+// solo aparecía DESPUÉS de gastar los créditos del día. Se descubrió el
+// 2026-09-03, en la primera corrida que llegó hasta aquí.
+//
+// 📌 Es el MISMO error que apareció en la app hermana al sacar esta cuenta del
+// script. Dos veces el mismo fallo, en los dos repositorios, por la misma
+// razón: una función con dos formas de llamarla y un linter que no distingue.
+// Por eso ahora la cuenta vive en `barridoSwap`, que recibe listas ya
+// generadas y tiene su propia prueba sin internet.
 {
-  const neutro = generarSenales(completo, { thr: 0.5, topN: 3, geometria: simetrica })
-  const dias = neutro.senales
-    .map((x) => neutro.porClave.get(`${x.id}@${x.vistoEl}`)?.diasTardados)
-    .filter((d) => typeof d === 'number')
-    .sort((a, b) => a - b)
-  const mediana = dias.length ? dias[Math.floor(dias.length / 2)] : 0
-  const medio = dias.length ? dias.reduce((a, b) => a + b, 0) / dias.length : 0
-  console.log(`Cuánto duran las operaciones: mediana ${mediana} días, media ${medio.toFixed(1)}.`)
+  const neutro = correr(simetrica)
+  const b = barridoSwap(neutro.senales, neutro.porClave)
+  console.log(`Cuánto duran las operaciones: mediana ${b.mediana} días, media ${b.media.toFixed(1)}.`)
   console.log(`Eso son las noches que se pagan en cada una.`)
   console.log('')
 
@@ -894,23 +964,13 @@ console.log('')
       `  ${(sinCostes.porRiesgo ?? 0).toFixed(3).padStart(7)}` +
       `        —`
   )
-  for (const nivel of NIVELES_SWAP) {
-    const m = medir(neutro.senales, neutro.porClave, { conSpread: true, swapPipsNoche: nivel })
-    // Cuánto cuesta de media una operación a este nivel, en pips.
-    let sumaCoste = 0
-    let n = 0
-    for (const x of neutro.senales) {
-      const r = neutro.porClave.get(`${x.id}@${x.vistoEl}`)
-      if (!r || (r.resultado !== 'ganada' && r.resultado !== 'perdida')) continue
-      sumaCoste += costeEnPips(x.par, r.diasTardados ?? 0, nivel)
-      n++
-    }
+  for (const { nivel, medicion: m, costeMedio } of b.filas) {
     const etiqueta = nivel === 0 ? 'solo spread' : `+ ${nivel.toFixed(2)} pips`
     console.log(
       `${etiqueta.padEnd(13)} ${String(m.total).padStart(5)}` +
         `  ${(m.acierto ?? 0).toFixed(0).padStart(5)}%` +
         `  ${(m.porRiesgo ?? 0).toFixed(3).padStart(7)}` +
-        `  ${n ? (sumaCoste / n).toFixed(1).padStart(6) : '     —'} pips`
+        `  ${costeMedio.toFixed(1).padStart(6)} pips`
     )
   }
   console.log('')

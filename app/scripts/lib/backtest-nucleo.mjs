@@ -1,4 +1,4 @@
-import { costeEnPips } from './costes.mjs'
+import { costeEnPips, NIVELES_SWAP } from './costes.mjs'
 // El motor del banco de pruebas: qué señales habría dado la app cada día.
 //
 // Va aparte de `backtest.mjs` para poder comprobarlo sin internet: el script
@@ -257,4 +257,50 @@ export function medir(senales, porClave, { conSpread = false, swapPipsNoche = 0 
     // un 20% de lo que se arriesga en cada una, sea el par que sea.
     porRiesgo: total ? sumaR / total : null,
   }
+}
+
+/**
+ * El barrido de swap: cuánto duran las operaciones de una regla y cuánto se
+ * lleva el swap a cada nivel.
+ *
+ * ⚠️ POR QUÉ ESTO IMPORTA MÁS EN SWING QUE EN INTRADÍA. Aquí una operación
+ * dura una docena de días de mediana, o sea que paga una docena de noches. A
+ * 0,5 pips por noche son 6 pips por operación, y sobre un riesgo típico de
+ * unos 60 pips eso es 0,10 por unidad de riesgo — suficiente para borrar del
+ * mapa una regla que parecía ganar +0,09.
+ *
+ * Hasta ahora esto solo se medía sobre las señales de la app. La regla de
+ * reversión, que es la ÚNICA candidata a ganar dinero, nunca se había medido
+ * pagando swap. Por eso la cuenta vive aquí y no dentro del script: para
+ * poder aplicársela a cualquier regla, y para poder probarla sin internet.
+ *
+ * @returns { total, mediana, media, filas } — `filas` trae una entrada por
+ *          nivel de NIVELES_SWAP con su medición y su coste medio en pips.
+ */
+export function barridoSwap(senales, porClave, niveles = NIVELES_SWAP) {
+  const resueltas = []
+  for (const s of senales) {
+    const r = porClave.get(`${s.id}@${s.vistoEl}`)
+    if (!r || (r.resultado !== 'ganada' && r.resultado !== 'perdida')) continue
+    // En swing cada vela ES un día, así que los días que tardó son las noches
+    // que se pagaron. En la app hermana no vale esta cuenta: allí depende de
+    // la HORA de entrada y hay que mirar los cortes reales.
+    resueltas.push({ par: s.par, noches: r.diasTardados ?? 0 })
+  }
+
+  const total = resueltas.length
+  const dias = resueltas.map((x) => x.noches).sort((a, b) => a - b)
+  const mediana = total ? dias[Math.floor(total / 2)] : 0
+  const media = total ? dias.reduce((a, b) => a + b, 0) / total : 0
+
+  const filas = niveles.map((nivel) => {
+    const sumaCoste = resueltas.reduce((a, x) => a + costeEnPips(x.par, x.noches, nivel), 0)
+    return {
+      nivel,
+      medicion: medir(senales, porClave, { conSpread: true, swapPipsNoche: nivel }),
+      costeMedio: total ? sumaCoste / total : 0,
+    }
+  })
+
+  return { total, mediana, media, filas }
 }
