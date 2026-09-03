@@ -13,7 +13,7 @@
 
 import { spreadDe, costeEnPips, SPREAD_PIPS, SPREAD_POR_DEFECTO, NIVELES_SWAP } from './lib/costes.mjs'
 import { PAIRS } from '../src/lib/marketCalc.js'
-import { medir } from './lib/backtest-nucleo.mjs'
+import { medir, barridoSwap } from './lib/backtest-nucleo.mjs'
 
 let fallos = 0
 const comprobar = (bien, que) => {
@@ -196,6 +196,69 @@ console.log('\n8. La cuenta del banco de pruebas aplica bien los costes')
   )
   comprobar(conAbierta.total === 2 && conAbierta.sinJuzgar === 1, 'una operación sin resolver se aparta, no se cuenta como perdida')
   cerca(conAbierta.porRiesgo, sin.porRiesgo, 1e-9, 'y no mueve el resultado')
+}
+
+// --- 9. EL BARRIDO DE SWAP -----------------------------------------------
+//
+// Es la tabla que responde "¿a partir de qué swap deja de ganar esta regla?".
+// Importa más en Swing que en la app hermana: aquí una operación dura una
+// docena de días, o sea que paga una docena de noches, y eso puede borrar del
+// mapa una regla que sin swap parecía ganar.
+
+console.log('\n9. El barrido de swap cuenta bien las noches y el coste')
+{
+  const senales = [
+    { id: 'D', vistoEl: 'u1', par: 'EUR/USD', pipRiesgo: 100, pipBeneficio: 100 },
+    { id: 'E', vistoEl: 'u2', par: 'EUR/USD', pipRiesgo: 100, pipBeneficio: 100 },
+  ]
+  // Una que se resolvió el mismo día (0 noches) y otra que tardó 10.
+  const porClave = new Map([
+    ['D@u1', { resultado: 'ganada', pips: 100, diasTardados: 0 }],
+    ['E@u2', { resultado: 'perdida', pips: -100, diasTardados: 10 }],
+  ])
+
+  const b = barridoSwap(senales, porClave)
+  comprobar(b.total === 2, 'cuenta las dos operaciones resueltas')
+  cerca(b.media, 5, 1e-12, 'la media de noches es 5 (0 y 10)')
+  comprobar(b.filas.length === NIVELES_SWAP.length, `saca una fila por cada nivel (${NIVELES_SWAP.length})`)
+
+  // A swap 0 solo se paga el spread de EUR/USD: 0,9 en las dos.
+  cerca(b.filas[0].costeMedio, 0.9, 1e-12, 'a swap cero, el coste medio es solo el spread')
+
+  // A 1 pip por noche: (0,9 + 0) y (0,9 + 10) → media 5,9.
+  const uno = b.filas.find((f) => f.nivel === 1.0)
+  cerca(uno.costeMedio, (0.9 + 0.9 + 10) / 2, 1e-12, 'a un pip por noche, la que aguantó diez arrastra la media a 5,9')
+
+  // EL ERROR DE SIGNO, ahora en la tabla entera.
+  let empeoraSiempre = true
+  for (let i = 1; i < b.filas.length; i++) {
+    if (b.filas[i].medicion.porRiesgo > b.filas[i - 1].medicion.porRiesgo) empeoraSiempre = false
+    if (b.filas[i].costeMedio < b.filas[i - 1].costeMedio) empeoraSiempre = false
+  }
+  comprobar(empeoraSiempre, 'de fila en fila el coste sube y el resultado baja, nunca al revés')
+
+  comprobar(
+    b.filas.every((f) => f.medicion.acierto === b.filas[0].medicion.acierto),
+    'el acierto es el mismo en todas las filas: los costes no mueven quién ganó'
+  )
+
+  // Una operación que dura MÁS paga más. Es lo propio de swing y la razón de
+  // que esta tabla exista.
+  const largas = new Map([
+    ['D@u1', { resultado: 'ganada', pips: 100, diasTardados: 30 }],
+    ['E@u2', { resultado: 'perdida', pips: -100, diasTardados: 30 }],
+  ])
+  const bl = barridoSwap(senales, largas)
+  const unoLargo = bl.filas.find((f) => f.nivel === 1.0)
+  comprobar(unoLargo.costeMedio > uno.costeMedio, 'aguantar 30 noches cuesta más que la mezcla de 0 y 10')
+  comprobar(
+    unoLargo.medicion.porRiesgo < uno.medicion.porRiesgo,
+    'y por tanto rinde menos: las operaciones largas pagan el swap'
+  )
+
+  const vacio = barridoSwap(senales, new Map())
+  comprobar(vacio.total === 0 && vacio.media === 0, 'sin operaciones resueltas devuelve ceros, no NaN')
+  comprobar(vacio.filas.every((f) => Number.isFinite(f.costeMedio)), 'y ningún coste medio sale NaN')
 }
 
 console.log('')
