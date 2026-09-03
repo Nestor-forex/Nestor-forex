@@ -93,8 +93,7 @@ export default function Auth({ nombreApp, onRegistrar, onIngresar }) {
           <button className="btn btn-primary" style={{ minHeight: 50, fontSize: 16, opacity: cargando ? 0.7 : 1 }} disabled={cargando} onClick={registrar}>
             {cargando ? t('auth.enviando') : t('auth.enviarSolicitud')}
           </button>
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-{t('auth.notaSolicitud')}</p>
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>{t('auth.notaSolicitud')}</p>
         </div>
       )}
 

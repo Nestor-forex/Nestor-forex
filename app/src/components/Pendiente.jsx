@@ -23,8 +23,7 @@ export default function Pendiente({ nombreApp, onSalir }) {
         <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.55 }}>{t('pendiente.mensaje')}</p>
       </div>
 
-      <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-{t('pendiente.nota')}</p>
+      <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>{t('pendiente.nota')}</p>
 
       <button className="btn-ghost" style={{ marginTop: 'auto' }} onClick={onSalir}>
         {t('comun.salir')}

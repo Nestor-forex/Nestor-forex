@@ -11,7 +11,8 @@ export default function MiembrosTab({ usuarios, cargando, onAprobar, onRetirar }
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <h2 style={{ margin: 0, fontSize: 18 }}>{t('miembros.titulo')}</h2>
       <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-        {t('miembros.intro')}</div>
+        {t('miembros.intro')}
+      </div>
 
       {cargando && (
         <div className="mono" style={{ fontSize: 13, color: 'var(--text-muted)' }}>

@@ -58,11 +58,13 @@ export default function CalculadoraTab({ ratesUSD, loadingTasas, errorTasas }) {
 
       {errorTasas && !ratesUSD && (
         <div style={{ padding: 12, border: '1px solid oklch(0.62 0.13 25)', borderRadius: 8, color: 'oklch(0.8 0.1 25)', fontSize: 13 }}>
-          {t('calc.errorTasa', { causa: errorTasas.includes('conexión') ? t('calc.sinConexion') : t('calc.error') })}</div>
+          {t('calc.errorTasa', { causa: errorTasas.includes('conexión') ? t('calc.sinConexion') : t('calc.error') })}
+        </div>
       )}
 
       <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-        {t('calc.pie')}</p>
+        {t('calc.pie')}
+      </p>
     </div>
   )
 }
