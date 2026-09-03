@@ -854,16 +854,37 @@ Total del día: 168 (vigía) + 168 (publicador) + 7 (reporte) = **343 de 800**.
 hora YA CERRADAS, y esas no se mueven. Solo el precio de la hora en curso pasa
 de refrescarse cada 15 min a cada 30.
 
-## Pendiente de Néstor: sacar la llave del repositorio
+## La llave: hecho en Intradía (2026-09-03), a medias en Swing
 
-`velas.mjs` lee primero el secreto `TWELVEDATA_KEY` y **se cae a
-`.env.production`** si no está. Para cerrarlo del todo, EN ESTE ORDEN:
+**En Intradía ya está cerrado** (su PR #35). Néstor creó el secreto
+`TWELVEDATA_KEY` y se borró la línea de `.env.production`. Comprobado que el
+publicador siguió corriendo **con éxito después** de borrarla.
 
-1. crear el secreto `TWELVEDATA_KEY` en el repositorio de Intradía,
-2. y **solo entonces** borrar la línea de `.env.production`.
+⚠️ **En Swing NO.** La llave sigue escrita en `app/.env.production`, o sea en
+el repositorio. Ya **no** llega al navegador (esta app lee el barrido publicado
+desde el 2026-08-09), pero está a la vista de cualquiera que mire el repo.
 
-Al revés se quedan sin precios el vigía y el reporte diario. Lo mismo se puede
-hacer en Swing, que tiene la misma estructura.
+⚠️ **Y es LA MISMA llave en los dos repos**, así que las dos apps comparten los
+800 créditos diarios: mientras siga publicada aquí, sacarla de Intradía no
+sirvió de mucho en la práctica.
+
+Lo que falta, EN ESTE ORDEN:
+
+1. Néstor crea el secreto `TWELVEDATA_KEY` **en el repositorio de Swing** — los
+   secretos son por repositorio, el de Intradía no sirve aquí;
+2. y **solo entonces** se borra la línea de `.env.production`.
+
+Al revés se quedan sin precios el vigía y el reporte diario. **El paso del
+código ya está hecho** (`leerLlave` prefiere el secreto y se cae al archivo; y
+los cuatro workflows que llaman a estos guiones —backtest, comparar-fuente,
+reporte-diario, vigía— ya llevan el `env`), así que cuando exista el secreto
+solo queda borrar la línea.
+
+📌 **Lección del cambio en Intradía:** al revisar los workflows uno por uno
+apareció que `comparar-reglas.yml` llamaba a estos guiones y se había quedado
+sin el `env`. Habría fallado la próxima vez que alguien lo lanzara, y con la
+llave ya borrada, sin explicación. **Revisar TODOS los workflows antes de
+borrar la llave, no solo los que uno recuerda.**
 
 ## Comprobaciones nuevas
 
