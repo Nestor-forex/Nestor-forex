@@ -931,15 +931,27 @@ console.log('El swap es lo que el bróker cobra por cada NOCHE con la operación
 console.log('abierta. Hasta hoy el banco de pruebas lo ignoraba por completo.')
 console.log('')
 
+// ⚠️ ESTA SECCIÓN ESTUVO ROTA DESDE QUE SE ESCRIBIÓ, Y NADIE LO SUPO.
+//
+// Llamaba a `generarSenales(completo, {...})` — con el barrido ya calculado
+// en vez de con (barras, rates, rangos), que es lo que esa función espera.
+// Devolvía `undefined` y el script se caía con "Cannot read properties of
+// undefined" al llegar aquí.
+//
+// El linter no lo veía, porque los dos nombres existen. Y como esto es lo
+// último del informe y hay que descargar miles de velas para llegar, el fallo
+// solo aparecía DESPUÉS de gastar los créditos del día. Se descubrió el
+// 2026-09-03, en la primera corrida que llegó hasta aquí.
+//
+// 📌 Es el MISMO error que apareció en la app hermana al sacar esta cuenta del
+// script. Dos veces el mismo fallo, en los dos repositorios, por la misma
+// razón: una función con dos formas de llamarla y un linter que no distingue.
+// Por eso ahora la cuenta vive en `barridoSwap`, que recibe listas ya
+// generadas y tiene su propia prueba sin internet.
 {
-  const neutro = generarSenales(completo, { thr: 0.5, topN: 3, geometria: simetrica })
-  const dias = neutro.senales
-    .map((x) => neutro.porClave.get(`${x.id}@${x.vistoEl}`)?.diasTardados)
-    .filter((d) => typeof d === 'number')
-    .sort((a, b) => a - b)
-  const mediana = dias.length ? dias[Math.floor(dias.length / 2)] : 0
-  const medio = dias.length ? dias.reduce((a, b) => a + b, 0) / dias.length : 0
-  console.log(`Cuánto duran las operaciones: mediana ${mediana} días, media ${medio.toFixed(1)}.`)
+  const neutro = correr(simetrica)
+  const b = barridoSwap(neutro.senales, neutro.porClave)
+  console.log(`Cuánto duran las operaciones: mediana ${b.mediana} días, media ${b.media.toFixed(1)}.`)
   console.log(`Eso son las noches que se pagan en cada una.`)
   console.log('')
 
@@ -952,23 +964,13 @@ console.log('')
       `  ${(sinCostes.porRiesgo ?? 0).toFixed(3).padStart(7)}` +
       `        —`
   )
-  for (const nivel of NIVELES_SWAP) {
-    const m = medir(neutro.senales, neutro.porClave, { conSpread: true, swapPipsNoche: nivel })
-    // Cuánto cuesta de media una operación a este nivel, en pips.
-    let sumaCoste = 0
-    let n = 0
-    for (const x of neutro.senales) {
-      const r = neutro.porClave.get(`${x.id}@${x.vistoEl}`)
-      if (!r || (r.resultado !== 'ganada' && r.resultado !== 'perdida')) continue
-      sumaCoste += costeEnPips(x.par, r.diasTardados ?? 0, nivel)
-      n++
-    }
+  for (const { nivel, medicion: m, costeMedio } of b.filas) {
     const etiqueta = nivel === 0 ? 'solo spread' : `+ ${nivel.toFixed(2)} pips`
     console.log(
       `${etiqueta.padEnd(13)} ${String(m.total).padStart(5)}` +
         `  ${(m.acierto ?? 0).toFixed(0).padStart(5)}%` +
         `  ${(m.porRiesgo ?? 0).toFixed(3).padStart(7)}` +
-        `  ${n ? (sumaCoste / n).toFixed(1).padStart(6) : '     —'} pips`
+        `  ${costeMedio.toFixed(1).padStart(6)} pips`
     )
   }
   console.log('')
