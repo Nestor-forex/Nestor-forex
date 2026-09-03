@@ -854,37 +854,50 @@ Total del día: 168 (vigía) + 168 (publicador) + 7 (reporte) = **343 de 800**.
 hora YA CERRADAS, y esas no se mueven. Solo el precio de la hora en curso pasa
 de refrescarse cada 15 min a cada 30.
 
-## La llave: hecho en Intradía (2026-09-03), a medias en Swing
+## La llave YA NO está en ninguno de los dos repositorios (2026-09-03)
 
-**En Intradía ya está cerrado** (su PR #35). Néstor creó el secreto
-`TWELVEDATA_KEY` y se borró la línea de `.env.production`. Comprobado que el
-publicador siguió corriendo **con éxito después** de borrarla.
+Cerrado en **Intradía** (su PR #35) y en **Swing** (PR #35 de aquí). Néstor creó
+el secreto `TWELVEDATA_KEY` **en cada repositorio** —los secretos son por
+repositorio, no por cuenta— y solo entonces se borró la línea de
+`.env.production`. Al revés se habrían quedado sin precios el vigía y el
+reporte diario.
 
-⚠️ **En Swing NO.** La llave sigue escrita en `app/.env.production`, o sea en
-el repositorio. Ya **no** llega al navegador (esta app lee el barrido publicado
-desde el 2026-08-09), pero está a la vista de cualquiera que mire el repo.
+Era **la misma llave en los dos**, y comparten los 800 créditos del día. Por eso
+no bastaba con sacarla de uno: mientras siguiera publicada en el otro, seguía a
+la vista de cualquiera.
 
-⚠️ **Y es LA MISMA llave en los dos repos**, así que las dos apps comparten los
-800 créditos diarios: mientras siga publicada aquí, sacarla de Intradía no
-sirvió de mucho en la práctica.
+### Cómo se comprobó que el secreto servía ANTES de borrar nada
 
-Lo que falta, EN ESTE ORDEN:
+En el log del workflow sale `TWELVEDATA_KEY: ***` — GitHub solo enmascara así
+un secreto que **existe y no está vacío**— y el reporte salió con precios
+reales. Como `leerLlave` usa **primero** el secreto, la llave que funcionó fue
+la del secreto, no la del archivo.
 
-1. Néstor crea el secreto `TWELVEDATA_KEY` **en el repositorio de Swing** — los
-   secretos son por repositorio, el de Intradía no sirve aquí;
-2. y **solo entonces** se borra la línea de `.env.production`.
+⚠️ **SI SE AÑADE UN WORKFLOW NUEVO** que llame a estos guiones, hay que pasarle
+el secreto o fallará:
 
-Al revés se quedan sin precios el vigía y el reporte diario. **El paso del
-código ya está hecho** (`leerLlave` prefiere el secreto y se cae al archivo; y
-los cuatro workflows que llaman a estos guiones —backtest, comparar-fuente,
-reporte-diario, vigía— ya llevan el `env`), así que cuando exista el secreto
-solo queda borrar la línea.
+```yaml
+    env:
+      TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
+```
 
-📌 **Lección del cambio en Intradía:** al revisar los workflows uno por uno
-apareció que `comparar-reglas.yml` llamaba a estos guiones y se había quedado
-sin el `env`. Habría fallado la próxima vez que alguien lo lanzara, y con la
-llave ya borrada, sin explicación. **Revisar TODOS los workflows antes de
-borrar la llave, no solo los que uno recuerda.**
+📌 **Esto no es hipotético.** Al hacer el cambio en Intradía apareció que
+`comparar-reglas.yml` llamaba a estos guiones y **se había quedado sin el
+`env`**. Habría fallado la próxima vez que alguien lo lanzara, y con la llave ya
+borrada, sin explicación. **Revisar TODOS los workflows antes de borrar una
+llave, no solo los que uno recuerda.**
+
+### Dos cosas más que salieron de aquí, sin arreglar todavía
+
+⚠️ **Los workflows de Swing no tienen `timeout-minutes`.** Sin él GitHub deja
+correr un trabajo hasta **6 horas**. Los de Intradía sí lo tienen (el vigía, 10
+minutos). Si un día uno se cuelga, bloquea la cola media jornada.
+
+⚠️ **La API de estado de GitHub miente, y bastante.** Durante 10 minutos dijo
+`in_progress` de un trabajo que había terminado en 65 segundos. Ya había pasado
+antes (el 2026-08-28) y volvió a pasar. **Para saber si algo terminó, pedir los
+LOGS, no el estado**: los logs dan 404 mientras corre de verdad y aparecen en
+cuanto termina. Eso sí es fiable.
 
 ## Comprobaciones nuevas
 
