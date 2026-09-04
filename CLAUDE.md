@@ -1308,3 +1308,79 @@ revisar un pull request se compara lo comparable.
 
 📌 El workflow **imprime contra qué rama comparó**. Una comprobación que no
 dice qué miró deja al que la lee adivinando si el verde significa algo.
+
+---
+
+# El barrido de liquidez NO funciona (2026-09-04). Sexta familia que falla
+
+Néstor trajo una investigación sobre lo que usan los operadores profesionales
+(ICT/SMC, Level 2, Volume Profile, Bookmap). Casi todo pide datos que no
+tenemos: nosotros vemos el resumen de cada vela, ellos ven las órdenes en
+espera. **El barrido de liquidez era lo único calculable con máximo, mínimo y
+cierre**, y encima es un patrón de reversión, que es la única familia que ha
+medido positivo aquí. Por eso se probó antes que nada de esa lista.
+
+Medido sobre 1.436 días (2021-06-23 a 2026-09-04), vara neutra 1:1, con costes.
+
+| tamaño | ops | señ/mes | acierto | por 1R | 1ª mitad | 2ª mitad |
+|---|---:|---:|---:|---:|---:|---:|
+| 1 día | 5.258 | 81,4 | 47% | **−0,08** | −0,09 | −0,06 |
+| 3 días | 4.114 | 63,7 | 46% | **−0,10** | −0,14 | −0,06 |
+| 5 días | 3.456 | 53,5 | 46% | **−0,09** | −0,14 | −0,05 |
+| 10 días | 2.623 | 40,6 | 47% | **−0,08** | −0,14 | −0,03 |
+| 20 días | 1.896 | 29,4 | 46% | **−0,10** | −0,14 | −0,05 |
+
+**Los cinco tamaños pierden.** No hay uno bueno y otros malos. Añadirle el RSI
+estirado sube a +0,03 pero con 9,1 señales/mes y cayéndose en la segunda mitad
+(+0,06 → −0,01): no es nada.
+
+**En Intradía también falla** (su PR #44): −0,10 a −0,14 en los cuatro tamaños.
+
+## El control salió MEJOR que lo que se probaba, y hay que tener cuidado con eso
+
+El control era la misma perforación **sin exigir que el precio recupere** al
+cierre: comprar el mínimo nuevo mientras sigue cayendo.
+
+| | ops | señ/mes | acierto | por 1R | 1ª mit | 2ª mit |
+|---|---:|---:|---:|---:|---:|---:|
+| comprar la caída de 1 día | 4.303 | 66,6 | 53% | +0,03 | +0,04 | +0,03 |
+| …de 5 días | 2.521 | 39,0 | 54% | +0,06 | +0,04 | +0,08 |
+| …de 10 días | 1.862 | 28,8 | 55% | **+0,09** | +0,05 | +0,12 |
+| …de 20 días | 1.337 | 20,7 | 56% | **+0,09** | +0,08 | +0,10 |
+| *la app hoy* | 1.788 | 27,7 | 48% | *−0,07* | | |
+| *la reversión M2* | 871 | 13,5 | 55% | *+0,08* | | |
+
+Iguala a la reversión M2 con **el doble de señales**, coincide con ella solo en
+el **3%** de las señales, y el gradiente es limpio y creciente con el tamaño.
+
+⚠️ **PERO NO REPLICA EN INTRADÍA:** allí el mismo control da **−0,08 plano** en
+los tres tamaños, sin gradiente. Así que la esperanza de «dos apps
+independientes apuntando a lo mismo» **no se cumplió**. No lo desmiente (velas
+diarias y de una hora son cosas distintas, y esa es la regla de siempre), pero
+el argumento que yo quería construir con ello se cayó.
+
+⚠️ **Y NO se asciende a candidato:** era el control, y se miró DESPUÉS de ver
+la tabla. Es el mismo troceo a posteriori que ya se rechazó con el control de
+la confluencia. Si se persigue, tiene que ser con una medición **propia y
+diseñada de antemano**.
+
+## El nombre engañaba, y por poco lo publico así
+
+Esas filas se llamaban «rompimiento». Un rompimiento se opera A FAVOR del
+movimiento: mínimo nuevo → vender. **Aquí el lado no cambia con `volver`**, así
+que era comprar el mínimo nuevo. Con el nombre viejo la tabla parecía decir
+«perseguir el movimiento funciona», que contradice todo lo demás del proyecto.
+
+Se comprobó con el código delante (un par que perfora el suelo y cierra abajo
+sale `true` para 'COMPRA'), no de memoria. Renombrado a «comprar la caída» en
+los dos repos.
+
+📌 **Lección: una etiqueta equivocada es un error de medición.** El número
+estaba bien; la conclusión que inducía era la contraria.
+
+## Lo que confirma la intuición de Néstor sobre las paredes
+
+Pedir **fuerza relativa Y RSI estirado a la vez** dio **CERO señales**. En las
+dos apps. Su observación —«todas juntas son paredes que no te dejan pasar»— no
+es una impresión: es literal.
+
