@@ -49,6 +49,10 @@ jobs:
       - name: Comprobar el modelo de costes
         working-directory: app
         run: node scripts/prueba-costes.mjs
+      - name: Comprobar el barrido de liquidez
+        working-directory: app
+        run: node scripts/prueba-barrido-liquidez.mjs
+
       - name: Medir
         working-directory: app
         env:

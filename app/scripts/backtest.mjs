@@ -35,6 +35,7 @@ import { computarBarrido } from '../src/lib/marketCalc.js'
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
 import { generarSenales, medir, barridoSwap } from './lib/backtest-nucleo.mjs'
 import { GEOMETRIAS, simetrica, actual, atrFijo } from './lib/geometrias.mjs'
+import { reglaBarrido } from './lib/patrones.mjs'
 import { resolver } from './lib/resolver.mjs'
 
 // Días de arranque que no se juzgan: el EMA50 y el RSI necesitan historia
@@ -1229,6 +1230,120 @@ console.log('')
   for (const clave of ['alineada', 'media', 'ninguna']) {
     const r = correr(actual, null, { tendenciaMin: clave })
     fila(`tendencia ${clave}`, medir(r.senales, r.porClave, { conSpread: true }))
+  }
+}
+
+// --------------------------------------------------------------------------
+// EL BARRIDO DE LIQUIDEZ (idea traída por Néstor de los métodos ICT / SMC)
+//
+// QUÉ ES, SIN JERGA
+// El precio perfora un máximo o un mínimo anterior —donde está acumulada la
+// gente con sus stops— y CIERRA DE VUELTA DENTRO. La idea es que ese pinchazo
+// no era el inicio de un movimiento sino la recogida de esos stops, y que el
+// precio suele volverse después.
+//
+// POR QUÉ ESTA IDEA Y NO OTRA DE SU LISTA
+// Néstor trajo una investigación sobre lo que usan los operadores
+// profesionales. La mayor parte de esa lista —Level 2, Volume Profile,
+// Bookmap, Bloomberg— pide datos que NO tenemos: nosotros vemos el resumen de
+// cada vela (apertura, máximo, mínimo, cierre) y ellos ven las órdenes en
+// espera. Eso no se puede copiar, y explica por qué el estudio de las 14
+// familias sobre datos OHLCV no encontró nada.
+//
+// Pero el barrido de liquidez SÍ se calcula con máximo, mínimo y cierre. Y hay
+// una razón de fondo para probarlo antes que cualquier otra: **es un patrón de
+// REVERSIÓN**, y la reversión es lo único que ha medido positivo en todo este
+// proyecto (+0,051 por 1R en Swing con costes). No sería copiar una moda:
+// sería una segunda vía, independiente, hacia el mismo efecto que ya
+// encontramos. Cuando dos caminos distintos llevan al mismo sitio, eso sí
+// es una señal de que hay algo.
+//
+// ⚠️ EL CONTROL ES LO QUE HACE QUE ESTO SEA UNA MEDICIÓN Y NO UN CUENTO.
+// Se mide también el ROMPIMIENTO: perforar el mismo nivel y cerrar FUERA. Si
+// las dos cosas dan lo mismo, entonces lo que importa no es "volverse" sino
+// simplemente "tocar el nivel", y la historia del barrido de stops sobra.
+// --------------------------------------------------------------------------
+
+{
+  const corteBar = fechas[Math.floor(fechas.length / 2)]
+  const meses = (fechas.length - CALENTAMIENTO) / 21
+
+  console.log('')
+  console.log('EL BARRIDO DE LIQUIDEZ (regla nueva, vara neutra 1:1)')
+  console.log('El precio perfora un extremo anterior y CIERRA DE VUELTA dentro.')
+  console.log(`Las dos mitades se parten en ${corteBar}.`)
+  console.log('')
+  console.log('regla                                  ops  señ/mes  acierto  por 1R  │ 1ª mit │ 2ª mit')
+  console.log('─'.repeat(92))
+
+  const linea = (nombre, regla) => {
+    const r = correr(simetrica, regla)
+    const m = medir(r.senales, r.porClave, { conSpread: true })
+    const m1 = medir(r.senales.filter((x) => x.vistoEl < corteBar), r.porClave, { conSpread: true })
+    const m2 = medir(r.senales.filter((x) => x.vistoEl >= corteBar), r.porClave, { conSpread: true })
+    const pr = (x) => (x === null ? '   —  ' : ((x >= 0 ? '+' : '') + x.toFixed(2)).padStart(6))
+    const ac = (x) => (x === null ? '  — ' : (x.toFixed(0) + '%').padStart(4))
+    console.log(
+      `${nombre.padEnd(36)} ${String(m.total).padStart(5)}   ${(m.total / meses).toFixed(1).padStart(5)}    ` +
+        `${ac(m.acierto)}  ${pr(m.porRiesgo)} │ ${pr(m1.porRiesgo)} │ ${pr(m2.porRiesgo)}`
+    )
+    return r
+  }
+
+  // El barrido de N días. Con N=1 es "el máximo/mínimo de AYER", que es el
+  // nivel del que hablan los métodos ICT; con N=5 es el de la semana pasada.
+  console.log('· Cuántos días atrás está el nivel que se barre')
+  for (const n of [1, 3, 5, 10, 20]) {
+    linea(`  B${n}. barrido de ${n} día${n > 1 ? 's' : ''}`, reglaBarrido(n))
+  }
+
+  console.log('')
+  console.log('· Añadiéndole condiciones al mejor tamaño (10 días)')
+  linea('  + fuerza relativa a favor', reglaBarrido(10, { exigirFuerza: true }))
+  linea('  + RSI estirado (como la M2)', reglaBarrido(10, { rsiEstirado: true }))
+  linea('  + las dos', reglaBarrido(10, { exigirFuerza: true, rsiEstirado: true }))
+
+  console.log('')
+  console.log('· CONTROL: la misma perforación pero cerrando FUERA (rompimiento)')
+  console.log('  Si esto da lo mismo, lo que importa es tocar el nivel, no volverse.')
+  for (const n of [1, 5, 10, 20]) {
+    linea(`  R${n}. rompimiento de ${n} día${n > 1 ? 's' : ''}`, reglaBarrido(n, { volver: false }))
+  }
+
+  console.log('─'.repeat(92))
+  console.log('Para comparar, con la misma vara:')
+  {
+    const base = correr(simetrica)
+    const m = medir(base.senales, base.porClave, { conSpread: true })
+    console.log(
+      `  la app hoy                         ${String(m.total).padStart(5)}   ${(m.total / meses).toFixed(1).padStart(5)}    ` +
+        `${(m.acierto ?? 0).toFixed(0).padStart(3)}%  ${((m.porRiesgo ?? 0) >= 0 ? '+' : '') + (m.porRiesgo ?? 0).toFixed(2)}`
+    )
+    const rev = correr(simetrica, REGLAS_REVERSION[1][1])
+    const mr = medir(rev.senales, rev.porClave, { conSpread: true })
+    console.log(
+      `  la reversión M2 (lo mejor medido)  ${String(mr.total).padStart(5)}   ${(mr.total / meses).toFixed(1).padStart(5)}    ` +
+        `${(mr.acierto ?? 0).toFixed(0).padStart(3)}%  ${((mr.porRiesgo ?? 0) >= 0 ? '+' : '') + (mr.porRiesgo ?? 0).toFixed(2)}`
+    )
+  }
+
+  // Si el barrido y la reversión eligieran las mismas operaciones, no sería
+  // una vía independiente sino la misma regla con otro nombre — y entonces
+  // "dos caminos llevan al mismo sitio" dejaría de ser un argumento.
+  console.log('')
+  console.log('¿ES UNA VÍA INDEPENDIENTE O LA REVERSIÓN CON OTRO NOMBRE?')
+  {
+    const bar = correr(simetrica, reglaBarrido(10))
+    const rev = correr(simetrica, REGLAS_REVERSION[1][1])
+    const clave = (x) => `${x.par}|${x.lado}|${x.vistoEl}`
+    const enRev = new Set(rev.senales.map(clave))
+    const comunes = bar.senales.filter((x) => enRev.has(clave(x))).length
+    const pct = bar.senales.length ? (comunes / bar.senales.length) * 100 : 0
+    console.log(
+      `De las ${bar.senales.length} señales del barrido de 10 días, ${comunes} (${pct.toFixed(0)}%) ` +
+        `coinciden con la reversión M2.`
+    )
+    console.log('Cuanto MENOS coincidan, más independiente es el hallazgo (si lo hay).')
   }
 }
 
