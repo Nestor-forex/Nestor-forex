@@ -1,14 +1,12 @@
 {
-  "actualizadoEl": "2026-09-03T18:52:52.014Z",
-  "cierre": "2026-09-03",
+  "actualizadoEl": "2026-09-04T18:33:54.991Z",
+  "cierre": "2026-09-04",
   "senales": [
     "AUD/USD|COMPRA|tendencia",
-    "EUR/USD|COMPRA|tendencia",
-    "USD/JPY|VENTA|tendencia",
     "GBP/JPY|VENTA|tendencia",
-    "USD/CAD|VENTA|tendencia",
-    "USD/JPY|COMPRA|reversion",
+    "USD/JPY|VENTA|tendencia",
     "GBP/JPY|COMPRA|reversion",
+    "USD/JPY|COMPRA|reversion",
     "AUD/USD|VENTA|reversion"
   ]
 }
