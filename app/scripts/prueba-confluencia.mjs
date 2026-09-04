@@ -246,5 +246,51 @@ console.log('\nVIGILAR no se toca')
   )
 }
 
+console.log('\nAflojar la exigencia de tendencia SÍ afloja')
+{
+  // Néstor trajo la observación de que apilar indicadores deja la app muda, y
+  // esto comprueba el mecanismo antes de gastar créditos midiéndolo: que cada
+  // escalón deje pasar MÁS que el anterior, y que lo que pasaba con el nivel
+  // estricto siga pasando con el flojo. Si no se anidaran, "aflojar" estaría
+  // cambiando las señales por otras en vez de añadir, y la tabla del banco de
+  // pruebas no diría lo que parece decir.
+  const porNivel = {}
+  for (const n of ['alineada', 'media', 'ninguna']) {
+    porNivel[n] = derivarVista(data, { thr: 0, incluirVentas: true, tendenciaMin: n })
+  }
+  const operables = (v) =>
+    v.pares.filter((p) => p.sesgo === 'COMPRA' || p.sesgo === 'VENTA').map((p) => `${p.name}|${p.sesgo}`)
+
+  const est = operables(porNivel.alineada)
+  const med = operables(porNivel.media)
+  const nin = operables(porNivel.ninguna)
+
+  comprobar(est.length > 0, `con las medias alineadas pasan ${est.length}`)
+  comprobar(med.length >= est.length, `solo con la EMA20 pasan ${med.length} (no menos)`)
+  comprobar(nin.length >= med.length, `sin exigir tendencia pasan ${nin.length} (no menos)`)
+  comprobar(nin.length > est.length, 'y aflojar del todo deja pasar MÁS que hoy: afloja de verdad')
+
+  // Lo estricto tiene que ser un subconjunto de lo flojo. Si apareciera una
+  // señal con el filtro puesto que no aparece sin él, "aflojar" no sería
+  // aflojar.
+  comprobar(
+    est.every((x) => med.includes(x)),
+    'lo que pasa con medias alineadas también pasa con solo la EMA20'
+  )
+  comprobar(
+    med.every((x) => nin.includes(x)),
+    'y lo que pasa con la EMA20 también pasa sin exigir tendencia'
+  )
+
+  // Y por defecto la app tiene que comportarse EXACTAMENTE como antes: este
+  // cambio es aditivo, no una modificación silenciosa de las señales.
+  const sinPasarNada = derivarVista(data, { thr: 0, incluirVentas: true })
+  comprobar(
+    JSON.stringify(sinPasarNada.pares.map((p) => p.sesgo)) ===
+      JSON.stringify(porNivel.alineada.pares.map((p) => p.sesgo)),
+    'y no pasar nada es idéntico a "alineada": la app no cambia sola'
+  )
+}
+
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')
 process.exit(fallos ? 1 : 0)

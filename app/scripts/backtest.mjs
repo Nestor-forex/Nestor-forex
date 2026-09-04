@@ -1125,6 +1125,113 @@ console.log('')
   }
 }
 
+// --------------------------------------------------------------------------
+// AFLOJAR LOS FILTROS: ¿la app está muda por culpa suya?
+//
+// Lo pidió Néstor después de investigar por su cuenta, y su observación es
+// buena: los operadores con experiencia usan POCOS indicadores, y una razón es
+// justo esta — cada condición parece razonable por separado y apiladas son una
+// pared que no deja pasar nada.
+//
+// Este proyecto ya se dio ese golpe en la app hermana: subir el ADX de 20 a 35
+// mejoró el acierto y dejó SIETE reportes seguidos sin una sola señal, incluido
+// el solape de Londres con Nueva York.
+//
+// ⚠️ CÓMO HAY QUE LEER ESTA TABLA, Y ES LO MÁS IMPORTANTE DE ELLA.
+// Aflojar da MÁS señales. Eso NO es mejorar: está medido que las señales de
+// esta app pierden dinero, y más señales de un sistema que pierde es perder
+// más rápido. Lo único que puede justificar aflojar es que la app sirva como
+// HERRAMIENTA DE INFORMACIÓN —que hable, que enseñe qué se mueve— sin que el
+// resultado por operación empeore.
+//
+// Son dos objetivos distintos. Por eso las señales/mes van AL LADO del "por
+// 1R" y no en otra tabla: la decisión es un intercambio, no una mejora.
+// --------------------------------------------------------------------------
+
+{
+  const meses = (fechas.length - CALENTAMIENTO) / 21
+
+  console.log('')
+  console.log('AFLOJAR LOS FILTROS (regla neutra 1:1, con spread)')
+  console.log('Cada fila quita o relaja una pared. Mirar las DOS columnas juntas:')
+  console.log('más señales no es mejor si el resultado por operación empeora.')
+  console.log('')
+  console.log('qué se afloja                          ops  señ/mes  acierto   por 1R')
+  console.log('─'.repeat(80))
+
+  const linea = (nombre, r) => {
+    const m = medir(r.senales, r.porClave, { conSpread: true })
+    const ac = m.acierto === null ? '  — ' : (m.acierto.toFixed(0) + '%').padStart(4)
+    const pr =
+      m.porRiesgo === null
+        ? '   —  '
+        : ((m.porRiesgo >= 0 ? '+' : '') + m.porRiesgo.toFixed(2)).padStart(6)
+    console.log(
+      `${nombre.padEnd(34)} ${String(m.total).padStart(5)}   ${(m.total / meses).toFixed(1).padStart(5)}    ${ac}   ${pr}`
+    )
+  }
+
+  const conThr = (t, vista = {}) => {
+    const senales = generarSenales(fechas, rates, rangosPar, {
+      calentamiento: CALENTAMIENTO,
+      thr: t,
+      topN: TOP_N,
+      geometria: simetrica,
+      vista,
+    })
+    const { resultados } = resolver(senales, completo)
+    return { senales, porClave: new Map(resultados.map((r) => [r.clave, r])) }
+  }
+
+  // 1. El umbral de fuerza. Es la primera puerta: por debajo de `thr` el par ni
+  //    se considera.
+  console.log('· El umbral de fuerza relativa (hoy 0.5)')
+  for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+    linea(`  fuerza > ${t.toFixed(2)}${t === THR ? '  (hoy)' : ''}`, conThr(t))
+  }
+
+  // 2. La exigencia de tendencia. Es la pared más alta: pide DOS cosas a la vez
+  //    (precio sobre la EMA20, y EMA20 sobre EMA50), y la segunda tarda mucho
+  //    en cumplirse después de un giro.
+  console.log('')
+  console.log('· Cuánta tendencia se exige')
+  for (const [clave, nombre] of [
+    ['alineada', '  medias alineadas  (hoy)'],
+    ['media', '  solo precio sobre la EMA20'],
+    ['ninguna', '  nada: manda solo la fuerza'],
+  ]) {
+    linea(nombre, correr(simetrica, null, { tendenciaMin: clave }))
+  }
+
+  // 3. Las dos aflojadas a la vez, que es lo que de verdad se plantea.
+  console.log('')
+  console.log('· Las dos a la vez')
+  for (const t of [0.25, 0.5]) {
+    for (const clave of ['media', 'ninguna']) {
+      linea(`  fuerza > ${t} + tendencia ${clave}`, conThr(t, { tendenciaMin: clave }))
+    }
+  }
+
+  // 4. Lo que cuesta tener las ventas en pausa. No es un filtro de umbral: es
+  //    media app apagada, y conviene tener el número al lado de los demás.
+  console.log('')
+  console.log('· Lo que cuesta la pausa de las ventas')
+  const base = correr(simetrica)
+  linea('  solo compras (lo que se ve hoy)', {
+    senales: base.senales.filter((s) => s.lado === 'COMPRA'),
+    porClave: base.porClave,
+  })
+  linea('  compras y ventas', base)
+
+  console.log('─'.repeat(80))
+  console.log('Con la geometría REAL de la app:')
+  console.log('filtro                                           ops   acierto      pips   por 1R')
+  for (const clave of ['alineada', 'media', 'ninguna']) {
+    const r = correr(actual, null, { tendenciaMin: clave })
+    fila(`tendencia ${clave}`, medir(r.senales, r.porClave, { conSpread: true }))
+  }
+}
+
 console.log('')
 console.log('Cómo leerlo, y con qué desconfianza:')
 console.log(' · Con menos de ~30 operaciones el porcentaje puede ser suerte.')
