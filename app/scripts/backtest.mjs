@@ -1157,18 +1157,30 @@ console.log('')
   console.log('Cada fila quita o relaja una pared. Mirar las DOS columnas juntas:')
   console.log('más señales no es mejor si el resultado por operación empeora.')
   console.log('')
-  console.log('qué se afloja                          ops  señ/mes  acierto   por 1R')
-  console.log('─'.repeat(80))
+  // ⚠️ LAS DOS MITADES DEL TIEMPO SON OBLIGATORIAS AQUÍ, y no estaban en la
+  // primera versión de esta tabla. Es EXACTAMENTE la prueba que el ADX no pasó:
+  // el 2026-08-12 se subió de 20 a 35 en la app hermana porque «acertaba más»,
+  // y el resultado fueron siete reportes seguidos sin una sola señal. Un número
+  // que solo es bueno en una mitad del periodo no es una mejora, es una
+  // casualidad con buena presentación.
+  //
+  // Sin estas dos columnas no se puede recomendar ENCENDER nada.
+  const corteAfl = fechas[Math.floor(fechas.length / 2)]
+
+  console.log(`Las dos mitades se parten en ${corteAfl}.`)
+  console.log('')
+  console.log('qué se afloja                          ops  señ/mes  acierto   por 1R  │ 1ª mit │ 2ª mit')
+  console.log('─'.repeat(92))
 
   const linea = (nombre, r) => {
     const m = medir(r.senales, r.porClave, { conSpread: true })
+    const m1 = medir(r.senales.filter((x) => x.vistoEl < corteAfl), r.porClave, { conSpread: true })
+    const m2 = medir(r.senales.filter((x) => x.vistoEl >= corteAfl), r.porClave, { conSpread: true })
     const ac = m.acierto === null ? '  — ' : (m.acierto.toFixed(0) + '%').padStart(4)
-    const pr =
-      m.porRiesgo === null
-        ? '   —  '
-        : ((m.porRiesgo >= 0 ? '+' : '') + m.porRiesgo.toFixed(2)).padStart(6)
+    const pr = (x) => (x === null ? '   —  ' : ((x >= 0 ? '+' : '') + x.toFixed(2)).padStart(6))
     console.log(
-      `${nombre.padEnd(34)} ${String(m.total).padStart(5)}   ${(m.total / meses).toFixed(1).padStart(5)}    ${ac}   ${pr}`
+      `${nombre.padEnd(34)} ${String(m.total).padStart(5)}   ${(m.total / meses).toFixed(1).padStart(5)}    ${ac}   ` +
+        `${pr(m.porRiesgo)} │ ${pr(m1.porRiesgo)} │ ${pr(m2.porRiesgo)}`
     )
   }
 
@@ -1224,12 +1236,20 @@ console.log('')
   })
   linea('  compras y ventas', base)
 
-  console.log('─'.repeat(80))
-  console.log('Con la geometría REAL de la app:')
-  console.log('filtro                                           ops   acierto      pips   por 1R')
+  console.log('─'.repeat(92))
+  console.log('Con la geometría REAL de la app, y también partido en dos:')
+  console.log('filtro                                           ops   acierto      pips   por 1R  │ 1ª mit │ 2ª mit')
   for (const clave of ['alineada', 'media', 'ninguna']) {
     const r = correr(actual, null, { tendenciaMin: clave })
-    fila(`tendencia ${clave}`, medir(r.senales, r.porClave, { conSpread: true }))
+    const m = medir(r.senales, r.porClave, { conSpread: true })
+    const m1 = medir(r.senales.filter((x) => x.vistoEl < corteAfl), r.porClave, { conSpread: true })
+    const m2 = medir(r.senales.filter((x) => x.vistoEl >= corteAfl), r.porClave, { conSpread: true })
+    const pr = (x) => (x === null ? '   —  ' : ((x >= 0 ? '+' : '') + x.toFixed(2)).padStart(6))
+    const acierto = m.acierto === null ? '   —  ' : `${m.acierto.toFixed(0).padStart(4)}%`
+    console.log(
+      `${`tendencia ${clave}`.padEnd(46)} ${String(m.total).padStart(5)}   ${acierto}   ` +
+        `${String(m.pips).padStart(7)}   ${pr(m.porRiesgo)} │ ${pr(m1.porRiesgo)} │ ${pr(m2.porRiesgo)}`
+    )
   }
 }
 
