@@ -81,9 +81,9 @@ const completo = computarBarrido(fechas, rates, rangosPar)
 // Mide una lista de señales ya generadas.
 
 // Genera y juzga con una geometría dada.
-function correr(geometria, reglaEntrada = null, vista = {}) {
+function correr(geometria, reglaEntrada = null, vista = {}, calentamiento = CALENTAMIENTO) {
   const senales = generarSenales(fechas, rates, rangosPar, {
-    calentamiento: CALENTAMIENTO,
+    calentamiento,
     thr: THR,
     topN: TOP_N,
     geometria,
@@ -981,6 +981,148 @@ console.log('')
   console.log('Y ojo con la trampa de leer esto al revés: que el swap empeore poco')
   console.log('NO quiere decir que el sistema esté bien. Quiere decir que ya perdía')
   console.log('antes de contarlo.')
+}
+
+// --------------------------------------------------------------------------
+// LA CONFLUENCIA DE MARCOS TEMPORALES.
+//
+// De dónde sale: Néstor vio una app de escritorio que anuncia "confluencia
+// ponderada de 15m, 1h, 4h y 1D" y preguntó si podíamos probar ese método. De
+// toda su lista de funciones era lo ÚNICO que esta app no había medido nunca:
+// RSI, ATR, stop y objetivo automáticos, calculadora de lote y alertas ya
+// estaban todos medidos aquí.
+//
+// Aquí las velas son diarias, así que los marcos son diario, semanal y mensual.
+// Se reagrupa la serie de verdad (ver `reagrupar` en marketCalc.js); NO se
+// aproxima con una media diaria más larga, que sería otra cosa.
+//
+// TRES COSAS QUE ESTA MEDICIÓN TIENE QUE SOBREVIVIR PARA CREÉRSELA:
+//
+//  1. EL CONTROL. Se mide también lo CONTRARIO —exigir que ningún marco largo
+//     acompañe—. Si confluir y no confluir dan lo mismo, el filtro no está
+//     midiendo nada, y eso hay que poder verlo.
+//
+//  2. LAS SEÑALES POR MES. El error del ADX en la app hermana fue mirar solo el
+//     acierto: subió el umbral, el acierto mejoró, y la app se quedó siete
+//     reportes seguidos sin decir nada. Un filtro que deja la app muda no sirve
+//     aunque acierte.
+//
+//  3. LAS DOS MITADES DEL TIEMPO.
+//
+// ⚠️ Y EL CALENTAMIENTO SUBE A 140 DÍAS, para todas las filas de esta tabla
+// incluida la de referencia. La EMA20 semanal necesita 20 semanas (~100 días) y
+// la EMA6 mensual 6 meses (~130). Con el calentamiento normal de 80 los marcos
+// largos dirían "Rango" durante meses y el filtro rechazaría todo por falta de
+// datos, no por falta de confluencia. Comparar contra una referencia calentada
+// a 80 mediría el calentamiento, no el filtro.
+//
+// Y sí cabe en producción: el vigía descarga 300 días.
+// --------------------------------------------------------------------------
+
+{
+  const CAL_CONF = 140
+  const corteConf = fechas[Math.floor((CAL_CONF + fechas.length) / 2)]
+  const meses = (fechas.length - CAL_CONF) / 21
+
+  console.log('')
+  console.log('CONFLUENCIA DE MARCOS TEMPORALES (diario + semanal + mensual)')
+  console.log('¿Ayuda exigir que la tendencia apunte al mismo lado en varios marcos?')
+  console.log(`Regla neutra 1:1, spread descontado, calentamiento ${CAL_CONF} días.`)
+  console.log(`Las dos mitades se parten en ${corteConf}.`)
+  console.log('')
+  console.log('exigencia                     ops  señ/mes  acierto   por 1R  │  1ª mitad  │  2ª mitad')
+  console.log('─'.repeat(88))
+
+  const EXIGENCIAS = [
+    [null, 'sin filtro (hoy)'],
+    [1, 'al menos 1 marco largo'],
+    [2, 'los 2 marcos largos'],
+    [-1, 'CONTROL: ninguno acompaña'],
+  ]
+
+  const porConfluencia = new Map()
+  for (const [n, etiqueta] of EXIGENCIAS) {
+    const r = correr(simetrica, null, { confluenciaMin: n }, CAL_CONF)
+    porConfluencia.set(n, r)
+    const m = medir(r.senales, r.porClave, { conSpread: true })
+    const m1 = medir(r.senales.filter((s) => s.vistoEl < corteConf), r.porClave, { conSpread: true })
+    const m2 = medir(r.senales.filter((s) => s.vistoEl >= corteConf), r.porClave, { conSpread: true })
+    const ac = (x) => (x === null ? '  — ' : (x.toFixed(0) + '%').padStart(4))
+    const pr = (x) => (x === null ? '   —  ' : ((x >= 0 ? '+' : '') + x.toFixed(2)).padStart(6))
+    console.log(
+      `${etiqueta.padEnd(28)} ${String(m.total).padStart(4)}   ${(m.total / meses).toFixed(1).padStart(5)}    ` +
+        `${ac(m.acierto)}   ${pr(m.porRiesgo)}  │ ${ac(m1.acierto)} ${pr(m1.porRiesgo)} │ ` +
+        `${ac(m2.acierto)} ${pr(m2.porRiesgo)}`
+    )
+  }
+  console.log('─'.repeat(88))
+  console.log('⚠️ Las operaciones pueden SUBIR con el filtro, y no es un error: la app')
+  console.log('   se queda con los 5 mejores por lado, así que cuando el filtro rechaza')
+  console.log('   un par, el siguiente sube a ese hueco y entra en otra fecha. El filtro')
+  console.log('   no quita señales, las CAMBIA POR OTRAS. Pasó igual con el del RSI.')
+  console.log('')
+  console.log('Para encenderlo hace falta que "los 2 marcos" gane a "sin filtro" EN LAS')
+  console.log('DOS MITADES, que el CONTROL salga claramente peor, y que queden señales')
+  console.log('suficientes al mes. Si el control empata, el filtro no mide nada.')
+
+  console.log('')
+  console.log('EL MISMO, CON LA GEOMETRÍA REAL DE LA APP (con spread)')
+  console.log('exigencia                                        ops   acierto      pips   por 1R')
+  console.log('─'.repeat(86))
+  for (const [n, etiqueta] of EXIGENCIAS) {
+    const r = correr(actual, null, { confluenciaMin: n }, CAL_CONF)
+    fila(etiqueta, medir(r.senales, r.porClave, { conSpread: true }))
+  }
+  console.log('─'.repeat(86))
+
+  // Cuánto se solapan de verdad los marcos. Si el semanal dijera casi siempre
+  // lo mismo que el diario, el filtro no podría aportar nada por construcción,
+  // y ese sería el hallazgo — no el "por 1R".
+  console.log('')
+  console.log('¿CUÁNTO SE PARECEN LOS MARCOS ENTRE SÍ?')
+  console.log('Si el semanal repitiera al diario, este filtro no podría aportar nada.')
+  console.log('')
+  let coincideSem = 0
+  let coincideMes = 0
+  let total = 0
+  for (const p of completo.pares) {
+    if (p.tend === 'Rango') continue
+    total++
+    if (p.tendSem === p.tend) coincideSem++
+    if (p.tendMes === p.tend) coincideMes++
+  }
+  if (total) {
+    console.log(`Del último día, ${total} pares con tendencia diaria clara:`)
+    console.log(`  el semanal coincide en ${coincideSem} (${((coincideSem / total) * 100).toFixed(0)}%)`)
+    console.log(`  el mensual coincide en ${coincideMes} (${((coincideMes / total) * 100).toFixed(0)}%)`)
+  } else {
+    console.log('Ningún par con tendencia diaria clara el último día.')
+  }
+  console.log('')
+  console.log('LA MEJOR DE ELLAS, PAGANDO LAS NOCHES')
+  const mejorConf = [1, 2].reduce((a, b) => {
+    const ma = medir(porConfluencia.get(a).senales, porConfluencia.get(a).porClave, { conSpread: true })
+    const mb = medir(porConfluencia.get(b).senales, porConfluencia.get(b).porClave, { conSpread: true })
+    return (mb.porRiesgo ?? -99) > (ma.porRiesgo ?? -99) ? b : a
+  })
+  const rMejor = porConfluencia.get(mejorConf)
+  const bConf = barridoSwap(rMejor.senales, rMejor.porClave)
+  console.log(
+    `${mejorConf === 2 ? 'Los 2 marcos largos' : 'Al menos 1 marco largo'}  ` +
+      `(${bConf.total} ops · mediana ${bConf.mediana} días, media ${bConf.media.toFixed(1)})`
+  )
+  console.log('   swap/noche      acierto   por 1R   coste medio')
+  const sinC = medir(rMejor.senales, rMejor.porClave)
+  console.log(
+    `   sin costes       ${(sinC.acierto ?? 0).toFixed(0).padStart(5)}%  ${(sinC.porRiesgo ?? 0).toFixed(3).padStart(7)}         —`
+  )
+  for (const { nivel, medicion: m, costeMedio } of bConf.filas) {
+    const etiqueta = nivel === 0 ? 'solo spread' : `+ ${nivel.toFixed(2)} pips`
+    console.log(
+      `   ${etiqueta.padEnd(14)}  ${(m.acierto ?? 0).toFixed(0).padStart(5)}%` +
+        `  ${(m.porRiesgo ?? 0).toFixed(3).padStart(7)}   ${costeMedio.toFixed(1).padStart(5)} pips`
+    )
+  }
 }
 
 console.log('')

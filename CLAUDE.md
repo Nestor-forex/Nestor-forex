@@ -1132,3 +1132,179 @@ umbrales vecinos (positivo en los seis) y al troceo en dos mitades.
 Lo que la app le enseña hoy a Néstor pierde en todos los niveles, y el swap
 solo lo empeora. **La distancia entre lo que la app da y lo que la reversión
 mide es la Fase 4 entera.**
+
+---
+
+# La confluencia de marcos temporales NO ayuda en Swing (2026-09-04)
+
+Néstor vio una app de escritorio (TradePulse AI, en la Microsoft Store) que
+anuncia «confluencia ponderada de 15m, 1h, 4h y 1D» y pidió probar ese método.
+De toda su lista de funciones era **lo único que esta app no había medido
+nunca**: RSI, ATR, stop y objetivo automáticos, calculadora de lote y alertas
+ya estaban todos medidos aquí.
+
+Aquí las velas son diarias, así que los marcos equivalentes son **diario,
+semanal y mensual**. Se reagrupa la serie de verdad (`reagrupar` en
+`marketCalc.js`), no se aproxima con una media diaria más larga: una EMA100
+diaria NO es una EMA20 semanal.
+
+Medido sobre 1.436 días (2021-06-23 a 2026-09-04), vara neutra 1:1, spread
+por par, calentamiento 140 días para todas las filas.
+
+| exigencia | ops | señ/mes | acierto | por 1R | 1ª mitad | 2ª mitad |
+|---|---:|---:|---:|---:|---:|---:|
+| **Sin filtro (hoy)** | 1.706 | 27,6 | 48% | **−0,06** | −0,08 | −0,04 |
+| Al menos 1 marco largo | 1.516 | 24,6 | 47% | −0,07 | −0,10 | −0,05 |
+| Los 2 marcos largos | 1.418 | 23,0 | 47% | −0,08 | −0,08 | −0,08 |
+| CONTROL: ninguno acompaña | 427 | 6,9 | 52% | **+0,01** | −0,01 | +0,03 |
+
+Con la geometría real de la app: sin filtro −0,03, con 1 marco −0,05, con 2
+marcos −0,05, y el CONTROL **+0,03** (+823 pips sobre 422 operaciones).
+
+**El filtro empeora, y empeora más cuanto más se exige.** `CONFLUENCIA_MIN` se
+queda en `null`. **Apagado.**
+
+## El control salió mejor que todo lo demás, y qué hacer con eso
+
+Ir **en contra** de los marcos largos es lo único positivo de la tabla. No es
+casualidad: apunta en la misma dirección que la reversión, que es la única
+regla que ha medido positivo en todo el proyecto. Swing gana cuando compra lo
+que se cayó, no cuando persigue lo que sube — y la confluencia es perseguir
+con más pasos.
+
+⚠️ **Pero NO se asciende el control a candidato.** Se diseñó como control, se
+miró DESPUÉS de ver la tabla, y eso es exactamente el troceo a posteriori que
+este proyecto lleva meses evitando. Además: +0,01 con la vara neutra es
+prácticamente cero, va −0,01 en la primera mitad y +0,03 en la segunda (no es
+estable), y deja **6,9 señales al mes contra 27,6**. Es una pista que confirma
+la reversión, no un hallazgo propio.
+
+## Un dato que conviene tener escrito
+
+**El semanal coincide con el diario en el 78% de los pares, y el mensual
+también.** O sea que el filtro casi siempre solo quita señales sin aportar
+información nueva. Eso explica el resultado mejor que cualquier teoría: si un
+marco repite lo que dice el otro, exigir que coincidan no es exigir nada.
+
+📌 Y la trampa de siempre volvió a aparecer: **el filtro cambia las señales por
+otras, no las quita.** La app se queda con los 5 mejores por lado, así que al
+rechazar un par el siguiente sube al hueco y entra en otra fecha.
+
+---
+
+# Lo que se hizo con las apps que Néstor encontró (2026-09-04)
+
+Mandó capturas de dos productos y pidió opinión, investigación, y que sus apps
+tuvieran «lo que me falta que tienen las otras».
+
+## Las dos apps, y qué se sacó de cada una
+
+**TradePulse AI** (Microsoft Store, escritorio): su lista de funciones —RSI,
+ATR%, stop y objetivo automáticos, confluencia multi-temporal, calculadora de
+posición, alertas— es **casi exactamente la de estas apps**, y encima es de
+cripto (Binance), no de Forex. **Cero reseñas.** Presume de motor de
+backtesting y **no publica ni un resultado**; si fuera bueno sería lo primero
+de su página. Lo único que aportó fue la idea de la confluencia, ya medida
+arriba y descartada.
+
+**Visual Trader** (Traderlink, italiana, acciones de Milán): producto
+establecido y de verdad. Lo que se le copió **no es el método —es otro mercado
+y otros datos— sino cómo lo ENSEÑA**: el «meteo di borsa», un parte del tiempo
+al lado de cada instrumento.
+
+## Lo que se construyó
+
+**1. Importar operaciones del bróker** (`importarOperaciones.js` +
+`ImportarBroker.jsx`, en las DOS apps). Lee informes .htm de MT4, .html de MT5
+y CSV de casi cualquier bróker.
+
+⚠️ **Se eligió el archivo y NO la API a propósito**, y el motivo no es pereza:
+no hay servidor, así que una credencial de bróker viviría dentro de la app y
+cualquiera podría sacarla del JavaScript. Es el mismo agujero de Capital.com y
+Twelve Data, y este daría acceso al **dinero** de alguien. Además funciona con
+cualquier bróker del mundo y no cuesta nada al mes (un puente comercial para
+MetaTrader cobra $5-10 por cuenta conectada, todos los meses).
+
+Detalles que costaron y no hay que deshacer:
+- Las columnas se buscan **por nombre y en varios idiomas**: el informe de
+  Néstor dice «Símbolo» y «Beneficio». Por posición fija habría funcionado en
+  la máquina de quien programa y fallado en la suya.
+- Entra el resultado **NETO** (beneficio − swap − comisión). Enseñarlo sin
+  descontar sería contarse el cuento justo en los costes que este proyecto
+  lleva meses midiendo.
+- **Nada se guarda hasta confirmar**, con las cinco primeras a la vista.
+- **No duplica**: cada operación lleva el `ticket` del bróker, porque lo normal
+  es exportar el historial entero cada vez.
+- Los avisos salen como `{ codigo, n }` y **no como frases en español**: el
+  lector corre también en Node y no sabe el idioma. Traduce quien pinta.
+
+**2. Las mediciones dentro de la app** (`medicion.js` + sección plegable en
+Historial, solo Swing). El argumento de venta que ninguna competidora tiene:
+enseñar el propio número siendo malo. El orden de las filas es deliberado —
+primero 55% de acierto y después «se pierden 3 centavos por dólar
+arriesgado»—, porque puesto al revés el acierto se lee como la conclusión y es
+justo el número con el que se engaña a la gente en este sector.
+
+⚠️ Los números se escriben A MANO y **llevan fecha dentro** para que un número
+viejo se delate en pantalla en vez de envejecer en silencio. Se actualizan
+corriendo el banco de pruebas y copiando.
+
+**3. El clima del par** (`ClimaMercado.jsx`, solo Swing). Sol / sol y nubes /
+nublado / niebla / tormenta al lado de cada par del tablero completo.
+**No es un indicador nuevo**: lee la tendencia, la fuerza, el RSI y el ATR que
+la tabla ya muestra. Si dijera algo que los números no dicen, sería una opinión
+disfrazada de dato. En SVG y no con emoji, porque los emoji cambian en cada
+sistema, y con `dir="ltr"` fijo por el mismo error que ya pasó en árabe.
+
+📌 **Está en PRIMOS, no en GEMELOS, y es importante**: el dibujo puede ser
+igual, los umbrales no. Un ATR del 1,2% es tormenta en velas diarias y sería un
+terremoto en velas de una hora.
+
+## Un comparador que la memoria daba por hecho y NO existía
+
+`prueba-idiomas.mjs` (57 comprobaciones, en las dos apps). Esta memoria decía
+«hay un script que compara los 13 diccionarios entre sí». **No lo había**: se
+hizo a mano una vez y no se guardó. Comprueba mismas claves, mismo tipo (una
+frase que en español es función y en otro idioma es texto rompe la pantalla
+SOLO en ese idioma, que es la peor forma de romperse), que las frases con
+números usen sus huecos, y que ningún idioma lleve texto de otro alfabeto.
+
+📌 **Lección: que algo esté escrito en la memoria no quiere decir que exista.**
+Antes de fiarse de una herramienta que la memoria menciona, comprobar que el
+archivo está ahí.
+
+## Verificado en navegador, no solo compilando
+
+Chromium con el `barrido.json` **real de producción**: el tablero pinta los 14
+pares con su clima en español, y **la importación se probó de punta a punta
+subiendo un informe de MT4 de verdad** — 2 operaciones reconocidas con su neto
+correcto (+76,30 y −142,40), el oro saltado con aviso, el depósito ignorado,
+cero errores de consola.
+
+Y valió la pena, como siempre: el dibujo de «sol y nubes» tenía la nube
+tapando el sol y a 24 px se confundía con «Nublado», que es lo contrario de lo
+que quiere decir. Eso no lo ve un build.
+
+---
+
+# Convención para cambios que tocan las dos apps (2026-09-04)
+
+Un cambio en un archivo GEMELO hay que hacerlo en los dos repositorios, y eso
+son dos ramas y dos pull requests. Comparando siempre contra la `main` de la
+hermana, esas dos ramas **nunca pueden estar en verde a la vez**: cada una ve
+la mitad del cambio y el comparador falla. Pasó la primera vez que se intentó
+(la importación del bróker), y dejaría la disciplina de los gemelos con un
+peaje fijo sobre cada cambio compartido.
+
+**Desde ahora: un cambio emparejado usa LA MISMA RAMA en los dos
+repositorios.** El workflow `gemelos.yml` busca en la app hermana una rama con
+el mismo nombre y, si existe, compara contra ella; si no, contra la principal.
+
+⚠️ **Esto no afloja la comprobación.** Lo que hay que garantizar es que las dos
+`main` no se separen, y eso lo siguen comprobando el push a `main` y la corrida
+diaria, que van siempre main contra main. Si de un par solo se fusionara una
+mitad, la corrida del día siguiente lo canta. Lo único que cambia es que al
+revisar un pull request se compara lo comparable.
+
+📌 El workflow **imprime contra qué rama comparó**. Una comprobación que no
+dice qué miró deja al que la lee adivinando si el verde significa algo.

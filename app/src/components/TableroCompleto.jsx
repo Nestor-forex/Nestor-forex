@@ -8,6 +8,7 @@ import { generarReporteMd, descargarMd } from '../lib/reporte'
 import BarraFuerza from './BarraFuerza'
 import Sparkline from './Sparkline'
 import Glosario from './Glosario'
+import ClimaMercado from './ClimaMercado'
 
 function Chip({ children, color }) {
   return (
@@ -126,12 +127,18 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {pares.map((p) => (
               <div key={p.name} className="card" style={{ padding: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                   <span className="mono" style={{ fontWeight: 600, fontSize: 14 }}>
                     {p.name}
                   </span>
-                  <span className="mono" style={{ fontSize: 11.5, fontWeight: 700, color: sesgoColor(p.sesgo) }}>
-                    {t(`sesgo.${p.sesgo}`)}
+                  {/* El clima va junto al sesgo y no en una fila propia: son
+                      la misma pregunta («¿qué pasa hoy con este par?») dicha
+                      en dibujo y en palabra. */}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <ClimaMercado par={p} />
+                    <span className="mono" style={{ fontSize: 11.5, fontWeight: 700, color: sesgoColor(p.sesgo) }}>
+                      {t(`sesgo.${p.sesgo}`)}
+                    </span>
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
