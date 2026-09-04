@@ -60,6 +60,76 @@ export const atrWilder = (highs, lows, closes, p = 14) => {
   return a
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// MARCOS TEMPORALES: la misma serie mirada de lejos
+// ─────────────────────────────────────────────────────────────────────────
+//
+// La idea la sugirió Néstor tras ver una app de escritorio que anuncia
+// "confluencia ponderada de 15m, 1h, 4h y 1D". Aquí las velas son DIARIAS, así
+// que los marcos equivalentes son diario, semanal y mensual.
+//
+// ⚠️ NO se aproxima multiplicando el periodo de la media (una EMA100 diaria NO
+// es una EMA20 semanal). Se reagrupa la serie de verdad, quedándose con el
+// último cierre de cada semana y de cada mes, y sobre ESA serie se calculan las
+// medias. Es lo que ve un operador cuando cambia el gráfico a semanal.
+//
+// La clave de semana sale del número de semanas desde el epoch, no del día de
+// la semana: así dos fechas de la misma semana caen juntas aunque falten días
+// por festivos, que en Forex pasa constantemente.
+const claveSemana = (d) =>
+  Math.floor(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) / 604800000)
+const claveMes = (d) => d.slice(0, 7)
+
+// Reagrupa una serie diaria quedándose con el último cierre de cada periodo.
+// Recorre hacia adelante y va pisando el último valor del grupo abierto, así
+// que el cierre de un periodo a medias es el del último día que hay — que es
+// exactamente lo que enseña un gráfico semanal el miércoles.
+export const reagrupar = (fechas, closes, claveDe) => {
+  const salida = []
+  let anterior = null
+  for (let i = 0; i < fechas.length; i++) {
+    const clave = claveDe(fechas[i])
+    if (clave !== anterior) {
+      salida.push(closes[i])
+      anterior = clave
+    } else {
+      salida[salida.length - 1] = closes[i]
+    }
+  }
+  return salida
+}
+
+// La misma fórmula de tendencia que usa el marco diario (`tend`), aplicada a
+// cualquier serie. Se comparte a propósito: si un día se cambia el criterio de
+// "alcista", tiene que cambiar en los tres marcos a la vez o dirían cosas
+// distintas sin que nadie lo hubiera decidido.
+//
+// ⚠️ Sin historia suficiente devuelve 'Rango', NO la tendencia que salga con
+// cuatro datos. Es deliberado: un marco que no se puede calcular tiene que
+// decir "no sé", y "no sé" nunca debe contar como confirmación. La consecuencia
+// práctica es que el filtro de confluencia rechaza todo durante el
+// calentamiento, y por eso el banco de pruebas lo sube a 140 días.
+export const tendenciaDe = (serie, corta, larga) => {
+  if (serie.length < larga) return 'Rango'
+  const c = serie.at(-1)
+  const ec = emaLast(serie, corta)
+  const el = emaLast(serie, larga)
+  return c > ec && ec > el ? 'Alcista' : c < ec && ec < el ? 'Bajista' : 'Rango'
+}
+
+// Periodos de cada marco. Los semanales son los diarios de la app (20/50)
+// reducidos a la escala de la semana; los mensuales son cortos a propósito,
+// porque el vigía solo descarga 300 días y eso son ~14 meses: pedir una EMA20
+// mensual sería pedir una media que en producción NUNCA se podría calcular.
+//
+// Cuánta historia diaria necesita cada uno:
+//   semanal EMA20 → 20 semanas ≈ 100 días
+//   mensual EMA6  →  6 meses   ≈ 130 días
+// Ambos caben de sobra en los 300 días que baja el vigía. Si algún día se
+// alargan estos periodos, hay que comprobar que sigan cabiendo.
+const SEMANAL = [10, 20]
+const MENSUAL = [3, 6]
+
 // El que se usaba cuando la fuente solo daba cierres. Se queda como respaldo
 // para que la app no se rompa si algún día llegan datos sin máximo ni mínimo,
 // pero subestima el movimiento real casi a la mitad — ver el comentario de
@@ -147,6 +217,11 @@ export function computarBarrido(fechas, rates, rangosPar = null) {
     const atrAbs = conRangos ? atrWilder(highs, lows, closes) : atrCierres(closes)
     const atrPct = (atrAbs / c) * 100
     const tend = c > e20 && e20 > e50 ? 'Alcista' : c < e20 && e20 < e50 ? 'Bajista' : 'Rango'
+    // La misma tendencia vista en semanal y en mensual. Son dos cadenas cortas
+    // por par (28 en total), así que no engordan el barrido que baja cada
+    // miembro — a diferencia de las series, que sí hay que quitar al publicar.
+    const tendSem = tendenciaDe(reagrupar(fechas, closes, claveSemana), ...SEMANAL)
+    const tendMes = tendenciaDe(reagrupar(fechas, closes, claveMes), ...MENSUAL)
     // Los soportes y resistencias van con los extremos REALES: es donde el
     // precio llegó y se devolvió, que es lo que hace que un nivel importe.
     // Con solo cierres se quedaban cortos y estrechaban el stop.
@@ -166,6 +241,8 @@ export function computarBarrido(fechas, rates, rangosPar = null) {
       atrPct,
       atrAbs,
       tend,
+      tendSem,
+      tendMes,
       dif: raw[b] - raw[q],
       hi20: Math.max(...last20),
       lo20: Math.min(...bajos20),
@@ -215,12 +292,51 @@ export function computarBarrido(fechas, rates, rangosPar = null) {
 // dos mitades del tiempo dirán qué hay, si es que hay algo.
 const RSI_MAX = null
 
-const clasificar = (p, thr, { rsiMax = RSI_MAX } = {}) => {
+// EL FILTRO DE CONFLUENCIA MULTI-TEMPORAL, TAMBIÉN APAGADO HASTA MEDIRLO.
+//
+// `null` = apagado, y la app se comporta EXACTAMENTE igual que sin este código.
+// Con un número N, la señal solo pasa si al menos N de los marcos LARGOS
+// —semanal y mensual— apuntan al mismo lado que el diario.
+//
+//   0  → no exige nada (idéntico a apagado, pero por el camino del filtro)
+//   1  → al menos uno de los dos marcos largos acompaña
+//   2  → los dos acompañan: confluencia total
+//  −1  → CONTROL: exige que NINGUNO acompañe, o sea lo contrario del filtro.
+//        Está para que la medición pueda fallar: si "confluencia" y "lo
+//        contrario de confluencia" dan el mismo número, el filtro no está
+//        midiendo nada y hay que decirlo.
+//
+// ⚠️ Y LA TRAMPA QUE YA MORDIÓ UNA VEZ EN ESTE PROYECTO: esto NO quita señales,
+// las CAMBIA POR OTRAS. La app se queda con los 5 mejores por lado; cuando el
+// filtro rechaza un par, el siguiente de la lista sube a ese hueco y entra en
+// fechas distintas, así que cuenta como operación nueva. Con el filtro del RSI
+// las operaciones SUBIERON de 1.785 a 2.108. La medición no es "la app menos
+// las malas", es "la app con otras señales".
+const CONFLUENCIA_MIN = null
+
+const clasificar = (p, thr, { rsiMax = RSI_MAX, confluenciaMin = CONFLUENCIA_MIN } = {}) => {
   // "Extendido" es simétrico: comprar con el RSI arriba y vender con el RSI
   // abajo son el mismo error visto en el espejo.
   const estirado = rsiMax !== null && (p.dif > 0 ? p.rsiV >= rsiMax : p.rsiV <= 100 - rsiMax)
-  if (p.dif > thr && p.tend === 'Alcista' && !estirado) return 'COMPRA'
-  if (p.dif < -thr && p.tend === 'Bajista' && !estirado) return 'VENTA'
+
+  // Cuántos marcos largos acompañan al lado que se está considerando. Se cuenta
+  // contra el lado, no contra el diario, para que el filtro sea simétrico: si
+  // solo mirara "Alcista" recortaría las compras y dejaría las ventas intactas,
+  // y el resultado parecería una mejora cuando en realidad sería "la app opera
+  // menos compras". Es el mismo error que ya se cometió con el ADX.
+  const acompanan = (lado) => {
+    const quiere = lado === 'COMPRA' ? 'Alcista' : 'Bajista'
+    return (p.tendSem === quiere ? 1 : 0) + (p.tendMes === quiere ? 1 : 0)
+  }
+  const confluye = (lado) => {
+    if (confluenciaMin === null || confluenciaMin === undefined) return true
+    const n = acompanan(lado)
+    // El control invierte la exigencia en vez de relajarla: cero acompañamiento.
+    return confluenciaMin < 0 ? n === 0 : n >= confluenciaMin
+  }
+
+  if (p.dif > thr && p.tend === 'Alcista' && !estirado && confluye('COMPRA')) return 'COMPRA'
+  if (p.dif < -thr && p.tend === 'Bajista' && !estirado && confluye('VENTA')) return 'VENTA'
   if (Math.abs(p.dif) > thr) return 'VIGILAR'
   return '—'
 }
@@ -393,11 +509,12 @@ export function derivarVista(
     incluirVentas = !VENTAS_PAUSADAS,
     incluirReversion = false,
     rsiMax,
+    confluenciaMin,
   } = {}
 ) {
   // Un solo sitio donde se decide, para que las cuatro llamadas de abajo no
   // puedan quedar con criterios distintos entre sí.
-  const cls = (p) => clasificar(p, thr, { rsiMax })
+  const cls = (p) => clasificar(p, thr, { rsiMax, confluenciaMin })
   const { esc, pares: paresRaw } = data
 
   const monedas = Object.keys(esc)
