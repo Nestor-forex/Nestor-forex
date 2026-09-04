@@ -1384,3 +1384,83 @@ Pedir **fuerza relativa Y RSI estirado a la vez** dio **CERO señales**. En las
 dos apps. Su observación —«todas juntas son paredes que no te dejan pasar»— no
 es una impresión: es literal.
 
+
+---
+
+# Se ENCENDIERON dos puertas (2026-09-04). Cómo se decidió, que es lo que importa
+
+Néstor lo pidió tras ver las mediciones. La regla de decisión se fijó **ANTES**
+de mirar los resultados, justo para no ajustarla a lo que saliera:
+
+> Se enciende solo si da **más señales/mes** Y **no es peor que hoy en NINGUNA
+> de las dos mitades del periodo**.
+
+Es el listón que el ADX no pasó en su día. Las dos columnas de mitades **no
+existían** en las tablas de aflojar de ninguna de las dos apps: se añadieron
+antes de decidir, no después.
+
+## Swing: `TENDENCIA_MIN` de `'alineada'` a `'media'`
+
+Se quita la segunda condición (que la EMA20 esté sobre la EMA50), que era la
+que más tardaba en cumplirse tras un giro.
+
+| exigencia | señ/mes | por 1R | 1ª mitad | 2ª mitad |
+|---|---:|---:|---:|---:|
+| alineada (antes) | 27,7 | −0,07 | −0,10 | −0,04 |
+| **media (ahora)** | **36,1** | **−0,05** | −0,07 | −0,04 |
+| ninguna | 36,2 | −0,05 | −0,08 | −0,03 |
+
+Geometría real: −0,04 → **−0,03**, y los pips perdidos bajan de −19.171 a
+−17.374 **pese a operar 548 veces más**.
+
+Se eligió `'media'` y no `'ninguna'` aunque midan casi igual: queda una razón de
+mercado en pie y ocho señales al mes no pagan renunciar a ella.
+
+## Intradía: `ADX_MIN` de 20 a 10
+
+| filtro | ops | acierto | pips | por 1R | 1ª mit | 2ª mit |
+|---|---:|---:|---:|---:|---:|---:|
+| ADX ≥ 20 (antes) | 7.217 | 39% | −41.886 | −0,13 | −0,14 | −0,12 |
+| **ADX ≥ 10 (ahora)** | **8.009** | 38% | −45.744 | −0,13 | −0,14 | −0,12 |
+| ADX ≥ 0 | 8.015 | 38% | −45.941 | −0,13 | −0,14 | −0,12 |
+
+📌 **El dato que decidió: entre ADX 0 y ADX 10 hay SEIS señales de diferencia
+en cinco años.** Por debajo de 10 el filtro no hace nada, y entre 10 y 20 solo
+quita 792 señales a cambio de cero.
+
+⚠️ **ESTE CASO ES MÁS FLOJO QUE EL DE SWING Y NO HAY QUE OLVIDARLO.** Allí
+aflojar MEJORÓ el resultado y se perdieron MENOS pips en total. Aquí el
+resultado por operación se queda IGUAL, así que el total de pips perdidos SUBE
+un 9 % solo porque hay más operaciones. Lo que se compró es que la app HABLE,
+no que acierte.
+
+## El patrón que se repitió en las dos, y que hay que esperar la próxima vez
+
+**Al encender, fallaron las comprobaciones que fijaban el valor viejo.** En
+Swing `prueba-confluencia.mjs`, en Intradía `prueba-backtest.mjs`. Eso es
+exactamente su trabajo: avisar de que la app cambia.
+
+**Se actualizan al valor nuevo, nunca se borran**, y se les añade la
+comprobación contraria (que YA NO coincida con el valor viejo) para que sigan
+cantando si alguien lo mueve sin querer.
+
+📌 Y una de Intradía tuvo que cambiar de **FORMA**, no solo de número: exigía
+«sin ADX salen MÁS señales», cierto con el umbral en 20. Con el umbral en 10,
+quitarlo del todo da EL MISMO número — que es justo lo que dice la medición.
+Seguir exigiendo «más» habría sido exigir que el ADX siguiera estorbando. Pasó
+a exigir que quitarlo no QUITE señales.
+
+⚠️ **Lo que NO cambia con esto:** las dos apps siguen perdiendo con la vara
+honesta (Swing −0,03, Intradía −0,13). Más señales de un sistema que pierde es
+perder más rápido si se operan con dinero. Lo que se compró es que sirvan como
+herramienta de información.
+
+## La lista de indicadores para Néstor
+
+Se le entregó como página aparte (Artifact privado):
+https://claude.ai/code/artifact/e1f93455-ab77-4041-855e-220d681b198e
+
+Organizada por **veredicto**, no alfabéticamente: lo que las apps usan hoy, lo
+medido y apagado, lo que usan los profesionales y no podemos tener (con el
+motivo real: **el Forex no tiene volumen central**, así que Volume Profile y
+VWAP no son difíciles aquí, son imposibles), y el vocabulario de medición.
