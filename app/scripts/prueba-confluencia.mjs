@@ -282,13 +282,28 @@ console.log('\nAflojar la exigencia de tendencia SÍ afloja')
     'y lo que pasa con la EMA20 también pasa sin exigir tendencia'
   )
 
-  // Y por defecto la app tiene que comportarse EXACTAMENTE como antes: este
-  // cambio es aditivo, no una modificación silenciosa de las señales.
+  // EL VALOR POR DEFECTO ES EL QUE MANDA EN LA APP, así que tiene que estar
+  // clavado a un nivel concreto y no al que le toque.
+  //
+  // Hasta el 2026-09-04 esta comprobación exigía 'alineada', porque la
+  // exigencia venía APAGADA y el cambio era aditivo. Ese día se encendió en
+  // 'media' con permiso de Néstor, tras medir 36,1 señales/mes contra 27,7 y
+  // −0,05 contra −0,07, y —lo que decide— sin ser peor en NINGUNA de las dos
+  // mitades del periodo. Esta comprobación falló en ese momento, que es
+  // exactamente lo que tenía que hacer: avisar de que la app cambiaba.
+  //
+  // Se actualiza al nivel nuevo en vez de borrarla. Sigue sirviendo para lo
+  // mismo: si alguien mueve el nivel sin querer, esto lo canta.
   const sinPasarNada = derivarVista(data, { thr: 0, incluirVentas: true })
   comprobar(
     JSON.stringify(sinPasarNada.pares.map((p) => p.sesgo)) ===
+      JSON.stringify(porNivel.media.pares.map((p) => p.sesgo)),
+    'y no pasar nada es idéntico a "media", que es el nivel encendido hoy'
+  )
+  comprobar(
+    JSON.stringify(sinPasarNada.pares.map((p) => p.sesgo)) !==
       JSON.stringify(porNivel.alineada.pares.map((p) => p.sesgo)),
-    'y no pasar nada es idéntico a "alineada": la app no cambia sola'
+    '…y YA NO es idéntico a "alineada": el cambio está de verdad puesto'
   )
 }
 

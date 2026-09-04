@@ -339,7 +339,31 @@ const CONFLUENCIA_MIN = null
 // resultado por operación empeore. Son dos cosas distintas y no hay que
 // confundirlas: la tabla del banco de pruebas lleva las señales/mes AL LADO
 // del resultado justo para eso.
-const TENDENCIA_MIN = 'alineada'
+// ENCENDIDO EN 'media' EL 2026-09-04, con permiso de Néstor y después de que
+// pasara la prueba que el ADX no pasó. Medido sobre 1.436 días, vara neutra
+// 1:1, con costes, y PARTIDO EN DOS MITADES (2024-03-27):
+//
+//   exigencia            señ/mes   por 1R   1ª mitad   2ª mitad
+//   alineada (antes)       27,7     −0,07     −0,10      −0,04
+//   media (ahora)          36,1     −0,05     −0,07      −0,04
+//   ninguna                36,2     −0,05     −0,08      −0,03
+//
+// Y con la geometría REAL de la app: −0,04 → −0,03, con los pips perdidos
+// bajando de −19.171 a −17.374 pese a operar 548 veces MÁS.
+//
+// Lo que hace válido el cambio no es el promedio: es que 'media' **no es peor
+// que 'alineada' en NINGUNA de las dos mitades**. El ADX se subió en su día
+// mirando solo el promedio, y por eso salieron siete reportes mudos.
+//
+// Se eligió 'media' y no 'ninguna' aunque midan casi igual (36,1 contra 36,2):
+// con 'media' queda una razón de mercado en pie —no comprar por debajo de la
+// media de 20— y ocho señales de diferencia al mes no pagan renunciar a ella.
+//
+// ⚠️ ESTO NO CONVIERTE LA APP EN GANADORA. Sigue en −0,03 por unidad de riesgo,
+// o sea perdiendo. Lo que se compró aquí es que la app HABLE más sin que cada
+// señal salga peor. Si algún día se opera con dinero de verdad, el número que
+// manda sigue siendo el −0,03, no las 36 señales.
+const TENDENCIA_MIN = 'media'
 
 const cumpleTendencia = (p, lado, exigencia) => {
   if (exigencia === 'ninguna') return true
