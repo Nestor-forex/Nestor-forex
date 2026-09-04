@@ -51,6 +51,12 @@ export const GEMELOS = [
   'src/components/CargandoApp.jsx',
   'src/components/DiarioTab.jsx',
   'src/components/Glosario.jsx',
+  // Leer el informe del broker y meterlo en el Diario. Es identico en las dos
+  // apps a proposito: el formato de MT4/MT5 no sabe nada de si se opera en
+  // velas de un dia o de una hora, y los pares que cada app acepta se le pasan
+  // por parametro (`conocidos`) en vez de estar escritos dentro.
+  'src/components/ImportarBroker.jsx',
+  'src/lib/importarOperaciones.js',
   'src/components/Header.jsx',
   'src/components/MiembrosTab.jsx',
   'src/components/Pendiente.jsx',
@@ -72,6 +78,11 @@ export const GEMELOS = [
   'src/lib/useMembers.js',
   'scripts/lib/firestore-rest.mjs',
   'scripts/prueba-aviso-real.mjs',
+  'scripts/prueba-importar.mjs',
+  // El comparador de los 13 diccionarios. La memoria daba por hecho que
+  // existia y no existia en ninguna de las dos apps: se hizo a mano una vez y
+  // no se guardo. Ahora esta, y en las dos.
+  'scripts/prueba-idiomas.mjs',
 ]
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -89,6 +100,18 @@ export const GEMELOS = [
 // empeora en Swing; está medido. Unificar umbrales sería el peor error posible
 // aquí.
 export const PRIMOS = {
+  'src/components/ClimaMercado.jsx':
+    'El clima del par (idea tomada de Visual Trader). El DIBUJO es el mismo, ' +
+    'pero los umbrales NO pueden serlo: un ATR del 1.2% es tormenta en velas ' +
+    'diarias y seria un terremoto en velas de una hora. Por eso vive solo en ' +
+    'Swing hasta que se elijan los umbrales de intradia MIRANDO SUS DATOS, no ' +
+    'copiando estos. Es la regla de siempre: lo medido en una app no vale en la otra.',
+
+  'src/lib/medicion.js':
+    'Los numeros del banco de pruebas que la app ensena en pantalla. Son de ' +
+    'ESTA app y de nadie mas: ensenar aqui los de la hermana seria mentir con ' +
+    'numeros verdaderos, que es la peor clase de mentira.',
+
   'src/lib/marketCalc.js':
     'El corazón de cada app. Swing usa EMA20/50 sobre velas diarias; Intradía ' +
     'EMA9/21 sobre velas de una hora, más pivotes de sesión y modo rango. ' +

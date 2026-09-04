@@ -1,5 +1,8 @@
+import { useState } from 'react'
 import { useIdioma } from '../lib/i18n'
 import { useHistorial } from '../lib/useHistorial'
+import { MEDICION } from '../lib/medicion'
+import { fmtFecha } from '../lib/format'
 
 // La pantalla que responde la única pregunta que importa: ¿esto acierta?
 //
@@ -40,6 +43,7 @@ export default function HistorialTab() {
       ) : (
         <>
           <Resumen resumen={resumen} t={t} />
+          <MedicionLarga t={t} locale={locale} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {filas.map((f) => (
               <Fila key={`${f.id}@${f.vistoEl}`} f={f} t={t} locale={locale} />
@@ -47,7 +51,126 @@ export default function HistorialTab() {
           </div>
         </>
       )}
+      {!filas.length && <MedicionLarga t={t} locale={locale} />}
     </>
+  )
+}
+
+// Lo medido sobre cinco años, dentro de la app.
+//
+// Va colapsado porque no es lo que se mira todos los días, pero va SIEMPRE —
+// también cuando el historial está vacío, que es justo cuando alguien nuevo
+// necesita saber sobre qué se apoya lo que está leyendo.
+//
+// ⚠️ EL ORDEN DE LAS DOS FILAS ES DELIBERADO. Primero el 55% de acierto y
+// después el «por cada dólar arriesgado, se pierden 3 centavos». Puesto al
+// revés, el acierto se lee como la conclusión y es exactamente el número con
+// el que se engaña la gente en este sector: con el objetivo más cerca que el
+// stop se acierta mucho y se pierde igual.
+function MedicionLarga({ t, locale }) {
+  const [abierto, setAbierto] = useState(false)
+  const { app, neutra, reversion } = MEDICION
+
+  const signo = (x) => (x >= 0 ? '+' : '') + x.toFixed(2)
+  const color = (x) => (x >= 0 ? 'var(--green)' : 'var(--red)')
+
+  return (
+    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <button
+        onClick={() => setAbierto((v) => !v)}
+        aria-expanded={abierto}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 8,
+          background: 'none',
+          border: 'none',
+          padding: 0,
+          minHeight: 32,
+          cursor: 'pointer',
+          color: 'var(--text)',
+          fontSize: 13.5,
+          fontWeight: 600,
+          textAlign: 'start',
+        }}
+      >
+        <span>{t('medicion.titulo')}</span>
+        <span className="mono" style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+          {abierto ? '▾' : '▸'}
+        </span>
+      </button>
+
+      {abierto && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <p style={{ ...TEXTO, margin: 0 }}>
+            {t('medicion.intro', {
+              dias: MEDICION.dias,
+              desde: fmtFecha(MEDICION.desde, locale),
+              hasta: fmtFecha(MEDICION.hasta, locale),
+            })}
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <Linea
+              t={t}
+              nombre={t('medicion.laApp')}
+              ops={app.operaciones}
+              acierto={app.acierto}
+              valor={signo(app.porRiesgo)}
+              color={color(app.porRiesgo)}
+            />
+            <Linea
+              t={t}
+              nombre={t('medicion.varaNeutra')}
+              ops={neutra.operaciones}
+              acierto={neutra.acierto}
+              valor={signo(neutra.porRiesgo)}
+              color={color(neutra.porRiesgo)}
+            />
+            <Linea
+              t={t}
+              nombre={t('medicion.reversion')}
+              ops={reversion.operaciones}
+              acierto={reversion.acierto}
+              valor={signo(reversion.porRiesgo)}
+              color={color(reversion.porRiesgo)}
+            />
+          </div>
+
+          <p style={{ ...TEXTO, margin: 0 }}>{t('medicion.queSignifica')}</p>
+          <p style={{ ...TEXTO, margin: 0 }}>{t('medicion.porQueLoContamos')}</p>
+          <p style={{ ...TEXTO, margin: 0, color: 'var(--text-muted)', fontSize: 11.5 }}>
+            {t('medicion.fechado', { fecha: fmtFecha(MEDICION.fecha, locale) })}
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Linea({ t, nombre, ops, acierto, valor, color }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'baseline',
+        justifyContent: 'space-between',
+        gap: 10,
+        paddingBottom: 6,
+        borderBottom: '1px solid var(--border)',
+      }}
+    >
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 600 }}>{nombre}</div>
+        <div className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+          {t('medicion.pieLinea', { ops, acierto })}
+        </div>
+      </div>
+      <div className="mono" style={{ fontSize: 15, fontWeight: 700, color, whiteSpace: 'nowrap' }}>
+        {valor}
+      </div>
+    </div>
   )
 }
 
