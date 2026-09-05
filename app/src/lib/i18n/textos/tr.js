@@ -95,6 +95,18 @@ export default {
     sufijoVelas: '20d',
   },
 
+  reversion: {
+    marca: 'DENEY',
+    titulo: 'Ters kural',
+    explica:
+      'Bu sinyaller yukarıdakilerin TAM TERSİNİ yapar: yükseleni değil, düşen para birimini alır. Bu projede pozitif ölçülen tek kuraldır. Normal sinyallerle asla karıştırılmasın diye bilerek ayrı gösteriliyor.',
+    enBanco: 'Test tezgâhında (5 yıl)',
+    enReal: 'Bugüne kadarki gerçek işlemlerde',
+    aviso:
+      'Henüz çok az işlem var. Hiçbir şeye karar vermez: sonuçlar birikirken takip edebilesin diye gösteriliyor. Alım ya da satım tavsiyesi değildir.',
+    vacio: 'Bugün bu kuraldan sinyal yok.',
+  },
+
   setup: {
     soporte: 'Destek',
     resistencia: 'Direnç',

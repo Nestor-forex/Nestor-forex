@@ -96,7 +96,17 @@ export function useMarketData({ thr = 0.5, topN = 3 } = {}) {
 
   // `derivarVista` se sigue ejecutando aquí y no en el vigía porque necesita
   // el idioma de cada persona, y eso el servidor no lo sabe.
-  const vista = data ? derivarVista(data, { thr, topN, t }) : null
+  // `incluirReversion` ENCENDIDO el 2026-09-05, a petición de Néstor.
+  //
+  // Hasta hoy solo la encendía el vigía, que la anotaba en la sombra sin
+  // enseñarla. Lleva 12 operaciones reales resueltas (6 ganadas, 6 perdidas,
+  // +117 pips) contra las de la app (17 resueltas, 65 % de acierto y −462
+  // pips), así que ya no contradice lo medido en el banco de pruebas.
+  //
+  // ⚠️ Sale en su PROPIA lista (`setupsReversion`), nunca dentro de `setups`.
+  // Son reglas opuestas —la app compra lo fuerte, esta compra lo débil— y
+  // mezclarlas en la misma tabla sería el peor error posible aquí.
+  const vista = data ? derivarVista(data, { thr, topN, t, incluirReversion: true }) : null
 
   return {
     loading,
@@ -111,6 +121,7 @@ export function useMarketData({ thr = 0.5, topN = 3 } = {}) {
     ventas: vista?.ventas ?? [],
     vigilancia: vista?.vigilancia ?? [],
     setups: vista?.setups ?? [],
+    setupsReversion: vista?.setupsReversion ?? [],
     corte: vista?.corte ?? '…',
   }
 }

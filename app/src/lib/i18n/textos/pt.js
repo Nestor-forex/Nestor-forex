@@ -99,6 +99,18 @@ export default {
     sufijoVelas: '20d',
   },
 
+  reversion: {
+    marca: 'EXPERIMENTO',
+    titulo: 'A regra contrária',
+    explica:
+      'Estes sinais fazem o OPOSTO dos de cima: compram a moeda que caiu, não a que sobe. É a única regra que mediu positivo neste projeto. Aparecem à parte, de propósito, para nunca se confundirem com os sinais normais.',
+    enBanco: 'No banco de provas (5 anos)',
+    enReal: 'Em operações reais até hoje',
+    aviso:
+      'Ainda são muito poucas operações. Não decide nada: mostra-se para que possas acompanhá-la enquanto acumula resultados. Não é uma recomendação de compra ou venda.',
+    vacio: 'Hoje não há nenhum sinal desta regra.',
+  },
+
   setup: {
     soporte: 'Suporte',
     resistencia: 'Resistência',

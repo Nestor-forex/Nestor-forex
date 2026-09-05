@@ -97,7 +97,11 @@ export default function App() {
     return r
   }
 
-  const detalle = detalleId ? mercado.setups.find((s) => s.name + s.lado === detalleId) : null
+  // Busca en las DOS listas: si mirara solo `mercado.setups`, el botón «ver la
+  // señal en detalle» de una reversión abriría una pantalla en blanco.
+  const detalle = detalleId
+    ? [...mercado.setups, ...mercado.setupsReversion].find((s) => s.name + s.lado === detalleId)
+    : null
 
   // Pasa el setup al Diario: llena el par, la dirección y una nota con los
   // niveles, y lo deja como operación abierta. El lote y el resultado los pone
@@ -215,6 +219,7 @@ export default function App() {
             ventas={mercado.ventas}
             vigilancia={mercado.vigilancia}
             setups={mercado.setups}
+            setupsReversion={mercado.setupsReversion}
             corte={mercado.corte}
           />
         )}

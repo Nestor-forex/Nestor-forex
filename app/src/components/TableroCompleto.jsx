@@ -3,6 +3,7 @@ import { limitaciones } from '../lib/fakeData'
 import { sesgoColor, tendColor, rsiColor, fmtDif } from '../lib/display'
 import { fmtFechaHoy, fmtFecha, claveSesionActiva } from '../lib/format'
 import { useIdioma } from '../lib/i18n'
+import { MEDICION, REAL } from '../lib/medicion'
 import { VENTAS_PAUSADAS } from '../lib/reglas'
 import { generarReporteMd, descargarMd } from '../lib/reporte'
 import BarraFuerza from './BarraFuerza'
@@ -28,6 +29,45 @@ function Chip({ children, color }) {
   )
 }
 
+// Una tarjeta de señal. Vive aparte porque la pintan DOS secciones: las
+// señales de la app y las de la regla contraria. Duplicarla habría dejado dos
+// copias que se separan en cuanto alguien toque una — el mismo problema que
+// las dos apps hermanas, en pequeño.
+function SetupCard({ s, t, onVerSetup }) {
+  return (
+    <div className="card">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <span className="mono" style={{ fontWeight: 600, fontSize: 16 }}>
+          {s.name}
+        </span>
+        <Chip color={s.lado === 'COMPRA' ? 'var(--green)' : 'var(--red)'}>{t(`lado.${s.lado}`)}</Chip>
+      </div>
+      <div className="mono" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: 12.5 }}>
+        <span style={{ color: 'var(--text-muted)' }}>{t('setup.soporte')}</span>
+        <span>{s.sup}</span>
+        <span style={{ color: 'var(--text-muted)' }}>{t('setup.resistencia')}</span>
+        <span>{s.res}</span>
+        <span style={{ color: 'var(--text-muted)' }}>{t('setup.entrada')}</span>
+        <span>{s.entrada}</span>
+        <span style={{ color: 'var(--text-muted)' }}>{t('setup.stopLoss')}</span>
+        <span>{s.sl}</span>
+        <span style={{ color: 'var(--text-muted)' }}>{t('setup.takeProfit')}</span>
+        <span>{s.tp}</span>
+        <span style={{ color: 'var(--text-muted)' }}>{t('setup.rb')}</span>
+        <span style={{ color: s.rrOk ? 'var(--green)' : 'var(--amber)' }}>{s.rr}</span>
+      </div>
+      <p style={{ margin: '12px 0 0', fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+        {t('setup.invalida')} {s.inval}
+      </p>
+      {onVerSetup && (
+        <button type="button" className="btn" style={{ marginTop: 12, width: '100%' }} onClick={() => onVerSetup(s)}>
+          {t('setup.verDetalle')}
+        </button>
+      )}
+    </div>
+  )
+}
+
 function RazonList({ items, emptyText }) {
   if (!items.length) {
     return <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{emptyText}</div>
@@ -46,7 +86,7 @@ function RazonList({ items, emptyText }) {
   )
 }
 
-export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, corte }) {
+export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], corte }) {
   const { t, locale } = useIdioma()
   const fecha = useMemo(() => fmtFechaHoy(locale), [locale])
   const sesion = t(claveSesionActiva())
@@ -205,43 +245,69 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
           <h2 className="section-title">{t('tablero.setups')}</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {setups.map((s) => (
-              <div key={s.name + s.lado} className="card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <span className="mono" style={{ fontWeight: 600, fontSize: 16 }}>
-                    {s.name}
-                  </span>
-                  <Chip color={s.lado === 'COMPRA' ? 'var(--green)' : 'var(--red)'}>{t(`lado.${s.lado}`)}</Chip>
-                </div>
-                <div className="mono" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: 12.5 }}>
-                  <span style={{ color: 'var(--text-muted)' }}>{t('setup.soporte')}</span>
-                  <span>{s.sup}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>{t('setup.resistencia')}</span>
-                  <span>{s.res}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>{t('setup.entrada')}</span>
-                  <span>{s.entrada}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>{t('setup.stopLoss')}</span>
-                  <span>{s.sl}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>{t('setup.takeProfit')}</span>
-                  <span>{s.tp}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>{t('setup.rb')}</span>
-                  <span style={{ color: s.rrOk ? 'var(--green)' : 'var(--amber)' }}>{s.rr}</span>
-                </div>
-                <p style={{ margin: '12px 0 0', fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{t('setup.invalida')} {s.inval}</p>
-                {onVerSetup && (
-                  <button
-                    type="button"
-                    className="btn"
-                    style={{ marginTop: 12, width: '100%' }}
-                    onClick={() => onVerSetup(s)}
-                  >
-                    {t('setup.verDetalle')}
-                  </button>
-                )}
-              </div>
+              <SetupCard key={s.name + s.lado} s={s} t={t} onVerSetup={onVerSetup} />
             ))}
           </div>
         </section>
         </>
+        )}
+
+        {/* ⚠️ LA REGLA CONTRARIA VA EN SU PROPIA SECCIÓN, NUNCA EN LA DE ARRIBA.
+            La app compra lo fuerte; esto compra lo débil. Son reglas opuestas,
+            y mezclarlas en la misma tabla sería el peor error posible aquí:
+            nadie podría saber cuál está mirando. Por eso la lista llega
+            separada desde `derivarVista` y no se concatena en ningún sitio. */}
+        {!loading && !error && setupsReversion.length > 0 && (
+          <section style={{ marginTop: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <h2 className="section-title" style={{ margin: 0 }}>{t('reversion.titulo')}</h2>
+              <Chip color="var(--amber)">{t('reversion.marca')}</Chip>
+            </div>
+            <p style={{ margin: '10px 0 0', fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              {t('reversion.explica')}
+            </p>
+
+            <div
+              className="mono"
+              style={{
+                margin: '14px 0 0',
+                padding: '12px 14px',
+                border: '1px solid var(--border)',
+                borderRadius: 6,
+                fontSize: 12.5,
+                display: 'grid',
+                gridTemplateColumns: '1fr auto',
+                gap: '7px 14px',
+                alignItems: 'baseline',
+              }}
+            >
+              <span style={{ color: 'var(--text-muted)' }}>{t('reversion.enBanco')}</span>
+              <span>
+                {MEDICION.reversion.operaciones} ops · {MEDICION.reversion.acierto}% ·{' '}
+                <strong style={{ color: 'var(--green)' }}>
+                  +{MEDICION.reversion.porRiesgo.toFixed(3)}
+                </strong>
+              </span>
+              <span style={{ color: 'var(--text-muted)' }}>{t('reversion.enReal')}</span>
+              <span>
+                {REAL.reversion.resueltas} ops · {REAL.reversion.ganadas}–{REAL.reversion.perdidas} ·{' '}
+                <strong style={{ color: REAL.reversion.pips >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                  {REAL.reversion.pips >= 0 ? '+' : ''}
+                  {REAL.reversion.pips} pips
+                </strong>
+              </span>
+            </div>
+
+            <p style={{ margin: '10px 0 14px', fontSize: 12.5, color: 'var(--amber)', lineHeight: 1.5 }}>
+              {t('reversion.aviso')}
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {setupsReversion.map((s) => (
+                <SetupCard key={s.name + s.lado} s={s} t={t} onVerSetup={onVerSetup} />
+              ))}
+            </div>
+          </section>
         )}
 
         <section style={{ borderTop: '1px solid var(--border)', paddingTop: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>

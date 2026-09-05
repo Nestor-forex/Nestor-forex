@@ -112,5 +112,44 @@ console.log('\n10. Las reversiones tampoco salen hacia un celular')
   comprobar('una reversión de COMPRA también es sombra', esSombra(setup('X/Y', 'COMPRA', 'reversion')) === true)
 }
 
+console.log('\n11. El vigía sigue anotando las reversiones tras separarlas de la app')
+{
+  // ⚠️ ESTA ES LA COMPROBACIÓN MÁS IMPORTANTE DEL ARCHIVO, y existe por un
+  // fallo que estuvo a un renglón de pasar.
+  //
+  // El 2026-09-05 las reversiones se sacaron de `vista.setups` a una lista
+  // propia (`setupsReversion`), porque al enseñarlas en la app se habrían
+  // mezclado con las señales normales en la misma tabla. Pero el vigía leía
+  // `vista.setups` a secas: con ese cambio habría dejado de anotarlas **sin
+  // dar un solo error**. Seguiría corriendo, seguiría publicando, y el
+  // historial de la reversión simplemente dejaría de crecer.
+  //
+  // Y ese historial es lo único de este proyecto que NO se puede recuperar:
+  // un día que no se anota, se perdió. Ya lleva 12 operaciones resueltas
+  // (6 ganadas, 6 perdidas, +117 pips) y es el número que decidirá si la
+  // regla se enciende de verdad algún día.
+  //
+  // Se comprueba leyendo el archivo del vigía, no llamándolo: arrancarlo pide
+  // internet y credenciales. Es tosco a propósito — lo que hay que garantizar
+  // es que ese renglón no vuelva a quedarse con una sola lista.
+  const fuente = readFileSync(new URL('./vigia.mjs', import.meta.url), 'utf8')
+  const juntaLasDos =
+    fuente.includes('vista.setups') && fuente.includes('vista.setupsReversion')
+  comprobar('el vigía lee las DOS listas, no solo la de la app', juntaLasDos)
+  comprobar(
+    'y lo que compara no es `vista.setups` a secas',
+    /compararConAnterior\(\s*(?!vista\.setups\s*,)/.test(fuente)
+  )
+
+  // Y que `derivarVista` de verdad las separe: si volvieran a `setups`, la
+  // tabla del tablero las pintaría como señales normales.
+  comprobar(
+    'derivarVista devuelve `setupsReversion` como lista propia',
+    readFileSync(new URL('../src/lib/marketCalc.js', import.meta.url), 'utf8').includes(
+      'setupsReversion'
+    )
+  )
+}
+
 console.log(fallos === 0 ? '\nTodas las comprobaciones pasaron.\n' : `\n${fallos} comprobación(es) fallaron.\n`)
 process.exit(fallos === 0 ? 0 : 1)

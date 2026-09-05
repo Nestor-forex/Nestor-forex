@@ -95,6 +95,18 @@ export default {
     sufijoVelas: '20d',
   },
 
+  reversion: {
+    marca: 'ESPERIMENTO',
+    titulo: 'La regola contraria',
+    explica:
+      "Questi segnali fanno l'OPPOSTO di quelli sopra: comprano la valuta che è scesa, non quella che sale. È l'unica regola che ha misurato positivo in questo progetto. Sono mostrati a parte, di proposito, per non confonderli mai con i segnali normali.",
+    enBanco: 'Nel banco di prova (5 anni)',
+    enReal: 'In operazioni reali finora',
+    aviso:
+      'Sono ancora pochissime operazioni. Non decide nulla: si mostra perché tu possa seguirla mentre accumula risultati. Non è una raccomandazione di acquisto o vendita.',
+    vacio: 'Oggi nessun segnale di questa regola.',
+  },
+
   setup: {
     soporte: 'Supporto',
     resistencia: 'Resistenza',

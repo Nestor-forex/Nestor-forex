@@ -99,6 +99,18 @@ export default {
     sufijoVelas: '20d',
   },
 
+  reversion: {
+    marca: 'EXPERIMENT',
+    titulo: 'Die umgekehrte Regel',
+    explica:
+      'Diese Signale tun das GEGENTEIL der obigen: Sie kaufen die Währung, die gefallen ist, nicht die steigende. Es ist die einzige Regel, die in diesem Projekt positiv gemessen wurde. Sie werden bewusst getrennt angezeigt, damit sie nie mit den normalen Signalen verwechselt werden.',
+    enBanco: 'Im Testlauf (5 Jahre)',
+    enReal: 'In echten Trades bis heute',
+    aviso:
+      'Es sind noch sehr wenige Trades. Das entscheidet nichts: Es wird gezeigt, damit du es verfolgen kannst, während es Ergebnisse sammelt. Es ist keine Kauf- oder Verkaufsempfehlung.',
+    vacio: 'Heute keine Signale dieser Regel.',
+  },
+
   setup: {
     soporte: 'Unterstützung',
     resistencia: 'Widerstand',
