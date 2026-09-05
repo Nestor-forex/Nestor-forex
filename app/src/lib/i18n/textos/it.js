@@ -100,6 +100,8 @@ export default {
     titulo: 'La regola contraria',
     explica:
       "Questi segnali fanno l'OPPOSTO di quelli sopra: comprano la valuta che è scesa, non quella che sale. È l'unica regola che ha misurato positivo in questo progetto. Sono mostrati a parte, di proposito, per non confonderli mai con i segnali normali.",
+    ojoContrario:
+      'Per questo la stessa coppia può comparire qui come BUY e sopra come SELL. Non è un errore: è esattamente ciò che significa «contraria».',
     enBanco: 'Nel banco di prova (5 anni)',
     enReal: 'In operazioni reali finora',
     aviso:

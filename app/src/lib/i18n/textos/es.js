@@ -143,6 +143,8 @@ export default {
     titulo: 'La regla contraria',
     explica:
       'Estas señales hacen lo OPUESTO a las de arriba: compran la divisa que se cayó, no la que sube. Es la única regla que ha medido positivo en este proyecto. Se muestran aparte, y a propósito, para que nunca se confundan con las señales normales.',
+    ojoContrario:
+      'Por eso el mismo par puede salir aquí como COMPRA y arriba como VENTA. No es un error: es exactamente lo que significa «contraria».',
     enBanco: 'En el banco de pruebas (5 años)',
     enReal: 'En operaciones reales hasta hoy',
     aviso:
