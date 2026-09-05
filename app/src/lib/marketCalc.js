@@ -314,7 +314,74 @@ const RSI_MAX = null
 // las malas", es "la app con otras señales".
 const CONFLUENCIA_MIN = null
 
-const clasificar = (p, thr, { rsiMax = RSI_MAX, confluenciaMin = CONFLUENCIA_MIN } = {}) => {
+// CUÁNTA TENDENCIA SE EXIGE PARA DEJAR PASAR UNA SEÑAL.
+//
+// Néstor investigó por su cuenta y trajo una observación que vale la pena
+// tener escrita: los operadores con experiencia usan POCOS indicadores, y una
+// de las razones es justo lo que nos pasa — apilar condiciones deja la app
+// muda. Cada filtro parece razonable por separado y juntos son una pared.
+//
+// Este proyecto ya se dio ese golpe: en la app hermana se subió el ADX de 20 a
+// 35 porque acertaba más, y salieron SIETE reportes seguidos sin una sola
+// señal, incluido el solape de Londres con Nueva York. Se eligió bien según lo
+// que se midió, y se midió lo que no era.
+//
+// Los tres niveles, de más a menos exigente:
+//   'alineada' (hoy) → precio por encima de la EMA20 Y la EMA20 por encima de
+//                      la EMA50. Dos condiciones.
+//   'media'          → solo precio por encima de la EMA20. Una condición.
+//   'ninguna'        → no se mira la tendencia: manda solo la fuerza relativa.
+//
+// ⚠️ AFLOJAR ESTO NO ES "MEJORARLO". Da MÁS señales, y está medido que las que
+// da la app pierden dinero. Más señales de un sistema que pierde es perder más
+// rápido. Lo que sí puede justificar aflojar es que la app sirva como
+// herramienta de información —que hable, que enseñe qué se mueve— sin que el
+// resultado por operación empeore. Son dos cosas distintas y no hay que
+// confundirlas: la tabla del banco de pruebas lleva las señales/mes AL LADO
+// del resultado justo para eso.
+// ENCENDIDO EN 'media' EL 2026-09-04, con permiso de Néstor y después de que
+// pasara la prueba que el ADX no pasó. Medido sobre 1.436 días, vara neutra
+// 1:1, con costes, y PARTIDO EN DOS MITADES (2024-03-27):
+//
+//   exigencia            señ/mes   por 1R   1ª mitad   2ª mitad
+//   alineada (antes)       27,7     −0,07     −0,10      −0,04
+//   media (ahora)          36,1     −0,05     −0,07      −0,04
+//   ninguna                36,2     −0,05     −0,08      −0,03
+//
+// Y con la geometría REAL de la app: −0,04 → −0,03, con los pips perdidos
+// bajando de −19.171 a −17.374 pese a operar 548 veces MÁS.
+//
+// Lo que hace válido el cambio no es el promedio: es que 'media' **no es peor
+// que 'alineada' en NINGUNA de las dos mitades**. El ADX se subió en su día
+// mirando solo el promedio, y por eso salieron siete reportes mudos.
+//
+// Se eligió 'media' y no 'ninguna' aunque midan casi igual (36,1 contra 36,2):
+// con 'media' queda una razón de mercado en pie —no comprar por debajo de la
+// media de 20— y ocho señales de diferencia al mes no pagan renunciar a ella.
+//
+// ⚠️ ESTO NO CONVIERTE LA APP EN GANADORA. Sigue en −0,03 por unidad de riesgo,
+// o sea perdiendo. Lo que se compró aquí es que la app HABLE más sin que cada
+// señal salga peor. Si algún día se opera con dinero de verdad, el número que
+// manda sigue siendo el −0,03, no las 36 señales.
+const TENDENCIA_MIN = 'media'
+
+const cumpleTendencia = (p, lado, exigencia) => {
+  if (exigencia === 'ninguna') return true
+  const quiere = lado === 'COMPRA' ? 'Alcista' : 'Bajista'
+  if (exigencia === 'media') {
+    // Solo el precio contra la media rápida: se quita la condición de que una
+    // media esté por encima de la otra, que es la que más tarda en cumplirse
+    // después de un giro.
+    return lado === 'COMPRA' ? p.c > p.e20 : p.c < p.e20
+  }
+  return p.tend === quiere
+}
+
+const clasificar = (
+  p,
+  thr,
+  { rsiMax = RSI_MAX, confluenciaMin = CONFLUENCIA_MIN, tendenciaMin = TENDENCIA_MIN } = {}
+) => {
   // "Extendido" es simétrico: comprar con el RSI arriba y vender con el RSI
   // abajo son el mismo error visto en el espejo.
   const estirado = rsiMax !== null && (p.dif > 0 ? p.rsiV >= rsiMax : p.rsiV <= 100 - rsiMax)
@@ -335,8 +402,10 @@ const clasificar = (p, thr, { rsiMax = RSI_MAX, confluenciaMin = CONFLUENCIA_MIN
     return confluenciaMin < 0 ? n === 0 : n >= confluenciaMin
   }
 
-  if (p.dif > thr && p.tend === 'Alcista' && !estirado && confluye('COMPRA')) return 'COMPRA'
-  if (p.dif < -thr && p.tend === 'Bajista' && !estirado && confluye('VENTA')) return 'VENTA'
+  if (p.dif > thr && cumpleTendencia(p, 'COMPRA', tendenciaMin) && !estirado && confluye('COMPRA'))
+    return 'COMPRA'
+  if (p.dif < -thr && cumpleTendencia(p, 'VENTA', tendenciaMin) && !estirado && confluye('VENTA'))
+    return 'VENTA'
   if (Math.abs(p.dif) > thr) return 'VIGILAR'
   return '—'
 }
@@ -510,11 +579,12 @@ export function derivarVista(
     incluirReversion = false,
     rsiMax,
     confluenciaMin,
+    tendenciaMin,
   } = {}
 ) {
   // Un solo sitio donde se decide, para que las cuatro llamadas de abajo no
   // puedan quedar con criterios distintos entre sí.
-  const cls = (p) => clasificar(p, thr, { rsiMax, confluenciaMin })
+  const cls = (p) => clasificar(p, thr, { rsiMax, confluenciaMin, tendenciaMin })
   const { esc, pares: paresRaw } = data
 
   const monedas = Object.keys(esc)

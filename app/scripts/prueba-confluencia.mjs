@@ -246,5 +246,66 @@ console.log('\nVIGILAR no se toca')
   )
 }
 
+console.log('\nAflojar la exigencia de tendencia SÍ afloja')
+{
+  // Néstor trajo la observación de que apilar indicadores deja la app muda, y
+  // esto comprueba el mecanismo antes de gastar créditos midiéndolo: que cada
+  // escalón deje pasar MÁS que el anterior, y que lo que pasaba con el nivel
+  // estricto siga pasando con el flojo. Si no se anidaran, "aflojar" estaría
+  // cambiando las señales por otras en vez de añadir, y la tabla del banco de
+  // pruebas no diría lo que parece decir.
+  const porNivel = {}
+  for (const n of ['alineada', 'media', 'ninguna']) {
+    porNivel[n] = derivarVista(data, { thr: 0, incluirVentas: true, tendenciaMin: n })
+  }
+  const operables = (v) =>
+    v.pares.filter((p) => p.sesgo === 'COMPRA' || p.sesgo === 'VENTA').map((p) => `${p.name}|${p.sesgo}`)
+
+  const est = operables(porNivel.alineada)
+  const med = operables(porNivel.media)
+  const nin = operables(porNivel.ninguna)
+
+  comprobar(est.length > 0, `con las medias alineadas pasan ${est.length}`)
+  comprobar(med.length >= est.length, `solo con la EMA20 pasan ${med.length} (no menos)`)
+  comprobar(nin.length >= med.length, `sin exigir tendencia pasan ${nin.length} (no menos)`)
+  comprobar(nin.length > est.length, 'y aflojar del todo deja pasar MÁS que hoy: afloja de verdad')
+
+  // Lo estricto tiene que ser un subconjunto de lo flojo. Si apareciera una
+  // señal con el filtro puesto que no aparece sin él, "aflojar" no sería
+  // aflojar.
+  comprobar(
+    est.every((x) => med.includes(x)),
+    'lo que pasa con medias alineadas también pasa con solo la EMA20'
+  )
+  comprobar(
+    med.every((x) => nin.includes(x)),
+    'y lo que pasa con la EMA20 también pasa sin exigir tendencia'
+  )
+
+  // EL VALOR POR DEFECTO ES EL QUE MANDA EN LA APP, así que tiene que estar
+  // clavado a un nivel concreto y no al que le toque.
+  //
+  // Hasta el 2026-09-04 esta comprobación exigía 'alineada', porque la
+  // exigencia venía APAGADA y el cambio era aditivo. Ese día se encendió en
+  // 'media' con permiso de Néstor, tras medir 36,1 señales/mes contra 27,7 y
+  // −0,05 contra −0,07, y —lo que decide— sin ser peor en NINGUNA de las dos
+  // mitades del periodo. Esta comprobación falló en ese momento, que es
+  // exactamente lo que tenía que hacer: avisar de que la app cambiaba.
+  //
+  // Se actualiza al nivel nuevo en vez de borrarla. Sigue sirviendo para lo
+  // mismo: si alguien mueve el nivel sin querer, esto lo canta.
+  const sinPasarNada = derivarVista(data, { thr: 0, incluirVentas: true })
+  comprobar(
+    JSON.stringify(sinPasarNada.pares.map((p) => p.sesgo)) ===
+      JSON.stringify(porNivel.media.pares.map((p) => p.sesgo)),
+    'y no pasar nada es idéntico a "media", que es el nivel encendido hoy'
+  )
+  comprobar(
+    JSON.stringify(sinPasarNada.pares.map((p) => p.sesgo)) !==
+      JSON.stringify(porNivel.alineada.pares.map((p) => p.sesgo)),
+    '…y YA NO es idéntico a "alineada": el cambio está de verdad puesto'
+  )
+}
+
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')
 process.exit(fallos ? 1 : 0)

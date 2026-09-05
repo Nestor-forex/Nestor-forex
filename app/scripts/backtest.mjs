@@ -35,6 +35,7 @@ import { computarBarrido } from '../src/lib/marketCalc.js'
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
 import { generarSenales, medir, barridoSwap } from './lib/backtest-nucleo.mjs'
 import { GEOMETRIAS, simetrica, actual, atrFijo } from './lib/geometrias.mjs'
+import { reglaBarrido } from './lib/patrones.mjs'
 import { resolver } from './lib/resolver.mjs'
 
 // Días de arranque que no se juzgan: el EMA50 y el RSI necesitan historia
@@ -1122,6 +1123,259 @@ console.log('')
       `   ${etiqueta.padEnd(14)}  ${(m.acierto ?? 0).toFixed(0).padStart(5)}%` +
         `  ${(m.porRiesgo ?? 0).toFixed(3).padStart(7)}   ${costeMedio.toFixed(1).padStart(5)} pips`
     )
+  }
+}
+
+// --------------------------------------------------------------------------
+// AFLOJAR LOS FILTROS: ¿la app está muda por culpa suya?
+//
+// Lo pidió Néstor después de investigar por su cuenta, y su observación es
+// buena: los operadores con experiencia usan POCOS indicadores, y una razón es
+// justo esta — cada condición parece razonable por separado y apiladas son una
+// pared que no deja pasar nada.
+//
+// Este proyecto ya se dio ese golpe en la app hermana: subir el ADX de 20 a 35
+// mejoró el acierto y dejó SIETE reportes seguidos sin una sola señal, incluido
+// el solape de Londres con Nueva York.
+//
+// ⚠️ CÓMO HAY QUE LEER ESTA TABLA, Y ES LO MÁS IMPORTANTE DE ELLA.
+// Aflojar da MÁS señales. Eso NO es mejorar: está medido que las señales de
+// esta app pierden dinero, y más señales de un sistema que pierde es perder
+// más rápido. Lo único que puede justificar aflojar es que la app sirva como
+// HERRAMIENTA DE INFORMACIÓN —que hable, que enseñe qué se mueve— sin que el
+// resultado por operación empeore.
+//
+// Son dos objetivos distintos. Por eso las señales/mes van AL LADO del "por
+// 1R" y no en otra tabla: la decisión es un intercambio, no una mejora.
+// --------------------------------------------------------------------------
+
+{
+  const meses = (fechas.length - CALENTAMIENTO) / 21
+
+  console.log('')
+  console.log('AFLOJAR LOS FILTROS (regla neutra 1:1, con spread)')
+  console.log('Cada fila quita o relaja una pared. Mirar las DOS columnas juntas:')
+  console.log('más señales no es mejor si el resultado por operación empeora.')
+  console.log('')
+  // ⚠️ LAS DOS MITADES DEL TIEMPO SON OBLIGATORIAS AQUÍ, y no estaban en la
+  // primera versión de esta tabla. Es EXACTAMENTE la prueba que el ADX no pasó:
+  // el 2026-08-12 se subió de 20 a 35 en la app hermana porque «acertaba más»,
+  // y el resultado fueron siete reportes seguidos sin una sola señal. Un número
+  // que solo es bueno en una mitad del periodo no es una mejora, es una
+  // casualidad con buena presentación.
+  //
+  // Sin estas dos columnas no se puede recomendar ENCENDER nada.
+  const corteAfl = fechas[Math.floor(fechas.length / 2)]
+
+  console.log(`Las dos mitades se parten en ${corteAfl}.`)
+  console.log('')
+  console.log('qué se afloja                          ops  señ/mes  acierto   por 1R  │ 1ª mit │ 2ª mit')
+  console.log('─'.repeat(92))
+
+  const linea = (nombre, r) => {
+    const m = medir(r.senales, r.porClave, { conSpread: true })
+    const m1 = medir(r.senales.filter((x) => x.vistoEl < corteAfl), r.porClave, { conSpread: true })
+    const m2 = medir(r.senales.filter((x) => x.vistoEl >= corteAfl), r.porClave, { conSpread: true })
+    const ac = m.acierto === null ? '  — ' : (m.acierto.toFixed(0) + '%').padStart(4)
+    const pr = (x) => (x === null ? '   —  ' : ((x >= 0 ? '+' : '') + x.toFixed(2)).padStart(6))
+    console.log(
+      `${nombre.padEnd(34)} ${String(m.total).padStart(5)}   ${(m.total / meses).toFixed(1).padStart(5)}    ${ac}   ` +
+        `${pr(m.porRiesgo)} │ ${pr(m1.porRiesgo)} │ ${pr(m2.porRiesgo)}`
+    )
+  }
+
+  const conThr = (t, vista = {}) => {
+    const senales = generarSenales(fechas, rates, rangosPar, {
+      calentamiento: CALENTAMIENTO,
+      thr: t,
+      topN: TOP_N,
+      geometria: simetrica,
+      vista,
+    })
+    const { resultados } = resolver(senales, completo)
+    return { senales, porClave: new Map(resultados.map((r) => [r.clave, r])) }
+  }
+
+  // 1. El umbral de fuerza. Es la primera puerta: por debajo de `thr` el par ni
+  //    se considera.
+  console.log('· El umbral de fuerza relativa (hoy 0.5)')
+  for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+    linea(`  fuerza > ${t.toFixed(2)}${t === THR ? '  (hoy)' : ''}`, conThr(t))
+  }
+
+  // 2. La exigencia de tendencia. Es la pared más alta: pide DOS cosas a la vez
+  //    (precio sobre la EMA20, y EMA20 sobre EMA50), y la segunda tarda mucho
+  //    en cumplirse después de un giro.
+  console.log('')
+  console.log('· Cuánta tendencia se exige')
+  for (const [clave, nombre] of [
+    ['alineada', '  medias alineadas  (hoy)'],
+    ['media', '  solo precio sobre la EMA20'],
+    ['ninguna', '  nada: manda solo la fuerza'],
+  ]) {
+    linea(nombre, correr(simetrica, null, { tendenciaMin: clave }))
+  }
+
+  // 3. Las dos aflojadas a la vez, que es lo que de verdad se plantea.
+  console.log('')
+  console.log('· Las dos a la vez')
+  for (const t of [0.25, 0.5]) {
+    for (const clave of ['media', 'ninguna']) {
+      linea(`  fuerza > ${t} + tendencia ${clave}`, conThr(t, { tendenciaMin: clave }))
+    }
+  }
+
+  // 4. Lo que cuesta tener las ventas en pausa. No es un filtro de umbral: es
+  //    media app apagada, y conviene tener el número al lado de los demás.
+  console.log('')
+  console.log('· Lo que cuesta la pausa de las ventas')
+  const base = correr(simetrica)
+  linea('  solo compras (lo que se ve hoy)', {
+    senales: base.senales.filter((s) => s.lado === 'COMPRA'),
+    porClave: base.porClave,
+  })
+  linea('  compras y ventas', base)
+
+  console.log('─'.repeat(92))
+  console.log('Con la geometría REAL de la app, y también partido en dos:')
+  console.log('filtro                                           ops   acierto      pips   por 1R  │ 1ª mit │ 2ª mit')
+  for (const clave of ['alineada', 'media', 'ninguna']) {
+    const r = correr(actual, null, { tendenciaMin: clave })
+    const m = medir(r.senales, r.porClave, { conSpread: true })
+    const m1 = medir(r.senales.filter((x) => x.vistoEl < corteAfl), r.porClave, { conSpread: true })
+    const m2 = medir(r.senales.filter((x) => x.vistoEl >= corteAfl), r.porClave, { conSpread: true })
+    const pr = (x) => (x === null ? '   —  ' : ((x >= 0 ? '+' : '') + x.toFixed(2)).padStart(6))
+    const acierto = m.acierto === null ? '   —  ' : `${m.acierto.toFixed(0).padStart(4)}%`
+    console.log(
+      `${`tendencia ${clave}`.padEnd(46)} ${String(m.total).padStart(5)}   ${acierto}   ` +
+        `${String(m.pips).padStart(7)}   ${pr(m.porRiesgo)} │ ${pr(m1.porRiesgo)} │ ${pr(m2.porRiesgo)}`
+    )
+  }
+}
+
+// --------------------------------------------------------------------------
+// EL BARRIDO DE LIQUIDEZ (idea traída por Néstor de los métodos ICT / SMC)
+//
+// QUÉ ES, SIN JERGA
+// El precio perfora un máximo o un mínimo anterior —donde está acumulada la
+// gente con sus stops— y CIERRA DE VUELTA DENTRO. La idea es que ese pinchazo
+// no era el inicio de un movimiento sino la recogida de esos stops, y que el
+// precio suele volverse después.
+//
+// POR QUÉ ESTA IDEA Y NO OTRA DE SU LISTA
+// Néstor trajo una investigación sobre lo que usan los operadores
+// profesionales. La mayor parte de esa lista —Level 2, Volume Profile,
+// Bookmap, Bloomberg— pide datos que NO tenemos: nosotros vemos el resumen de
+// cada vela (apertura, máximo, mínimo, cierre) y ellos ven las órdenes en
+// espera. Eso no se puede copiar, y explica por qué el estudio de las 14
+// familias sobre datos OHLCV no encontró nada.
+//
+// Pero el barrido de liquidez SÍ se calcula con máximo, mínimo y cierre. Y hay
+// una razón de fondo para probarlo antes que cualquier otra: **es un patrón de
+// REVERSIÓN**, y la reversión es lo único que ha medido positivo en todo este
+// proyecto (+0,051 por 1R en Swing con costes). No sería copiar una moda:
+// sería una segunda vía, independiente, hacia el mismo efecto que ya
+// encontramos. Cuando dos caminos distintos llevan al mismo sitio, eso sí
+// es una señal de que hay algo.
+//
+// ⚠️ EL CONTROL ES LO QUE HACE QUE ESTO SEA UNA MEDICIÓN Y NO UN CUENTO.
+// Se mide también el ROMPIMIENTO: perforar el mismo nivel y cerrar FUERA. Si
+// las dos cosas dan lo mismo, entonces lo que importa no es "volverse" sino
+// simplemente "tocar el nivel", y la historia del barrido de stops sobra.
+// --------------------------------------------------------------------------
+
+{
+  const corteBar = fechas[Math.floor(fechas.length / 2)]
+  const meses = (fechas.length - CALENTAMIENTO) / 21
+
+  console.log('')
+  console.log('EL BARRIDO DE LIQUIDEZ (regla nueva, vara neutra 1:1)')
+  console.log('El precio perfora un extremo anterior y CIERRA DE VUELTA dentro.')
+  console.log(`Las dos mitades se parten en ${corteBar}.`)
+  console.log('')
+  console.log('regla                                  ops  señ/mes  acierto  por 1R  │ 1ª mit │ 2ª mit')
+  console.log('─'.repeat(92))
+
+  const linea = (nombre, regla) => {
+    const r = correr(simetrica, regla)
+    const m = medir(r.senales, r.porClave, { conSpread: true })
+    const m1 = medir(r.senales.filter((x) => x.vistoEl < corteBar), r.porClave, { conSpread: true })
+    const m2 = medir(r.senales.filter((x) => x.vistoEl >= corteBar), r.porClave, { conSpread: true })
+    const pr = (x) => (x === null ? '   —  ' : ((x >= 0 ? '+' : '') + x.toFixed(2)).padStart(6))
+    const ac = (x) => (x === null ? '  — ' : (x.toFixed(0) + '%').padStart(4))
+    console.log(
+      `${nombre.padEnd(36)} ${String(m.total).padStart(5)}   ${(m.total / meses).toFixed(1).padStart(5)}    ` +
+        `${ac(m.acierto)}  ${pr(m.porRiesgo)} │ ${pr(m1.porRiesgo)} │ ${pr(m2.porRiesgo)}`
+    )
+    return r
+  }
+
+  // El barrido de N días. Con N=1 es "el máximo/mínimo de AYER", que es el
+  // nivel del que hablan los métodos ICT; con N=5 es el de la semana pasada.
+  console.log('· Cuántos días atrás está el nivel que se barre')
+  for (const n of [1, 3, 5, 10, 20]) {
+    linea(`  B${n}. barrido de ${n} día${n > 1 ? 's' : ''}`, reglaBarrido(n))
+  }
+
+  console.log('')
+  console.log('· Añadiéndole condiciones al mejor tamaño (10 días)')
+  linea('  + fuerza relativa a favor', reglaBarrido(10, { exigirFuerza: true }))
+  linea('  + RSI estirado (como la M2)', reglaBarrido(10, { rsiEstirado: true }))
+  linea('  + las dos', reglaBarrido(10, { exigirFuerza: true, rsiEstirado: true }))
+
+  console.log('')
+  // ⚠️ CUIDADO CON EL NOMBRE DE ESTAS FILAS. Se llamaron «rompimiento» en la
+  // primera versión y era ENGAÑOSO: un rompimiento, tal como se entiende
+  // normalmente, es VENDER cuando el precio hace un mínimo nuevo (seguir el
+  // movimiento). Aquí es al revés: se COMPRA ese mínimo nuevo. Comprobado con
+  // el código en la mano, no de memoria — un par que perfora el suelo y cierra
+  // abajo sale `true` para 'COMPRA', no para 'VENTA'.
+  //
+  // O sea que estas filas son «comprar la caída sin esperar a que rebote»:
+  // reversión más profunda todavía que el barrido, no lo contrario de él. Las
+  // dos compran debilidad; lo que cambia es si se exige que el precio ya haya
+  // recuperado al cierre (barrido) o no (esto).
+  console.log('· CONTROL: perfora y NO recupera — y se compra igual')
+  console.log('  Comprar el mínimo nuevo mientras sigue cayendo, sin esperar rebote.')
+  console.log('  Si esto da lo mismo, lo que importa es tocar el nivel, no volverse.')
+  for (const n of [1, 5, 10, 20]) {
+    linea(`  C${n}. comprar la caída de ${n} día${n > 1 ? 's' : ''}`, reglaBarrido(n, { volver: false }))
+  }
+
+  console.log('─'.repeat(92))
+  console.log('Para comparar, con la misma vara:')
+  {
+    const base = correr(simetrica)
+    const m = medir(base.senales, base.porClave, { conSpread: true })
+    console.log(
+      `  la app hoy                         ${String(m.total).padStart(5)}   ${(m.total / meses).toFixed(1).padStart(5)}    ` +
+        `${(m.acierto ?? 0).toFixed(0).padStart(3)}%  ${((m.porRiesgo ?? 0) >= 0 ? '+' : '') + (m.porRiesgo ?? 0).toFixed(2)}`
+    )
+    const rev = correr(simetrica, REGLAS_REVERSION[1][1])
+    const mr = medir(rev.senales, rev.porClave, { conSpread: true })
+    console.log(
+      `  la reversión M2 (lo mejor medido)  ${String(mr.total).padStart(5)}   ${(mr.total / meses).toFixed(1).padStart(5)}    ` +
+        `${(mr.acierto ?? 0).toFixed(0).padStart(3)}%  ${((mr.porRiesgo ?? 0) >= 0 ? '+' : '') + (mr.porRiesgo ?? 0).toFixed(2)}`
+    )
+  }
+
+  // Si el barrido y la reversión eligieran las mismas operaciones, no sería
+  // una vía independiente sino la misma regla con otro nombre — y entonces
+  // "dos caminos llevan al mismo sitio" dejaría de ser un argumento.
+  console.log('')
+  console.log('¿ES UNA VÍA INDEPENDIENTE O LA REVERSIÓN CON OTRO NOMBRE?')
+  {
+    const bar = correr(simetrica, reglaBarrido(10))
+    const rev = correr(simetrica, REGLAS_REVERSION[1][1])
+    const clave = (x) => `${x.par}|${x.lado}|${x.vistoEl}`
+    const enRev = new Set(rev.senales.map(clave))
+    const comunes = bar.senales.filter((x) => enRev.has(clave(x))).length
+    const pct = bar.senales.length ? (comunes / bar.senales.length) * 100 : 0
+    console.log(
+      `De las ${bar.senales.length} señales del barrido de 10 días, ${comunes} (${pct.toFixed(0)}%) ` +
+        `coinciden con la reversión M2.`
+    )
+    console.log('Cuanto MENOS coincidan, más independiente es el hallazgo (si lo hay).')
   }
 }
 
