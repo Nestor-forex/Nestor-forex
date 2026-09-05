@@ -103,6 +103,29 @@ const fila = (nombre, m) => {
   )
 }
 
+// La misma fila, más la columna que dice CUÁNTO HAY QUE ACERTAR para no perder.
+//
+// ⚠️ ESTA COLUMNA SE CALCULÓ A MANO EL 2026-08-25 Y POR ESO EXISTE AHORA.
+// En la rejilla de doce geometrías de aquel día, la de MEJOR acierto (55 %, con
+// el objetivo al 0,75 del riesgo) perdía dinero: su equilibrio estaba en 57 %.
+// Sin la columna al lado, «55 % de acierto» se lee como una buena noticia y es
+// justo el número con el que se engaña a la gente en este sector. Depender de
+// que alguien se acuerde de hacer la cuenta aparte no es un sistema.
+//
+// El «~» marca las filas donde el equilibrio es solo indicativo: cuando cada
+// operación tiene su propia proporción objetivo/riesgo —la geometría real de la
+// app, donde el objetivo es el primer nivel que aparece— la fórmula usa la
+// proporción MEDIA y deja de cuadrar. En esas filas manda `por 1R`.
+const filaConEquilibrio = (nombre, m) => {
+  const pc = (x) => (x === null ? '   — ' : `${x.toFixed(0).padStart(4)}%`)
+  const porR = m.porRiesgo === null ? '    —' : `${m.porRiesgo >= 0 ? '+' : ''}${m.porRiesgo.toFixed(2)}`
+  const aprox = m.equilibrioExacto === false ? '~' : ' '
+  console.log(
+    `${nombre.padEnd(46)} ${String(m.total).padStart(5)}   ${pc(m.acierto)}  ${aprox}${pc(m.equilibrio)}   ` +
+      `${String(m.pips).padStart(7)}   ${porR.padStart(7)}`
+  )
+}
+
 console.log('---BACKTEST-INICIO---')
 console.log(`Días descargados: ${fechas.length} · de ${fechas[0]} a ${fechas.at(-1)}`)
 console.log(`Días medidos: ${fechas.length - CALENTAMIENTO} (los primeros ${CALENTAMIENTO} son de calentamiento)`)
@@ -111,21 +134,28 @@ console.log('GEOMETRÍA DEL STOP Y EL OBJETIVO')
 console.log('Mismas señales en todas: mismos pares, mismo lado, mismo día.')
 console.log('Lo ÚNICO que cambia es dónde se pone el stop y el objetivo.')
 console.log('')
-console.log('geometría                                        ops   acierto      pips   por 1R')
-console.log('─'.repeat(86))
+console.log('geometría                                        ops   acierto   hace falta      pips   por 1R')
+console.log('─'.repeat(95))
 
 const resultadosPorGeometria = []
 for (const [nombre, geo] of GEOMETRIAS) {
   const { senales, porClave } = correr(geo)
   const m = medir(senales, porClave)
-  fila(nombre, m)
+  filaConEquilibrio(nombre, m)
   resultadosPorGeometria.push({ nombre, geo, senales, porClave, m })
 }
-console.log('─'.repeat(86))
+console.log('─'.repeat(95))
 console.log('')
 console.log('"por 1R" = cuánto se gana o se pierde por cada unidad de riesgo.')
 console.log('Es LA columna: los pips sueltos no se pueden comparar entre geometrías')
 console.log('con riesgos distintos. Positivo = el sistema gana. Negativo = pierde.')
+console.log('')
+console.log('"hace falta" = cuánto hay que acertar SOLO para no perder, con estos')
+console.log('costes y esta geometría. Es la columna que evita el autoengaño: si el')
+console.log('acierto no le llega, la regla pierde por bonito que suene el porcentaje.')
+console.log('Acercar el objetivo sube el acierto Y sube el listón, las dos cosas.')
+console.log('Un "~" delante = cada operación tiene su propia proporción objetivo/riesgo,')
+console.log('así que ahí el número es solo indicativo y la que decide es "por 1R".')
 
 // --------------------------------------------------------------------------
 // Por qué sangran las ventas. En la medición anterior se llevaban el 87% de la
