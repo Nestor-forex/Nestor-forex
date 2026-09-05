@@ -3,18 +3,23 @@ name: Vigía diario
 # Revisa el barrido una vez al día y anota las señales nuevas. Ver el
 # comentario de cabecera de app/scripts/vigia.mjs para el porqué.
 #
-# UNA VEZ AL DÍA, no cada hora como en la app hermana de intradía: los precios
-# vienen del Banco Central Europeo y solo cambian una vez al día, así que
-# pedirlos cada hora sería pedir veinticuatro veces lo mismo.
+# UNA VEZ AL DÍA, no cada hora como en la app hermana de intradía: aquí cada
+# vela ES un día, así que pedir precios cada hora sería pedir veinticuatro
+# veces lo mismo — y gastar veinticuatro veces los créditos de Twelve Data.
 #
 # Los datos NO se guardan en esta rama: van a la rama `datos`, para que el
 # historial del código no quede sepultado bajo un commit diario.
 
 on:
   schedule:
-    # 15:50 UTC de lunes a viernes: el BCE publica sus tasas a eso de las
-    # 16:00 CET, y el reporte diario sale a las 15:40, así que este va
-    # justo después y no se pisan.
+    # 15:50 UTC de lunes a viernes: el reporte diario sale a las 15:40, así que
+    # este va justo después y no se pisan.
+    #
+    # ⚠️ La hora se eligió cuando los precios venían del BCE (publicaba a eso de
+    # las 16:00 CET). Desde el 2026-08-09 son velas diarias de Twelve Data, que
+    # cierran a las 22:00 UTC, así que este vigía ve la vela del día ANTERIOR ya
+    # cerrada más la de hoy a medias. Es lo correcto para no juzgar con una vela
+    # sin terminar — pero el motivo ya no es el que decía este comentario.
     #
     # Ojo: el reloj de GitHub es impuntual y se salta horas —medido en la app
     # hermana: 3 corridas donde tocaban 13—. Para un vigía diario eso importa
