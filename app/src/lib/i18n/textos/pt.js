@@ -361,6 +361,9 @@ export default {
   },
 
   historial: {
+    reversionTitulo: 'Histórico da regra contrária',
+    reversionIntro:
+      'As mesmas contas, mas da regra que compra o que caiu. Ficam à parte de propósito: são dois experimentos diferentes e juntá-los não responde a nenhuma das duas perguntas.',
     titulo: 'Histórico de sinais',
     intro: 'Cada sinal que o vigia encontrou e o que aconteceu depois.',
     cargando: 'Carregando o histórico…',

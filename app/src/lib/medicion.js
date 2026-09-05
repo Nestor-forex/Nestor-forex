@@ -27,16 +27,29 @@
 
 export const MEDICION = {
   // Cuándo se corrió el banco de pruebas que dio estos números.
-  fecha: '2026-09-04',
-  desde: '2021-06-23',
-  hasta: '2026-09-04',
+  fecha: '2026-09-05',
+  desde: '2021-06-24',
+  hasta: '2026-09-05',
   dias: 1436,
 
+  // ⚠️ ACTUALIZADOS EL 2026-09-05, y esta es la razón exacta por la que estos
+  // números llevan fecha dentro.
+  //
+  // Ese día se aflojó `TENDENCIA_MIN` de 'alineada' a 'media', o sea que la
+  // app pasó a dar 36,1 señales al mes en vez de 27,7. Los números de aquí
+  // eran de la app ANTERIOR y quedaron falsos en el mismo momento del cambio,
+  // sin que nada fallara: la pantalla habría seguido enseñando 1.693
+  // operaciones de una app que ya no existe.
+  //
+  // 📌 REGLA QUE SALE DE AQUÍ: cambiar un umbral de `marketCalc.js` obliga a
+  // volver a correr el banco de pruebas y actualizar este archivo. No es
+  // opcional — es la mitad del cambio.
+  //
   // La app tal cual, con SU geometría de stop y objetivo, spread por par
   // descontado. Es lo que Néstor ve en pantalla, medido de verdad.
   app: {
-    operaciones: 1693,
-    acierto: 55,
+    operaciones: 2320,
+    acierto: 56,
     porRiesgo: -0.03,
   },
 
@@ -45,9 +58,9 @@ export const MEDICION = {
   // con el objetivo más cerca que el stop se puede acertar mucho y perder
   // igual, y esta fila es la que lo desnuda.
   neutra: {
-    operaciones: 1706,
+    operaciones: 2331,
     acierto: 48,
-    porRiesgo: -0.06,
+    porRiesgo: -0.05,
   },
 
   // La regla de reversión: comprar lo que se cayó en vez de lo que sube. Es lo

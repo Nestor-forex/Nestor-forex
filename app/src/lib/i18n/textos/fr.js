@@ -361,6 +361,9 @@ export default {
   },
 
   historial: {
+    reversionTitulo: "Historique de la règle inverse",
+    reversionIntro:
+      "Les mêmes comptes, mais pour la règle qui achète ce qui a chuté. Séparés volontairement : ce sont deux expériences différentes, et les mélanger ne répond à aucune des deux questions.",
     titulo: 'Historique des signaux',
     intro: 'Chaque signal trouvé par la vigie, et ce qui a suivi.',
     cargando: 'Chargement de l’historique…',

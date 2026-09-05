@@ -351,6 +351,9 @@ export default {
   },
 
   historial: {
+    reversionTitulo: '相反规则的历史记录',
+    reversionIntro:
+      '同样的统计，但针对买入下跌品种的规则。特意分开：这是两个不同的实验，合在一起哪个问题都回答不了。',
     titulo: '信号历史',
     intro: '哨兵发现的每个信号，以及之后发生了什么。',
     cargando: '正在加载历史…',

@@ -356,6 +356,9 @@ export default {
   },
 
   historial: {
+    reversionTitulo: 'Ters kuralın geçmişi',
+    reversionIntro:
+      'Aynı hesap, ama düşeni alan kural için. Bilerek ayrı tutuluyor: bunlar iki farklı deney ve birleştirmek iki soruyu da yanıtlamaz.',
     titulo: 'Sinyal geçmişi',
     intro: 'Gözcünün bulduğu her sinyal ve sonrasında olanlar.',
     cargando: 'Geçmiş yükleniyor…',

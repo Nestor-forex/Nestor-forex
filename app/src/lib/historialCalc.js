@@ -14,12 +14,18 @@
  * app hermana: aquí los 14 pares se piden directamente, así que el máximo y
  * el mínimo de cada día son los reales en todos.
  *
- * ⚠️ Lo que sí va aparte es `sombra`: las ventas, que están pausadas. El vigía
- * las sigue anotando para acumular operaciones reales, pero la app no las
- * propone y nadie recibe aviso de ellas. Por eso NO pueden entrar en `todas`:
- * el porcentaje que mira Néstor estaría contando operaciones que la app dejó
- * de proponerle, y dejaría de responder la pregunta que la pantalla dice
- * responder.
+ * ⚠️ Lo que va aparte son DOS cosas distintas, y no una:
+ *
+ *   · `ventasPausadas` — señales de la app que se anotan pero no se proponen
+ *     mientras la pausa dure.
+ *   · `reversion` — la regla CONTRARIA a la de la app. No es una señal de la
+ *     app apagada: es otra idea corriendo en paralelo.
+ *
+ * Ninguna de las dos puede entrar en `todas`: el porcentaje que mira Néstor
+ * estaría contando operaciones que la app no le propuso, y dejaría de
+ * responder la pregunta que la pantalla dice responder. Y tampoco pueden ir
+ * juntas entre sí — el promedio de dos experimentos distintos no responde
+ * ninguna de las dos preguntas.
  */
 export function resumir(resultados) {
   const cuenta = (lista) => {
@@ -47,12 +53,31 @@ export function resumir(resultados) {
   const todasJuzgadas = [...ultimaPorClave.values()].filter(
     (r) => r.resultado === 'ganada' || r.resultado === 'perdida'
   )
-  // Las de sombra salen de aquí y no vuelven a entrar. Su sitio es `sombra`,
-  // y solo lo lee el vigía.
+  // Las de sombra salen de aquí y no vuelven a entrar.
   const juzgadas = todasJuzgadas.filter((r) => !r.sombra)
+
+  // ⚠️ LA SOMBRA NO ES UNA SOLA COSA, y hasta el 2026-09-05 se trataba como si
+  // lo fuera. Dentro hay DOS experimentos distintos que no tienen nada que ver:
+  //
+  //   · las VENTAS PAUSADAS — señales de la app que se anotan pero no se
+  //     proponen mientras la pausa dure;
+  //   · la REVERSIÓN — la regla CONTRARIA a la app, que compra lo que se cayó.
+  //
+  // Juntarlas en un solo número no dice nada de ninguna: hoy son 12 reversiones
+  // y 4 ventas, y el promedio de las dos no responde ninguna pregunta. Peor:
+  // el vigía imprimía ese cubo mezclado con la etiqueta «Ventas en sombra»,
+  // que era sencillamente falsa.
+  //
+  // Se separan por `tipo`, no por `sombra`.
+  const deReversion = todasJuzgadas.filter((r) => r.tipo === 'reversion')
+  const ventasPausadas = todasJuzgadas.filter((r) => r.sombra && r.tipo !== 'reversion')
 
   return {
     todas: cuenta(juzgadas),
+    reversion: cuenta(deReversion),
+    ventasPausadas: cuenta(ventasPausadas),
+    // Se mantiene el cubo junto para no romper a quien ya lo lee, pero lo
+    // que hay que enseñar son los dos de arriba.
     sombra: cuenta(todasJuzgadas.filter((r) => r.sombra)),
   }
 }

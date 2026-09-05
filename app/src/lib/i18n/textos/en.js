@@ -361,6 +361,9 @@ export default {
   },
 
   historial: {
+    reversionTitulo: 'Opposite-rule history',
+    reversionIntro:
+      'The same tally, but for the rule that buys what fell. Kept separate on purpose: these are two different experiments, and merging them answers neither question.',
     titulo: 'Signal history',
     intro: 'Every signal the watcher found, and what happened next.',
     cargando: 'Loading history…',
