@@ -89,6 +89,15 @@ export const GEMELOS = [
   // existia y no existia en ninguna de las dos apps: se hizo a mano una vez y
   // no se guardo. Ahora esta, y en las dos.
   'scripts/prueba-idiomas.mjs',
+  // La copia de seguridad del historial. Identica a proposito y con mas razon
+  // que ninguna: no contiene ni un numero de trading —solo cuenta lineas y
+  // avisa si el archivo encogio— y protege el MISMO activo irremplazable en
+  // las dos apps. Si un dia divergen, es que alguien arreglo la alarma en una
+  // sola, que es exactamente el fallo que la lista de gemelos existe para
+  // cazar.
+  'scripts/lib/respaldo.mjs',
+  'scripts/respaldo-historial.mjs',
+  'scripts/prueba-respaldo.mjs',
 ]
 
 // ─────────────────────────────────────────────────────────────────────────
