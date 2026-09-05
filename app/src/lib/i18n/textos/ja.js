@@ -355,6 +355,7 @@ export default {
   },
 
   historial: {
+    esReversion: '逆張り',
     reversionTitulo: '逆ルールの履歴',
     reversionIntro:
       '集計方法は同じですが、下落したものを買うルールのものです。意図的に分けています。別々の実験であり、まとめてしまうとどちらの問いにも答えられません。',

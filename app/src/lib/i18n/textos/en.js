@@ -361,6 +361,7 @@ export default {
   },
 
   historial: {
+    esReversion: 'REVERSION',
     reversionTitulo: 'Opposite-rule history',
     reversionIntro:
       'The same tally, but for the rule that buys what fell. Kept separate on purpose: these are two different experiments, and merging them answers neither question.',

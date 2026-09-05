@@ -98,5 +98,17 @@ function unir(senales, resultados) {
     .map(conResultado)
     .sort(masNuevaPrimero)
 
-  return { filas, filasReversion, resumen: resumir(resultados) }
+  // ⚠️ UNA SOLA LISTA, EN ORDEN DE FECHA, con las reversiones etiquetadas.
+  //
+  // Néstor lo pidió así después de ver las dos listas separadas: quiere leer
+  // la historia como pasó —un renglón detrás de otro— y que cada reversión
+  // diga que lo es, en vez de tener que saltar entre dos bloques.
+  //
+  // Lo que SÍ sigue separado son los NÚMEROS: los porcentajes de arriba van
+  // por regla, cada uno con el suyo. Mezclar las filas es cómodo; mezclar los
+  // promedios haría que ninguno respondiera su pregunta. Son dos cosas
+  // distintas y solo una de ellas es peligrosa.
+  const filasTodas = [...filas, ...filasReversion].sort(masNuevaPrimero)
+
+  return { filas, filasReversion, filasTodas, resumen: resumir(resultados) }
 }

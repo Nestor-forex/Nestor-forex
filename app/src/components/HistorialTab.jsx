@@ -19,7 +19,7 @@ const COLOR = {
 
 export default function HistorialTab() {
   const { t, locale } = useIdioma()
-  const { cargando, error, filas, filasReversion, resumen } = useHistorial()
+  const { cargando, error, filas, filasReversion, filasTodas, resumen } = useHistorial()
 
   if (cargando) return <Aviso>{t('historial.cargando')}</Aviso>
   if (error) return <Aviso ambar>{t('historial.error')}</Aviso>
@@ -33,7 +33,7 @@ export default function HistorialTab() {
         <p style={{ ...TEXTO, margin: 0 }}>{t('historial.intro')}</p>
       </div>
 
-      {!filas.length ? (
+      {!filasTodas.length ? (
         <div className="card">
           <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 8 }}>
             {t('historial.vacio')}
@@ -42,54 +42,38 @@ export default function HistorialTab() {
         </div>
       ) : (
         <>
+          {/* ⚠️ LOS NÚMEROS VAN POR REGLA, Y ESO NO SE MEZCLA NUNCA.
+              Las filas sí se juntan abajo —Néstor quiere leer la historia
+              seguida— pero cada porcentaje tiene que seguir respondiendo SU
+              pregunta. Un promedio de las dos reglas no responde ninguna: la
+              app acierta más y pierde, la reversión acierta menos y gana; el
+              punto medio no describe a ninguna de las dos. */}
           <Resumen resumen={resumen} t={t} />
+
+          {resumen.reversion.total > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 12.5, fontWeight: 600 }}>{t('historial.reversionTitulo')}</span>
+                <Etiqueta>{t('historial.esReversion')}</Etiqueta>
+              </div>
+              <Resumen resumen={{ todas: resumen.reversion }} t={t} />
+              <p style={{ ...TEXTO, margin: 0 }}>{t('historial.reversionIntro')}</p>
+            </div>
+          )}
+
           <MedicionLarga t={t} locale={locale} />
+
+          {/* Una sola lista, en orden de fecha. Cada reversión lleva su
+              etiqueta: sin ella, dos reglas OPUESTAS se leerían como si fueran
+              lo mismo, que es el único error grave posible en esta pantalla. */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {filas.map((f) => (
+            {filasTodas.map((f) => (
               <Fila key={`${f.id}@${f.vistoEl}`} f={f} t={t} locale={locale} />
             ))}
           </div>
         </>
       )}
-
-      {/* ⚠️ EL HISTORIAL DE LA REGLA CONTRARIA, APARTE Y SIN MEZCLAR NUNCA.
-          Es la pregunta que este experimento tiene que responder, y solo la
-          responde si las dos listas se pueden mirar por separado. Se filtra
-          por `tipo`, no por `sombra`: ahí dentro también están las ventas
-          pausadas, que son otro experimento distinto. */}
-      {filasReversion.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 24 }}>
-          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 18 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <h2 className="section-title" style={{ margin: 0 }}>{t('historial.reversionTitulo')}</h2>
-              <span
-                className="mono"
-                style={{
-                  fontSize: 10.5,
-                  fontWeight: 600,
-                  letterSpacing: '.06em',
-                  padding: '2px 7px',
-                  borderRadius: 3,
-                  color: 'var(--amber)',
-                  border: '1px solid var(--amber)',
-                }}
-              >
-                {t('reversion.marca')}
-              </span>
-            </div>
-            <p style={{ ...TEXTO, margin: '8px 0 0' }}>{t('historial.reversionIntro')}</p>
-          </div>
-
-          <Resumen resumen={{ todas: resumen.reversion }} t={t} />
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {filasReversion.map((f) => (
-              <Fila key={`${f.id}@${f.vistoEl}`} f={f} t={t} locale={locale} />
-            ))}
-          </div>
-        </div>
-      )}
-      {!filas.length && <MedicionLarga t={t} locale={locale} />}
+      {!filasTodas.length && <MedicionLarga t={t} locale={locale} />}
     </>
   )
 }
@@ -212,6 +196,29 @@ function Linea({ t, nombre, ops, acierto, valor, color }) {
   )
 }
 
+// La marca que distingue una reversión de una señal normal. Vive aparte
+// porque la usan dos sitios —el encabezado del resumen y cada fila— y si se
+// escribiera dos veces, un día dirían cosas distintas.
+function Etiqueta({ children }) {
+  return (
+    <span
+      className="mono"
+      style={{
+        fontSize: 9.5,
+        fontWeight: 600,
+        letterSpacing: '.06em',
+        padding: '1px 5px',
+        borderRadius: 3,
+        color: 'var(--amber)',
+        border: '1px solid var(--amber)',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {children}
+    </span>
+  )
+}
+
 function Resumen({ resumen, t }) {
   const { todas } = resumen
 
@@ -259,8 +266,14 @@ function Fila({ f, t, locale }) {
   return (
     <div className="card" style={{ padding: '10px 12px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
-        <div className="mono" style={{ fontSize: 13.5, fontWeight: 700 }}>
-          {f.par} {t('lado.' + f.lado)}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+          <span className="mono" style={{ fontSize: 13.5, fontWeight: 700 }}>
+            {f.par} {t('lado.' + f.lado)}
+          </span>
+          {/* Solo las reversiones se marcan. Las normales se quedan como
+              estaban: son la mayoría y lo excepcional es lo que hay que
+              señalar, no al revés. */}
+          {f.tipo === 'reversion' && <Etiqueta>{t('historial.esReversion')}</Etiqueta>}
         </div>
         <div style={{ fontSize: 12, fontWeight: 700, color: COLOR[estado] }}>
           {t('historial.' + estado)}

@@ -355,6 +355,7 @@ export default {
   },
 
   historial: {
+    esReversion: '역방향',
     reversionTitulo: '반대 규칙 기록',
     reversionIntro:
       '같은 집계이지만 떨어진 통화를 사는 규칙의 것입니다. 의도적으로 따로 둡니다. 서로 다른 두 실험이라 합치면 어느 쪽 질문에도 답하지 못합니다.',

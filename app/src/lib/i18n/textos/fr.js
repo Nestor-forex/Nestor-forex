@@ -361,6 +361,7 @@ export default {
   },
 
   historial: {
+    esReversion: 'INVERSION',
     reversionTitulo: "Historique de la règle inverse",
     reversionIntro:
       "Les mêmes comptes, mais pour la règle qui achète ce qui a chuté. Séparés volontairement : ce sont deux expériences différentes, et les mélanger ne répond à aucune des deux questions.",

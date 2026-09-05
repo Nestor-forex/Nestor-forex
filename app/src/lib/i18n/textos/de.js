@@ -361,6 +361,7 @@ export default {
   },
 
   historial: {
+    esReversion: 'UMKEHR',
     reversionTitulo: 'Verlauf der umgekehrten Regel',
     reversionIntro:
       'Dieselbe Rechnung, aber für die Regel, die das Gefallene kauft. Bewusst getrennt: das sind zwei verschiedene Experimente, und zusammengelegt beantworten sie keine der beiden Fragen.',
