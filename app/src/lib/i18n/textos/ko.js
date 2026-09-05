@@ -355,6 +355,9 @@ export default {
   },
 
   historial: {
+    reversionTitulo: '반대 규칙 기록',
+    reversionIntro:
+      '같은 집계이지만 떨어진 통화를 사는 규칙의 것입니다. 의도적으로 따로 둡니다. 서로 다른 두 실험이라 합치면 어느 쪽 질문에도 답하지 못합니다.',
     titulo: '신호 기록',
     intro: '감시자가 찾은 모든 신호와 그 이후에 일어난 일.',
     cargando: '기록을 불러오는 중…',

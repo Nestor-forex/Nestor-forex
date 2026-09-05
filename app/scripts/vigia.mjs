@@ -236,11 +236,19 @@ if (resumen.todas.total) {
 // mezclaran, el porcentaje que mira Néstor incluiría ventas que la app dejó
 // de proponerle. Esta línea es el contador de la espera: es el dato que hará
 // falta el día que haya que decidir si las ventas vuelven.
-if (resumen.sombra.total) {
+//
+// ⚠️ Y VAN EN DOS LÍNEAS, NO EN UNA. Hasta el 2026-09-05 esto imprimía el cubo
+// `sombra` entero bajo la etiqueta «Ventas en sombra», y esa etiqueta era
+// FALSA: dentro había 12 reversiones y 4 ventas. El promedio de dos
+// experimentos distintos no responde ninguna de las dos preguntas, y encima
+// llevaba el nombre de solo uno de ellos.
+const linea = (etiqueta, c) => {
+  if (!c.total) return
   console.log(
-    `Ventas en sombra (pausadas, se miden pero no se avisan): ${resumen.sombra.ganadas}/${resumen.sombra.total}` +
-      ` (${resumen.sombra.acierto}%), ${resumen.sombra.pips >= 0 ? '+' : ''}${resumen.sombra.pips} pips`
+    `${etiqueta}: ${c.ganadas}/${c.total} (${c.acierto}%), ${c.pips >= 0 ? '+' : ''}${c.pips} pips`
   )
 }
+linea('Ventas en sombra (pausadas, se miden pero no se avisan)', resumen.ventasPausadas)
+linea('Reversión en paralelo (la regla contraria a la app)', resumen.reversion)
 console.log(`Avisos al celular: ${JSON.stringify(avisos)}`)
 console.log('---VIGIA-FIN---')

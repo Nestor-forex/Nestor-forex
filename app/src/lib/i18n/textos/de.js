@@ -361,6 +361,9 @@ export default {
   },
 
   historial: {
+    reversionTitulo: 'Verlauf der umgekehrten Regel',
+    reversionIntro:
+      'Dieselbe Rechnung, aber für die Regel, die das Gefallene kauft. Bewusst getrennt: das sind zwei verschiedene Experimente, und zusammengelegt beantworten sie keine der beiden Fragen.',
     titulo: 'Signalverlauf',
     intro: 'Jedes Signal des Wächters und was danach passierte.',
     cargando: 'Verlauf wird geladen…',

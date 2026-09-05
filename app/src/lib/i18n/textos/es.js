@@ -384,6 +384,9 @@ export default {
   },
 
   historial: {
+    reversionTitulo: 'Historial de la regla contraria',
+    reversionIntro:
+      'Las mismas cuentas, pero de la regla que compra lo que se cayó. Van aparte a propósito: son dos experimentos distintos y juntarlos no responde ninguna de las dos preguntas.',
     titulo: 'Historial de señales',
     intro: 'Cada señal que encontró el vigía y qué pasó después.',
     cargando: 'Cargando el historial…',

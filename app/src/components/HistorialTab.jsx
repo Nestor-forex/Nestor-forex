@@ -19,7 +19,7 @@ const COLOR = {
 
 export default function HistorialTab() {
   const { t, locale } = useIdioma()
-  const { cargando, error, filas, resumen } = useHistorial()
+  const { cargando, error, filas, filasReversion, resumen } = useHistorial()
 
   if (cargando) return <Aviso>{t('historial.cargando')}</Aviso>
   if (error) return <Aviso ambar>{t('historial.error')}</Aviso>
@@ -50,6 +50,44 @@ export default function HistorialTab() {
             ))}
           </div>
         </>
+      )}
+
+      {/* ⚠️ EL HISTORIAL DE LA REGLA CONTRARIA, APARTE Y SIN MEZCLAR NUNCA.
+          Es la pregunta que este experimento tiene que responder, y solo la
+          responde si las dos listas se pueden mirar por separado. Se filtra
+          por `tipo`, no por `sombra`: ahí dentro también están las ventas
+          pausadas, que son otro experimento distinto. */}
+      {filasReversion.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 24 }}>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <h2 className="section-title" style={{ margin: 0 }}>{t('historial.reversionTitulo')}</h2>
+              <span
+                className="mono"
+                style={{
+                  fontSize: 10.5,
+                  fontWeight: 600,
+                  letterSpacing: '.06em',
+                  padding: '2px 7px',
+                  borderRadius: 3,
+                  color: 'var(--amber)',
+                  border: '1px solid var(--amber)',
+                }}
+              >
+                {t('reversion.marca')}
+              </span>
+            </div>
+            <p style={{ ...TEXTO, margin: '8px 0 0' }}>{t('historial.reversionIntro')}</p>
+          </div>
+
+          <Resumen resumen={{ todas: resumen.reversion }} t={t} />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {filasReversion.map((f) => (
+              <Fila key={`${f.id}@${f.vistoEl}`} f={f} t={t} locale={locale} />
+            ))}
+          </div>
+        </div>
       )}
       {!filas.length && <MedicionLarga t={t} locale={locale} />}
     </>

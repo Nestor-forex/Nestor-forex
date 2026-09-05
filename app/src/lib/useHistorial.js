@@ -74,18 +74,29 @@ export function useHistorial() {
 function unir(senales, resultados) {
   const porClave = new Map(resultados.map((r) => [r.clave, r]))
 
-  const filas = senales
-    // Las de sombra no se pintan. Son ventas pausadas: el vigía las anota
-    // para ir acumulando datos reales, pero la app no las propone y nadie
-    // recibió aviso de ellas. Enseñarlas sería mostrar operaciones que nunca
-    // se le propusieron a nadie — y peor, se leerían como recomendaciones.
-    // `resumir` ya las deja fuera del porcentaje; esto, fuera de la lista.
-    .filter((s) => !s.sombra)
-    .map((s) => {
-      const r = porClave.get(`${s.id}@${s.vistoEl}`)
-      return { ...s, resultado: r?.resultado || 'abierta', pips: r?.pips, exacto: r?.exacto }
-    })
-    .sort((a, b) => (a.vistoEl < b.vistoEl ? 1 : -1))
+  const conResultado = (s) => {
+    const r = porClave.get(`${s.id}@${s.vistoEl}`)
+    return { ...s, resultado: r?.resultado || 'abierta', pips: r?.pips, exacto: r?.exacto }
+  }
+  const masNuevaPrimero = (a, b) => (a.vistoEl < b.vistoEl ? 1 : -1)
 
-  return { filas, resumen: resumir(resultados) }
+  // Las señales que la app SÍ propone. Las de sombra quedan fuera: el vigía
+  // las anota para acumular datos reales, pero nadie recibió aviso de ellas y
+  // mezclarlas aquí las haría leer como recomendaciones.
+  const filas = senales.filter((s) => !s.sombra).map(conResultado).sort(masNuevaPrimero)
+
+  // ⚠️ LA REVERSIÓN VA EN SU PROPIA LISTA, y esto es lo que Néstor pidió ver:
+  // poder distinguir cuál es cuál. Hasta el 2026-09-05 sus operaciones se
+  // guardaban pero no se veían en ninguna pantalla — solo salía el número del
+  // banco de pruebas, que es historia simulada, no lo que va pasando de verdad.
+  //
+  // Se filtra por `tipo`, NO por `sombra`: en la sombra también están las
+  // ventas pausadas, que son otro experimento distinto. Filtrar por sombra
+  // habría mezclado los dos.
+  const filasReversion = senales
+    .filter((s) => s.tipo === 'reversion')
+    .map(conResultado)
+    .sort(masNuevaPrimero)
+
+  return { filas, filasReversion, resumen: resumir(resultados) }
 }
