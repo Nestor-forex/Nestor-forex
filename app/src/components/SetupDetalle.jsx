@@ -74,7 +74,12 @@ export default function SetupDetalle({ setup, corte, onVolver, onAnotar }) {
   const { dec, compra, precio, sl, tp, ema, rr, pipRiesgo, pipBeneficio, sup, res, serie20, rsi, atrPct, fuerzaB, fuerzaQ, b, q } = c
   const f = (v) => v.toFixed(dec)
   const colorLado = compra ? 'var(--green)' : 'var(--red)'
-  const rrOk = rr >= 1.5
+  // ⚠️ La reversión queda fuera del aviso de «R/B bajo»: su 1:1 es deliberado
+  // —es la geometría con la que se midió— y marcarlo en ámbar diría que está
+  // mal justo lo que hace a propósito. Mismo criterio que en `marketCalc.js`;
+  // este archivo tiene su propio cálculo, así que hay que arreglarlo en los
+  // dos o la tarjeta y el detalle dirían cosas distintas del mismo setup.
+  const rrOk = setup.tipo === 'reversion' || rr >= 1.5
 
   // Dominio vertical: la serie más los niveles, para que ninguno quede fuera.
   const todos = [...serie20, sl, tp, precio, sup, res]

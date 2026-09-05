@@ -99,6 +99,18 @@ export default {
     sufijoVelas: '20d',
   },
 
+  reversion: {
+    marca: 'EXPÉRIENCE',
+    titulo: 'La règle inverse',
+    explica:
+      "Ces signaux font l'INVERSE de ceux du dessus : ils achètent la devise qui a chuté, pas celle qui monte. C'est la seule règle mesurée positive dans ce projet. Ils sont affichés à part, volontairement, pour ne jamais être confondus avec les signaux normaux.",
+    enBanco: 'Sur le banc de test (5 ans)',
+    enReal: 'En opérations réelles à ce jour',
+    aviso:
+      "Cela reste très peu d'opérations. Cela ne décide rien : c'est affiché pour que tu puisses le suivre pendant qu'il accumule des résultats. Ce n'est pas une recommandation d'achat ou de vente.",
+    vacio: "Aucun signal de cette règle aujourd'hui.",
+  },
+
   setup: {
     soporte: 'Support',
     resistencia: 'Résistance',

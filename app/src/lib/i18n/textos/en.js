@@ -99,6 +99,18 @@ export default {
     sufijoVelas: '20d',
   },
 
+  reversion: {
+    marca: 'EXPERIMENT',
+    titulo: 'The opposite rule',
+    explica:
+      'These signals do the OPPOSITE of the ones above: they buy the currency that fell, not the one that is rising. It is the only rule that has measured positive in this project. They are shown separately, on purpose, so they are never confused with the normal signals.',
+    enBanco: 'In the test bench (5 years)',
+    enReal: 'In real trades so far',
+    aviso:
+      'These are still very few trades. It decides nothing: it is shown so you can follow it while it accumulates results. It is not a buy or sell recommendation.',
+    vacio: 'No signals from this rule today.',
+  },
+
   setup: {
     soporte: 'Support',
     resistencia: 'Resistance',

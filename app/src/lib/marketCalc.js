@@ -541,8 +541,21 @@ const mkSetup = (p, lado, esc = {}, t, tipo = 'tendencia') => {
     entrada: t('calc_barrido.entrada', { precio: p.c.toFixed(d), ema: p.e20.toFixed(d) }),
     sl: sl.toFixed(d) + (compra ? t('calc_barrido.slCompra') : t('calc_barrido.slVenta')),
     tp: tp.toFixed(d),
-    rr: '1:' + rr.toFixed(1) + (rr < 1.5 ? t('calc_barrido.rbBajo') : ''),
-    rrOk: rr >= 1.5,
+    // ⚠️ EL AVISO DE «R/B BAJO» NO SE LE PONE A LA REVERSIÓN, y no es un
+    // capricho: su 1:1 es DELIBERADO. Es la geometría exacta con la que se
+    // midió la regla (stop y objetivo a 1,5 ATR de cada lado), y con la que el
+    // vigía la lleva anotando desde el 2026-08-18. Cambiarla rompería la
+    // comparación con lo medido.
+    //
+    // Salió al mirar la pantalla en un navegador, y el build jamás lo habría
+    // enseñado: las tres reversiones aparecían con «1:1.0 ⚠ por debajo de
+    // 1:1.5» en ámbar, o sea marcando como defecto justo lo que la regla hace
+    // a propósito. Quien lo leyera pensaría que todas sus señales están mal.
+    //
+    // El umbral de 1,5 sigue mandando en las señales de la app, que sí buscan
+    // un objetivo más lejos que el stop.
+    rr: '1:' + rr.toFixed(1) + (rr < 1.5 && !esReversion ? t('calc_barrido.rbBajo') : ''),
+    rrOk: esReversion || rr >= 1.5,
     inval: compra
       ? t('calc_barrido.invalCompra', { sl: sl.toFixed(d), b: p.b })
       : t('calc_barrido.invalVenta', { sl: sl.toFixed(d), q: p.q }),
@@ -640,13 +653,30 @@ export function derivarVista(
     razon: razonReversion(p, esc, t),
   }))
 
+  // ⚠️ LAS DOS LISTAS VAN SEPARADAS, Y NO ES COSMÉTICO.
+  //
+  // Hasta el 2026-09-05 las reversiones iban DENTRO de `setups`. Mientras la
+  // regla corría en la sombra daba igual, porque solo el vigía la encendía.
+  // Al enseñarla en la app dejó de dar igual: `TableroCompleto` pinta `setups`
+  // entero, así que encenderla habría metido las reversiones en la lista de
+  // señales normales sin que nada avisara. Son reglas OPUESTAS —una compra lo
+  // fuerte, la otra lo débil— y mezclarlas en la misma tabla es justo lo que
+  // no puede pasar.
+  //
+  // `setups` sigue significando lo que siempre significó: lo que hace la app.
   const setups = [
     ...comprasRaw.slice(0, topN).map((p) => mkSetup(p, 'COMPRA', esc, t)),
     ...ventasRaw.slice(0, topN).map((p) => mkSetup(p, 'VENTA', esc, t)),
-    ...reversionesRaw.map((p) => mkSetup(p, clsRev(p), esc, t, 'reversion')),
   ]
+
+  // ⚠️ Y ESTO EL VIGÍA TIENE QUE SEGUIR ANOTÁNDOLO. Antes le llegaba gratis
+  // dentro de `setups`; ahora tiene que juntar las dos listas a propósito
+  // (ver `vigia.mjs`). Si alguien lo olvida, el historial de la reversión deja
+  // de crecer **sin dar ningún error**, y ese historial es lo único de este
+  // proyecto que no se puede recuperar. Hay una comprobación que lo vigila.
+  const setupsReversion = reversionesRaw.map((p) => mkSetup(p, clsRev(p), esc, t, 'reversion'))
 
   const corte = t('calc_barrido.corte', { fecha: data.ultima })
 
-  return { monedas, pares, compras, ventas, vigilancia, reversiones, setups, corte }
+  return { monedas, pares, compras, ventas, vigilancia, reversiones, setups, setupsReversion, corte }
 }

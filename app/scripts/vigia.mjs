@@ -58,7 +58,21 @@ const data = computarBarrido(fechas, rates, rangosPar)
 // se anotan en la sombra: no se enseñan, no se avisan, solo acumulan.
 const vista = derivarVista(data, { thr: 0.5, topN: 3, incluirVentas: true, incluirReversion: true })
 
-const { actuales, nuevas } = compararConAnterior(vista.setups, leerEstado(ESTADO))
+// ⚠️ LAS DOS LISTAS, JUNTAS Y A PROPÓSITO.
+//
+// Hasta el 2026-09-05 las reversiones venían dentro de `vista.setups` y esto
+// era `vista.setups` a secas. Al enseñarlas en la app hubo que separarlas allí
+// (si no, se habrían mezclado con las señales normales en la misma tabla), y
+// eso dejó este renglón a un paso de romper el historial EN SILENCIO: seguiría
+// corriendo, seguiría anotando, y las reversiones simplemente dejarían de
+// existir sin un solo error.
+//
+// El historial es lo único de este proyecto que no se puede recuperar: si un
+// día no se anota, ese día se perdió para siempre. Por eso van juntas aquí y
+// hay una comprobación que exige que este archivo lea las dos.
+const todosLosSetups = [...vista.setups, ...vista.setupsReversion]
+
+const { actuales, nuevas } = compararConAnterior(todosLosSetups, leerEstado(ESTADO))
 
 // Cuáles pueden llegar a un celular y cuáles solo se anotan. La regla está en
 // `vigia-nucleo.mjs`, con su prueba: es la promesa de que una regla pausada

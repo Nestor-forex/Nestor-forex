@@ -170,10 +170,24 @@ console.log('\n6. La reversión está apagada y no se pisa con las señales de s
   // añade una lista.
   const midiendo = derivarVista(data, { thr: 0, incluirVentas: true, incluirReversion: true })
   const conVentas = derivarVista(data, { thr: 0, incluirVentas: true })
-  const revs = midiendo.setups.filter((s) => s.tipo === 'reversion')
+  // ⚠️ LAS REVERSIONES YA NO VIVEN EN `setups`, y esta comprobación falló el
+  // 2026-09-05 justo por eso — que es exactamente su trabajo.
+  //
+  // Antes iban dentro de `setups` con `tipo: 'reversion'`. Al enseñarlas en el
+  // tablero hubo que sacarlas a `setupsReversion`: `TableroCompleto` pinta
+  // `setups` entero, así que dejarlas ahí las habría mezclado con las señales
+  // normales en la misma tabla, y son reglas OPUESTAS.
+  const revs = midiendo.setupsReversion
   comprobar(revs.length > 0, `encendida sí aparecen (${revs.length}): se puede medir`)
   comprobar(
-    midiendo.setups.filter((s) => s.tipo !== 'reversion').length === conVentas.setups.length,
+    revs.every((s) => s.tipo === 'reversion'),
+    'y todas las de esa lista son de reversión'
+  )
+  // La lista de la app no puede haberse movido ni un elemento: encender la
+  // reversión AÑADE una lista aparte, no cambia la que ya existía.
+  comprobar(
+    midiendo.setups.length === conVentas.setups.length &&
+      midiendo.setups.every((s) => s.tipo !== 'reversion'),
     'encenderla no toca ninguna de las señales que ya daba'
   )
 
