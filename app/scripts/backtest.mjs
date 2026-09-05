@@ -31,7 +31,22 @@
 //   Actions → "Banco de pruebas de las reglas" → Run workflow
 
 import { costeEnPips, NIVELES_SWAP } from './lib/costes.mjs'
-import { computarBarrido } from '../src/lib/marketCalc.js'
+// ⚠️ LOS UMBRALES SE IMPORTAN, NO SE ESCRIBEN AQUÍ.
+//
+// Las tablas de aflojar marcan con «(hoy)» la fila que la app usa de verdad, y
+// esa marca estaba escrita a mano. El 2026-09-05 se vio lo que pasa: el día
+// antes se había aflojado `TENDENCIA_MIN` de 'alineada' a 'media' y la etiqueta
+// se quedó señalando 'alineada'. El informe decía «hoy» sobre una fila que ya
+// no era la app — y en Intradía pasaba lo mismo con el ADX, apuntando a 20
+// cuando estaba en 0, con 800 operaciones de diferencia entre las dos filas.
+//
+// 📌 Una etiqueta equivocada es un error de medición: los números estaban bien
+// y la conclusión que inducían era falsa. Ya había pasado con «rompimiento» el
+// 2026-09-04. Derivándola del propio valor no puede volver a envejecer sola.
+import { computarBarrido, RSI_MAX, TENDENCIA_MIN, CONFLUENCIA_MIN } from '../src/lib/marketCalc.js'
+
+// Le pega «(hoy)» a la fila que de verdad corre en la app.
+const hoySi = (nombre, esLaDeHoy) => (esLaDeHoy ? `${nombre}  (hoy)` : nombre)
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
 import { generarSenales, medir, barridoSwap } from './lib/backtest-nucleo.mjs'
 import { GEOMETRIAS, simetrica, actual, atrFijo } from './lib/geometrias.mjs'
@@ -293,7 +308,7 @@ const enMitad = (s, primera) => (primera ? s.vistoEl < corte : s.vistoEl >= cort
     const ac = (x) => (x === null ? '  — ' : (x.toFixed(0) + '%').padStart(4))
     const pr = (x) => (x === null ? '   —  ' : ((x >= 0 ? '+' : '') + x.toFixed(2)).padStart(6))
     console.log(
-      `${(u === null ? 'sin filtro (hoy)' : `rechaza si RSI ≥ ${u}`).padEnd(22)} ` +
+      `${hoySi(u === null ? 'sin filtro' : `rechaza si RSI ≥ ${u}`, u === RSI_MAX).padEnd(22)} ` +
         `${String(m.total).padStart(4)}    ${ac(m.acierto)}   ${pr(m.porRiesgo)}  │ ` +
         `${String(m1.total).padStart(4)} ${ac(m1.acierto)} ${pr(m1.porRiesgo)} │ ` +
         `${String(m2.total).padStart(4)} ${ac(m2.acierto)} ${pr(m2.porRiesgo)}`
@@ -310,7 +325,7 @@ const enMitad = (s, primera) => (primera ? s.vistoEl < corte : s.vistoEl >= cort
   console.log('─'.repeat(86))
   for (const u of [null, 75, 70, 65]) {
     const r = correr(actual, null, { rsiMax: u })
-    fila(u === null ? 'sin filtro (hoy)' : `rechaza si RSI ≥ ${u}`, medir(r.senales, r.porClave, { conSpread: true }))
+    fila(hoySi(u === null ? 'sin filtro' : `rechaza si RSI ≥ ${u}`, u === RSI_MAX), medir(r.senales, r.porClave, { conSpread: true }))
   }
   console.log('─'.repeat(86))
 }
@@ -1064,12 +1079,16 @@ console.log('')
   console.log('exigencia                     ops  señ/mes  acierto   por 1R  │  1ª mitad  │  2ª mitad')
   console.log('─'.repeat(88))
 
+  // El «(hoy)» lo pone `hoySi` sobre la fila que coincide con `CONFLUENCIA_MIN`,
+  // no una de ellas escrita a mano: si mañana se enciende el filtro, la marca se
+  // mueve sola. El CONTROL (−1) no es una opción de la app, así que nunca la
+  // lleva.
   const EXIGENCIAS = [
-    [null, 'sin filtro (hoy)'],
+    [null, 'sin filtro'],
     [1, 'al menos 1 marco largo'],
     [2, 'los 2 marcos largos'],
     [-1, 'CONTROL: ninguno acompaña'],
-  ]
+  ].map(([n, etiqueta]) => [n, hoySi(etiqueta, n !== -1 && n === CONFLUENCIA_MIN)])
 
   const porConfluencia = new Map()
   for (const [n, etiqueta] of EXIGENCIAS) {
@@ -1228,9 +1247,9 @@ console.log('')
 
   // 1. El umbral de fuerza. Es la primera puerta: por debajo de `thr` el par ni
   //    se considera.
-  console.log('· El umbral de fuerza relativa (hoy 0.5)')
+  console.log(`· El umbral de fuerza relativa (hoy ${THR})`)
   for (const t of [0, 0.25, 0.5, 0.75, 1]) {
-    linea(`  fuerza > ${t.toFixed(2)}${t === THR ? '  (hoy)' : ''}`, conThr(t))
+    linea(hoySi(`  fuerza > ${t.toFixed(2)}`, t === THR), conThr(t))
   }
 
   // 2. La exigencia de tendencia. Es la pared más alta: pide DOS cosas a la vez
@@ -1239,11 +1258,11 @@ console.log('')
   console.log('')
   console.log('· Cuánta tendencia se exige')
   for (const [clave, nombre] of [
-    ['alineada', '  medias alineadas  (hoy)'],
+    ['alineada', '  medias alineadas'],
     ['media', '  solo precio sobre la EMA20'],
     ['ninguna', '  nada: manda solo la fuerza'],
   ]) {
-    linea(nombre, correr(simetrica, null, { tendenciaMin: clave }))
+    linea(hoySi(nombre, clave === TENDENCIA_MIN), correr(simetrica, null, { tendenciaMin: clave }))
   }
 
   // 3. Las dos aflojadas a la vez, que es lo que de verdad se plantea.

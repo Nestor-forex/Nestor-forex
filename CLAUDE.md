@@ -1464,3 +1464,93 @@ Organizada por **veredicto**, no alfabéticamente: lo que las apps usan hoy, lo
 medido y apagado, lo que usan los profesionales y no podemos tener (con el
 motivo real: **el Forex no tiene volumen central**, así que Volume Profile y
 VWAP no son difíciles aquí, son imposibles), y el vocabulario de medición.
+
+---
+
+# El informe decía «(hoy)» sobre filas que no eran la app (2026-09-05)
+
+Salió leyendo el resultado del ensayo de spreads de Intradía, no buscándolo.
+
+Las tablas de aflojar marcan con «(hoy)» la fila que la app usa de verdad, para
+que se vea de dónde se parte. Esa marca estaba **escrita a mano**, y había
+envejecido en las dos apps:
+
+| app | decía «(hoy)» en | valor real | consecuencia |
+|---|---|---|---|
+| Intradía | `ADX ≥ 20` | `ADX_MIN = 0` | la fila marcada tenía 7.219 ops; la de verdad, 8.022 |
+| Intradía | `con ADX ≥ 35 (hoy)` | ídem | **dos etiquetas, dos valores, ninguno el real** |
+| Intradía | `sin filtro (hoy)` (RSI) | `RSI_MAX = 70` | decía que no había filtro habiéndolo |
+| Swing | `medias alineadas (hoy)` | `TENDENCIA_MIN = 'media'` | se aflojó el 2026-09-05 y la etiqueta no se movió |
+
+📌 **Los números estaban BIEN.** Lo que engañaba era el rótulo — y ya está
+escrito en este archivo, del 2026-09-04, que **una etiqueta equivocada es un
+error de medición**. Aquella vez fue «rompimiento» por «comprar la caída».
+Volvió a pasar en menos de un día, lo que dice que la lección sola no basta.
+
+## El arreglo, y por qué no es «tener más cuidado»
+
+Los umbrales se **exportan** desde `marketCalc.js` (`ADX_MIN`, `RSI_MAX`,
+`TENDENCIA_MIN`, en Swing también `CONFLUENCIA_MIN`) y `backtest.mjs` los
+importa. La marca la pone `hoySi(nombre, esLaDeHoy)` comparando contra el valor
+real. Cambiar un umbral mueve la etiqueta sola.
+
+⚠️ **Esto NO junta las dos apps.** `marketCalc.js` sigue siendo PRIMO y los
+valores siguen siendo distintos y medidos por separado: lo único que se comparte
+es la idea de leer el valor en vez de escribirlo.
+
+## La comprobación, y lo que cazó al primer intento
+
+`prueba-costes.mjs` lee `backtest.mjs` y falla si aparece «(hoy» en un texto
+literal fuera de `hoySi` y sin `${...}` dentro. Al estrenarla **encontró una que
+se me había pasado** (`'tal cual (hoy)'`), y al romper una a propósito falló
+como debe.
+
+También exige que `hoySi` siga existiendo: sin eso, borrarla dejaría la
+comprobación en verde sobre un informe que ya no marca nada — el mismo agujero
+de «una prueba que se adapta a lo que encuentra no comprueba nada».
+
+📌 **Regla que sale de aquí: al cambiar un umbral, mirar también quién lo
+NOMBRA.** El código que lo usa se actualiza solo; el texto que lo describe, no.
+
+---
+
+# El ensayo con los spreads reales de Néstor (2026-09-05, Intradía)
+
+Néstor leyó los 18 spreads de su cuenta de AvaTrade y los pasó. **Con el mercado
+cerrado**, así que están inflados: media 4,36 pips contra los 2,17 de la tabla.
+Guardados como `SPREAD_NESTOR_FINDE`, marcados, y **no se usan por defecto**.
+
+Vara neutra 1:1, mismas señales, solo cambia el peaje.
+
+| regla | ops | sin costes | A (2,17) | B (4,36) |
+|---|---:|---:|---:|---:|
+| la app tal cual | 8.022 | −0,030 | −0,106 | −0,172 |
+| R1. Comprar lo débil, vender lo fuerte | 6.070 | **+0,016** | −0,051 | −0,108 |
+| R2. …y solo con el RSI estirado (35/65) | 5.281 | +0,002 | −0,067 | −0,126 |
+| R3. …y solo lejos de la EMA21 | 6.063 | **+0,016** | −0,051 | −0,108 |
+| R4. R2 solo en el solape Londres-NY | 1.820 | **+0,023** | −0,045 | −0,108 |
+| R5. CONTROL: la inversión, de frente | 6.054 | +0,014 | −0,054 | −0,111 |
+
+**El peaje se lleva 0,068 con la tabla A y 0,125 con la B.**
+
+## Lo que esto cierra, y es más de lo que se buscaba
+
+La pregunta era «¿cuánto decide el bróker?». La respuesta útil salió de la
+columna que ya estaba: **la mejor ventaja SIN costes es +0,023, y el peaje más
+barato es 0,068 — tres veces más.**
+
+⚠️ **Entonces en Intradía no hay bróker que la salve.** Para que R4 saliera a
+cero haría falta un spread medio por debajo de ~0,7 pips en 18 pares, cruces
+incluidos. Eso no existe al por menor. Y eso vale igual para la reversión, que
+en Swing sí aguanta: **aquí no**.
+
+📌 Es el mismo aviso de siempre —lo medido en una app no vale en la otra— pero
+al revés de como suele usarse: aquí la regla buena de Swing NO se salva en
+Intradía, y el motivo no es la regla, son los objetivos cortos contra un coste
+fijo.
+
+## Lo que sigue pendiente de Néstor
+
+Volver a leer los spreads **con el mercado abierto** (8:00-11:00 hora Colombia,
+de lunes en adelante). **Esos** sí sustituyen a `SPREAD_PIPS`; los de fin de
+semana no sustituyen nada.
