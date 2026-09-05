@@ -357,6 +357,7 @@ export default {
   },
 
   historial: {
+    esReversion: 'INVERSIONE',
     reversionTitulo: 'Storico della regola contraria',
     reversionIntro:
       'Gli stessi conti, ma della regola che compra ciò che è sceso. Vanno a parte di proposito: sono due esperimenti diversi e unirli non risponde a nessuna delle due domande.',

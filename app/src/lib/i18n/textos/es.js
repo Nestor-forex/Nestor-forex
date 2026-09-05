@@ -384,6 +384,7 @@ export default {
   },
 
   historial: {
+    esReversion: 'REVERSIÓN',
     reversionTitulo: 'Historial de la regla contraria',
     reversionIntro:
       'Las mismas cuentas, pero de la regla que compra lo que se cayó. Van aparte a propósito: son dos experimentos distintos y juntarlos no responde ninguna de las dos preguntas.',
