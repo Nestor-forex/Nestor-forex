@@ -290,7 +290,7 @@ export function computarBarrido(fechas, rates, rangosPar = null) {
 // 7.340 operaciones el efecto era de UN punto (46% → 47%). La idea era buena
 // y el número era ruido de 17 operaciones. Aquí el barrido de umbrales y las
 // dos mitades del tiempo dirán qué hay, si es que hay algo.
-const RSI_MAX = null
+export const RSI_MAX = null
 
 // EL FILTRO DE CONFLUENCIA MULTI-TEMPORAL, TAMBIÉN APAGADO HASTA MEDIRLO.
 //
@@ -312,7 +312,7 @@ const RSI_MAX = null
 // fechas distintas, así que cuenta como operación nueva. Con el filtro del RSI
 // las operaciones SUBIERON de 1.785 a 2.108. La medición no es "la app menos
 // las malas", es "la app con otras señales".
-const CONFLUENCIA_MIN = null
+export const CONFLUENCIA_MIN = null
 
 // CUÁNTA TENDENCIA SE EXIGE PARA DEJAR PASAR UNA SEÑAL.
 //
@@ -363,7 +363,7 @@ const CONFLUENCIA_MIN = null
 // o sea perdiendo. Lo que se compró aquí es que la app HABLE más sin que cada
 // señal salga peor. Si algún día se opera con dinero de verdad, el número que
 // manda sigue siendo el −0,03, no las 36 señales.
-const TENDENCIA_MIN = 'media'
+export const TENDENCIA_MIN = 'media'
 
 const cumpleTendencia = (p, lado, exigencia) => {
   if (exigencia === 'ninguna') return true
