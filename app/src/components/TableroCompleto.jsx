@@ -36,9 +36,37 @@ function Chip({ children, color }) {
 function SetupCard({ s, t, onVerSetup }) {
   return (
     <div className="card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span className="mono" style={{ fontWeight: 600, fontSize: 16 }}>
-          {s.name}
+      {/* ⚠️ LA TARJETA SE IDENTIFICA SOLA, y no basta con el título de la
+          sección. `SetupCard` la pintan las DOS reglas, así que una reversión
+          se veía EXACTAMENTE igual que una señal normal: solo las separaba el
+          encabezado, que queda arriba y se pierde al desplazarse.
+          Néstor lo encontró en el peor caso posible: GBP/JPY salía VENTA en la
+          tabla del clima y COMPRA en una tarjeta, y no había forma de ver que
+          esa tarjeta era de la regla contraria. No era un error de cálculo
+          —son reglas opuestas y ese par es el ejemplo perfecto— pero la
+          pantalla lo hacía parecer una contradicción. */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 8 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+          <span className="mono" style={{ fontWeight: 600, fontSize: 16 }}>
+            {s.name}
+          </span>
+          {s.tipo === 'reversion' && (
+            <span
+              className="mono"
+              style={{
+                fontSize: 9.5,
+                fontWeight: 600,
+                letterSpacing: '.06em',
+                padding: '1px 5px',
+                borderRadius: 3,
+                color: 'var(--amber)',
+                border: '1px solid var(--amber)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {t('historial.esReversion')}
+            </span>
+          )}
         </span>
         <Chip color={s.lado === 'COMPRA' ? 'var(--green)' : 'var(--red)'}>{t(`lado.${s.lado}`)}</Chip>
       </div>
@@ -265,6 +293,11 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
             </div>
             <p style={{ margin: '10px 0 0', fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
               {t('reversion.explica')}
+            </p>
+            {/* La frase que evita la confusión que tuvo Néstor: ver el mismo
+                par con dirección opuesta en dos sitios de la misma pantalla. */}
+            <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--amber)', lineHeight: 1.6 }}>
+              {t('reversion.ojoContrario')}
             </p>
 
             <div

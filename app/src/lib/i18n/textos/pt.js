@@ -104,6 +104,8 @@ export default {
     titulo: 'A regra contrária',
     explica:
       'Estes sinais fazem o OPOSTO dos de cima: compram a moeda que caiu, não a que sobe. É a única regra que mediu positivo neste projeto. Aparecem à parte, de propósito, para nunca se confundirem com os sinais normais.',
+    ojoContrario:
+      'Por isso o mesmo par pode aparecer aqui como BUY e acima como SELL. Não é um erro: é exatamente o que significa «contrária».',
     enBanco: 'No banco de provas (5 anos)',
     enReal: 'Em operações reais até hoje',
     aviso:

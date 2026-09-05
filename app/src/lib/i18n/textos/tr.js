@@ -100,6 +100,8 @@ export default {
     titulo: 'Ters kural',
     explica:
       'Bu sinyaller yukarıdakilerin TAM TERSİNİ yapar: yükseleni değil, düşen para birimini alır. Bu projede pozitif ölçülen tek kuraldır. Normal sinyallerle asla karıştırılmasın diye bilerek ayrı gösteriliyor.',
+    ojoContrario:
+      'Bu yüzden aynı parite burada BUY, yukarıda SELL görünebilir. Hata değil: «ters» tam olarak bu demek.',
     enBanco: 'Test tezgâhında (5 yıl)',
     enReal: 'Bugüne kadarki gerçek işlemlerde',
     aviso:

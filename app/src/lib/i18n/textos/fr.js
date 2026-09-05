@@ -104,6 +104,8 @@ export default {
     titulo: 'La règle inverse',
     explica:
       "Ces signaux font l'INVERSE de ceux du dessus : ils achètent la devise qui a chuté, pas celle qui monte. C'est la seule règle mesurée positive dans ce projet. Ils sont affichés à part, volontairement, pour ne jamais être confondus avec les signaux normaux.",
+    ojoContrario:
+      "C'est pourquoi la même paire peut apparaître ici en BUY et plus haut en SELL. Ce n'est pas une erreur : c'est exactement ce que veut dire « inverse »",
     enBanco: 'Sur le banc de test (5 ans)',
     enReal: 'En opérations réelles à ce jour',
     aviso:

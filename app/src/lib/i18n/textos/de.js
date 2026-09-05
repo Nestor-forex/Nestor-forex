@@ -104,6 +104,8 @@ export default {
     titulo: 'Die umgekehrte Regel',
     explica:
       'Diese Signale tun das GEGENTEIL der obigen: Sie kaufen die Währung, die gefallen ist, nicht die steigende. Es ist die einzige Regel, die in diesem Projekt positiv gemessen wurde. Sie werden bewusst getrennt angezeigt, damit sie nie mit den normalen Signalen verwechselt werden.',
+    ojoContrario:
+      'Deshalb kann dasselbe Paar hier als BUY und oben als SELL erscheinen. Das ist kein Fehler, sondern genau das, was «umgekehrt» bedeutet.',
     enBanco: 'Im Testlauf (5 Jahre)',
     enReal: 'In echten Trades bis heute',
     aviso:
