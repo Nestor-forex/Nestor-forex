@@ -364,6 +364,10 @@ export default {
 
   historial: {
     esReversion: 'INVERSION',
+    esCaida: "ACHETER LA BAISSE",
+    caidaTitulo: "Historique de « acheter la baisse »",
+    caidaIntro:
+      "La troisième règle : elle achète une paire le jour où elle touche son plus bas de 10 jours. Séparée à dessein — c'est une autre expérience, et tout mélanger ne répondrait à aucune des trois questions.",
     reversionTitulo: "Historique de la règle inverse",
     reversionIntro:
       "Les mêmes comptes, mais pour la règle qui achète ce qui a chuté. Séparés volontairement : ce sont deux expériences différentes, et les mélanger ne répond à aucune des deux questions.",

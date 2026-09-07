@@ -387,6 +387,10 @@ export default {
 
   historial: {
     esReversion: 'REVERSIÓN',
+    esCaida: "COMPRAR LA CAÍDA",
+    caidaTitulo: "Historial de «comprar la caída»",
+    caidaIntro:
+      "La tercera regla, que compra el par el día que toca su punto más bajo de 10 días. Va aparte porque es otro experimento distinto: mezclarla con las demás no respondería ninguna de las tres preguntas.",
     reversionTitulo: 'Historial de la regla contraria',
     reversionIntro:
       'Las mismas cuentas, pero de la regla que compra lo que se cayó. Van aparte a propósito: son dos experimentos distintos y juntarlos no responde ninguna de las dos preguntas.',

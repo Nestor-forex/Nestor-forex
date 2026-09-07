@@ -108,7 +108,13 @@ function unir(senales, resultados) {
   // por regla, cada uno con el suyo. Mezclar las filas es cómodo; mezclar los
   // promedios haría que ninguno respondiera su pregunta. Son dos cosas
   // distintas y solo una de ellas es peligrosa.
-  const filasTodas = [...filas, ...filasReversion].sort(masNuevaPrimero)
+  // Y la tercera, «comprar la caída», desde el 2026-09-07. Sin esta lista sus
+  // señales no aparecerían en NINGUNA pantalla: no están en `filas` (son
+  // sombra) y no son reversión. Se habrían anotado durante meses sin que
+  // Néstor pudiera ver ni una.
+  const filasCaida = senales.filter((s) => s.tipo === 'caida').map(conResultado).sort(masNuevaPrimero)
 
-  return { filas, filasReversion, filasTodas, resumen: resumir(resultados) }
+  const filasTodas = [...filas, ...filasReversion, ...filasCaida].sort(masNuevaPrimero)
+
+  return { filas, filasReversion, filasCaida, filasTodas, resumen: resumir(resultados) }
 }

@@ -359,6 +359,10 @@ export default {
 
   historial: {
     esReversion: 'TERS',
+    esCaida: "DÜŞÜŞÜ SATIN AL",
+    caidaTitulo: "«Düşüşü satın al» geçmişi",
+    caidaIntro:
+      "Üçüncü kural: pariteyi 10 günlük dibine değdiği gün satın alır. Bilerek ayrı tutuluyor — farklı bir deney ve karıştırmak üç sorudan hiçbirini yanıtlamaz.",
     reversionTitulo: 'Ters kuralın geçmişi',
     reversionIntro:
       'Aynı hesap, ama düşeni alan kural için. Bilerek ayrı tutuluyor: bunlar iki farklı deney ve birleştirmek iki soruyu da yanıtlamaz.',

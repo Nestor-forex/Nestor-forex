@@ -69,12 +69,28 @@ export function resumir(resultados) {
   // que era sencillamente falsa.
   //
   // Se separan por `tipo`, no por `sombra`.
+  // ⚠️ Y DESDE EL 2026-09-07 SON TRES, no dos. «Comprar la caída» es un tercer
+  // experimento, distinto de los otros dos.
+  //
+  // Esto no es un añadido cosmético: sin él, sus resultados caían dentro de
+  // `ventasPausadas` —porque son sombra y no son reversión— y la pantalla los
+  // habría enseñado con la etiqueta «ventas pausadas», que es sencillamente
+  // falsa. Es EXACTAMENTE el mismo fallo que describe el comentario de arriba,
+  // repetido dos días después por no haber escrito la condición por el lado
+  // seguro.
+  //
+  // Por eso `ventasPausadas` se define ahora por lo que ES —señales de la app
+  // que no se proponen— y no por descarte de las demás. Un experimento nuevo
+  // no puede volver a colarse ahí.
   const deReversion = todasJuzgadas.filter((r) => r.tipo === 'reversion')
-  const ventasPausadas = todasJuzgadas.filter((r) => r.sombra && r.tipo !== 'reversion')
+  const deCaida = todasJuzgadas.filter((r) => r.tipo === 'caida')
+  const esDeLaApp = (r) => !r.tipo || r.tipo === 'tendencia'
+  const ventasPausadas = todasJuzgadas.filter((r) => r.sombra && esDeLaApp(r))
 
   return {
     todas: cuenta(juzgadas),
     reversion: cuenta(deReversion),
+    caida: cuenta(deCaida),
     ventasPausadas: cuenta(ventasPausadas),
     // Se mantiene el cubo junto para no romper a quien ya lo lee, pero lo
     // que hay que enseñar son los dos de arriba.

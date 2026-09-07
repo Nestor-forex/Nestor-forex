@@ -364,6 +364,10 @@ export default {
 
   historial: {
     esReversion: 'UMKEHR',
+    esCaida: "DEN EINBRUCH KAUFEN",
+    caidaTitulo: "Verlauf von „den Einbruch kaufen“",
+    caidaIntro:
+      "Die dritte Regel: Sie kauft ein Paar an dem Tag, an dem es sein 10-Tage-Tief erreicht. Bewusst getrennt — es ist ein anderes Experiment, und eine Vermischung würde keine der drei Fragen beantworten.",
     reversionTitulo: 'Verlauf der umgekehrten Regel',
     reversionIntro:
       'Dieselbe Rechnung, aber für die Regel, die das Gefallene kauft. Bewusst getrennt: das sind zwei verschiedene Experimente, und zusammengelegt beantworten sie keine der beiden Fragen.',
