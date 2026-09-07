@@ -1628,3 +1628,142 @@ vigía ve la del día anterior cerrada más la de hoy a medias. Sigue siendo lo
 correcto —no juzgar con una vela sin terminar— pero por otro motivo.
 
 📌 Es el mismo patrón del día: **al cambiar algo, mirar también quién lo NOMBRA.**
+
+---
+
+# Los spreads REALES, y una predicción mía que era falsa (2026-09-07)
+
+Néstor leyó los 18 spreads de su cuenta de AvaTrade el domingo por la noche,
+**con el mercado abierto** (sesión de Asia). Son los primeros números reales de
+un bróker de verdad que ha tenido el proyecto.
+
+📌 **Antes de verlos predije que saldrían PEORES que los del viernes**, porque
+Asia es la sesión con menos gente. Salieron mucho mejores: media **1,91** contra
+4,36. El fallo era confundir «sesión con poca liquidez» con «mercado cerrado»:
+el viernes **no había mercado**, y un bróker sin mercado no ensancha el spread —
+**se lo inventa**. Tercera vez que un mecanismo convincente resulta falso.
+
+## Lo que validan, que es lo importante
+
+La tabla del banco de pruebas suponía 2,17 y la realidad es 1,91: **un 12 % más
+cara**. Todo lo medido en meses **no estaba inflando resultados a favor propio**,
+que era el riesgo de fondo del proyecto entero.
+
+Solo tres pares salían más baratos de lo real, y por poco: USD/JPY (1,0→1,3),
+USD/CAD (1,6→1,8), NZD/USD (1,7→2,1).
+
+⚠️ **No sustituyen a `SPREAD_PIPS`**, y ahora por el motivo contrario al del
+viernes: **Asia es la sesión MÁS BARATA** que verá esa cuenta. Medir con el
+mejor momento del día es el mismo autoengaño por el otro lado. Guardados como
+`SPREAD_NESTOR_ASIA`.
+
+## Swing: el bróker casi no decide
+
+Reversión M2 de +0,086 a **+0,089**, y el umbral de swap **no se mueve** (sigue
+en 1 pip/noche). El peaje entero se lleva **0,018**.
+
+## Intradía: cerrado, y con el número calculado
+
+| regla | ops | sin costes | oficial | REAL | cerrado |
+|---|---:|---:|---:|---:|---:|
+| la app tal cual | 7.937 | −0,033 | −0,108 | −0,103 | −0,174 |
+| R1 | 6.005 | +0,020 | −0,047 | −0,043 | −0,104 |
+| R2 (RSI estirado) | 5.231 | +0,004 | −0,066 | −0,061 | −0,124 |
+| R4 (solape Londres-NY) | 1.806 | **+0,027** | −0,042 | −0,039 | −0,104 |
+
+Peaje: 0,068 oficial · **0,063 real** · 0,125 cerrado.
+
+> **La MEJOR ventaja sin costes es 0,027 y el peaje más barato 0,063: 2,4 VECES
+> MÁS. No hay bróker que la salve.**
+
+⚠️ **Esa línea la CALCULA el script**, no está escrita a mano. Cierra la
+pregunta del bróker en Intradía para siempre: aunque operara gratis, lo mejor
+que tiene da +0,027.
+
+## 📌 El mecanismo, que por una vez se ve
+
+| | stop típico | spread | pesa |
+|---|---:|---:|---:|
+| Swing | ~120 pips | 2 | 1,8 % del riesgo |
+| Intradía | ~30 pips | 2 | **7 %** |
+
+Es la regla de siempre —lo medido en una app no vale en la otra— pero con la
+causa a la vista: **el mismo bróker y el mismo spread, cuatro veces más peso.**
+
+---
+
+# «Comprar la caída»: preregistrada, aprobada y en la sombra (2026-09-07)
+
+Néstor pidió perseguir en serio la regla que salió mejor que todo lo demás
+siendo un CONTROL el 2026-09-04. «En serio» se definió como dos cosas.
+
+## A) El listón, escrito ANTES (`scripts/lib/preregistro.mjs`)
+
+Seis criterios, todos obligatorios, con la fecha dentro: gana en las dos
+mitades · las ventanas vecinas también · aguanta 0,5 de swap · más señales que
+la reversión · solapa menos del 20 % · ningún par aporta más del 40 %.
+
+**El veredicto lo CALCULA `juzgar()`**, no lo argumenta nadie.
+`prueba-preregistro.mjs` comprueba que MUERDE con ocho resultados inventados que
+fallan un criterio cada uno, y con los bordes exactos.
+
+⚠️ **Si algún día un resultado queda a un pelo, la respuesta NO es aflojar un
+criterio.** Ése es el momento exacto para el que se escribió el listón antes.
+
+## El resultado: pasó los seis
+
+1.856 ops · 28,7 señales/mes · 55 % · **+0,087** con costes · mitades +0,055 y
+**+0,118** (mejora, al revés que la reversión) · +0,054 pagando swap · solape
+18 % · mejor par 23 %.
+
+## ⚠️ Dos honestidades que van con ese aprobado
+
+📌 **Le dije a Néstor «coincide solo en el 3 %» y era FALSO.** Ese 3 % es del
+barrido de liquidez (`volver: true`), no de «comprar la caída» (`volver: false`).
+El número real es **18 %**, o sea que pasó el criterio **raspando** y es bastante
+menos independiente de la reversión de lo que dije.
+
+📌 **El criterio de «vecinas» tiene un fallo que no cambió el veredicto.** Elige
+las vecinas por distancia absoluta, así que para la ventana de 10 cogió **5 y 1**
+cuando la vecina natural es **20** (de 10 a 20 es el doble; de 10 a 1 es diez
+veces menos). Da igual esta vez —la de 20 también sale +0,09— pero el criterio no
+midió lo que decía medir. Si se retoca, arreglarlo por proporción y no por resta.
+
+## B) Ya corre en la sombra desde el 2026-09-07
+
+El vigía la anota con `tipo: 'caida'`, como la reversión desde el 2026-08-18.
+**Dos relojes en marcha:** la reversión a 13,5 señales/mes (van 12 reales) y
+ésta a 28,7 desde cero — unos 5 meses hasta 150 en vez de 11.
+
+⚠️ Pasar el listón **es necesario y no suficiente**: estos 1.436 días ya se
+miraron. Lo único limpio es el registro hacia adelante.
+
+## ⚠️⚠️ EL FALLO GRAVE, CAZADO ANTES DE PUBLICARSE
+
+`esSombra` **enumeraba** las reglas de sombra (`tipo === 'reversion'`). Las
+COMPRAS de «comprar la caída» no encajaban en ninguna condición, así que habrían
+salido como señales normales y **HABRÍAN DESPERTADO EL CELULAR DE NÉSTOR con una
+regla sin probar.**
+
+Ahora está escrita **al revés**: sombra es TODO lo que no sea la regla propia de
+la app (`!s.tipo || s.tipo === 'tendencia'`). Una regla nueva **nace apagada** y
+solo se enciende si alguien viene aquí a mano.
+
+📌 **La lección, que vale para cualquier interruptor de este proyecto:** es la
+diferencia entre olvidarse de APAGAR algo —que manda avisos falsos a un
+celular— y olvidarse de ENCENDERLO, que solo retrasa una decisión. Escribir la
+condición por el lado seguro cuesta lo mismo.
+
+Con comprobación de que un `tipo` que nadie ha visto todavía **también** nace en
+la sombra, para la regla que venga mañana.
+
+## Otros dos detalles del cambio
+
+- `derivarVista({ incluirCaida: true })` **revienta** si el barrido no trae
+  `highs` y `lows` en vez de devolver cero señales. `barrido.json` los descarta
+  al publicarse, y una lista vacía se lee como «hoy no hubo señales» —
+  indistinguible de «llevo ocho meses sin anotar nada».
+- El patrón se movió a `src/lib/marketCalc.js` (`perforaExtremo`) y
+  `patrones.mjs` lo reexporta: ahora lo necesitan el banco de pruebas **y**
+  `derivarVista`. En las DOS apps, para que siga siendo gemelo. ⚠️ La regla NO
+  se porta a Intradía: allí mide −0,08 plano.
