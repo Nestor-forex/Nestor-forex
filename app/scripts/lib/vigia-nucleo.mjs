@@ -32,11 +32,33 @@ export const idDe = (s) => `${s.name}|${s.lado}|${s.tipo || 'tendencia'}`
 //     producto, y eso lo decide Néstor. Mientras tanto corren en paralelo sin
 //     que nadie las vea.
 //
+//   · «COMPRAR LA CAÍDA» desde el 2026-09-07, por lo mismo: mide bien sobre 5
+//     años pero se descubrió mirando una tabla que ya se había visto, así que
+//     hasta que no acumule operaciones reales no significa nada.
+//
 // Lo de las ventas va atado a `VENTAS_PAUSADAS`: el día que se reactiven,
 // dejan de ser sombra solas. Dos interruptores para lo mismo es como quedan
 // encendidas a medias.
-export const esSombra = (s) =>
-  (VENTAS_PAUSADAS && s?.lado === 'VENTA') || s?.tipo === 'reversion'
+//
+// ⚠️ Y LA REGLA ESTÁ ESCRITA AL REVÉS A PROPÓSITO: sombra es TODO lo que no
+// sea la regla propia de la app.
+//
+// La primera versión enumeraba las de sombra (`tipo === 'reversion'`), y al
+// añadir «comprar la caída» eso se convirtió en un agujero de verdad: sus
+// COMPRAS no encajaban en ninguna de las dos condiciones, así que habrían
+// salido como señales normales y HABRÍAN DESPERTADO EL CELULAR DE NÉSTOR con
+// una regla sin probar. Se cazó antes de publicarla, pero por poco.
+//
+// Escrita así, una regla nueva nace en la sombra y solo sale de ella si
+// alguien viene aquí a sacarla a mano. Es la diferencia entre olvidarse de
+// apagar algo y olvidarse de encenderlo: el primer olvido manda avisos falsos,
+// el segundo solo retrasa una decisión.
+//
+// (`tipo` vacío = las señales de siempre de la app: Swing no tiene modo rango
+// y nunca se lo puso.)
+const esDeLaApp = (s) => !s?.tipo || s.tipo === 'tendencia'
+
+export const esSombra = (s) => (VENTAS_PAUSADAS && s?.lado === 'VENTA') || !esDeLaApp(s)
 
 // Parte las señales nuevas en las que pueden salir hacia un celular y las que
 // solo se anotan. Devuelve las dos listas en vez de filtrar por dentro para

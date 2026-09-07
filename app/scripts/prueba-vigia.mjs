@@ -110,6 +110,27 @@ console.log('\n10. Las reversiones tampoco salen hacia un celular')
   comprobar('las dos reversiones quedan apartadas', sombra.length === 2)
   comprobar('solo se avisa la compra normal', visibles.length === 1 && visibles[0].id === 'a')
   comprobar('una reversión de COMPRA también es sombra', esSombra(setup('X/Y', 'COMPRA', 'reversion')) === true)
+
+  // ⚠️ EL AGUJERO QUE ESTO CIERRA, Y QUE ESTUVO A PUNTO DE PUBLICARSE.
+  //
+  // Al añadir «comprar la caída» el 2026-09-07, `esSombra` enumeraba las de
+  // sombra (`tipo === 'reversion'`). Sus COMPRAS no encajaban en ninguna
+  // condición, así que habrían salido como señales normales y HABRÍAN
+  // DESPERTADO EL CELULAR con una regla sin probar.
+  comprobar('una caída de COMPRA es sombra', esSombra(setup('X/Y', 'COMPRA', 'caida')) === true)
+  comprobar('y una caída de VENTA también', esSombra(setup('X/Y', 'VENTA', 'caida')) === true)
+
+  // Y la comprobación que vale para la regla que venga MAÑANA: cualquier tipo
+  // desconocido nace en la sombra. Olvidarse de encender algo solo retrasa una
+  // decisión; olvidarse de apagarlo manda avisos falsos a un celular.
+  comprobar(
+    'un tipo que nadie ha visto todavía TAMBIÉN nace en la sombra',
+    esSombra(setup('X/Y', 'COMPRA', 'lo-que-inventemos-en-2027')) === true
+  )
+  // Y que lo de siempre siga saliendo: si esto se volviera sombra, la app
+  // dejaría de avisar de nada y tampoco daría error.
+  comprobar('la señal normal de la app sigue siendo visible', esSombra(setup('X/Y', 'COMPRA', 'tendencia')) === false)
+  comprobar('y una sin `tipo` también, que es como las escribe Swing', esSombra(setup('X/Y', 'COMPRA')) === false)
 }
 
 console.log('\n11. El vigía sigue anotando las reversiones tras separarlas de la app')
@@ -136,6 +157,19 @@ console.log('\n11. El vigía sigue anotando las reversiones tras separarlas de l
   const juntaLasDos =
     fuente.includes('vista.setups') && fuente.includes('vista.setupsReversion')
   comprobar('el vigía lee las DOS listas, no solo la de la app', juntaLasDos)
+
+  // ⚠️ Y DESDE EL 2026-09-07 SON TRES. «Comprar la caída» también corre en la
+  // sombra, y le pasa exactamente lo mismo: si el vigía deja de leer su lista,
+  // su historial deja de crecer sin un solo error. Empieza de cero hoy, así que
+  // cada día que no se anote es un día más de espera para poder juzgarla.
+  comprobar(
+    'y también la tercera, la de «comprar la caída»',
+    fuente.includes('vista.setupsCaida')
+  )
+  comprobar(
+    'y se la pide a derivarVista, que si no viene vacía',
+    /incluirCaida:\s*true/.test(fuente)
+  )
   comprobar(
     'y lo que compara no es `vista.setups` a secas',
     /compararConAnterior\(\s*(?!vista\.setups\s*,)/.test(fuente)
@@ -143,11 +177,18 @@ console.log('\n11. El vigía sigue anotando las reversiones tras separarlas de l
 
   // Y que `derivarVista` de verdad las separe: si volvieran a `setups`, la
   // tabla del tablero las pintaría como señales normales.
+  const calc = readFileSync(new URL('../src/lib/marketCalc.js', import.meta.url), 'utf8')
+  comprobar('derivarVista devuelve `setupsReversion` como lista propia', calc.includes('setupsReversion'))
+  comprobar('y `setupsCaida` como otra lista propia', calc.includes('setupsCaida'))
+
+  // ⚠️ Y que NINGUNA de las dos de sombra se cuele en `setups`, que es lo que
+  // pinta el tablero. Son reglas OPUESTAS a la de la app —una compra lo fuerte,
+  // las otras lo débil— y mezclarlas en la misma tabla es justo lo que no puede
+  // pasar. Ya estuvo a punto una vez.
+  const setupsNormales = calc.match(/const setups = \[[\s\S]*?\n  \]/)
   comprobar(
-    'derivarVista devuelve `setupsReversion` como lista propia',
-    readFileSync(new URL('../src/lib/marketCalc.js', import.meta.url), 'utf8').includes(
-      'setupsReversion'
-    )
+    'y `setups` (lo que ve el tablero) NO incluye ninguna de las dos',
+    !!setupsNormales && !/reversion|[Cc]aida/.test(setupsNormales[0])
   )
 }
 

@@ -11,7 +11,14 @@
 // restar. La tabla saldría mejor cuantos más costes se descuentan, que es
 // exactamente el autoengaño que este archivo intenta impedir.
 
-import { spreadDe, costeEnPips, SPREAD_PIPS, SPREAD_POR_DEFECTO, NIVELES_SWAP } from './lib/costes.mjs'
+import {
+  spreadDe,
+  costeEnPips,
+  SPREAD_PIPS,
+  SPREAD_NESTOR_ASIA,
+  SPREAD_POR_DEFECTO,
+  NIVELES_SWAP,
+} from './lib/costes.mjs'
 import { PAIRS } from '../src/lib/marketCalc.js'
 import { medir, barridoSwap } from './lib/backtest-nucleo.mjs'
 import { readFileSync } from 'node:fs'
@@ -47,10 +54,17 @@ console.log('\n2. Los cruces cuestan más que los pares con dólar')
 {
   const conDolar = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'USD/CAD', 'AUD/USD', 'NZD/USD']
   const cruces = ['EUR/CHF', 'EUR/CAD', 'EUR/NZD', 'GBP/CAD', 'GBP/JPY', 'NZD/CHF', 'NZD/CAD']
-  const peorMayor = Math.max(...conDolar.map(spreadDe))
-  const mejorCruce = Math.min(...cruces.map(spreadDe))
+  // ⚠️ `.map((p) => spreadDe(p))` y NO `.map(spreadDe)`: `map` pasa el índice
+  // en el segundo argumento, que ahora es la tabla. Este mismo fallo se coló en
+  // Intradía y devolvía un número creíble; aquí lo cazó el guardia al primer
+  // intento.
+  const peorMayor = Math.max(...conDolar.map((p) => spreadDe(p)))
+  const mejorCruce = Math.min(...cruces.map((p) => spreadDe(p)))
   comprobar(mejorCruce > peorMayor, `el cruce más barato (${mejorCruce}) cuesta más que el mayor más caro (${peorMayor})`)
-  comprobar(spreadDe('EUR/USD') === Math.min(...conDolar.map(spreadDe)), 'EUR/USD es el más barato, como en el mercado real')
+  comprobar(
+    spreadDe('EUR/USD') === Math.min(...conDolar.map((p) => spreadDe(p))),
+    'EUR/USD es el más barato, como en el mercado real'
+  )
 }
 
 // --- 3. Un par desconocido se mide CARO, no barato ------------------------
@@ -389,6 +403,87 @@ console.log('\n11. Ninguna etiqueta «(hoy)» del banco de pruebas está escrita
   // `hoySi` dejaría la comprobación de arriba pasando en verde sobre un informe
   // que ya no marca nada.
   comprobar(/const hoySi = /.test(fuente), 'y `hoySi` sigue existiendo para ponerlas')
+}
+
+
+console.log('\n12. Se puede medir con OTRA tabla de spreads sin tocar la oficial')
+{
+  // ⚠️ El fallo que esto vigila es SILENCIOSO: si `tablaSpread` se ignorara,
+  // las dos columnas saldrían idénticas y parecería que «el bróker da igual».
+  // Esa es exactamente la conclusión falsa más cómoda de creer.
+  const caros = { 'EUR/USD': 20 }
+  const senales = [
+    { id: 'A', vistoEl: 'd1', par: 'EUR/USD', pipRiesgo: 100, pipBeneficio: 100 },
+    { id: 'B', vistoEl: 'd2', par: 'EUR/USD', pipRiesgo: 100, pipBeneficio: 100 },
+  ]
+  const res = new Map([
+    ['A@d1', { resultado: 'ganada', pips: 100, diasTardados: 0 }],
+    ['B@d2', { resultado: 'perdida', pips: -100, diasTardados: 0 }],
+  ])
+  const normal = medir(senales, res, { conSpread: true })
+  const caro = medir(senales, res, { conSpread: true, tablaSpread: caros })
+  comprobar(
+    caro.porRiesgo < normal.porRiesgo,
+    `una tabla más cara da PEOR resultado (${normal.porRiesgo.toFixed(3)} → ${caro.porRiesgo.toFixed(3)})`
+  )
+
+  // Con 20 pips sobre un riesgo de 100, el coste es 0,2 por operación. Se paga
+  // se gane o se pierda, así que el resultado baja exactamente 0,2.
+  cerca(caro.porRiesgo, -0.2, 1e-9, 'y la cuenta cuadra a mano: 20 pips sobre 100 de riesgo = −0,200')
+
+  // Un par ausente cae al valor por defecto: ni revienta ni se cuela gratis.
+  const otro = medir(
+    [{ id: 'C', vistoEl: 'd3', par: 'XXX/YYY', pipRiesgo: 100, pipBeneficio: 100 }],
+    new Map([['C@d3', { resultado: 'ganada', pips: 100, diasTardados: 0 }]]),
+    { conSpread: true, tablaSpread: caros }
+  )
+  comprobar(Number.isFinite(otro.porRiesgo), 'un par ausente de la tabla usa el valor por defecto, no NaN')
+
+  // Y sin pasar nada manda la oficial: el ensayo no puede contaminar las
+  // mediciones de verdad.
+  comprobar(
+    medir(senales, res, { conSpread: true }).porRiesgo === normal.porRiesgo,
+    'sin pasar tabla, manda la oficial'
+  )
+
+  // `spreadDe` REVIENTA si la tabla no es una tabla. Nació de un fallo real:
+  // `lista.map(spreadDe)` pasa el índice como segundo argumento, y el
+  // `?? SPREAD_POR_DEFECTO` lo convertía en un número creíble.
+  let reventó = false
+  try {
+    spreadDe('EUR/USD', 0)
+  } catch {
+    reventó = true
+  }
+  comprobar(reventó, 'y `spreadDe` revienta si le pasan un número como tabla, en vez de inventarse un precio')
+}
+
+console.log('\n13. Los spreads REALES de la cuenta de Néstor')
+{
+  // Leídos con el mercado abierto el 2026-09-07. Sirven para una cosa muy
+  // concreta: comprobar que la tabla del banco de pruebas no está midiendo
+  // MÁS BARATO que la realidad, que sería inflar los resultados a favor propio.
+  const media = (t) => Object.values(t).reduce((a, b) => a + b, 0) / Object.keys(t).length
+
+  comprobar(
+    media(SPREAD_PIPS) > media(SPREAD_NESTOR_ASIA),
+    `la tabla oficial (${media(SPREAD_PIPS).toFixed(2)}) es más cara que la real ` +
+      `(${media(SPREAD_NESTOR_ASIA).toFixed(2)}): mide del lado prudente`
+  )
+
+  // Todos los pares que la app opera tienen que estar, o la comparación
+  // taparía los que faltan con el valor por defecto sin decir nada.
+  const nuestros = PAIRS.map(([b, q]) => `${b}/${q}`)
+  const faltan = nuestros.filter((p) => !(p in SPREAD_NESTOR_ASIA))
+  comprobar(faltan.length === 0, faltan.length ? `FALTAN: ${faltan.join(', ')}` : `están los ${nuestros.length} pares de la app`)
+
+  // ⚠️ Y que NO se haya colado como tabla por defecto. Es lo único que podría
+  // pasar en silencio: todas las mediciones saldrían un poco mejores y nadie
+  // lo notaría, que es justo el autoengaño que este archivo entero previene.
+  comprobar(
+    spreadDe('EUR/USD') === SPREAD_PIPS['EUR/USD'],
+    'y la tabla por defecto SIGUE siendo la oficial, no la de Néstor'
+  )
 }
 
 console.log('')

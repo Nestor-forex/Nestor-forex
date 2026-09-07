@@ -581,6 +581,69 @@ const porDifAbs = (a, b) => Math.abs(b.dif) - Math.abs(a.dif)
  *                       una decisión de Néstor. Hoy solo la enciende el vigía,
  *                       para anotarla en la sombra sin enseñársela a nadie.
  */
+/**
+ * ¿PERFORA EL PAR UN EXTREMO DE LAS N VELAS ANTERIORES?
+ *
+ * Vive aquí, y no en `scripts/lib/patrones.mjs` donde nació, porque ahora la
+ * necesitan los dos lados: el banco de pruebas (que la importa desde allí) y
+ * `derivarVista`, para poder anotar la regla en la sombra. Una sola copia:
+ * mantener dos iguales a mano es trabajo que la máquina puede evitar, y la
+ * primera versión de aquel archivo ya se estrelló por tener dos.
+ *
+ * ⚠️ EL NIVEL SALE DE LAS VELAS ANTERIORES, NO INCLUYE LA DE HOY. Es el error
+ * que dejaría todo en cero sin avisar: el mínimo de hoy es, por definición,
+ * candidato a ser el más bajo, así que incluirlo lo compararía consigo mismo y
+ * no habría señal NUNCA. Saldría cero operaciones y parecería que «el patrón
+ * no ocurre».
+ *
+ * @param volver  true  = el precio RECUPERA al cierre (el barrido de liquidez)
+ *                false = se queda fuera, o sea sigue cayendo al cerrar
+ *
+ *                ⚠️ `volver: false` NO es un rompimiento: el lado NO cambia.
+ *                'COMPRA' con `volver: false` es comprar un mínimo nuevo que
+ *                cierra abajo — comprar la caída SIN esperar el rebote.
+ */
+export function perforaExtremo(p, n, lado, volver = true) {
+  const H = p.highs
+  const L = p.lows
+  if (!H || !L || H.length < n + 1) return false
+  if (lado === 'COMPRA') {
+    const suelo = Math.min(...L.slice(-n - 1, -1))
+    const perforo = L.at(-1) < suelo
+    return perforo && (volver ? p.c > suelo : p.c < suelo)
+  }
+  const techo = Math.max(...H.slice(-n - 1, -1))
+  const perforo = H.at(-1) > techo
+  return perforo && (volver ? p.c < techo : p.c > techo)
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// «COMPRAR LA CAÍDA» — LA TERCERA REGLA, Y CORRE EN LA SOMBRA
+// ─────────────────────────────────────────────────────────────────────────
+// Comprar el par el día que hace mínimo de VENTANA_CAIDA días; vender el que
+// hace máximo. Sin esperar a que rebote.
+//
+// Apareció el 2026-09-04 como CONTROL de otra medición y salió mejor que lo que
+// se probaba: +0,09 por unidad de riesgo con 28,7 señales al mes, contra −0,05
+// de la app. Se rechazó entonces a propósito, por haberla mirado DESPUÉS de ver
+// la tabla.
+//
+// ⚠️ NO SE ENSEÑA EN NINGUNA PANTALLA Y NO DESPIERTA NINGÚN CELULAR. Solo la
+// enciende el vigía, y solo para anotarla. El listón que tendría que pasar para
+// dejar de estar en la sombra está escrito en `scripts/lib/preregistro.mjs`
+// desde antes de medirla, y ni siquiera pasarlo la enciende: lo que hace falta
+// es historial REAL, y por eso empieza a acumularlo desde hoy.
+//
+// Se eligió 10 días y no 20 —midieron igual— porque da más señales, y las
+// señales son el cuello de botella: son los meses que hay que esperar.
+export const VENTANA_CAIDA = 10
+
+const clasificarCaida = (p) => {
+  if (perforaExtremo(p, VENTANA_CAIDA, 'COMPRA', false)) return 'COMPRA'
+  if (perforaExtremo(p, VENTANA_CAIDA, 'VENTA', false)) return 'VENTA'
+  return null
+}
+
 export function derivarVista(
   data,
   {
@@ -590,6 +653,7 @@ export function derivarVista(
     locale,
     incluirVentas = !VENTAS_PAUSADAS,
     incluirReversion = false,
+    incluirCaida = false,
     rsiMax,
     confluenciaMin,
     tendenciaMin,
@@ -676,7 +740,32 @@ export function derivarVista(
   // proyecto que no se puede recuperar. Hay una comprobación que lo vigila.
   const setupsReversion = reversionesRaw.map((p) => mkSetup(p, clsRev(p), esc, t, 'reversion'))
 
+  // «Comprar la caída», también en la sombra. Misma advertencia que arriba: si
+  // el vigía deja de leer esta lista, su historial deja de crecer sin dar
+  // ningún error. Hay una comprobación que exige que la lea.
+  //
+  // ⚠️ Y REVIENTA SI LE FALTAN LOS DATOS EN VEZ DE DEVOLVER CERO SEÑALES.
+  // `barrido.json` descarta `highs` y `lows` al publicarse —son 300 números por
+  // par y engordarían el archivo de 9 KB a medio mega—, así que en el navegador
+  // esta regla no se puede calcular. Nadie se la pide allí; pero si algún día
+  // alguien lo hiciera, tiene que enterarse. Una lista vacía se lee como «hoy
+  // no hubo señales» y es indistinguible de «llevo ocho meses sin anotar nada».
+  let setupsCaida = []
+  if (incluirCaida) {
+    if (!data.pares.some((p) => p.highs && p.lows)) {
+      throw new Error(
+        'derivarVista({ incluirCaida: true }) necesita `highs` y `lows`, y este barrido no los trae. ' +
+          '¿Viene de `barrido.json`? Ahí se descartan al publicar. Esta regla solo se puede calcular ' +
+          'donde se calculó el barrido, o sea en el vigía.'
+      )
+    }
+    setupsCaida = cands
+      .filter((p) => clasificarCaida(p))
+      .slice(0, topN)
+      .map((p) => mkSetup(p, clasificarCaida(p), esc, t, 'caida'))
+  }
+
   const corte = t('calc_barrido.corte', { fecha: data.ultima })
 
-  return { monedas, pares, compras, ventas, vigilancia, reversiones, setups, setupsReversion, corte }
+  return { monedas, pares, compras, ventas, vigilancia, reversiones, setups, setupsReversion, setupsCaida, corte }
 }
