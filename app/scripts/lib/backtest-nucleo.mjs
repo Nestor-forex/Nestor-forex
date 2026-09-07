@@ -1,4 +1,4 @@
-import { costeEnPips, NIVELES_SWAP } from './costes.mjs'
+import { costeEnPips, NIVELES_SWAP, SPREAD_PIPS } from './costes.mjs'
 // El motor del banco de pruebas: qué señales habría dado la app cada día.
 //
 // Va aparte de `backtest.mjs` para poder comprobarlo sin internet: el script
@@ -201,7 +201,14 @@ export function generarSenales(
 // estuvo dentro del script no se podía probar sin internet ni sin gastar
 // créditos de la API: o sea que la cuenta que más pesa era la única sin
 // comprobar. Ahora `prueba-backtest.mjs` la mide directamente.
-export function medir(senales, porClave, { conSpread = false, swapPipsNoche = 0 } = {}) {
+// `tablaSpread` permite medir las MISMAS operaciones con otro peaje, para ver
+// cuánto decide el bróker y cuánto la regla. No cambia ni una señal: cambiar
+// el coste no cambia lo que hizo el precio, solo lo que queda después.
+export function medir(
+  senales,
+  porClave,
+  { conSpread = false, swapPipsNoche = 0, tablaSpread = SPREAD_PIPS } = {}
+) {
   let ganadas = 0
   let perdidas = 0
   let pips = 0
@@ -262,7 +269,7 @@ export function medir(senales, porClave, { conSpread = false, swapPipsNoche = 0 
     // resolvió al día siguiente pagó una noche, una que tardó tres semanas
     // pagó veintiuna. Por eso el swap castiga sobre todo a las que se quedan
     // colgadas, que es exactamente como funciona en la cuenta real.
-    const costePips = conSpread ? costeEnPips(s.par, r.diasTardados ?? 0, swapPipsNoche) : 0
+    const costePips = conSpread ? costeEnPips(s.par, r.diasTardados ?? 0, swapPipsNoche, tablaSpread) : 0
     const coste = costePips / s.pipRiesgo
     // Se acumulan sobre las MISMAS operaciones que entran en el resultado (las
     // resueltas), no sobre todas las señales: si no, el equilibrio hablaría de

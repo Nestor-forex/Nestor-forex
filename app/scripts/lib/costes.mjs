@@ -69,12 +69,72 @@ export const SPREAD_PIPS = {
   'NZD/CAD': 3.4,
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// LOS SPREADS REALES DE LA CUENTA DE NÉSTOR (AvaTrade)
+// ─────────────────────────────────────────────────────────────────────────
+// Leídos el 2026-09-07 a las 20:20 hora de Colombia: sesión de Asia, mercado
+// ABIERTO y operando. Son los primeros números reales de un bróker de verdad
+// que ha tenido este proyecto.
+//
+// 📌 Y CORRIGEN UNA PREDICCIÓN MÍA QUE ERA FALSA. Antes de verlos escribí que
+// saldrían PEORES que los del viernes, porque Asia es la sesión con menos
+// gente. Salieron mucho mejores: media 1,91 contra 4,36.
+//
+// El fallo era confundir «sesión con poca liquidez» con «mercado cerrado». No
+// es lo mismo: el viernes NO HABÍA mercado, y un bróker sin mercado no
+// ensancha el spread — se lo inventa. Por eso los del fin de semana no valen
+// para nada y estos sí.
+//
+// ⚠️ SIGUEN SIN SUSTITUIR A `SPREAD_PIPS`, y el motivo ya no es que estén
+// inflados sino el contrario: Asia es la sesión MÁS BARATA que va a ver esta
+// cuenta, y medir con el mejor momento del día sería contarse el cuento. La
+// tabla oficial se queda en el lado alto a propósito.
+//
+// Lo que estos números SÍ hacen es validar esa tabla: suponía 2,17 de media
+// contra 1,91 reales, o sea un 12 % de más. Todo lo medido en meses NO estaba
+// inflando resultados a favor propio, que era el riesgo de fondo.
+//
+// Solo tres pares salen más caros de lo supuesto, y por poco: USD/JPY
+// (1,0 → 1,3), USD/CAD (1,6 → 1,8) y NZD/USD (1,7 → 2,1).
+export const SPREAD_NESTOR_ASIA = {
+  'EUR/USD': 0.8,
+  'GBP/USD': 1.2,
+  'USD/JPY': 1.3,
+  'USD/CHF': 1.3,
+  'USD/CAD': 1.8,
+  'AUD/USD': 0.9,
+  'NZD/USD': 2.1,
+  'EUR/CHF': 1.6,
+  'EUR/CAD': 2.3,
+  'EUR/NZD': 3.3,
+  'EUR/GBP': 1.2,
+  'GBP/CAD': 3.3,
+  'GBP/JPY': 2.2,
+  'NZD/CHF': 1.9,
+  'NZD/CAD': 2.4,
+  'AUD/JPY': 1.9,
+  'NZD/JPY': 2.5,
+  'AUD/NZD': 2.4,
+}
+
 // Para un par que no esté en la tabla. Alto a propósito: que un par nuevo se
 // mida caro hasta que alguien ponga su número real, y no barato por descuido.
 export const SPREAD_POR_DEFECTO = 3.0
 
-export function spreadDe(par) {
-  return SPREAD_PIPS[par] ?? SPREAD_POR_DEFECTO
+export function spreadDe(par, tabla = SPREAD_PIPS) {
+  // ⚠️ REVIENTA SI LA TABLA NO ES UNA TABLA, y el mensaje nombra la trampa
+  // concreta. Al añadir este segundo parámetro en Intradía, una comprobación
+  // que hacía `lista.map(spreadDe)` empezó a pasar el ÍNDICE como tabla:
+  // `0['EUR/USD']` daba undefined y el `??` de abajo lo convertía en 3 pips.
+  // Un número perfectamente creíble. Nadie se habría enterado.
+  if (typeof tabla !== 'object' || tabla === null) {
+    throw new TypeError(
+      `spreadDe(par, tabla): la tabla llegó como ${typeof tabla} (${tabla}). ` +
+        '¿Se está usando como `lista.map(spreadDe)`? Ahí `map` pasa el índice ' +
+        'en el segundo argumento: usa `lista.map((p) => spreadDe(p))`.'
+    )
+  }
+  return tabla[par] ?? SPREAD_POR_DEFECTO
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -102,6 +162,6 @@ export const NIVELES_SWAP = [0, 0.25, 0.5, 1.0, 2.0]
  * El spread se paga UNA vez (al abrir y cerrar, ya va todo junto en el
  * número de la tabla). El swap se paga por cada noche.
  */
-export function costeEnPips(par, noches = 0, swapPipsNoche = 0) {
-  return spreadDe(par) + Math.max(0, noches) * swapPipsNoche
+export function costeEnPips(par, noches = 0, swapPipsNoche = 0, tabla = SPREAD_PIPS) {
+  return spreadDe(par, tabla) + Math.max(0, noches) * swapPipsNoche
 }

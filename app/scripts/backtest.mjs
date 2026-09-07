@@ -30,7 +30,11 @@
 // bloqueado api.twelvedata.com:
 //   Actions → "Banco de pruebas de las reglas" → Run workflow
 
-import { costeEnPips, NIVELES_SWAP } from './lib/costes.mjs'
+import { costeEnPips, NIVELES_SWAP, SPREAD_PIPS, SPREAD_NESTOR_ASIA } from './lib/costes.mjs'
+
+// La media de una tabla de spreads, para poder decir en pantalla con qué se
+// está midiendo en vez de que el lector lo tenga que buscar en otro archivo.
+const mediaDe = (t) => (Object.values(t).reduce((a, b) => a + b, 0) / Object.keys(t).length).toFixed(2)
 // ⚠️ LOS UMBRALES SE IMPORTAN, NO SE ESCRIBEN AQUÍ.
 //
 // Las tablas de aflojar marcan con «(hoy)» la fila que la app usa de verdad, y
@@ -780,6 +784,84 @@ for (const { nombre, r } of revCorridas) {
 console.log('El swap real depende del par, de la dirección y del momento: a veces se')
 console.log('cobra y a veces se paga. Por eso lo que importa no es una fila sino a')
 console.log('PARTIR DE CUÁL la conclusión cambia.')
+
+// --------------------------------------------------------------------------
+// ¿CUÁNTO DECIDE EL BRÓKER Y CUÁNTO LA REGLA?
+//
+// Las MISMAS operaciones sumadas con dos peajes distintos. No se vuelve a
+// llamar a `correr()` a propósito: cambiar la tabla de costes no cambia ni una
+// señal ni lo que hizo el precio, así que repetir las corridas sería regalar
+// veinte minutos de máquina. Se reutilizan `revCorridas` y `neutraPartida`.
+//
+// La columna «real» son los spreads que Néstor leyó en su cuenta de AvaTrade
+// el 2026-09-07 con el mercado ABIERTO (sesión de Asia). Ver `costes.mjs`.
+//
+// ⚠️ NO sustituyen a la tabla oficial, y el motivo no es que estén inflados:
+// es el contrario. Asia es la sesión más barata que va a ver esa cuenta, y
+// medir con el mejor momento del día sería contarse el cuento. La tabla
+// oficial se queda deliberadamente en el lado caro.
+// --------------------------------------------------------------------------
+
+console.log('')
+console.log('¿CUÁNTO DECIDE EL BRÓKER? (vara neutra 1:1, mismas operaciones)')
+console.log(`Oficial = la tabla del banco de pruebas (media ${mediaDe(SPREAD_PIPS)} pips).`)
+console.log(`Real    = la cuenta de Néstor, mercado abierto (media ${mediaDe(SPREAD_NESTOR_ASIA)}).`)
+console.log('')
+console.log('regla                                       ops   sin costes   oficial      real')
+console.log('─'.repeat(86))
+{
+  const compras = neutraPartida.senales.filter((s) => s.lado === 'COMPRA')
+  const filas = [
+    { nombre: 'la app tal cual', s: neutraPartida.senales, pc: neutraPartida.porClave },
+    { nombre: '   solo sus compras', s: compras, pc: neutraPartida.porClave },
+    ...revCorridas.map(({ nombre, r }) => ({ nombre, s: r.senales, pc: r.porClave })),
+  ]
+  const num = (x) => (x === null ? '   —  ' : (x >= 0 ? '+' : '') + x.toFixed(3)).padStart(8)
+  let sumaOf = 0
+  let sumaRe = 0
+  for (const { nombre, s: sen, pc } of filas) {
+    const sin = medir(sen, pc)
+    const of = medir(sen, pc, { conSpread: true })
+    const re = medir(sen, pc, { conSpread: true, tablaSpread: SPREAD_NESTOR_ASIA })
+    sumaOf += (sin.porRiesgo ?? 0) - (of.porRiesgo ?? 0)
+    sumaRe += (sin.porRiesgo ?? 0) - (re.porRiesgo ?? 0)
+    console.log(
+      `${nombre.padEnd(40)} ${String(sin.total).padStart(5)}   ` +
+        `${num(sin.porRiesgo)}  ${num(of.porRiesgo)}  ${num(re.porRiesgo)}`
+    )
+  }
+  console.log('─'.repeat(86))
+  console.log(
+    `El peaje se lleva ${(sumaOf / filas.length).toFixed(3)} con la oficial y ` +
+      `${(sumaRe / filas.length).toFixed(3)} con la real (por unidad de riesgo).`
+  )
+  console.log('Cuanto mayor sea eso frente a la columna «sin costes», más decide el')
+  console.log('bróker y menos la regla.')
+}
+
+// Y la pregunta que de verdad decide en Swing: la reversión gana o pierde
+// según CUÁNTO SWAP se pague, así que lo útil no es un número sino hasta qué
+// nivel aguanta — con cada tabla de costes.
+console.log('')
+console.log('HASTA QUÉ SWAP AGUANTA CADA REGLA, CON UNA TABLA Y CON LA OTRA')
+console.log('')
+console.log('regla                                       con la oficial      con la real')
+console.log('─'.repeat(86))
+for (const { nombre, r } of revCorridas) {
+  const aguanta = (tabla) => {
+    let ultimo = null
+    for (const nivel of NIVELES_SWAP) {
+      const m = medir(r.senales, r.porClave, { conSpread: true, swapPipsNoche: nivel, tablaSpread: tabla })
+      if ((m.porRiesgo ?? -1) > 0) ultimo = nivel
+    }
+    return ultimo === null ? 'pierde ya con el spread' : `${ultimo} pips/noche`
+  }
+  console.log(`${nombre.padEnd(40)} ${aguanta(SPREAD_PIPS).padEnd(20)} ${aguanta(SPREAD_NESTOR_ASIA)}`)
+}
+console.log('─'.repeat(86))
+console.log('El swap típico de un par mayor va de 0,2 a 1 pip por noche, y en una de')
+console.log('las dos direcciones a veces se COBRA. Una regla que aguanta 1 pip llega')
+console.log('justo al lado caro de lo normal.')
 
 // --------------------------------------------------------------------------
 // LOS UMBRALES VECINOS: ¿es real o lo ajusté yo?
