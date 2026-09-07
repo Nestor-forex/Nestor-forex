@@ -55,6 +55,7 @@ import { leerLlave, obtenerVelas } from './lib/velas.mjs'
 import { generarSenales, medir, barridoSwap } from './lib/backtest-nucleo.mjs'
 import { GEOMETRIAS, simetrica, actual, atrFijo } from './lib/geometrias.mjs'
 import { reglaBarrido } from './lib/patrones.mjs'
+import { juzgar, PREREGISTRO, QUE_SIGNIFICA_APROBAR } from './lib/preregistro.mjs'
 import { resolver } from './lib/resolver.mjs'
 
 // Días de arranque que no se juzgan: el EMA50 y el RSI necesitan historia
@@ -1508,6 +1509,110 @@ console.log('')
     )
     console.log('Cuanto MENOS coincidan, más independiente es el hallazgo (si lo hay).')
   }
+}
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// EL VEREDICTO PREREGISTRADO DE «COMPRAR LA CAÍDA»
+//
+// El listón está escrito en `lib/preregistro.mjs` desde ANTES de esta corrida,
+// con la fecha dentro. Aquí solo se reúnen los datos y se le pasan a
+// `juzgar()`: el veredicto lo calcula una función, no lo argumenta nadie.
+//
+// ⚠️ Si algún día el resultado queda a un pelo, la respuesta NO es aflojar un
+// criterio. Ése es el momento exacto para el que se escribió el listón antes.
+// ══════════════════════════════════════════════════════════════════════════
+
+console.log('')
+console.log('═'.repeat(92))
+console.log(`VEREDICTO PREREGISTRADO — «comprar la caída de ${PREREGISTRO.ventanaJuzgada} días»`)
+console.log(`Listón escrito el ${PREREGISTRO.fecha}, antes de correr esto.`)
+console.log('═'.repeat(92))
+{
+  const N = PREREGISTRO.ventanaJuzgada
+  const conCostes = { conSpread: true }
+  // 21 días hábiles por mes, igual que en el resto del informe. Se recalcula
+  // aquí porque el `meses` de las otras secciones vive dentro de sus bloques.
+  const meses = (fechas.length - CALENTAMIENTO) / 21
+
+  // La ventana que se juzga, y sus vecinas para ver si el efecto es ancho.
+  const vecinas = PREREGISTRO.ventanas.filter((v) => v !== N)
+  const corrida = (n) => correr(simetrica, reglaBarrido(n, { volver: false }))
+
+  const r = corrida(N)
+  const m = medir(r.senales, r.porClave, conCostes)
+  const corte = fechas[Math.floor(fechas.length / 2)]
+  const m1 = medir(r.senales.filter((x) => x.vistoEl < corte), r.porClave, conCostes)
+  const m2 = medir(r.senales.filter((x) => x.vistoEl >= corte), r.porClave, conCostes)
+  const mSwap = medir(r.senales, r.porClave, { conSpread: true, swapPipsNoche: 0.5 })
+
+  // Los dos vecinos más próximos por tamaño, que son los que dicen si el
+  // efecto es ancho o un pico.
+  const cercanas = vecinas.sort((a, b) => Math.abs(a - N) - Math.abs(b - N)).slice(0, 2)
+  const vecinos = cercanas.map((n) => {
+    const rv = corrida(n)
+    return medir(rv.senales, rv.porClave, conCostes).porRiesgo ?? -9
+  })
+
+  // Cuánto solapa con la reversión: si fueran las mismas operaciones, no sería
+  // una segunda vía.
+  const rev = correr(simetrica, REGLAS_REVERSION[1][1])
+  const clave = (x) => `${x.par}|${x.lado}|${x.vistoEl}`
+  const enRev = new Set(rev.senales.map(clave))
+  const solape = r.senales.length ? r.senales.filter((x) => enRev.has(clave(x))).length / r.senales.length : 1
+
+  // Cuánto aporta el par que más aporta. Si casi todo saliera de uno, no sería
+  // un efecto del mercado sino ese par en estos cinco años.
+  const porPar = new Map()
+  for (const sen of r.senales) {
+    const res = r.porClave.get(`${sen.id}@${sen.vistoEl}`)
+    if (!res || (res.resultado !== 'ganada' && res.resultado !== 'perdida')) continue
+    const uno = medir([sen], r.porClave, conCostes).porRiesgo ?? 0
+    porPar.set(sen.par, (porPar.get(sen.par) ?? 0) + uno)
+  }
+  const positivos = [...porPar.values()].filter((v) => v > 0)
+  const totalPositivo = positivos.reduce((a, b) => a + b, 0)
+  const aporteDelMejorPar = totalPositivo > 0 ? Math.max(...positivos) / totalPositivo : 1
+
+  const datos = {
+    por1R: m.porRiesgo ?? -9,
+    mitad1: m1.porRiesgo ?? -9,
+    mitad2: m2.porRiesgo ?? -9,
+    vecinos,
+    conSwap05: mSwap.porRiesgo ?? -9,
+    senalesMes: m.total / meses,
+    solapeConReversion: solape,
+    aporteDelMejorPar,
+  }
+
+  const n3 = (x) => ((x >= 0 ? '+' : '') + x.toFixed(3)).padStart(7)
+  console.log('')
+  console.log(`  operaciones             ${String(m.total).padStart(7)}`)
+  console.log(`  señales al mes          ${datos.senalesMes.toFixed(1).padStart(7)}`)
+  console.log(`  acierto                 ${((m.acierto ?? 0).toFixed(0) + '%').padStart(7)}`)
+  console.log(`  por 1R con costes       ${n3(datos.por1R)}`)
+  console.log(`  1ª mitad / 2ª mitad     ${n3(datos.mitad1)} / ${n3(datos.mitad2)}`)
+  console.log(`  vecinas (${cercanas.join(' y ')} días)      ${vecinos.map(n3).join(' / ')}`)
+  console.log(`  pagando 0,5 de swap     ${n3(datos.conSwap05)}`)
+  console.log(`  solapa con la reversión ${(solape * 100).toFixed(0).padStart(6)}%`)
+  console.log(`  aporte del mejor par    ${(aporteDelMejorPar * 100).toFixed(0).padStart(6)}%`)
+  console.log('')
+
+  const { aprueba, filas } = juzgar(datos)
+  for (const f of filas) console.log(`  ${f.pasa ? '✓' : '✗'} ${f.dice}`)
+  console.log('')
+  console.log(`  ${aprueba ? '✓ PASA EL LISTÓN' : '✗ NO PASA EL LISTÓN'}`)
+  if (!aprueba) {
+    console.log('')
+    console.log('  Lo que falló, y por qué ese criterio existía:')
+    for (const f of filas.filter((x) => !x.pasa)) console.log(`    · ${f.dice}\n      ${f.porque}`)
+  }
+  console.log('')
+  console.log(`  ⚠️ ${QUE_SIGNIFICA_APROBAR}`)
+  console.log('')
+  console.log('  ⚠️ Y aunque pase: estos días YA SE MIRARON, así que pasar aquí es')
+  console.log('     necesario pero NO suficiente. Lo único limpio es el registro')
+  console.log('     hacia adelante, que arranca hoy en la sombra.')
 }
 
 console.log('')

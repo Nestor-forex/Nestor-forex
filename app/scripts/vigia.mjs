@@ -56,7 +56,16 @@ const data = computarBarrido(fechas, rates, rangosPar)
 // `incluirVentas` para que la pausa pueda terminar con datos, e
 // `incluirReversion` para ver correr en paralelo la regla contraria. Las dos
 // se anotan en la sombra: no se enseñan, no se avisan, solo acumulan.
-const vista = derivarVista(data, { thr: 0.5, topN: 3, incluirVentas: true, incluirReversion: true })
+const vista = derivarVista(data, {
+  thr: 0.5,
+  topN: 3,
+  incluirVentas: true,
+  incluirReversion: true,
+  // Desde el 2026-09-07. Tercera regla en la sombra: no se enseña, no avisa,
+  // solo acumula operaciones reales para poder juzgarla algún día con datos
+  // que nadie ha mirado todavía.
+  incluirCaida: true,
+})
 
 // ⚠️ LAS DOS LISTAS, JUNTAS Y A PROPÓSITO.
 //
@@ -70,7 +79,7 @@ const vista = derivarVista(data, { thr: 0.5, topN: 3, incluirVentas: true, inclu
 // El historial es lo único de este proyecto que no se puede recuperar: si un
 // día no se anota, ese día se perdió para siempre. Por eso van juntas aquí y
 // hay una comprobación que exige que este archivo lea las dos.
-const todosLosSetups = [...vista.setups, ...vista.setupsReversion]
+const todosLosSetups = [...vista.setups, ...vista.setupsReversion, ...vista.setupsCaida]
 
 const { actuales, nuevas } = compararConAnterior(todosLosSetups, leerEstado(ESTADO))
 
