@@ -74,12 +74,46 @@ export function separarSombra(nuevas) {
 export function leerEstado(ruta) {
   try {
     const e = JSON.parse(readFileSync(ruta, 'utf8'))
-    return { senales: Array.isArray(e.senales) ? e.senales : [] }
+    return {
+      senales: Array.isArray(e.senales) ? e.senales : [],
+      // Cuándo corrió el vigía por última vez. Lo usa `yaCorrioHoy` para que
+      // los tres intentos del día no hagan el trabajo tres veces.
+      actualizadoEl: typeof e.actualizadoEl === 'string' ? e.actualizadoEl : null,
+    }
   } catch {
     // Primera corrida, o archivo estropeado: se arranca de cero. Que no haya
     // estado previo no puede tumbar el vigía.
-    return { senales: [] }
+    return { senales: [], actualizadoEl: null }
   }
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// LOS TRES INTENTOS DEL DÍA (desde el 2026-09-07)
+//
+// El reloj de GitHub no es de fiar: se salta corridas enteras sin avisar. El
+// viernes 5 de septiembre de 2026 el vigía de swing NO CORRIÓ, y ese día se
+// perdió para siempre — el historial vale porque registra lo que la app dijo
+// ESE día, así que no se puede rellenar después sin inventarlo.
+//
+// Arreglo: en vez de un intento al día, tres (15:50, 16:20 y 16:50 UTC). Para
+// que sigan siendo UNA corrida al día y no tres, cada uno mira antes si el
+// vigía ya corrió hoy y, si sí, se sale sin gastar ni un crédito de Twelve
+// Data. En un día normal solo trabaja el primero.
+//
+// ⚠️ ESCRITA POR EL LADO SEGURO, IGUAL QUE `esSombra`. Ante cualquier duda
+// —no hay estado, la fecha no se entiende, el archivo está roto— devuelve
+// `false`, o sea CORRE. Equivocarse hacia correr cuesta 14 créditos de los 800
+// del día y no cambia el historial (si no hay señales nuevas, no se anota
+// nada). Equivocarse hacia saltarse cuesta un día de historial que no vuelve.
+//
+// Se compara el DÍA en UTC, que es el mismo huso en el que están escritos los
+// crones. En hora local podría cambiar de día a mitad de la tanda.
+export function yaCorrioHoy(estado, ahora) {
+  const previo = estado?.actualizadoEl
+  if (typeof previo !== 'string') return false
+  const d = new Date(previo)
+  if (Number.isNaN(d.getTime())) return false
+  return d.toISOString().slice(0, 10) === ahora.toISOString().slice(0, 10)
 }
 
 // Devuelve { actuales, nuevas } con los setups de esta revisión y cuáles no

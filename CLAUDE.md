@@ -1825,3 +1825,91 @@ que esté detrás del login.
 otro, y —la que de verdad importa— **un `tipo` que nadie ha inventado todavía
 NO puede caer dentro de «ventas pausadas»**. Comprobado que muerde
 reintroduciendo la condición vieja: fallan dos comprobaciones.
+
+---
+
+# El reloj de GitHub se comió un día de historial (2026-09-07). Solo en Swing
+
+Néstor preguntó por la puntualidad y al mirarlo salió un agujero medido, no una
+teoría. Las corridas reales del vigía de Swing:
+
+```
+4 de septiembre  18:33   ← 2h43m tarde
+5 de septiembre  ——      ← NUNCA CORRIÓ
+7 de septiembre  18:40   ← lanzada a mano desde esta sesión
+```
+
+**El viernes 5 se perdió y no vuelve.** El historial vale porque registra lo que
+la app dijo ESE día con los precios de ESE día; reconstruirlo con el banco de
+pruebas sería meter filas inventadas en lo único limpio que tiene el proyecto —
+el registro hacia adelante. Se pierde el día y ya.
+
+📌 **Y esto llevaba desde el 2026-08-09 escrito como «pregunta abierta nº 3» sin
+tocarse.** Se arregló en Intradía el 2026-09-02 (el publicador cada 30 minutos,
+dos oportunidades por hora) y **en Swing no se hizo nada**, porque «para un
+vigía diario importa menos». Importa lo mismo: cuando falla, cuesta un día
+entero en vez de una hora.
+
+## Tres intentos, no tres corridas
+
+`vigia.yml` pasa de un cron a tres —**15:50, 16:20 y 16:50 UTC**— y `vigia.mjs`
+mira **antes de pedir precios** si ya corrió hoy (`yaCorrioHoy`, comparando el
+día en UTC de `actualizadoEl` en `estado/vigia.json`).
+
+Día normal: trabaja el primero, los otros dos salen en un segundo con **cero
+créditos** de Twelve Data. Día en que GitHub falla: entra el siguiente. Sigue
+siendo **una corrida al día** y el gasto no cambia.
+
+Tres piezas que lo sostienen y que no hay que quitar:
+
+- **`concurrency: vigia` con `cancel-in-progress: false`** (ya estaba). Es lo
+  único que impide que un intento retrasado se solape con el siguiente y los dos
+  anoten la misma señal. Sin eso, tres crones son tres formas de duplicar el
+  historial.
+- **`leerEstado` ahora conserva `actualizadoEl`.** Antes lo tiraba. Sin ese
+  campo el guardián nunca se activaría y los tres intentos harían el trabajo
+  tres veces (42 créditos al día en vez de 14) — y en silencio.
+- **`VIGIA_SOLO_SI_FALTA` solo se pone cuando el disparo es `schedule`.**
+  Lanzarlo a mano SIEMPRE corre, que es para lo que sirve el botón y es como se
+  recuperó hoy.
+
+## ⚠️ La decisión que no hay que ablandar: la duda se resuelve CORRIENDO
+
+`yaCorrioHoy` devuelve `false` —o sea, corre— ante cualquier cosa rara: no hay
+estado, el archivo está roto, la fecha no se entiende, `actualizadoEl` no es
+texto. Es la misma forma de escribir que `esSombra`, y por la misma razón:
+
+| equivocarse hacia… | cuesta |
+|---|---|
+| **correr de más** | 14 créditos de los 800, y nada más — si no hay señales nuevas no se anota nada |
+| **saltarse de más** | un día de historial que no vuelve |
+
+Los dos errores no valen lo mismo, así que la condición no puede ser simétrica.
+Hay cinco comprobaciones dedicadas solo a eso.
+
+## Cómo se verificó
+
+`prueba-vigia.mjs` (bloque 12, 14 comprobaciones), y **comprobado que muerde**:
+al cambiar «fecha ilegible → corre» por «→ se salta», falla. La primera vez que
+lo intenté el comando ni siquiera modificó el archivo — el mismo tropiezo del
+2026-09-03, así que **se miró el archivo con el daño puesto antes de dar por
+buena la prueba**.
+
+Y de punta a punta, sin gastar créditos y sin llave:
+
+| caso | qué hizo |
+|---|---|
+| ya corrió hoy + automático | se saltó, salida 0, **sin tocar la red** |
+| mismo estado, lanzado a mano | llegó a pedir velas (o sea, NO se saltó) |
+| corrió el viernes + automático | llegó a pedir velas — es justo el día perdido |
+
+## De paso: el log del vigía no nombraba «comprar la caída»
+
+`resumir` devuelve el cubo `caida` desde hoy y **no lo imprimía nadie**: la
+regla se habría anotado meses sin salir en el log de ninguna corrida. Mismo
+descuido que `filasTodas` esta misma mañana. Una línea más, al lado de las otras
+dos de sombra.
+
+⚠️ **Esto NO se porta a Intradía.** Allí el vigía corre cada hora y ya tiene el
+publicador cada 30 minutos: perder una corrida cuesta una hora, no un día, y
+`vigia.mjs` es PRIMO, no gemelo.
