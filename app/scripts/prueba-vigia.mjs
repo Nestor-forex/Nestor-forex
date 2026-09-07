@@ -11,7 +11,15 @@
 import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { compararConAnterior, escribir, esSombra, idDe, leerEstado, separarSombra } from './lib/vigia-nucleo.mjs'
+import {
+  compararConAnterior,
+  escribir,
+  esSombra,
+  idDe,
+  leerEstado,
+  separarSombra,
+  yaCorrioHoy,
+} from './lib/vigia-nucleo.mjs'
 
 const dir = mkdtempSync(join(tmpdir(), 'vigia-'))
 const ESTADO = join(dir, 'estado/vigia.json')
@@ -190,6 +198,60 @@ console.log('\n11. El vigía sigue anotando las reversiones tras separarlas de l
     'y `setups` (lo que ve el tablero) NO incluye ninguna de las dos',
     !!setupsNormales && !/reversion|[Cc]aida/.test(setupsNormales[0])
   )
+}
+
+console.log('\n12. Los tres intentos del día son UNA corrida, y la duda se resuelve CORRIENDO')
+{
+  // El vigía lo intenta tres veces al día porque el reloj de GitHub se salta
+  // corridas. Lo que se comprueba aquí es que el guardián no se pase de listo:
+  // saltarse un intento de más cuesta un día de historial que no vuelve, y
+  // correr de más cuesta 14 créditos de los 800 del día.
+  const hoy = new Date('2026-09-07T18:40:41.039Z')
+
+  comprobar(
+    'ya corrió hoy → el segundo intento se salta',
+    yaCorrioHoy({ actualizadoEl: '2026-09-07T15:52:00.000Z' }, hoy) === true
+  )
+  comprobar(
+    'el mismo día en UTC aunque sea a otra hora: sigue siendo hoy',
+    yaCorrioHoy({ actualizadoEl: '2026-09-07T00:00:00.000Z' }, hoy) === true
+  )
+  comprobar(
+    'corrió AYER → hay que correr (es justo el caso del viernes que se perdió)',
+    yaCorrioHoy({ actualizadoEl: '2026-09-04T18:33:00.000Z' }, hoy) === false
+  )
+
+  // ⚠️ El bloque que de verdad importa. Cada uno de estos es una forma de que
+  // el estado no diga nada útil, y en todas la respuesta tiene que ser CORRER.
+  // Si alguna devolviera `true`, un archivo raro dejaría al vigía mudo un día
+  // entero sin un solo error en pantalla.
+  comprobar('sin estado previo (primera corrida) → corre', yaCorrioHoy({ senales: [] }, hoy) === false)
+  comprobar('estado sin la fecha dentro → corre', yaCorrioHoy({ actualizadoEl: null }, hoy) === false)
+  comprobar('fecha ilegible → corre', yaCorrioHoy({ actualizadoEl: 'el martes' }, hoy) === false)
+  comprobar('fecha que no es texto → corre', yaCorrioHoy({ actualizadoEl: 20260907 }, hoy) === false)
+  comprobar('estado vacío del todo → corre', yaCorrioHoy(undefined, hoy) === false)
+
+  // Y que `leerEstado` traiga de verdad el campo, porque el guardián lo lee de
+  // ahí. Antes lo descartaba: sin esto, el guardián nunca se activaría y los
+  // tres intentos harían el trabajo tres veces, gastando 42 créditos al día.
+  escribir(ESTADO, JSON.stringify({ actualizadoEl: '2026-09-07T15:52:00.000Z', senales: ['EUR/USD|COMPRA|tendencia'] }, null, 2))
+  const leido = leerEstado(ESTADO)
+  comprobar('`leerEstado` conserva `actualizadoEl`', leido.actualizadoEl === '2026-09-07T15:52:00.000Z')
+  comprobar('y sigue trayendo las señales de siempre', leido.senales.length === 1)
+  comprobar('con lo leído del disco, el guardián se activa', yaCorrioHoy(leido, hoy) === true)
+
+  // El workflow solo pone la variable cuando el disparo es automático. Si eso
+  // se cayera, lanzarlo a mano no serviría para recuperar un día saltado —que
+  // es exactamente para lo que se usa el botón.
+  const wf = readFileSync(new URL('../../.github/workflows/vigia.yml', import.meta.url), 'utf8')
+  comprobar('el workflow tiene los tres intentos', (wf.match(/- cron:/g) || []).length === 3)
+  comprobar(
+    'y el guardián solo se enciende con `schedule` (a mano siempre corre)',
+    /VIGIA_SOLO_SI_FALTA:.*github\.event_name == 'schedule'/.test(wf)
+  )
+  // Sin `concurrency` dos intentos retrasados podrían solaparse y anotar la
+  // misma señal dos veces, que es peor que no anotarla.
+  comprobar('y sigue habiendo `concurrency` para que no se solapen', /concurrency:/.test(wf))
 }
 
 console.log(fallos === 0 ? '\nTodas las comprobaciones pasaron.\n' : `\n${fallos} comprobación(es) fallaron.\n`)

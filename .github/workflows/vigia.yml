@@ -21,10 +21,24 @@ on:
     # cerrada más la de hoy a medias. Es lo correcto para no juzgar con una vela
     # sin terminar — pero el motivo ya no es el que decía este comentario.
     #
-    # Ojo: el reloj de GitHub es impuntual y se salta horas —medido en la app
-    # hermana: 3 corridas donde tocaban 13—. Para un vigía diario eso importa
-    # menos que para uno por hora, pero si un día no corre, no corrió.
+    # ⚠️ TRES INTENTOS, NO TRES CORRIDAS (desde el 2026-09-07).
+    #
+    # El reloj de GitHub es impuntual y se salta corridas enteras: el viernes 5
+    # de septiembre de 2026 el vigía NO CORRIÓ, y ese día de historial se perdió
+    # para siempre —el historial vale porque registra lo que la app dijo ESE
+    # día, así que rellenarlo después sería inventarlo—. El día 4 llegó con 2
+    # horas y 43 minutos de retraso.
+    #
+    # Así que se intenta tres veces con media hora de separación. `vigia.mjs`
+    # mira antes si ya corrió hoy y, si sí, se sale sin pedir precios: en un día
+    # normal solo trabaja el primero y los otros dos tardan un segundo y no
+    # gastan ni un crédito. Sigue siendo UNA corrida al día.
+    #
+    # Y `concurrency` de abajo evita lo único que podría estropearlo: que un
+    # intento retrasado se solape con el siguiente y los dos anoten lo mismo.
     - cron: '50 15 * * 1-5'
+    - cron: '20 16 * * 1-5'
+    - cron: '50 16 * * 1-5'
   workflow_dispatch:
 
 # El vigía escribe en la rama `datos`, así que necesita permiso de escritura:
@@ -75,6 +89,13 @@ jobs:
           TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          # El guardián de los tres intentos, y SOLO para los automáticos: si
+          # hoy ya corrió, este intento se sale sin pedir precios.
+          #
+          # Lanzarlo a mano (`workflow_dispatch`) no pone la variable, así que
+          # siempre corre. Es lo que uno espera al darle al botón, y es como se
+          # recuperó el día que GitHub se saltó.
+          VIGIA_SOLO_SI_FALTA: ${{ github.event_name == 'schedule' && '1' || '' }}
         run: node scripts/vigia.mjs
 
       - name: Guardar lo que vio

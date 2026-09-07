@@ -24,7 +24,15 @@
 import { fileURLToPath } from 'node:url'
 import { computarBarrido, derivarVista } from '../src/lib/marketCalc.js'
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
-import { compararConAnterior, escribir, esSombra, leerEstado, leerJsonl, separarSombra } from './lib/vigia-nucleo.mjs'
+import {
+  compararConAnterior,
+  escribir,
+  esSombra,
+  leerEstado,
+  leerJsonl,
+  separarSombra,
+  yaCorrioHoy,
+} from './lib/vigia-nucleo.mjs'
 import { resolver, resumir } from './lib/resolver.mjs'
 
 const DATOS = process.env.VIGIA_DATOS || fileURLToPath(new URL('../../datos-local', import.meta.url))
@@ -37,6 +45,30 @@ const BARRIDO = `${DATOS}/estado/barrido.json`
 const LOG_RESULTADOS = `${DATOS}/historial/resultados.jsonl`
 
 const ahora = new Date()
+
+// ⚠️ ESTO VA ANTES DE PEDIR NADA, y ese es todo el truco.
+//
+// Desde el 2026-09-07 el vigía lo intenta TRES veces al día (15:50, 16:20 y
+// 16:50 UTC) porque el reloj de GitHub se salta corridas: el viernes 5 no
+// corrió ninguna vez y ese día de historial se perdió. Ver el comentario de
+// `yaCorrioHoy` para el porqué y para por qué la duda se resuelve corriendo.
+//
+// Para que tres intentos sigan siendo UNA corrida al día, el segundo y el
+// tercero se salen aquí si el primero ya hizo el trabajo — antes de
+// `obtenerVelas`, así que en un día normal los dos sobrantes no gastan ni un
+// crédito de Twelve Data ni tardan más de un segundo.
+//
+// Solo se aplica a los intentos automáticos: el workflow pone esta variable
+// únicamente cuando el disparo es `schedule`. Lanzarlo a mano SIEMPRE corre,
+// que es lo que uno quiere cuando le da al botón.
+const estadoPrevio = leerEstado(ESTADO)
+if (process.env.VIGIA_SOLO_SI_FALTA === '1' && yaCorrioHoy(estadoPrevio, ahora)) {
+  console.log('---VIGIA-INICIO---')
+  console.log(`Hoy ya corrió (${estadoPrevio.actualizadoEl}). Este intento no hace nada.`)
+  console.log('---VIGIA-FIN---')
+  process.exit(0)
+}
+
 const { fechas, rates, rangosPar } = await obtenerVelas(leerLlave())
 const data = computarBarrido(fechas, rates, rangosPar)
 // ⚠️ `incluirVentas` va encendido AQUÍ y solo aquí.
@@ -81,7 +113,11 @@ const vista = derivarVista(data, {
 // hay una comprobación que exige que este archivo lea las dos.
 const todosLosSetups = [...vista.setups, ...vista.setupsReversion, ...vista.setupsCaida]
 
-const { actuales, nuevas } = compararConAnterior(todosLosSetups, leerEstado(ESTADO))
+// `estadoPrevio` se leyó arriba, para el guardián de los tres intentos. Se
+// reutiliza aquí a propósito: volver a leerlo daría lo mismo, pero dos
+// lecturas del mismo archivo invitan a que algún día una de las dos se quede
+// atrás.
+const { actuales, nuevas } = compararConAnterior(todosLosSetups, estadoPrevio)
 
 // Cuáles pueden llegar a un celular y cuáles solo se anotan. La regla está en
 // `vigia-nucleo.mjs`, con su prueba: es la promesa de que una regla pausada
@@ -259,5 +295,9 @@ const linea = (etiqueta, c) => {
 }
 linea('Ventas en sombra (pausadas, se miden pero no se avisan)', resumen.ventasPausadas)
 linea('Reversión en paralelo (la regla contraria a la app)', resumen.reversion)
+// `resumir` devuelve este cubo desde el 2026-09-07 y aquí no lo imprimía
+// nadie: la regla se habría anotado durante meses sin aparecer en el log de
+// ninguna corrida. Es el mismo descuido que ya se cazó en `filasTodas`.
+linea('«Comprar la caída» en paralelo (también en la sombra)', resumen.caida)
 console.log(`Avisos al celular: ${JSON.stringify(avisos)}`)
 console.log('---VIGIA-FIN---')
