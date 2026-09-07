@@ -364,6 +364,10 @@ export default {
 
   historial: {
     esReversion: 'REVERSION',
+    esCaida: "BUY THE DIP",
+    caidaTitulo: "History of “buy the dip”",
+    caidaIntro:
+      "The third rule: it buys a pair on the day it hits its 10-day low. Kept separate on purpose — it is a different experiment, and mixing it with the others would answer none of the three questions.",
     reversionTitulo: 'Opposite-rule history',
     reversionIntro:
       'The same tally, but for the rule that buys what fell. Kept separate on purpose: these are two different experiments, and merging them answers neither question.',

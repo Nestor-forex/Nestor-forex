@@ -157,6 +157,52 @@ console.log('\n9. En swing todos los pares son exactos')
   comprobar(r.exactas === undefined, 'no hay cuenta aparte de "exactas": sobra aquí')
 }
 
+console.log('\n9b. Cada experimento cuenta APARTE, y ninguno se cuela en otro')
+{
+  // ⚠️ ESTA COMPROBACIÓN NACE DE UN FALLO REAL DEL 2026-09-07, y del mismo
+  // fallo dos veces en dos días.
+  //
+  // `ventasPausadas` estaba definida por DESCARTE: «es sombra y no es
+  // reversión». Al añadir «comprar la caída» como tercer experimento, sus
+  // resultados encajaron ahí solos y la pantalla los habría enseñado bajo la
+  // etiqueta «ventas pausadas» — sencillamente falsa.
+  //
+  // Un cubo definido por descarte se traga en silencio todo lo que venga
+  // después. Ahora cada uno se define por lo que ES.
+  const linea = (clave, tipo, sombra, resultado) => ({
+    clave,
+    tipo,
+    sombra,
+    resultado,
+    pips: resultado === 'ganada' ? 100 : -100,
+  })
+
+  const r = resumir([
+    linea('a', 'tendencia', false, 'ganada'), // la app, visible
+    linea('b', 'tendencia', true, 'perdida'), // una venta pausada
+    linea('c', 'reversion', true, 'ganada'),
+    linea('d', 'caida', true, 'ganada'),
+    linea('e', 'caida', true, 'perdida'),
+  ])
+
+  comprobar(r.todas.total === 1, 'las cuentas de la app solo miran lo que la app propone')
+  comprobar(r.reversion.total === 1, 'la reversión cuenta aparte')
+  comprobar(r.caida.total === 2, '«comprar la caída» cuenta aparte, no dentro de otro')
+  comprobar(r.ventasPausadas.total === 1, 'y las ventas pausadas siguen siendo SOLO las de la app')
+
+  // La que de verdad vigila: un experimento que nadie ha inventado todavía NO
+  // puede caer dentro de «ventas pausadas». Si cae, alguien volvió a definir
+  // ese cubo por descarte.
+  const conFuturo = resumir([
+    linea('a', 'tendencia', true, 'ganada'),
+    linea('z', 'lo-que-inventemos-en-2027', true, 'ganada'),
+  ])
+  comprobar(
+    conFuturo.ventasPausadas.total === 1,
+    'un tipo que nadie ha visto todavía NO se cuela como «venta pausada»'
+  )
+}
+
 console.log('\n10. Sin nada que juzgar no revienta')
 {
   const d = mundo([1.08], [1.08])

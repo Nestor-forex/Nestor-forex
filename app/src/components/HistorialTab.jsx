@@ -51,13 +51,29 @@ export default function HistorialTab() {
           <Resumen resumen={resumen} t={t} />
 
           {resumen.reversion.total > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ ...BLOQUE_EXPERIMENTO }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 12.5, fontWeight: 600 }}>{t('historial.reversionTitulo')}</span>
                 <Etiqueta>{t('historial.esReversion')}</Etiqueta>
               </div>
               <Resumen resumen={{ todas: resumen.reversion }} t={t} />
               <p style={{ ...TEXTO, margin: 0 }}>{t('historial.reversionIntro')}</p>
+            </div>
+          )}
+
+          {/* La tercera regla, desde el 2026-09-07. Su bloque es idéntico al de
+              la reversión y eso es a propósito: son dos experimentos con el
+              mismo estatus, y darle a uno más presencia que al otro sería
+              sugerir que uno vale más antes de que ninguno haya demostrado
+              nada. Aparece solo cuando tiene algo resuelto que enseñar. */}
+          {resumen.caida.total > 0 && (
+            <div style={{ ...BLOQUE_EXPERIMENTO }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 12.5, fontWeight: 600 }}>{t('historial.caidaTitulo')}</span>
+                <Etiqueta>{t('historial.esCaida')}</Etiqueta>
+              </div>
+              <Resumen resumen={{ todas: resumen.caida }} t={t} />
+              <p style={{ ...TEXTO, margin: 0 }}>{t('historial.caidaIntro')}</p>
             </div>
           )}
 
@@ -274,6 +290,7 @@ function Fila({ f, t, locale }) {
               estaban: son la mayoría y lo excepcional es lo que hay que
               señalar, no al revés. */}
           {f.tipo === 'reversion' && <Etiqueta>{t('historial.esReversion')}</Etiqueta>}
+          {f.tipo === 'caida' && <Etiqueta>{t('historial.esCaida')}</Etiqueta>}
         </div>
         <div style={{ fontSize: 12, fontWeight: 700, color: COLOR[estado] }}>
           {t('historial.' + estado)}
@@ -298,6 +315,21 @@ function Aviso({ children, ambar }) {
       <p style={{ ...TEXTO, margin: 0 }}>{children}</p>
     </div>
   )
+}
+
+// ⚠️ LA RAYA DE ARRIBA NO ES DECORACIÓN. Con tres bloques de porcentajes
+// seguidos —la app, la reversión y «comprar la caída»— y sin nada que los
+// separe, los números se leen como una lista corrida y deja de verse de quién
+// es cada uno. Confundir el acierto de una regla con el de otra es el único
+// error grave que puede cometer esta pantalla: son reglas OPUESTAS.
+//
+// Se vio al revisarla en un navegador de verdad; compilando no se ve.
+const BLOQUE_EXPERIMENTO = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 10,
+  paddingTop: 14,
+  borderTop: '1px solid rgba(255,255,255,.10)',
 }
 
 const TEXTO = { fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.55 }

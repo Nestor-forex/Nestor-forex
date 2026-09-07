@@ -360,6 +360,10 @@ export default {
 
   historial: {
     esReversion: 'INVERSIONE',
+    esCaida: "COMPRARE IL RIBASSO",
+    caidaTitulo: "Storico di «comprare il ribasso»",
+    caidaIntro:
+      "La terza regola: compra la coppia il giorno in cui tocca il minimo di 10 giorni. Tenuta separata di proposito — è un altro esperimento, e mescolarla non risponderebbe a nessuna delle tre domande.",
     reversionTitulo: 'Storico della regola contraria',
     reversionIntro:
       'Gli stessi conti, ma della regola che compra ciò che è sceso. Vanno a parte di proposito: sono due esperimenti diversi e unirli non risponde a nessuna delle due domande.',

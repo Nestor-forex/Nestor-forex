@@ -358,6 +358,10 @@ export default {
 
   historial: {
     esReversion: '역방향',
+    esCaida: "하락 매수",
+    caidaTitulo: "「하락 매수」 기록",
+    caidaIntro:
+      "세 번째 규칙: 통화쌍이 10일 최저치를 기록한 날 매수합니다. 의도적으로 분리했습니다 — 다른 실험이며, 섞으면 세 질문 중 어느 것에도 답할 수 없습니다.",
     reversionTitulo: '반대 규칙 기록',
     reversionIntro:
       '같은 집계이지만 떨어진 통화를 사는 규칙의 것입니다. 의도적으로 따로 둡니다. 서로 다른 두 실험이라 합치면 어느 쪽 질문에도 답하지 못합니다.',

@@ -1767,3 +1767,61 @@ la sombra, para la regla que venga mañana.
   `patrones.mjs` lo reexporta: ahora lo necesitan el banco de pruebas **y**
   `derivarVista`. En las DOS apps, para que siga siendo gemelo. ⚠️ La regla NO
   se porta a Intradía: allí mide −0,08 plano.
+
+---
+
+# Ver lo que corre en la sombra (2026-09-07)
+
+Néstor preguntó cómo puede VER lo que se anota en la sombra y los resultados
+que va dando. La respuesta era «la reversión sí, «comprar la caída» no» — y
+comprobarlo destapó **dos fallos reales**, ninguno visible compilando.
+
+## 1. Sus resultados se habrían contado bajo la etiqueta EQUIVOCADA
+
+`ventasPausadas` estaba definida **por descarte**: «es sombra y no es
+reversión». Los resultados de «comprar la caída» encajaban ahí solos, así que
+la pantalla los habría enseñado como **ventas pausadas** — sencillamente falso.
+
+📌 Es EXACTAMENTE el mismo fallo que ya está descrito en `historialCalc.js` del
+2026-09-05, repetido **dos días después**. Y es hermano del de `esSombra` del
+mismo día: las dos veces, una condición escrita por descarte se tragó en
+silencio lo que vino después.
+
+**Ahora cada cubo se define por lo que ES**, no por lo que no es:
+`esDeLaApp = !r.tipo || r.tipo === 'tendencia'`.
+
+## 2. Y no aparecía en NINGUNA lista
+
+`filasTodas` juntaba `filas` y `filasReversion`. Las de `caida` no están en
+ninguna de las dos, así que se habrían anotado **durante meses sin que Néstor
+viera ni una**.
+
+## Lo que se ve ahora
+
+Tres bloques de porcentajes en Historial —la app, la reversión y «comprar la
+caída»—, cada uno con su acierto, sus operaciones y sus pips, y **una sola
+lista abajo en orden de fecha** con cada fila etiquetada. Los textos, en los 13
+idiomas.
+
+⚠️ **Los números NO se mezclan nunca.** Son reglas opuestas: la app acierta más
+y pierde, las otras aciertan menos y ganan. Un promedio no describe a ninguna.
+
+## Lo que solo se vio en un navegador
+
+Los tres bloques quedaban **pegados sin nada que los separara**, y los
+porcentajes se leían como una lista corrida sin saber de quién era cada uno.
+Confundir el acierto de una regla con el de otra es el único error grave que
+puede cometer esta pantalla. Se añadió una raya fina arriba de cada
+experimento (`BLOQUE_EXPERIMENTO`).
+
+📌 Van sin auth: `HistorialTab` está detrás de Firebase, así que para verlo se
+compiló **el componente aislado** con Vite y un alias que sustituye
+`useHistorial` por un doble con las tres reglas. Sirve para cualquier pantalla
+que esté detrás del login.
+
+## La comprobación que lo vigila
+
+`prueba-resolver.mjs` (9b): cada experimento cuenta aparte, ninguno se cuela en
+otro, y —la que de verdad importa— **un `tipo` que nadie ha inventado todavía
+NO puede caer dentro de «ventas pausadas»**. Comprobado que muerde
+reintroduciendo la condición vieja: fallan dos comprobaciones.

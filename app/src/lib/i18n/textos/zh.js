@@ -354,6 +354,10 @@ export default {
 
   historial: {
     esReversion: '反向',
+    esCaida: "买入下跌",
+    caidaTitulo: "「买入下跌」的历史记录",
+    caidaIntro:
+      "第三条规则：在货币对创下10日最低点的当天买入。刻意分开显示——这是另一个实验，混在一起无法回答三个问题中的任何一个。",
     reversionTitulo: '相反规则的历史记录',
     reversionIntro:
       '同样的统计，但针对买入下跌品种的规则。特意分开：这是两个不同的实验，合在一起哪个问题都回答不了。',
