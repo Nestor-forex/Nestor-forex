@@ -2733,3 +2733,162 @@ arregla.
 
 📌 **Lección para mí:** antes de pedirle trabajo manual, comprobar si algo que
 ya estamos construyendo lo hace solo. Él lo vio y yo no.
+
+---
+
+# El calendario, rehecho tras verlo Néstor (2026-09-08)
+
+Se publicó, él lo abrió y **no lo entendió**. Tres cosas concretas, y las tres
+eran del diseño y no suyas. Queda escrito porque es el mejor ejemplo del
+proyecto de que **compilar y hasta revisar en navegador no basta: hasta que no
+lo mira el usuario de verdad, no está probado.**
+
+## 1. El código de divisa iba pintado por impacto → lo leyó como «el USD está mal»
+
+`USD` en rojo y `GBP` en ámbar. Él preguntó por qué unas divisas salían en rojo
+y otras en naranja, y tenía toda la razón: **el calendario no sabe hacia dónde
+se va a mover el precio**, así que pintar la divisa de rojo dice algo que el
+dato no dice.
+
+Ahora el código va en color neutro y el impacto se dice **con una palabra** en
+su propia pastilla: «Mueve mucho» / «Mueve algo» / «Festivo». El color
+acompaña a la palabra; nunca la sustituye.
+
+📌 Es la misma familia de error que la decisión de `Correlacion.jsx` («el
+número NO se pinta de verde ni de rojo»), pero aquí se coló igual. La regla
+general: **antes de pintar algo de color, preguntarse qué afirma ese color.**
+
+## 2. Los nombres venían en inglés y en jerga
+
+Yo le conté en el chat «el BCE decide tipos» y «la inflación de EE. UU.». La
+app decía `Main Refinancing Rate` y `Core PPI m/m`. No los reconoció, y con
+razón: **son cosas distintas escritas en idiomas distintos.**
+
+⚠️ **Néstor pidió expresamente conservar la jerga y poner la traducción entre
+paréntesis**, no sustituirla — y es lo correcto: el nombre en inglés es el que
+va a ver en cualquier otro calendario del mundo, así que cambiarlo le quitaría
+el enlace con todo lo demás. Queda `Core PPI m/m (Inflación)`.
+
+**`categoriaDe` CLASIFICA, no traduce.** Traducir cientos de títulos obligaría
+a inventar, y el día que ForexFactory publique uno nuevo saldría mal traducido
+sin que nadie se entere. Clasificar por familia es poco y es verdad: «Core PPI
+m/m» ES inflación, se llame como se llame.
+
+⚠️ **Y si no reconoce el evento, NO DICE NADA.** Devuelve `null` y se enseña
+solo el nombre original. Una categoría equivocada es peor que ninguna, porque
+se cree. Tiene comprobación propia.
+
+## 3. «17 eventos» contra «6 en pantalla», sin decir qué contaba cada uno
+
+Se le dijo «17 eventos reales» y él veía 6. **Los dos números eran ciertos**:
+17 es la semana entera del archivo, 6 son los de las próximas 48 horas que la
+tarjeta enseña. Pero puestos sin explicar, se lee como que la app se equivoca.
+
+Ahora el pie lo dice: «Se muestran los 6 de las próximas 48 horas. Esta semana
+hay 17 en total.»
+
+📌 **Y el título también cambió**: «Qué se publica hoy y mañana» no dice para
+qué sirve. Ahora «Noticias que pueden mover el precio» — **pueden**, no
+«mueven», porque prometer el movimiento sería lo de siempre.
+
+## ⚠️ Un fallo mío que no debe repetirse
+
+Escribí «17 eventos reales, 1,7 KB» en una tabla **sin haber leído el log del
+workflow**, y describí los eventos del jueves en español sin haber abierto el
+archivo publicado. Los datos resultaron ser correctos al comprobarlos después
+—el archivo traía 17, y el BCE era a las 7:15— pero **eso fue suerte, no
+método**. Afirmar antes de verificar es exactamente lo que este proyecto
+lleva meses corrigiendo.
+
+---
+
+# El puente de MT5, reescrito y enchufado (2026-09-08)
+
+Néstor: **«quiero que el puente envíe los spreads también, quiero dejarlo
+listo, no para después»**. Y sobre Render: **«¿para qué lo dejamos encendido si
+nada lo lee?… si es mejor publicar a la rama de datos, entonces hagámoslo»**.
+
+```
+puente-mt5/bridge_mt5.py       # reescrito: lee MT5 y publica a la rama `datos`
+puente-mt5/.gitignore          # token.txt NUNCA se sube (comprobado)
+app/src/lib/useMT5Quotes.js    # lee un archivo, ya no llama a un servidor
+app/src/components/CotizacionesVivo.jsx
+app/scripts/prueba-mt5.mjs     # reescrito al contrato nuevo
+```
+
+## Lo que cambia, y por qué cada cosa
+
+**1. Ahora manda el spread.** La versión anterior mandaba velas pero **no**
+`bid` ni `ask`, y el spread sale justo de la diferencia entre esos dos. O sea
+que **el dato por el que existe el puente no viajaba.**
+
+**2. Se acabó el servidor.** Publica en la rama `datos`, igual que el vigía:
+
+| archivo | qué lleva | para qué |
+|---|---|---|
+| `estado/mt5.json` | bid, ask, spread y ticks por par | la pantalla |
+| `spreads/<fecha>.jsonl` | una muestra por corrida | **medir** |
+
+⚠️ **El segundo es el que da sentido a todo esto.** Sin acumular, el dato se
+evapora en cada vuelta y seguiríamos con `SPREAD_PIPS` escrita a mano —de donde
+salen TODOS los números del banco de pruebas—.
+
+⚠️ Va en `spreads/`, **lejos de `historial/`**: el historial de señales es lo
+único irreparable y ningún guion nuevo tiene por qué escribir cerca de él.
+
+**3. Cada 15 minutos, no cada 15 segundos.** Antes era una petición a un
+servidor; ahora cada corrida deja un commit, y uno cada 15 s serían miles/día.
+
+**4. 18 pares** (los 14 de Swing + los 4 de Intradía), no 5.
+
+## 📌 Por qué el puente NUNCA funcionó en producción
+
+No era un descuido: `VITE_API_URL` valía `http://127.0.0.1:8000`, que es «este
+mismo aparato» —el teléfono de quien abre la app—. Y aunque hubiera apuntado a
+un servidor real por `http://`, el navegador lo habría **bloqueado**: una
+página HTTPS no puede llamar a una dirección sin cifrar. Leyendo un archivo de
+`raw.githubusercontent.com` los dos problemas desaparecen a la vez.
+
+## El permiso de GitHub: dónde va y dónde NO
+
+El puente necesita escribir, y para eso hace falta un token. **Nunca en el
+archivo**: los dos repositorios son públicos. Se busca en `NF_TOKEN` o en un
+`token.txt` al lado del guion, que **`.gitignore` bloquea** — comprobado con
+`git check-ignore`, no supuesto.
+
+Es un token *fine-grained*, **solo este repositorio** y **solo Contents:
+write**. No da acceso al correo, ni al bróker, ni al dinero. Los pasos con
+clics están en `puente-mt5/README.md` §0.
+
+## ⚠️ La prueba vieja falló, y eso era su trabajo
+
+`prueba-mt5.mjs` fijaba el contrato viejo (un servidor con formatos variables:
+lista pelada, dentro de `quotes`, llaves en mayúscula, sufijos del bróker…).
+**Se reescribió al contrato nuevo, no se borró.**
+
+Aquella flexibilidad tenía sentido mientras el formato lo decidía un servidor
+escrito aparte. Ahora el archivo lo escribe `bridge_mt5.py`, que está en ESTE
+repositorio: **aceptar diez formas de un archivo que escribimos nosotros no es
+robustez, es dejar sin comprobar que el puente escriba lo que dice escribir.**
+La limpieza de sufijos no se perdió — se hizo en el puente, que es donde está
+el símbolo crudo de MT5.
+
+## 📌 Y la prueba nueva cazó un fallo real al estrenarse
+
+`minutosDesde(null)` no devolvía `null` sino **29 millones de minutos**:
+`new Date(null)` NO es una fecha inválida en JavaScript, es el 1 de enero de
+1970. Sin el `typeof`, un archivo sin `actualizadoEl` habría pintado un aviso
+de «foto vieja» perfectamente convincente y completamente inventado.
+
+## Cómo se verificó
+
+Chromium, componente aislado, en español y árabe, **con los tres estados en
+cargas separadas**: normal, foto de hace 5 h (sale el aviso ámbar arriba de la
+tabla, no debajo) y puente apagado. Cero errores de consola, y `dir="ltr"`
+comprobado con el CSS calculado en pares y números.
+
+⚠️ La primera versión del banco de pruebas tenía un fallo MÍO: los tres casos
+se renderizaban a la vez sobre una variable global y el último pisaba a los
+otros dos — los tres salían «sin datos» y parecía un fallo de la app. Se
+separó en tres cargas de página. **Antes de creerse que la app está rota,
+comprobar que el banco de pruebas mide lo que dice.**

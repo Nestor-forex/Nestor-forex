@@ -99,6 +99,45 @@ export function normalizarEvento(crudo) {
   return ev
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// QUÉ ES ESTE EVENTO, EN CRISTIANO
+// ─────────────────────────────────────────────────────────────────────────
+// ForexFactory manda los nombres **en inglés y en jerga**: «Core PPI m/m»,
+// «Main Refinancing Rate». Néstor lo vio en la app y no reconoció lo mismo que
+// yo le había contado en español, y con razón: un principiante lee eso y no
+// aprende nada.
+//
+// ⚠️ NO SE TRADUCE EL NOMBRE, SE CLASIFICA. Traducir cientos de títulos
+// distintos obligaría a inventar, y el día que ForexFactory publique uno nuevo
+// saldría mal traducido sin que nadie se entere. Clasificar por familia es
+// poco y es verdad: «Core PPI m/m» ES inflación, se llame como se llame.
+//
+// ⚠️ Y SI NO SE RECONOCE, NO SE DICE NADA. Devuelve `null` y la pantalla
+// enseña solo el nombre original. Nunca una etiqueta a medias: una categoría
+// equivocada es peor que ninguna, porque se cree.
+//
+// El orden importa: se mira de lo más específico a lo más general. «ECB Press
+// Conference» tiene que caer en «decisión de tipos» y no en «discurso», porque
+// es donde se explica la decisión que se acaba de tomar.
+const CATEGORIAS = [
+  ['tipos', /rate statement|monetary policy|refinancing rate|cash rate|official bank rate|fomc|interest rate|rate decision|press conference|deposit facility/i],
+  ['inflacion', /\bcpi\b|\bppi\b|inflation|price index|deflator/i],
+  ['empleo', /employment|unemployment|payroll|jobless|claims|job\b|labour|labor/i],
+  ['crecimiento', /\bgdp\b|gross domestic/i],
+  ['ventas', /retail sales/i],
+  ['actividad', /\bpmi\b|sentiment|confidence|ifo|zew|industrial production|factory orders/i],
+  ['comercio', /trade balance|current account|exports|imports/i],
+  ['discurso', /speaks|testimony|speech|minutes/i],
+  ['festivo', /holiday/i],
+]
+
+export function categoriaDe(ev) {
+  const t = String(ev?.t ?? '')
+  if (!t) return null
+  for (const [clave, patron] of CATEGORIAS) if (patron.test(t)) return clave
+  return null
+}
+
 // ¿Este evento le interesa a esta app?
 //
 // Dos condiciones, y el orden importa poco pero la razón de cada una sí:
@@ -203,6 +242,16 @@ export function agruparPorDia(eventos, locale = 'es', zona = undefined) {
     porClave.get(clave).eventos.push(ev)
   }
   return grupos
+}
+
+// Cuántos eventos trae el archivo en total (toda la semana), para poder decir
+// en pantalla «se enseñan 6 de los 17 de esta semana».
+//
+// 📌 Existe por una confusión REAL: se le dijo a Néstor «17 eventos» y él veía
+// 6 en la tarjeta. Los dos números eran ciertos y medían cosas distintas — y
+// eso, sin decirlo al lado, se lee como que la app se equivoca.
+export function totalSemana(cal) {
+  return Array.isArray(cal?.eventos) ? cal.eventos.length : 0
 }
 
 // ¿La foto es vieja?

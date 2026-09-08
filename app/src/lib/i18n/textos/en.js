@@ -285,9 +285,24 @@ export default {
   },
 
   calendario: {
-    titulo: (v) => `Out today and tomorrow (${v.n})`,
-    aviso: (v) => `high-impact release in ${v.h} h`,
+    titulo: (v) => `News that can move price (${v.n})`,
+    aviso: (v) => `${v.div}: major release in ${v.h} h`,
     intro: 'Economic releases that can move price sharply. They do not change any of the app signals: they are here so you know when not to be entering blind.',
+    alto: 'Moves a lot',
+    medio: 'Moves somewhat',
+    festivo: 'Holiday',
+    cat: {
+      tipos: 'Interest rates',
+      inflacion: 'Inflation',
+      empleo: 'Jobs',
+      crecimiento: 'Growth',
+      ventas: 'Retail sales',
+      actividad: 'Business activity',
+      comercio: 'Foreign trade',
+      discurso: 'A central banker speaks',
+      festivo: 'Holiday: less movement',
+    },
+    cuantos: (v) => `Showing the ${v.n} due in the next 48 hours. There are ${v.total} this week in total.`,
     previsto: 'forecast',
     anterior: 'previous',
     viejo: 'This calendar has not been updated in over a day. Something upcoming may be missing.',
@@ -339,24 +354,17 @@ export default {
   },
 
   vivo: {
-    titulo: 'Live broker prices',
-    desc:
-      'Bid and ask straight from MetaTrader 5, refreshed every 2 seconds. It is the only place showing the real spread the broker charges; the scan above works on daily candles and does not know it.',
-    conectar: 'Connect to MetaTrader 5',
-    desconectar: 'Disconnect',
-    conectando: 'Looking for the bridge…',
-    enVivo: 'LIVE',
+    titulo: 'What it costs to open the trade',
+    desc: (v) => `Bid and ask straight from MetaTrader 5. It is the only thing that shows the REAL spread the broker charges — the scan above works on daily candles and cannot know it. ⚠️ These are from ${v.cuenta}: if your broker is another one, your numbers will differ.`,
+    cuentaGenerica: 'a live account',
+    cargando: 'Fetching the latest prices…',
+    sinDatos: 'No broker prices yet. The bridge publishes them only while the computer running MetaTrader 5 is switched on.',
+    vieja: (v) => `These prices were taken over ${v.h} h ago. The bridge was off; treat them as a reference, not as the price right now.`,
     par: 'Pair',
     bid: 'Bid',
     ask: 'Ask',
     spread: 'Spread',
-    pie: 'Spread in pips. Amber above 3.',
-    sinPuente: 'Could not reach the bridge',
-    sinPuenteQue: ({ url }) => `The app asked ${url} for prices and got no answer.`,
-    sinPuenteLocal:
-      'That address (127.0.0.1) means "this very device". It only works on the computer where MetaTrader 5 and the Python bridge are running, and only while both are on. From your phone, or from another computer, it will never find it: for that the bridge has to be published on the internet with its own address.',
-    error:
-      'The bridge answered something the app could not read. Check that /quotes returns the pairs with their bid and ask.',
+    pie: (v) => `Spread in pips, amber above 3. Taken on ${v.hora}.`,
   },
   avisos: {
     pausados: 'Alerts paused while we review the signals',

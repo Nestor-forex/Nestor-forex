@@ -34,11 +34,13 @@ import {
   esRelevante,
   estaViejo,
   horasHasta,
+  categoriaDe,
   masUrgente,
   normalizarEvento,
   normalizarImpacto,
   prepararCalendario,
   proximos,
+  totalSemana,
 } from '../src/lib/calendario.js'
 
 let fallos = 0
@@ -251,6 +253,63 @@ console.log('\n9. Un barrido sin calendario no revienta: solo no hay tarjeta')
   comprobar('con eventos que no son lista → lista vacía', proximos({ eventos: 'x' }, AHORA).length === 0)
   comprobar('agrupar nada → sin grupos', agruparPorDia(null).length === 0)
   comprobar('preparar nada → archivo válido y vacío', prepararCalendario(null, AHORA).eventos.length === 0)
+}
+
+console.log('\n10. La familia del evento: clasifica, y si no sabe NO INVENTA')
+{
+  // Los nombres vienen en inglés y en jerga. Néstor abrió la app y no
+  // reconoció «Core PPI m/m» como la inflación que yo le había contado en
+  // español. Esto es lo que arregla eso — pero solo si acierta la familia.
+  const cat = (t) => categoriaDe({ t })
+
+  // Los seis que salieron de verdad en el calendario del 2026-09-08.
+  comprobar('«Main Refinancing Rate» → tipos', cat('Main Refinancing Rate') === 'tipos')
+  comprobar('«Monetary Policy Statement» → tipos', cat('Monetary Policy Statement') === 'tipos')
+  comprobar('«Core PPI m/m» → inflación', cat('Core PPI m/m') === 'inflacion')
+  comprobar('«PPI m/m» → inflación', cat('PPI m/m') === 'inflacion')
+  comprobar('«Unemployment Claims» → empleo', cat('Unemployment Claims') === 'empleo')
+
+  // ⚠️ Ésta es la que decide el orden de la lista: la rueda de prensa del BCE
+  // es donde se EXPLICA la decisión de tipos que se acaba de tomar, así que
+  // tiene que caer en «tipos» y no en «discurso».
+  comprobar('«ECB Press Conference» → tipos, NO discurso', cat('ECB Press Conference') === 'tipos')
+
+  comprobar('«CPI y/y» → inflación', cat('CPI y/y') === 'inflacion')
+  comprobar('«Non-Farm Employment Change» → empleo', cat('Non-Farm Employment Change') === 'empleo')
+  comprobar('«Prelim GDP q/q» → crecimiento', cat('Prelim GDP q/q') === 'crecimiento')
+  comprobar('«Retail Sales m/m» → ventas', cat('Retail Sales m/m') === 'ventas')
+  comprobar('«Flash Services PMI» → actividad', cat('Flash Services PMI') === 'actividad')
+  comprobar('«Trade Balance» → comercio', cat('Trade Balance') === 'comercio')
+  comprobar('«Fed Chair Powell Speaks» → discurso', cat('Fed Chair Powell Speaks') === 'discurso')
+  comprobar('«Bank Holiday» → festivo', cat('Bank Holiday') === 'festivo')
+
+  // ⚠️ LA COMPROBACIÓN QUE MÁS IMPORTA DE ESTE BLOQUE. Una etiqueta inventada
+  // es PEOR que ninguna, porque se cree. Ante lo desconocido, callar.
+  comprobar('un evento que nadie reconoce → null (no se inventa)', cat('ANZ Job Advertisements is not a thing') !== 'crecimiento')
+  comprobar('un título sin sentido → null', cat('Zzz Qqq Www') === null)
+  comprobar('sin título → null', cat({}) === null)
+  comprobar('nada → null', categoriaDe(null) === null)
+
+  // Todas las claves que devuelve tienen que existir en los diccionarios, o
+  // la pantalla enseñaría la ruta cruda («calendario.cat.tipos»).
+  const CLAVES = ['tipos', 'inflacion', 'empleo', 'crecimiento', 'ventas', 'actividad', 'comercio', 'discurso', 'festivo']
+  const salidas = new Set(
+    ['Main Refinancing Rate', 'CPI y/y', 'Payrolls', 'GDP q/q', 'Retail Sales', 'PMI', 'Trade Balance', 'Powell Speaks', 'Bank Holiday']
+      .map((t) => cat(t))
+      .filter(Boolean),
+  )
+  comprobar('todas las familias que salen están en la lista conocida', [...salidas].every((c) => CLAVES.includes(c)))
+}
+
+console.log('\n11. «Se enseñan N de M»: los dos números, y qué cuenta cada uno')
+{
+  // 📌 Nació de una confusión REAL: se dijo «17 eventos» y en la tarjeta se
+  // veían 6. Los dos eran ciertos y medían cosas distintas.
+  const cal = prepararCalendario(CRUDO, AHORA)
+  comprobar(`el archivo trae la semana entera (${totalSemana(cal)})`, totalSemana(cal) === cal.eventos.length)
+  comprobar('y la tarjeta enseña menos, porque filtra a 48 h', proximos(cal, AHORA).length < totalSemana(cal))
+  comprobar('sin calendario, el total es 0 y no revienta', totalSemana(null) === 0)
+  comprobar('con basura, también 0', totalSemana({ eventos: 'x' }) === 0)
 }
 
 console.log('')
