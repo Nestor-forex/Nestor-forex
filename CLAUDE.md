@@ -3012,3 +3012,61 @@ cinco cargas de página separadas:
 | puente apagado | «Todavía no hay precios del bróker», sin mensaje de error rojo |
 
 Cero errores de consola en todos.
+
+---
+
+# Tasas de interés: la sonda, primero (2026-09-08)
+
+La **#3 de la fase de información**. Néstor la pidió después del calendario.
+Va por el mismo camino que aquél: **sonda primero, lector después.**
+
+```
+app/scripts/sonda-tasas.mjs        # pide, cuenta y enseña. No interpreta
+.github/workflows/sonda-tasas.yml  # solo a mano
+```
+
+La red de estas sesiones **bloquea las tres candidatas** — comprobado, no
+supuesto: `stats.bis.org`, `data-api.ecb.europa.eu` y `api.frankfurter.app`
+devuelven `Host not in allowlist` del proxy. Así que desde aquí no se puede
+ver ni si responden.
+
+## La candidata buena, y por qué
+
+**BIS, dataflow `WS_CBPOL`.** Publica la tasa de referencia de unos cuarenta
+bancos centrales **con la misma definición para todos**, sin llave. Es la
+fuente que republican los demás, FRED incluido: ir al BIS es ir al original.
+Encaja con la decisión del COT del mismo día — leer el archivo oficial
+nosotros mismos y no depender de nadie.
+
+Se sondean **cuatro formas de la dirección** (v1 y v2, CSV y JSON) porque la
+API del BIS cambió y desde aquí no se puede comprobar cuál está viva. Más el
+BCE como contraste para el euro, y **FRED SIN llave a propósito**, para dejar
+comprobado que la pide en vez de suponerlo.
+
+Códigos de país en el BIS: `USD→US · EUR→XM · GBP→GB · JPY→JP · CHF→CH ·
+CAD→CA · AUD→AU · NZD→NZ`. **`XM` es el área del euro**, no un país: la tasa
+la pone el BCE para los veinte.
+
+## ⚠️⚠️ LO QUE NO HAY QUE EXAGERAR CUANDO LLEGUEN LOS DATOS
+
+**La diferencia de tasas NO ES EL SWAP.** Es de dónde SALE, que no es lo mismo:
+
+- el banco central pone la referencia;
+- el bróker le añade un margen que **no publica nadie**;
+- y ese margen es **asimétrico**: en una dirección pagas y en la otra a veces
+  cobras, pero casi nunca tanto como pagarías al revés.
+
+O sea que esto da **el signo y el orden de magnitud**, no el número. El banco
+de pruebas **seguirá barriendo varios niveles de swap**; lo que cambia es que
+dejará de barrerlos a ciegas — sabremos cuáles son plausibles y en qué pares
+el swap juega a favor.
+
+📌 Queda escrito ANTES de ver los datos, a propósito. Es la cuarta vez en este
+proyecto que un mecanismo convincente resulta ser menos de lo que parecía, y
+«ya sabemos el swap» es justo la frase que se diría sola al ver la tabla.
+
+## Lo siguiente
+
+Lanzar la sonda (**Actions → «Sonda de las tasas de interés» → Run
+workflow**), leer el log, y **con la forma real delante** escribir el lector.
+Nunca al revés.
