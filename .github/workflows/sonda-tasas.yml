@@ -1,0 +1,42 @@
+name: Sonda de las tasas de interés
+
+# Averigua de dónde se pueden sacar las tasas de los bancos centrales de las 8
+# divisas del barrido, y qué forma tienen. Ver la cabecera de
+# app/scripts/sonda-tasas.mjs.
+#
+# EXISTE POR EL MISMO MOTIVO QUE LA DEL CALENDARIO: la red de las sesiones
+# donde se programa esta app bloquea `stats.bis.org`, `data-api.ecb.europa.eu`
+# y `api.frankfurter.app` (comprobado el 2026-09-08, no supuesto). Desde ahí no
+# se puede ver ni si responden. Escribir el lector a ciegas y descubrirlo con
+# la app publicada es al revés de como se trabaja aquí: primero se mira,
+# después se escribe.
+#
+# ⚠️ NO gasta créditos de Twelve Data ni necesita ningún secreto: son datos
+# públicos de organismos oficiales. Por eso este workflow no lleva `env`.
+#
+# Solo a mano. No tiene sentido programarlo: se lanza cuando hay que decidir.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    # Seis peticiones con 30 s de tope cada una. Si tarda más de 5 minutos es
+    # que algo se colgó, y sin esto GitHub lo dejaría correr seis horas.
+    timeout-minutes: 5
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # No hace falta `npm ci`: la sonda solo usa `fetch`, que ya viene en Node.
+      - name: Sondear
+        working-directory: app
+        run: node scripts/sonda-tasas.mjs
