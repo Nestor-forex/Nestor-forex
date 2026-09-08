@@ -2003,3 +2003,94 @@ que debo pegar». No era la página, que estaba bien.
 📌 **No lanzar diagnósticos que vuelquen HTML entero al chat**, y al dar un
 Artifact decirle que lo abra **copiando el enlace en Chrome**, no tocando las
 cajas grises de herramientas.
+
+---
+
+# Fase de información (2026-09-08): cinco herramientas nuevas, y por qué
+
+Néstor cambió de idea sobre el producto, y con argumento propio: **«para ser de
+información me parecía que le faltaba»**. Vio que un trader con experiencia
+probaría dos semanas y pagaría por el tiempo ahorrado, y que a un principiante
+—como era él cuando empezó— le habría servido de verdad.
+
+📌 **Tenía razón y hay que decirlo.** Hoy la app es «un barrido con una
+dirección que falla». Con calendario + posiciones institucionales + sentimiento
++ tasas + correlación pasa a ser **un parte diario del mercado**, y eso sí se
+puede cobrar sin prometer aciertos: se cobra el tiempo, no el resultado.
+
+Y su idea de **2 semanas de prueba y luego pagar** resuelve la duda del
+2026-09-08 sin discutirla: la prueba MIDE exactamente la pregunta 3 de la Fase
+2 (¿vuelven a la segunda semana?). Si no vuelven, no hay precio que lo salve.
+
+## Las cinco, en el orden acordado y por qué ese orden
+
+| # | qué | por qué ahí |
+|---|---|---|
+| 1 | **Calendario económico** | El hueco más grande. Hoy la app no sabe que hay Fed esta noche |
+| 2 | **Correlación entre pares** | **Cero datos nuevos**: se calcula con los 300 días que ya se bajan |
+| 3 | **Diferencial de tasas** | Pequeño, y ES el swap que hoy barremos a ciegas en 5 niveles |
+| 4 | **Posiciones institucionales (COT)** | Semanal, que es el horizonte de Swing. Gratis y oficial (CFTC) |
+| 5 | **Sentimiento minorista** | Hay que mirar términos de uso antes |
+
+⚠️ **Ninguna está medida.** La distinción que decide si hace falta medirla
+antes: **información** (calendario, tasas, correlación) no promete acertar más
+y entra sin medición; **filtro** (COT, sentimiento, «no operar antes de
+noticias») cambiaría las señales y NO entra sin pasar por el banco de pruebas.
+
+## ⚠️ El obstáculo del calendario, que costó descubrirlo
+
+La red de estas sesiones **bloquea** faireconomy, tradingeconomics y
+tradingview (`Host not in allowlist`, 403 del proxy). No se puede ver ni si
+responden ni qué forma tienen los datos.
+
+Por eso va primero `scripts/sonda-calendario.mjs` + su workflow a mano: pide,
+cuenta, enseña los nombres de los campos y un ejemplo crudo. **Con eso a la
+vista se escribe el lector; nunca a ciegas.**
+
+📌 Finnhub queda descartado: su calendario económico es de pago.
+
+---
+
+# Lo que NO se puede tener en Forex, y el texto para los suscriptores
+
+Néstor pidió esto expresamente: **explicar por qué otros ofrecen volumen, Level
+2, Volume Profile, VWAP y Bookmap y nosotros no, con argumentos propios,
+documentados y verdaderos.** Va a la landing y es de las cosas que mejor
+sostienen su bandera de honestidad.
+
+## El hecho del que sale todo
+
+**El Forex no tiene bolsa central.** Las acciones se negocian en un sitio
+—NYSE, Nasdaq— que apunta cada operación, así que el volumen es un número real
+y único. El Forex es una red de bancos negociando entre sí: **no hay un sitio,
+así que no hay un total**. No lo tiene nadie: ni nosotros ni ellos.
+
+## Entonces, ¿qué enseñan los que «ofrecen volumen»?
+
+**Tick volume**: cuántas VECES cambió el precio en ese rato, según **un solo
+bróker**. No es cuánto dinero se movió — es cuántas veces esa plataforma
+actualizó su número.
+
+⚠️ **Y aquí hay que ser justo, que es lo que hace creíble el argumento:** el
+tick volume NO es basura. Se parece bastante a la actividad real y hay
+operadores con experiencia que lo usan sabiendo lo que es. **El problema no es
+el dato: es venderlo como «volumen real».** Dos brókers dan números distintos
+para la misma hora, y eso solo puede pasar si no es una medición del mercado.
+
+- **Level 2 / libro de órdenes:** en acciones son las órdenes reales en la
+  bolsa. En Forex al por menor es el libro **de tu bróker** o de su proveedor:
+  una rebanada, no el mercado.
+- **Volume Profile y VWAP:** los dos se construyen SOBRE el volumen. Con tick
+  volume heredan el problema entero.
+- **Bookmap:** dibuja el libro de órdenes. Misma limitación, más bonito.
+
+## La frase para el suscriptor
+
+> No te enseñamos volumen porque en Forex **no existe un volumen real que
+> enseñar**. Lo que otros llaman volumen es cuántas veces cambió el precio en
+> un solo bróker. Es una aproximación razonable y hay quien la usa bien — pero
+> presentártela como una medición sería justo lo que esta app no hace.
+
+📌 **Y ya lo decimos**: el pie del reporte diario lleva desde siempre «Sin
+datos de MT5 no hay tick volume ni spread real del bróker». Esto solo lo
+explica.
