@@ -345,7 +345,7 @@ export default {
     previsto: 'previsto',
     anterior: 'anterior',
     viejo: 'Este calendario lleva más de un día sin actualizarse. Puede que falte algo de lo que viene.',
-    pie: 'Solo se muestran los datos de impacto alto y medio de las 8 divisas del barrido; los de impacto bajo se omiten porque no mueven una vela diaria. Las horas son las de tu teléfono. Fuente: ForexFactory.',
+    pie: 'Solo se muestran los datos de impacto alto y medio de las 8 divisas del barrido; los de impacto bajo se omiten porque taparían los que sí importan. Las horas son las de tu teléfono. Fuente: ForexFactory.',
   },
   correl: {
     titulo: (v) => `Pares que se mueven casi igual (${v.n})`,
@@ -446,7 +446,7 @@ export default {
   // plataforma de trading, y cambiarlos confundiría más de lo que ayudaría.
   vivo: {
     titulo: 'Lo que cuesta abrir la operación',
-    desc: (v) => `Precio de compra y de venta directo de MetaTrader 5. Es lo único que muestra el spread REAL que cobra el bróker — el barrido de arriba trabaja con velas diarias y no lo sabe. ⚠️ Son los de ${v.cuenta}: si tu bróker es otro, tus números serán distintos.`,
+    desc: (v) => `Precio de compra y de venta directo de MetaTrader 5. Es lo único que muestra el spread REAL que cobra el bróker — el barrido de arriba trabaja con velas y no lo sabe. ⚠️ Son los de ${v.cuenta}: si tu bróker es otro, tus números serán distintos.`,
     cuentaGenerica: 'una cuenta real',
     cargando: 'Buscando los últimos precios…',
     sinDatos: 'Todavía no hay precios del bróker. El puente los publica solo mientras el computador donde corre MetaTrader 5 está encendido.',

@@ -27,10 +27,15 @@ import { PAIR_NAMES, monedasDe } from './pairs.js'
 // entera solo; una segunda lista a mano se habría quedado vieja en silencio.
 export const DIVISAS = [...new Set(PAIR_NAMES.flatMap(monedasDe))].sort()
 
-// El horizonte que se enseña por defecto. Dos días, no una semana: aquí cada
-// vela es un día y una operación dura unos días, así que lo que cambia la
-// decisión de HOY es lo de hoy y mañana. La semana entera convertiría la
-// tarjeta en una lista que nadie lee.
+// El horizonte que se enseña por defecto. Dos días, no una semana: lo que
+// cambia la decisión de HOY es lo de hoy y lo de mañana. La semana entera
+// convertiría la tarjeta en una lista que nadie lee.
+//
+// Son 48 h en las DOS apps, aunque una opere en días y la otra en horas. No es
+// pereza: esto no mide cuánto dura una operación, mide hasta dónde se ve venir
+// algo. Saber que hay Fed esta noche cambia lo que se hace esta mañana igual
+// en las dos — y en Intradía más, porque ahí se entra y se sale antes de que
+// el dato llegue.
 export const HORAS_VISTA = 48
 
 // ⚠️ LOS NIVELES DE IMPACTO SON CÓDIGOS INTERNOS Y NO SE TRADUCEN.
@@ -143,10 +148,20 @@ export function categoriaDe(ev) {
 // Dos condiciones, y el orden importa poco pero la razón de cada una sí:
 //
 //   1. La divisa tiene que ser una de las nuestras. El feed trae CNY, BRL y
-//      demás, y ninguno de nuestros 14 pares los toca.
+//      demás, y ninguno de los pares que opera esta app los toca. `DIVISAS`
+//      sale de `pairs.js`, así que la lista se ajusta sola a cada app.
 //   2. Se cae SOLO el impacto bajo. Son la mayoría de los 80 eventos de la
-//      semana y ninguno mueve una vela diaria; dejarlos dentro escondería los
-//      dos que sí importan debajo de treinta que no.
+//      semana; dejarlos dentro escondería los dos que sí importan debajo de
+//      treinta que no.
+//
+// ⚠️ La condición 2 es la MISMA en las dos apps, y es deliberado aunque se
+// pueda discutir. En velas de una hora un dato de impacto bajo sí puede mover
+// algo, así que la tentación es dejarlos en Intradía. Pero el motivo para
+// quitarlos no es que no muevan el precio: es que en un teléfono treinta
+// líneas de ruido tapan las dos que importan, y eso vale igual en las dos
+// apps. Si algún día se quiere probar lo contrario, se cambia esta línea —
+// pero es una decisión de qué se ENSEÑA, no un filtro de señales: el
+// calendario no apaga ni una.
 export function esRelevante(ev) {
   return !!ev && DIVISAS.includes(ev.c) && ev.i !== BAJO
 }

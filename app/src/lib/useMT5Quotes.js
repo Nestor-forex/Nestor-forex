@@ -6,9 +6,16 @@ import { PAIR_NAMES } from './pairs.js'
 // EL SPREAD REAL DEL BRÓKER, vía el puente de MetaTrader 5.
 //
 // Esto es información que la app NUNCA tuvo: el barrido trabaja con velas
-// (máximo, mínimo y cierre de cada día), y ahí no está lo que de verdad cuesta
-// abrir una operación. El spread sale de la diferencia entre el precio al que
-// te compran y el precio al que te venden, y eso solo lo sabe el bróker.
+// (máximo, mínimo y cierre), y ahí no está lo que de verdad cuesta abrir una
+// operación. El spread sale de la diferencia entre el precio al que te compran
+// y el precio al que te venden, y eso solo lo sabe el bróker.
+//
+// ⚠️ EL PUENTE ES UNO Y SIRVE A LAS DOS APPS. Publica los 18 pares (los 14 de
+// Swing más los 4 que solo usa Intradía) en la rama `datos` del repositorio de
+// Swing, que es donde vive `puente-mt5/bridge_mt5.py`. Por eso esta dirección
+// es la MISMA en las dos apps —y este archivo es gemelo exacto—: cada una
+// filtra sus pares con su propio `PAIR_NAMES`. Dos puentes serían dos
+// programas que Néstor tendría que arrancar cada mañana.
 //
 // ─────────────────────────────────────────────────────────────────────────
 // ⚠️ CAMBIÓ DE RAÍZ EL 2026-09-08, Y CONVIENE ENTENDER POR QUÉ

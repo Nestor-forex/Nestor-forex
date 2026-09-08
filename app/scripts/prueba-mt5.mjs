@@ -29,6 +29,11 @@
 //   · el pip distinto en los pares con yen,
 //   · y que una fila rota no tumbe a las buenas.
 
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+
+import { PAIR_NAMES } from '../src/lib/pairs.js'
 import { minutosDesde, normalizarRespuesta } from '../src/lib/useMT5Quotes.js'
 
 let fallos = 0
@@ -136,6 +141,61 @@ console.log('\n6. De quién es la cuenta: el archivo lo dice, la app no lo supon
   // rótulo cambie solo.
   const cal = archivo({ 'EUR/USD': { bid: 1.1547, ask: 1.1548 } })
   ok(typeof cal.cuenta === 'string' && cal.cuenta.length > 0, 'el archivo trae `cuenta`')
+}
+
+console.log('\n7. Los símbolos del puente son EXACTAMENTE los que usan las dos apps')
+{
+  // ⚠️ ESTE BLOQUE EXISTE PORQUE EL FALLO YA PASÓ, el 2026-09-08.
+  //
+  // La lista `SYMBOLS` de `puente-mt5/bridge_mt5.py` se escribió de memoria y
+  // salieron dos pares mal: iban EUR/JPY y CAD/JPY, que no usa NINGUNA de las
+  // dos apps, y faltaban NZD/JPY y AUD/NZD, que Intradía sí usa.
+  //
+  // Y no falló nada. El puente publicó 18 pares con sus precios reales y el
+  // archivo se veía perfecto: la cuenta cuadraba (18 = 14 + 4) y los precios
+  // eran de verdad. Solo se vio al abrir el `pairs.js` de Intradía y comparar
+  // par por par. Ése es justo el fallo silencioso que este proyecto lleva
+  // meses cazando, y la respuesta de siempre es la misma: una comprobación,
+  // no «tener más cuidado».
+  const aqui = dirname(fileURLToPath(import.meta.url))
+  const py = readFileSync(join(aqui, '..', '..', 'puente-mt5', 'bridge_mt5.py'), 'utf8')
+
+  // Se lee el .py como TEXTO: Node no puede importar Python, y aunque pudiera,
+  // el puente necesita MetaTrader5 instalado y eso solo existe en Windows.
+  const bloque = py.match(/^SYMBOLS = \[([\s\S]*?)^\]/m)
+  ok(!!bloque, 'se encuentra la lista SYMBOLS dentro del puente')
+
+  const delPuente = [...(bloque?.[1] ?? '').matchAll(/"([A-Z]{6})"/g)].map(
+    // 'EURUSD' → 'EUR/USD', para poder compararlo con `pairs.js`.
+    (m) => `${m[1].slice(0, 3)}/${m[1].slice(3)}`,
+  )
+  ok(delPuente.length === 18, `el puente vigila 18 pares (vigila ${delPuente.length})`)
+  ok(new Set(delPuente).size === delPuente.length, 'y ninguno está repetido')
+
+  // Los 14 de Swing salen del propio `pairs.js` de esta app, así que si mañana
+  // Swing añade un par, esta comprobación lo pide en el puente sola.
+  const faltanDeSwing = PAIR_NAMES.filter((p) => !delPuente.includes(p))
+  ok(faltanDeSwing.length === 0, `están los 14 de Swing (faltan: ${faltanDeSwing.join(', ') || 'ninguno'})`)
+
+  // ⚠️ Los 4 de Intradía SÍ van escritos a mano, y no hay forma de evitarlo:
+  // su `pairs.js` vive en el otro repositorio y esta prueba corre sin red. Van
+  // escritos aquí Y en `scripts/gemelos.mjs` (la nota de PRIMOS de `pairs.js`),
+  // que es el sitio donde el proyecto documenta las diferencias entre las dos
+  // apps. Si algún día Intradía cambia sus pares, hay que tocar los dos sitios
+  // — y `prueba-gemelos.mjs` compara contra el otro repositorio de verdad.
+  const EXTRAS_INTRADIA = ['AUD/JPY', 'NZD/JPY', 'AUD/NZD', 'EUR/GBP']
+  const faltanDeIntradia = EXTRAS_INTRADIA.filter((p) => !delPuente.includes(p))
+  ok(
+    faltanDeIntradia.length === 0,
+    `están los 4 de Intradía (faltan: ${faltanDeIntradia.join(', ') || 'ninguno'})`,
+  )
+
+  // La comprobación que de verdad cazó el error: NINGÚN par de más. Sin esta
+  // línea, EUR/JPY y CAD/JPY habrían seguido ahí para siempre — no rompen
+  // nada, solo hacen que Néstor tenga símbolos abiertos en MT5 sin motivo.
+  const conocidos = new Set([...PAIR_NAMES, ...EXTRAS_INTRADIA])
+  const sobran = delPuente.filter((p) => !conocidos.has(p))
+  ok(sobran.length === 0, `ningún par que no use nadie (sobran: ${sobran.join(', ') || 'ninguno'})`)
 }
 
 console.log(fallos ? `\n${fallos} comprobación(es) fallaron.` : '\nTodo bien.')

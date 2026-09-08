@@ -302,7 +302,7 @@ export default {
     previsto: 'previsto',
     anterior: 'precedente',
     viejo: 'Questo calendario non si aggiorna da più di un giorno. Potrebbe mancare qualcosa.',
-    pie: 'Si mostrano solo i dati ad alto e medio impatto delle 8 valute della scansione; quelli a basso impatto restano fuori perché non muovono una candela giornaliera. Gli orari sono quelli del tuo telefono. Fonte: ForexFactory.',
+    pie: 'Si mostrano solo i dati ad alto e medio impatto delle 8 valute della scansione; quelli a basso impatto restano fuori perché coprirebbero quelli che contano. Gli orari sono quelli del tuo telefono. Fonte: ForexFactory.',
   },
   correl: {
     titulo: (v) => `Coppie che si muovono quasi uguale (${v.n})`,
@@ -351,7 +351,7 @@ export default {
 
   vivo: {
     titulo: 'Quanto costa aprire l\'operazione',
-    desc: (v) => `Prezzo di acquisto e di vendita direttamente da MetaTrader 5. È l'unica cosa che mostra lo spread REALE che applica il broker — la scansione qui sopra lavora su candele giornaliere e non lo sa. ⚠️ Sono quelli di ${v.cuenta}: se il tuo broker è un altro, i tuoi numeri saranno diversi.`,
+    desc: (v) => `Prezzo di acquisto e di vendita direttamente da MetaTrader 5. È l'unica cosa che mostra lo spread REALE che applica il broker — la scansione qui sopra lavora su candele e non lo sa. ⚠️ Sono quelli di ${v.cuenta}: se il tuo broker è un altro, i tuoi numeri saranno diversi.`,
     cuentaGenerica: 'un conto reale',
     cargando: 'Recupero degli ultimi prezzi…',
     sinDatos: 'Ancora nessun prezzo del broker. Il ponte li pubblica solo mentre il computer su cui gira MetaTrader 5 è acceso.',

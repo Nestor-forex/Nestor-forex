@@ -29,6 +29,9 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { prepararCalendario, proximos } from '../src/lib/calendario.js'
+// El nombre de la app sale de `identidad.js` y no escrito a mano: así este
+// guion es idéntico en las dos apps y `prueba-gemelos.mjs` puede vigilarlo.
+import { APP } from '../src/lib/identidad.js'
 
 const URL = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json'
 
@@ -42,7 +45,7 @@ async function bajar() {
   const r = await fetch(URL, {
     // Sin User-Agent algunos servidores devuelven 403 aunque el feed sea
     // público. Se pone uno honesto: no se disfraza de navegador.
-    headers: { 'User-Agent': 'NestorForexSwing/1.0 (+https://github.com/Nestor-forex)' },
+    headers: { 'User-Agent': `NestorForex-${APP}/1.0 (+https://github.com/Nestor-forex)` },
     signal: AbortSignal.timeout(LIMITE_MS),
   })
   if (!r.ok) throw new Error(`HTTP ${r.status}`)

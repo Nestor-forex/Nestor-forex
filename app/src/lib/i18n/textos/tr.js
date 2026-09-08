@@ -301,7 +301,7 @@ export default {
     previsto: 'beklenti',
     anterior: 'önceki',
     viejo: 'Bu takvim bir günden uzun süredir güncellenmedi. Gelecek olanlardan bazıları eksik olabilir.',
-    pie: 'Yalnızca taramadaki 8 para biriminin yüksek ve orta etkili verileri gösterilir; düşük etkili olanlar günlük mumu hareket ettirmedikleri için dışarıda bırakılır. Saatler telefonunuzun saatidir. Kaynak: ForexFactory.',
+    pie: 'Yalnızca taramadaki 8 para biriminin yüksek ve orta etkili verileri gösterilir; düşük etkili olanlar gerçekten önemli olanları gölgeleyecekleri için dışarıda bırakılır. Saatler telefonunuzun saatidir. Kaynak: ForexFactory.',
   },
   correl: {
     titulo: (v) => `Neredeyse aynı hareket eden pariteler (${v.n})`,
@@ -350,7 +350,7 @@ export default {
 
   vivo: {
     titulo: 'İşlemi açmanın maliyeti',
-    desc: (v) => `Doğrudan MetaTrader 5'ten alış ve satış fiyatı. Aracı kurumun aldığı GERÇEK spread'i gösteren tek yer burasıdır — yukarıdaki tarama günlük mumlarla çalışır ve bunu bilemez. ⚠️ Bunlar ${v.cuenta} rakamları: aracı kurumunuz başkaysa sizin rakamlarınız farklı olur.`,
+    desc: (v) => `Doğrudan MetaTrader 5'ten alış ve satış fiyatı. Aracı kurumun aldığı GERÇEK spread'i gösteren tek yer burasıdır — yukarıdaki tarama mumlarla çalışır ve bunu bilemez. ⚠️ Bunlar ${v.cuenta} rakamları: aracı kurumunuz başkaysa sizin rakamlarınız farklı olur.`,
     cuentaGenerica: 'gerçek bir hesabın',
     cargando: 'Son fiyatlar alınıyor…',
     sinDatos: 'Henüz aracı kurum fiyatı yok. Köprü bunları yalnızca MetaTrader 5’in çalıştığı bilgisayar açıkken yayımlar.',
