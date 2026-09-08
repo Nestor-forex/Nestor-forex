@@ -284,6 +284,15 @@ export default {
     estadoPendiente: 'pendente',
   },
 
+  calendario: {
+    titulo: (v) => `O que sai hoje e amanhã (${v.n})`,
+    aviso: (v) => `dado de alto impacto em ${v.h} h`,
+    intro: 'Dados económicos que podem mover o preço de repente. Não mudam nenhum sinal da app: estão aqui para você saber a que horas não convém entrar às cegas.',
+    previsto: 'previsto',
+    anterior: 'anterior',
+    viejo: 'Este calendário está há mais de um dia sem atualizar. Pode faltar algo do que vem.',
+    pie: 'Só se mostram os dados de impacto alto e médio das 8 moedas da varredura; os de impacto baixo ficam de fora porque não movem uma vela diária. As horas são as do seu telemóvel. Fonte: ForexFactory.',
+  },
   correl: {
     titulo: (v) => `Pares que se movem quase igual (${v.n})`,
     intro: 'Antes de abrir duas operações ao mesmo tempo, veja se estes pares andam juntos. Se andam, você não está dividindo o risco: está fazendo a mesma aposta com o dobro do tamanho.',

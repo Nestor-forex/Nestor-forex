@@ -284,6 +284,15 @@ export default {
     estadoPendiente: 'pending',
   },
 
+  calendario: {
+    titulo: (v) => `Out today and tomorrow (${v.n})`,
+    aviso: (v) => `high-impact release in ${v.h} h`,
+    intro: 'Economic releases that can move price sharply. They do not change any of the app signals: they are here so you know when not to be entering blind.',
+    previsto: 'forecast',
+    anterior: 'previous',
+    viejo: 'This calendar has not been updated in over a day. Something upcoming may be missing.',
+    pie: 'Only high and medium impact releases for the 8 currencies of the scan are shown; low impact ones are left out because they do not move a daily candle. Times are your phone’s. Source: ForexFactory.',
+  },
   correl: {
     titulo: (v) => `Pairs that move almost alike (${v.n})`,
     intro: 'Before opening two trades at once, check whether these pairs move together. If they do, you are not spreading risk: you are making the same bet at double the size.',

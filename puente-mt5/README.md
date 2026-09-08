@@ -8,6 +8,7 @@ el problema que esta carpeta viene a cerrar.
 | archivo | qué es | dónde vive en el PC de Néstor |
 |---|---|---|
 | `bridge_mt5.py` | el puente: lee MT5 y manda los datos | `Documents\nestor-forex-bridge\` |
+| `server.js` | el servidor que los recibe (corre en Render) | `Documents\nestor-forex-backend\` |
 | `Iniciar_Ecosistema.bat` | arranca las tres piezas de un doble clic | (el escritorio, presumiblemente) |
 
 ⚠️ **Se guardan como DOCUMENTO, no como parte de la app.** Nada del build de
@@ -87,43 +88,82 @@ puente mande las dos cosas.
 
 ---
 
-## 4. Lo que sigue sin estar en ningún repositorio
+## 4. Las tres preguntas abiertas, ya contestadas
 
-⚠️ **El código del servidor `nestor-forex-backend` NO está aquí.** El `.bat`
-lo arranca con `node server.js` desde
-`Documents\nestor-forex-backend`, así que existe en el PC de Néstor y en
-Render — pero si ese computador se estropea, se pierde igual que se estuvo a
-punto de perder este puente.
+Las tres se cerraron el **2026-09-08**, el mismo día, en cuanto Néstor abrió
+la dirección en Chrome y pegó el `server.js`.
 
-**Ese archivo es el siguiente que hay que traer.**
+### ✅ 1. El servicio de Render está VIVO
 
-El `.bat` además destapa un ecosistema más grande de lo que decía la memoria
-del proyecto: `nestor-forex-backend`, `nestor-forex-bridge`,
-`nestor-forex-swing` corriendo en local con `npm run dev`, y en una captura
-anterior se vieron además `nestor-forex-scalping` y `nestor-forex-rango`.
+Al abrir `https://nestor-forex-backend.onrender.com` sale **«Cannot GET /»**.
+Parece un error y no lo es: es Express contestando «estoy despierto, pero en
+esa dirección exacta no tengo nada». Encaja con el código, que solo define
+`/api/signals` y `/api/mt5/update` y ninguna ruta en la raíz. Un servicio
+muerto habría dado una página de Render, no eso.
+
+### ⚠️ 2. NO, el `POST` no pide ninguna contraseña
+
+```js
+app.post("/api/mt5/update", (req, res) => {
+    const { symbol, timeframe, candles, currentPrice } = req.body;
+    if (!symbol) { return res.status(400).json({ error: "Símbolo inválido" }); }
+```
+
+Lo único que comprueba es que venga un `symbol`. **Cualquiera que sepa la
+dirección puede mandarle precios inventados** y el servidor los guardaría como
+buenos. Hoy no importa porque nadie la conoce; el día que la app la use
+delante de suscriptores, sí.
+
+⚠️ **Y hay un segundo agujero, más silencioso:** `app.use(cors())` **sin
+opciones** deja que CUALQUIER página web del mundo lea `/api/signals` desde el
+navegador de quien la visite. Para un dato público de precios no es grave —
+pero es una decisión que aquí nadie tomó, vino puesta por defecto.
+
+📌 **Cuando se arregle, la contraseña NO se escribe en este archivo.** Los dos
+repositorios son PÚBLICOS. Va como variable de entorno en Render y como
+secreto de GitHub, exactamente igual que se hizo con `TWELVEDATA_KEY` el
+2026-09-03 — y por la misma razón, que allí la llave estaba a la vista de
+cualquiera dentro del JavaScript descargado.
+
+### ✅ 3. El servidor NO guarda historial
+
+```js
+let liveMarketData = {};
+```
+
+Una variable en memoria, indexada por `"EURUSD (D1)"`. Cada envío **machaca**
+el anterior, y **si Render reinicia el servicio, se borra todo**. Los planes
+gratuitos reinician solos.
+
+Para lo que hace hoy da igual —solo interesa el último precio— pero significa
+que **este servidor no puede ser la fuente del historial**, y que el primer
+`GET` después de un reinicio devuelve
+`{"estado":"Esperando datos de MetaTrader..."}` en vez de precios. Quien lo
+lea tiene que estar preparado para eso.
 
 ---
 
-## 5. Las tres preguntas abiertas
+## 5. El ecosistema que destapó el `.bat`
 
-1. **¿El servicio de Render sigue vivo?** Los planes gratuitos de Render se
-   duermen y se dan de baja solos. Desde estas sesiones no se puede
-   comprobar (la red las bloquea); hay que abrir la dirección en Chrome.
-2. **¿El `POST` pide alguna contraseña?** Si no la pide, **cualquiera en
-   internet puede mandarle precios falsos** a ese servidor, y la app se los
-   creería. Es la pregunta más urgente de las tres.
-3. **¿Qué guarda y qué devuelve el servidor?** Sin ver `server.js` no se sabe
-   si conserva historial o solo el último dato de cada par.
+Es más grande de lo que decía la memoria del proyecto:
+`nestor-forex-backend`, `nestor-forex-bridge`, `nestor-forex-swing` corriendo
+en local con `npm run dev`, y en una captura anterior se vieron además
+`nestor-forex-scalping` y `nestor-forex-rango`.
 
 ---
 
 ## 6. Lo que SÍ está bien, y conviene dejarlo escrito
 
-✅ **No hay ninguna credencial en estos archivos.** `mt5.initialize()` se
-llama **sin argumentos**: se engancha al MetaTrader 5 que ya está abierto y
-con la sesión iniciada a mano. No hay usuario, ni contraseña, ni número de
-cuenta en ninguna parte. Por eso se pueden guardar en un repositorio público
-sin tocar nada.
+✅ **No hay ninguna credencial en NINGUNO de los tres archivos.** Comprobado
+línea por línea antes de guardarlos:
+
+- `bridge_mt5.py` llama a `mt5.initialize()` **sin argumentos**: se engancha al
+  MetaTrader 5 que ya está abierto y con la sesión iniciada a mano. No hay
+  usuario, ni contraseña, ni número de cuenta.
+- `server.js` solo lee `process.env.PORT`, que se lo pone Render.
+- El `.bat` solo tiene rutas de carpetas.
+
+Por eso se pueden guardar en un repositorio público sin tocar nada.
 
 ⚠️ Y así tiene que quedarse. La regla del proyecto no cambia: **nunca meter
 credenciales del bróker en la app ni en el puente.** Es el mismo agujero que

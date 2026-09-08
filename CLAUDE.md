@@ -2498,3 +2498,238 @@ hace con «Sin conexión — mostrando el barrido guardado del…».
 
 ⚠️ Y rotularlo por lo que es: el spread de **la cuenta de Néstor en AvaTrade**,
 nunca «tu spread».
+
+---
+
+# El calendario económico (2026-09-08). La #1 de la fase de información
+
+El hueco más grande que tenía la app: hoy no sabe que hay Fed esta noche.
+
+```
+app/src/lib/calendario.js            # las cuentas puras (Node + navegador)
+app/scripts/publicar-calendario.mjs  # baja el feed y escribe estado/calendario.json
+app/src/lib/useCalendario.js         # lo lee desde la app
+app/src/components/Calendario.jsx    # la tarjeta, arriba del todo en el tablero
+app/scripts/prueba-calendario.mjs    # 55 comprobaciones, sin internet
+.github/workflows/calendario.yml     # cada 4 h, TODOS los días
+```
+
+**Fuente: ForexFactory (FairEconomy).** Se eligió CON LA SONDA del 2026-09-08,
+no leyendo documentación: fue la única de cuatro que respondió con eventos de
+nuestras divisas. Sin llave, gratis, y **cero créditos de Twelve Data**.
+
+## ⚠️ Por qué NO va dentro del vigía, que era lo cómodo
+
+Dos razones, y ninguna es de gusto:
+
+1. **Frescura.** El vigía corre 15:50 UTC **de lunes a viernes** y el feed
+   cubre **la semana EN CURSO**. El lunes por la mañana la última publicación
+   sería la del viernes: la semana pasada entera, con todo ya ocurrido y nada
+   de lo que viene. Eso no es «un poco viejo», es falso. Por eso el publicador
+   corre **cada 4 horas todos los días, fines de semana incluidos**.
+2. **Aislamiento.** El vigía escribe el historial, lo único irremplazable del
+   proyecto. Un fallo bajando un calendario no puede tener ni la posibilidad
+   de tocarlo.
+
+## Las decisiones que no hay que ablandar
+
+⚠️ **EL ARCHIVO NO FILTRA POR «FUTURO»; FILTRA EL NAVEGADOR.** Es lo menos
+obvio de todo esto. El archivo es una foto que se publica cada 4 horas y se
+lee durante horas: si se quitara lo pasado al publicar, un evento que ocurriera
+veinte minutos después seguiría saliendo como «próximo» hasta la siguiente
+publicación. Quien tiene el reloj bueno es el navegador de quien mira. Tiene
+prueba propia: el mismo archivo, ocho horas más tarde, enseña menos cosas sin
+volver a publicarse.
+
+⚠️ **LO DESCONOCIDO SE QUEDA.** Si mañana ForexFactory inventa un nivel de
+impacto nuevo, ese evento **se sigue enseñando** (`otro`). Los dos errores no
+cuestan lo mismo — enseñar de más es una línea de ruido en una tarjeta
+plegada; esconder de más es no enterarse de la Fed — así que la condición no
+puede ser simétrica. Es la misma forma de escribir que `yaCorrioHoy` (ante la
+duda, correr) y `esSombra` (ante la duda, no avisar).
+
+⚠️ **SI EL FEED RESPONDE PERO NO TRAE NADA NUESTRO, NO SE PUBLICA** y el
+workflow falla. Escribir un archivo vacío machacaría el bueno de ayer y en
+pantalla se vería igual que una semana tranquila. Mismo peligro que vigila el
+respaldo del historial: lo grave no es que algo desaparezca, es que encoja en
+silencio.
+
+⚠️ **ES INFORMACIÓN, NO UN FILTRO.** No apaga ni una señal. Esa distinción
+—escrita en la fase de información— es la que decide si hace falta medirlo
+antes. Si alguien quiere «no operar dos horas antes de una noticia», eso es un
+filtro y va al banco de pruebas primero.
+
+⚠️ **La hora es la del TELÉFONO de quien mira.** El feed manda ISO con huso, y
+se compara en tiempo absoluto. Un suscriptor en Madrid y otro en Bogotá tienen
+que ver cada uno su hora. Y se agrupa por día CIVIL del que mira, no por día
+UTC: hay prueba de que el mismo instante cae el día 8 en Bogotá y el 9 en
+Madrid.
+
+## 📌 Una prueba que NO comprobaba nada, y cómo se vio
+
+El bloque del huso horario comparaba `new Date(ev.d).getTime()` contra un
+número. **Eso comprueba el JavaScript de Node, no este código.** Se rompió el
+manejo del huso a propósito y la prueba siguió en verde.
+
+Reescrito para preguntar a través de `proximos` y `agruparPorDia`, que son las
+funciones que la pantalla usa de verdad, y con el caso **a caballo del límite**
+de las 48 horas, que es donde la diferencia decide algo. Ahora muerde.
+
+📌 **Y de paso me equivoqué en la aritmética del caso** (dije 55 horas cuando
+eran 31) y la prueba falló señalándomelo. Es lo que tiene que pasar.
+
+## ⚠️ El error que solo se vio en el navegador (el cuarto de esta clase)
+
+En árabe, la línea de «previsto / anterior» **mezcla palabra traducida y
+número**, y yo le puse `dir="ltr"` a todo el renglón. Resultado: el `%` se
+despegaba del número y **«24.5K» se partía en dos**, con la «K» en un renglón
+y el «24.5» en el siguiente.
+
+**La regla, que ya va por la cuarta vez** (el gráfico, el clima, la
+correlación y ahora esto): se fija la dirección **solo de lo que NO es
+idioma**. El código de divisa (`USD`) sí va en `ltr` fijo. La hora **no**: la
+arma `toLocaleTimeString`, que en árabe saca «١٠:١٤ م» con sus cifras y su
+marcador — forzarle `ltr` sería enmendarle la plana al formateador. Y el valor
+numérico dentro de una frase traducida va en `<bdi>`, que aísla sin imponer.
+
+## Cómo se verificó
+
+Chromium, componente aislado (el tablero está detrás de Firebase), en español
+y en árabe, con las cuatro situaciones en la misma página: normal, archivo
+viejo, vacío y nulo. Los dos vacíos **no pintan absolutamente nada**, cero
+errores de consola, y la dirección se comprobó **con el CSS calculado**, no de
+vista.
+
+⚠️ Detalle del entorno que costó un intento: el banco aislado **no se puede
+abrir con `file://`** — los módulos no cargan y la página sale en blanco sin
+decir por qué. Hay que servirlo por HTTP (`npx http-server`).
+
+---
+
+# El puente de MT5, completo (2026-09-08). Las tres preguntas, contestadas
+
+Néstor pegó también `server.js`. Los **tres** archivos están ya en
+`puente-mt5/`, y con ellos se cerraron las tres preguntas del mismo día:
+
+| pregunta | respuesta |
+|---|---|
+| ¿Render sigue vivo? | **Sí.** «Cannot GET /» es Express contestando, no un servicio muerto |
+| ¿El `POST` pide contraseña? | **NO.** Solo comprueba que venga un `symbol` |
+| ¿Guarda historial? | **No.** `let liveMarketData = {}` en memoria; un reinicio lo borra |
+
+⚠️ **Dos agujeros, y el segundo es más silencioso:** cualquiera que sepa la
+dirección puede mandarle precios falsos al `POST`; y `app.use(cors())` **sin
+opciones** deja que cualquier web del mundo lea `/api/signals`. Ninguna de las
+dos cosas la decidió nadie: vinieron por defecto.
+
+⚠️ **Y este servidor NO puede ser la fuente del historial**: los planes gratis
+de Render reinician solos y `liveMarketData` se pierde. El primer `GET`
+después de un reinicio devuelve `{"estado":"Esperando datos..."}` en vez de
+precios; quien lo lea tiene que estar preparado para eso.
+
+✅ **Ninguno de los tres archivos lleva credenciales**, comprobado línea por
+línea: `mt5.initialize()` sin argumentos, `server.js` solo lee `process.env.PORT`,
+y el `.bat` solo tiene rutas.
+
+## 📌 Néstor escribió una contraseña en el chat
+
+Ofreció inventarse una (`D180556nm@`) para tapar el agujero del `POST`. **No se
+usó en ninguna parte** y se le dijo por qué: los dos repositorios son PÚBLICOS
+—sería el agujero de Twelve Data otra vez— y el chat queda guardado. Se le pidió
+cambiarla si la usa en algún sitio real.
+
+⚠️ **Cuando se tape ese agujero, la contraseña va como variable de entorno en
+Render y como secreto de GitHub**, nunca en un archivo. Igual que
+`TWELVEDATA_KEY` el 2026-09-03.
+
+---
+
+# El agujero del backend: NO hay que taparlo, hay que APAGAR el servidor (2026-09-08)
+
+Néstor dijo, con razón, que un agujero de seguridad hay que arreglarlo en el
+momento «porque después se queda olvidado». Al ir a taparlo aparecieron dos
+cosas que cambian cuál es el arreglo correcto.
+
+## 1. La app publicada NUNCA llama a Render
+
+```
+app/.env.production:  VITE_API_URL=http://127.0.0.1:8000
+```
+
+Eso es **el propio aparato de quien abre la app**. Comprobado también sobre el
+build: la palabra `onrender` **no aparece** en `dist/`, y las únicas
+direcciones que quedan compiladas son las de Firebase, `raw.githubusercontent`
+y ese `127.0.0.1`.
+
+O sea que **nada de lo publicado lee ese servidor**. Y aunque `VITE_API_URL`
+apuntara a Render, `CotizacionesVivo` arranca APAGADA y solo pide algo si
+alguien pulsa el botón — así que tampoco hay un panel roto a la vista de nadie.
+
+📌 Y de paso explica por qué el puente «nunca funcionó» en producción: una
+página HTTPS llamando a `http://127.0.0.1` es el bloqueo de contenido mixto,
+justo lo descrito esa misma mañana. La mitad JS lleva meses sin poder funcionar.
+
+## 2. `nestor-forex-backend` NO está en GitHub
+
+La cuenta solo tiene **dos** repositorios: `Nestor-forex` y
+`Nestor-forex-intradia`. El backend vive únicamente en el PC de Néstor y en
+Render.
+
+⚠️ **Consecuencia que hay que tener clarísima:** `puente-mt5/server.js` de este
+repositorio es una **copia de respaldo**, no el código que corre. Arreglarlo
+aquí **NO arregla el servidor vivo**. Haría falta que Néstor lo cambiara en su
+máquina y lo volviera a desplegar.
+
+## ✅ El arreglo, entonces, es APAGAR el servicio de Render
+
+No es pereza, es que endurecer un servidor que no usa nadie es trabajo tirado:
+
+| | tapar el agujero | apagar el servicio |
+|---|---|---|
+| ¿cierra el `POST` abierto? | sí | **sí, del todo** |
+| ¿cierra el `cors()` abierto? | sí | **sí, del todo** |
+| ¿rompe algo publicado? | no | **no — nada lo lee** |
+| ¿hay que desplegar? | **sí**, y Néstor no sabe | no, un clic |
+| ¿sirve si luego se abandona Render? | no, se tira | — |
+
+Y encaja con la recomendación que ya estaba escrita: cuando se retome el
+puente, que **publique a la rama `datos`** como todo lo demás. Sin servidor no
+hay agujeros que tapar, ni servicio que pagar, ni preguntarse si sigue vivo.
+
+⚠️ **Si algún día se decide MANTENER Render**, entonces sí hay que hacer las
+dos cosas —contraseña en el `POST` y `cors()` restringido a los orígenes de las
+dos apps— y la contraseña va como variable de entorno en Render y secreto de
+GitHub, **nunca escrita en el archivo**: los dos repositorios son públicos.
+
+---
+
+# ¿Para qué pasar los spreads a mano si el puente es justo para eso? (2026-09-08)
+
+Néstor preguntó exactamente eso, y **tenía razón**. Queda escrito porque la
+pregunta destapa que yo le estaba pidiendo trabajo que el puente hace mejor.
+
+## La respuesta corta: sí, el puente los sustituye. Pero HOY no da ninguno
+
+⚠️ **El puente tal como está no manda spread.** `bridge_mt5.py` manda velas
+(`high`, `low`, `close`, `tick_volume`). El spread sale de `bid` y `ask`, y eso
+**no lo manda nadie**: lo espera `useMT5Quotes.js`, la mitad que no encaja.
+
+Así que hoy la elección real es:
+
+| | qué da | cuándo |
+|---|---|---|
+| Néstor leyendo la pantalla | 18 números, un instante, una sesión | 5 minutos |
+| El puente arreglado | los mismos 18, **muchas veces al día y solos** | días de trabajo |
+
+**El puente gana por goleada en cuanto funcione** — muchas muestras a distintas
+horas en vez de una foto— así que la lectura a mano es un **parche mientras
+tanto**, y solo vale la pena si el puente se demora.
+
+## Lo que NO cambia con el puente, y hay que decirlo igual
+
+Sea a mano o automático, es **el spread de la cuenta de Néstor en AvaTrade**.
+No es el del suscriptor. Eso hay que rotularlo siempre, y el puente no lo
+arregla.
+
+📌 **Lección para mí:** antes de pedirle trabajo manual, comprobar si algo que
+ya estamos construyendo lo hace solo. Él lo vio y yo no.

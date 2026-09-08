@@ -280,6 +280,15 @@ export default {
     estadoPendiente: 'in attesa',
   },
 
+  calendario: {
+    titulo: (v) => `Cosa esce oggi e domani (${v.n})`,
+    aviso: (v) => `dato ad alto impatto tra ${v.h} h`,
+    intro: 'Dati economici che possono muovere il prezzo di colpo. Non cambiano nessun segnale dell\'app: stanno qui perché tu sappia a che ora conviene non entrare alla cieca.',
+    previsto: 'previsto',
+    anterior: 'precedente',
+    viejo: 'Questo calendario non si aggiorna da più di un giorno. Potrebbe mancare qualcosa.',
+    pie: 'Si mostrano solo i dati ad alto e medio impatto delle 8 valute della scansione; quelli a basso impatto restano fuori perché non muovono una candela giornaliera. Gli orari sono quelli del tuo telefono. Fonte: ForexFactory.',
+  },
   correl: {
     titulo: (v) => `Coppie che si muovono quasi uguale (${v.n})`,
     intro: 'Prima di aprire due operazioni insieme, guarda se queste coppie vanno a braccetto. Se sì, non stai distribuendo il rischio: stai facendo la stessa scommessa al doppio.',

@@ -11,6 +11,8 @@ import Sparkline from './Sparkline'
 import Glosario from './Glosario'
 import ClimaMercado from './ClimaMercado'
 import Correlacion from './Correlacion'
+import Calendario from './Calendario'
+import { useCalendario } from '../lib/useCalendario'
 
 function Chip({ children, color }) {
   return (
@@ -117,6 +119,11 @@ function RazonList({ items, emptyText }) {
 
 export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], correlaciones = [], corte }) {
   const { t, locale } = useIdioma()
+  // El calendario se pide aqui y no en `useMarketData` porque va en su propio
+  // archivo y con su propio horario: el barrido lo publica el vigia una vez al
+  // dia de lunes a viernes, y el calendario cada cuatro horas TODOS los dias,
+  // porque el feed cubre la semana en curso y cambia de semana el domingo.
+  const calendario = useCalendario()
   const fecha = useMemo(() => fmtFechaHoy(locale), [locale])
   const sesion = t(claveSesionActiva())
 
@@ -160,6 +167,12 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
         </section>
 
         <Glosario />
+
+        {/* ARRIBA DEL TODO, y por encima de la correlacion, a proposito: es lo
+            unico de esta pantalla que caduca en horas. Si hay Fed en tres
+            horas, eso cambia si conviene abrir algo HOY — y hay que leerlo
+            antes de mirar ninguna tabla, no despues de haber elegido par. */}
+        <Calendario cal={calendario} />
 
         {/* Debajo del glosario a proposito: es contexto de RIESGO, no una
             senal. Va antes de las tablas para que se lea al decidir cuantas
