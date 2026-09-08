@@ -8,7 +8,8 @@ movió el precio** (el tick volume).
 |---|---|---|
 | `bridge_mt5.py` | **el puente.** Lee MT5 y publica a la rama `datos` | ✅ reescrito el 2026-09-08 |
 | `server.js` | el servidor viejo de Render | ⚠️ **ya no se usa** — ver §3 |
-| `Iniciar_Ecosistema.bat` | arranca las piezas de un doble clic | tal cual lo tenía Néstor |
+| `Iniciar_Puente.bat` | **arranca el puente de un doble clic** | ✅ nuevo, 2026-09-08 |
+| `Iniciar_Ecosistema.bat` | el arranque viejo de tres piezas | ⚠️ **ya no se usa** — ver abajo |
 | `.gitignore` | impide que el permiso de GitHub se suba nunca | — |
 
 ---
@@ -59,7 +60,17 @@ ni en ningún archivo del proyecto.**
     Si falta alguno: clic derecho → **Símbolos** → búscalo → **Mostrar**.
     MT5 solo entrega precio de los que estén ahí; el puente avisa de los que
     falten.
-13. Doble clic en `bridge_mt5.py` (o `python bridge_mt5.py`).
+13. **Doble clic en `Iniciar_Puente.bat`.**
+
+⚠️ **NO uses `Iniciar_Ecosistema.bat`**, el viejo. Aquel arrancaba tres cosas:
+el servidor de Render (que ya se apagó), el puente y una copia local de la app.
+Hoy solo hace falta el puente. Se conserva ese archivo únicamente como
+documento de lo que hubo.
+
+📌 **Para tenerlo a un clic desde el escritorio:** botón derecho sobre
+`Iniciar_Puente.bat` → **Mostrar más opciones** → **Enviar a** → **Escritorio
+(crear acceso directo)**. El `.bat` se apaña solo esté donde esté el acceso
+directo, porque busca su propia carpeta.
 
 Si todo va bien verás algo así, y **hay que dejar esa ventana abierta**:
 
