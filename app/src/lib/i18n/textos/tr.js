@@ -279,6 +279,15 @@ export default {
     estadoPendiente: 'beklemede',
   },
 
+  calendario: {
+    titulo: (v) => `Bugün ve yarın açıklanacaklar (${v.n})`,
+    aviso: (v) => `${v.h} saat sonra yüksek etkili veri`,
+    intro: 'Fiyatı bir anda hareketlendirebilecek ekonomik veriler. Uygulamadaki hiçbir sinyali değiştirmezler: hangi saatte körlemesine girilmemesi gerektiğini bilmeniz için buradalar.',
+    previsto: 'beklenti',
+    anterior: 'önceki',
+    viejo: 'Bu takvim bir günden uzun süredir güncellenmedi. Gelecek olanlardan bazıları eksik olabilir.',
+    pie: 'Yalnızca taramadaki 8 para biriminin yüksek ve orta etkili verileri gösterilir; düşük etkili olanlar günlük mumu hareket ettirmedikleri için dışarıda bırakılır. Saatler telefonunuzun saatidir. Kaynak: ForexFactory.',
+  },
   correl: {
     titulo: (v) => `Neredeyse aynı hareket eden pariteler (${v.n})`,
     intro: 'Aynı anda iki işlem açmadan önce, bu paritelerin birlikte hareket edip etmediğine bakın. Ediyorlarsa riski dağıtmıyorsunuz: aynı bahsi iki katı büyüklükte oynuyorsunuz.',

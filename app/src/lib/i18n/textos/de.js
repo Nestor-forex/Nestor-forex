@@ -284,6 +284,15 @@ export default {
     estadoPendiente: 'offen',
   },
 
+  calendario: {
+    titulo: (v) => `Was heute und morgen kommt (${v.n})`,
+    aviso: (v) => `Termin mit hoher Wirkung in ${v.h} Std.`,
+    intro: 'Wirtschaftsdaten, die den Kurs schlagartig bewegen können. Sie ändern kein Signal der App: Sie stehen hier, damit Sie wissen, wann man nicht blind einsteigen sollte.',
+    previsto: 'Prognose',
+    anterior: 'zuvor',
+    viejo: 'Dieser Kalender wurde seit über einem Tag nicht aktualisiert. Es könnte etwas fehlen.',
+    pie: 'Gezeigt werden nur Termine mit hoher und mittlerer Wirkung für die 8 Währungen des Scans; geringe Wirkung bleibt außen vor, weil sie eine Tageskerze nicht bewegt. Die Zeiten sind die Ihres Telefons. Quelle: ForexFactory.',
+  },
   correl: {
     titulo: (v) => `Paare, die sich fast gleich bewegen (${v.n})`,
     intro: 'Bevor Sie zwei Positionen gleichzeitig eröffnen, prüfen Sie, ob diese Paare zusammen laufen. Wenn ja, verteilen Sie das Risiko nicht: Sie setzen dieselbe Wette in doppelter Größe.',

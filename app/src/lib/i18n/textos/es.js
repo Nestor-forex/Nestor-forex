@@ -323,6 +323,15 @@ export default {
     estadoPendiente: 'pendiente',
   },
 
+  calendario: {
+    titulo: (v) => `Qué se publica hoy y mañana (${v.n})`,
+    aviso: (v) => `dato de alto impacto en ${v.h} h`,
+    intro: 'Datos económicos que pueden mover el precio de golpe. No cambian ninguna señal de la app: están aquí para que sepas a qué hora conviene no estar entrando a ciegas.',
+    previsto: 'previsto',
+    anterior: 'anterior',
+    viejo: 'Este calendario lleva más de un día sin actualizarse. Puede que falte algo de lo que viene.',
+    pie: 'Solo se muestran los datos de impacto alto y medio de las 8 divisas del barrido; los de impacto bajo se omiten porque no mueven una vela diaria. Las horas son las de tu teléfono. Fuente: ForexFactory.',
+  },
   correl: {
     titulo: (v) => `Pares que se mueven casi igual (${v.n})`,
     intro: 'Antes de abrir dos operaciones a la vez, mira si estos pares van del brazo. Si van juntos, no estás repartiendo el riesgo: estás haciendo la misma apuesta con el doble de tamaño.',

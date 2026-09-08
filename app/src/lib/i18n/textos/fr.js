@@ -284,6 +284,15 @@ export default {
     estadoPendiente: 'en attente',
   },
 
+  calendario: {
+    titulo: (v) => `Ce qui sort aujourd'hui et demain (${v.n})`,
+    aviso: (v) => `donnée à fort impact dans ${v.h} h`,
+    intro: 'Données économiques qui peuvent faire bouger le prix d\'un coup. Elles ne changent aucun signal de l\'application : elles sont là pour que vous sachiez à quelle heure il vaut mieux ne pas entrer à l\'aveugle.',
+    previsto: 'prévu',
+    anterior: 'précédent',
+    viejo: 'Ce calendrier n\'a pas été mis à jour depuis plus d\'un jour. Il peut manquer quelque chose.',
+    pie: 'Seules les données à fort et moyen impact des 8 devises du balayage sont affichées ; celles à faible impact sont écartées car elles ne bougent pas une bougie journalière. Les heures sont celles de votre téléphone. Source : ForexFactory.',
+  },
   correl: {
     titulo: (v) => `Paires qui bougent presque pareil (${v.n})`,
     intro: 'Avant d\'ouvrir deux positions à la fois, regardez si ces paires vont ensemble. Si oui, vous ne répartissez pas le risque : vous faites le même pari en double.',
