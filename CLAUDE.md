@@ -1913,3 +1913,93 @@ dos de sombra.
 ⚠️ **Esto NO se porta a Intradía.** Allí el vigía corre cada hora y ya tiene el
 publicador cada 30 minutos: perder una corrida cuesta una hora, no un día, y
 `vigia.mjs` es PRIMO, no gemelo.
+
+---
+
+# Lanzar Swing: el plan, y lo que Néstor descubrió al ponerse de cliente (2026-09-08)
+
+Néstor pidió ayuda para lanzar la app: no sabe de marketing, ni dónde
+promocionar, ni cómo hacer un video, y pidió una campaña «fuerte y agresiva».
+
+**El plan completo está en un Artifact privado** (única copia — si se pierde el
+enlace, se rehace desde aquí):
+https://claude.ai/code/artifact/b1559411-5115-401f-ae08-1c92c10c89ae
+Título: «Vender sin prometer». Seis fases, cada una con qué necesita antes y
+cómo saber que terminó, más el guion palabra por palabra del primer video.
+
+## La decisión de fondo
+
+Hoy **no se pueden vender señales**: la app acierta 48 % y da −0,03 por 1R, y
+las dos reglas positivas llevan 12 y 3 operaciones reales. Se vende
+**información**, y el argumento central es el que ninguna competidora tiene:
+**la app enseña sus propios números siendo malos** (la sección de mediciones
+del Historial).
+
+⚠️ Y la frase honesta NO es «no doy señales» —la app SÍ muestra la dirección—
+sino «aquí está lo que destaca hoy, y aquí al lado lo que acierta: 48 %». Lo
+que lo hace honesto es que el número esté visible, no esconder la dirección.
+
+## ⚠️⚠️ EL HALLAZGO DEL DÍA, Y ES EL MÁS IMPORTANTE
+
+Néstor se puso de parte del suscriptor y dijo: **«tú me das explicaciones
+claras y lógicas, y todavía no me convence pagar»**.
+
+**Eso no es un problema de comunicación: es la respuesta a la pregunta 3 de la
+Fase 2** («si dejara de existir, ¿la echarías de menos?»), contestada gratis
+por el propio autor antes de gastar un peso en campaña. Si el que la construyó
+no pagaría, ninguna landing lo arregla.
+
+📌 **Propuesta sobre la mesa, sin decidir: lanzarla GRATIS.** Hoy no hay qué
+cobrar; en ~5 meses las reglas de la sombra dirán si hay producto. Regalarla
+trae 200 personas usándola en vez de 5 pagando, y encaja con lo que a él le
+preocupa —quiere más apps con su marca y no quiere quemar la reputación.
+
+## La comparación con TradingView (guardada a petición suya, va a la landing)
+
+Preguntó si TradingView tiene lo mismo. **La respuesta honesta es que sí, casi
+todo, y gratis** — y él quiere que los suscriptores lo lean.
+
+| | TradingView | Las apps |
+|---|---|---|
+| RSI, ATR, EMA, ADX | ✅ todos, gratis | ✅ |
+| Fuerza relativa entre divisas | ✅ scripts de la comunidad | ✅ |
+| Stop/objetivo y lote | ✅ herramienta de posición | ✅ automático |
+| Alertas al celular | ✅ | ✅ |
+| Backtesting | ✅ **más potente que el nuestro** | 4 scripts |
+| Importar del bróker | ❌ | ✅ |
+| **Enseñar su propio acierto real** | ❌ | ✅ |
+| **Respuesta lista en 30 segundos** | ❌ | ✅ |
+
+**No hay una característica técnica que TradingView no iguale o supere.** La
+diferencia es **tiempo, no capacidad**: da el plato hecho en vez de los
+ingredientes. Más la honestidad y la curva de aprendizaje.
+
+⚠️ Y el agujero de ese argumento, que hay que decir: **el plato que se cocina
+hoy pierde.** Ahorrar una hora para llegar a −0,03 es un argumento delgado para
+cobrar — refuerza lo de lanzar gratis.
+
+📌 **Nunca competir de frente con TradingView.** Quien diga «yo ya lo uso»
+tiene razón y no es el cliente. El cliente es quien NO quiere aprenderlo.
+
+## Cómo se está escribiendo la página de venta
+
+Néstor pidió que los suscriptores tengan estas explicaciones **antes de pagar**.
+El método acordado: **él hace de cliente desconfiado, y cada pregunta que se
+pueda responder honestamente se vuelve una sección de la página.** Cada
+pregunta que NO se pueda responder bien señala qué falta arreglar en la app.
+
+Preguntas ya contestadas y listas para la página:
+- *«Si no das señales, ¿para qué el stop loss?»* → la dirección es opinión
+  (48 %), el stop es aritmética sobre cuánto se mueve el par. Con el ejemplo
+  real de los 12 pips de USD/CAD del 2026-08-09.
+- *«¿TradingView no tiene lo mismo?»* → la tabla de arriba.
+
+## Un tropiezo de herramientas que conviene recordar
+
+Néstor abrió la **caja del resultado de una llamada mía** (`action: read`) en la
+app del móvil y vio el HTML en crudo: «todo está en inglés y parecen códigos
+que debo pegar». No era la página, que estaba bien.
+
+📌 **No lanzar diagnósticos que vuelquen HTML entero al chat**, y al dar un
+Artifact decirle que lo abra **copiando el enlace en Chrome**, no tocando las
+cajas grises de herramientas.
