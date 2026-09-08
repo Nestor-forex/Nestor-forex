@@ -226,6 +226,10 @@ escribir(
     // eslint-disable-next-line no-unused-vars -- highs/lows se descartan aquí
     pares: data.pares.map(({ highs, lows, ...resto }) => resto),
     ratesUSD: data.ratesUSD,
+    // Qué pares se mueven juntos, ~2 KB. SÍ se publica —al revés que
+    // `highs`/`lows`— porque la app no puede recalcularlo: necesita 60 cierres
+    // por par y el barrido solo lleva los últimos 20.
+    correl: data.correl,
   }) + '\n'
 )
 
