@@ -324,9 +324,24 @@ export default {
   },
 
   calendario: {
-    titulo: (v) => `Qué se publica hoy y mañana (${v.n})`,
-    aviso: (v) => `dato de alto impacto en ${v.h} h`,
+    titulo: (v) => `Noticias que pueden mover el precio (${v.n})`,
+    aviso: (v) => `${v.div}: dato importante en ${v.h} h`,
     intro: 'Datos económicos que pueden mover el precio de golpe. No cambian ninguna señal de la app: están aquí para que sepas a qué hora conviene no estar entrando a ciegas.',
+    alto: 'Mueve mucho',
+    medio: 'Mueve algo',
+    festivo: 'Festivo',
+    cat: {
+      tipos: 'Tipos de interés',
+      inflacion: 'Inflación',
+      empleo: 'Empleo',
+      crecimiento: 'Crecimiento',
+      ventas: 'Ventas',
+      actividad: 'Actividad de las empresas',
+      comercio: 'Comercio exterior',
+      discurso: 'Habla un banquero central',
+      festivo: 'Festivo: menos movimiento',
+    },
+    cuantos: (v) => `Se muestran los ${v.n} de las próximas 48 horas. Esta semana hay ${v.total} en total.`,
     previsto: 'previsto',
     anterior: 'anterior',
     viejo: 'Este calendario lleva más de un día sin actualizarse. Puede que falte algo de lo que viene.',
@@ -430,22 +445,17 @@ export default {
   // y Pip NO se traducen en ningún idioma — son los nombres que usa cualquier
   // plataforma de trading, y cambiarlos confundiría más de lo que ayudaría.
   vivo: {
-    titulo: 'Precios en vivo del bróker',
-    desc: 'Precio de compra y de venta directo de MetaTrader 5, actualizado cada 2 segundos. Es lo único que muestra el spread real que cobra el bróker; el barrido de arriba trabaja con velas diarias y no lo sabe.',
-    conectar: 'Conectar con MetaTrader 5',
-    desconectar: 'Desconectar',
-    conectando: 'Buscando el puente…',
-    enVivo: 'EN VIVO',
+    titulo: 'Lo que cuesta abrir la operación',
+    desc: (v) => `Precio de compra y de venta directo de MetaTrader 5. Es lo único que muestra el spread REAL que cobra el bróker — el barrido de arriba trabaja con velas diarias y no lo sabe. ⚠️ Son los de ${v.cuenta}: si tu bróker es otro, tus números serán distintos.`,
+    cuentaGenerica: 'una cuenta real',
+    cargando: 'Buscando los últimos precios…',
+    sinDatos: 'Todavía no hay precios del bróker. El puente los publica solo mientras el computador donde corre MetaTrader 5 está encendido.',
+    vieja: (v) => `Estos precios se tomaron hace más de ${v.h} h. El puente estaba apagado; sirven de referencia, no como precio de ahora.`,
     par: 'Par',
-    bid: 'Bid',
-    ask: 'Ask',
+    bid: 'Compra',
+    ask: 'Venta',
     spread: 'Spread',
-    pie: 'Spread en pips. En ámbar si pasa de 3.',
-    sinPuente: 'No se pudo conectar con el puente',
-    sinPuenteQue: ({ url }) => `La app intentó pedirle los precios a ${url} y no hubo respuesta.`,
-    sinPuenteLocal:
-      'Esa dirección (127.0.0.1) significa "este mismo aparato". Solo funciona en el computador donde están corriendo MetaTrader 5 y el puente de Python, y con los dos encendidos. Desde el celular, o desde otro computador, nunca va a encontrarlo: para eso el puente tiene que estar publicado en internet con su propia dirección.',
-    error: 'El puente respondió algo que la app no supo leer. Revisa que /quotes devuelva los pares con su bid y su ask.',
+    pie: (v) => `Spread en pips, en ámbar si pasa de 3. Tomado el ${v.hora}.`,
   },
 
   errores: {

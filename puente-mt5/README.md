@@ -1,18 +1,117 @@
-# El puente a MetaTrader 5 — lo que hay, lo que falta y lo que no cuadra
+# El puente a MetaTrader 5
 
-**Estos dos archivos NO estaban en ningún repositorio.** Vivían solo en el
-computador de Néstor. Los pegó en el chat el **2026-09-08** y se guardan aquí
-**tal cual**, sin cambiar una línea, porque perderlos otra vez es exactamente
-el problema que esta carpeta viene a cerrar.
+Lleva a las apps lo único que el barrido no puede saber: **lo que de verdad
+cuesta abrir una operación** (el spread real del bróker) y **cuántas veces se
+movió el precio** (el tick volume).
 
-| archivo | qué es | dónde vive en el PC de Néstor |
+| archivo | qué es | estado |
 |---|---|---|
-| `bridge_mt5.py` | el puente: lee MT5 y manda los datos | `Documents\nestor-forex-bridge\` |
-| `server.js` | el servidor que los recibe (corre en Render) | `Documents\nestor-forex-backend\` |
-| `Iniciar_Ecosistema.bat` | arranca las tres piezas de un doble clic | (el escritorio, presumiblemente) |
+| `bridge_mt5.py` | **el puente.** Lee MT5 y publica a la rama `datos` | ✅ reescrito el 2026-09-08 |
+| `server.js` | el servidor viejo de Render | ⚠️ **ya no se usa** — ver §3 |
+| `Iniciar_Ecosistema.bat` | arranca las piezas de un doble clic | tal cual lo tenía Néstor |
+| `.gitignore` | impide que el permiso de GitHub se suba nunca | — |
 
-⚠️ **Se guardan como DOCUMENTO, no como parte de la app.** Nada del build de
-Vite ni de los workflows los toca. Están aquí para que existan.
+---
+
+## 0. CÓMO SE PONE EN MARCHA (para Néstor, paso a paso)
+
+Solo hay que hacerlo **una vez**. Después es abrir y ya.
+
+### Primero: darle permiso para escribir
+
+El puente necesita permiso para dejar los precios en GitHub. Es un permiso
+**solo para este repositorio** y **solo para escribir archivos** — no da acceso
+a tu correo, ni a tu dinero, ni a tu cuenta del bróker.
+
+1. Entra a **github.com** y pica tu foto (arriba a la derecha) → **Settings**.
+2. Baja del todo, a la izquierda: **Developer settings**.
+3. **Personal access tokens** → **Fine-grained tokens** → botón
+   **Generate new token**.
+4. Rellena así:
+   - **Token name:** `puente mt5`
+   - **Expiration:** `90 days` (cuando se venza, se repite esto)
+   - **Repository access:** marca **Only select repositories** y elige
+     **Nestor-forex/Nestor-forex**
+   - **Permissions** → **Repository permissions** → busca **Contents** y
+     ponlo en **Read and write**
+5. Botón verde **Generate token**.
+6. Sale un texto largo que empieza por `github_pat_`. **Cópialo ahora**:
+   GitHub no vuelve a enseñártelo nunca.
+
+⚠️ **Ese texto es como una llave. No lo pegues en el chat, ni en un correo,
+ni en ningún archivo del proyecto.**
+
+### Segundo: guardarlo en tu computador
+
+7. Abre el Bloc de notas.
+8. Pega **solo** ese texto. Nada más: ni tu nombre, ni comillas.
+9. Guárdalo como **`token.txt`** en la carpeta
+   `Documents\nestor-forex-bridge` (la misma donde está `bridge_mt5.py`).
+   - En «Tipo», elige **Todos los archivos**, para que no lo guarde como
+     `token.txt.txt`.
+
+### Tercero: poner el puente al día
+
+10. Copia el `bridge_mt5.py` de esta carpeta encima del que tienes en
+    `Documents\nestor-forex-bridge`.
+11. Abre MetaTrader 5 y entra a tu cuenta.
+12. En la ventana **Observación del Mercado**, comprueba que estén los pares.
+    Si falta alguno: clic derecho → **Símbolos** → búscalo → **Mostrar**.
+    MT5 solo entrega precio de los que estén ahí; el puente avisa de los que
+    falten.
+13. Doble clic en `bridge_mt5.py` (o `python bridge_mt5.py`).
+
+Si todo va bien verás algo así, y **hay que dejar esa ventana abierta**:
+
+```
+Conectado a MetaTrader 5.
+Publicando en Nestor-forex/Nestor-forex, rama datos, cada 15 minutos.
+
+15:22:10 — leyendo MT5…
+  [OK] estado/mt5.json — 18 pares
+  [OK] spreads/2026-09-08.jsonl
+  spread medio ahora: 1.84 pips
+```
+
+⚠️ **La app enseña los precios con la hora a la que se tomaron.** Si apagas el
+computador, no se rompe nada: sigue mostrando los últimos y dice de cuándo son.
+
+---
+
+## 0b. Lo que se reescribió el 2026-09-08, y por qué
+
+Néstor lo pidió así: **«quiero que el puente envíe los spreads también, quiero
+dejarlo listo, no para después»**. Y sobre Render: **«si es mejor publicar a
+la rama de datos, entonces hagámoslo»**.
+
+**1. Ahora manda el spread, que era lo único que faltaba.** La versión anterior
+mandaba velas (máximo, mínimo, cierre, tick volume) pero **no** el precio de
+compra y el de venta — y el spread sale justo de la diferencia entre esos dos.
+O sea que el dato por el que existe este puente no viajaba.
+
+**2. Se acabó el servidor.** Antes hacía `POST` a Render. Ahora escribe
+directo en la rama `datos`, igual que el vigía publica `barrido.json`:
+
+| archivo | qué lleva | para qué |
+|---|---|---|
+| `estado/mt5.json` | lo último: bid, ask, spread y ticks por par | la pantalla |
+| `spreads/<fecha>.jsonl` | una muestra por corrida | **medir** |
+
+⚠️ **El segundo archivo es el que da sentido a todo esto.** Sin él el dato se
+evapora en cada vuelta y seguiríamos con la tabla `SPREAD_PIPS` escrita a mano
+—de donde salen TODOS los números del banco de pruebas—. Con muestras a
+distintas horas deja de ser una suposición.
+
+⚠️ Y va en `spreads/`, **lejos de `historial/`**: el historial de señales es lo
+único irreparable del proyecto y ningún guion nuevo tiene por qué escribir
+cerca de él.
+
+**3. Cada 15 minutos, no cada 15 segundos.** Antes era una petición a un
+servidor; ahora cada corrida deja un commit en GitHub, y uno cada 15 segundos
+serían miles al día.
+
+**4. Los 18 pares**, no 5: los 14 de Swing más los 4 que solo usa Intradía, para
+que un solo puente sirva a las dos apps.
 
 ---
 
@@ -44,47 +143,44 @@ rediseñar dos veces algo que ya funcionaba.
 
 ---
 
-## 2. ⚠️ LAS DOS MITADES NO ENCAJAN
+## 2. ✅ Las dos mitades YA ENCAJAN (2026-09-08)
 
-Esto es lo más importante de este README, y hay que decidirlo antes de
-escribir una línea más de código.
+Durante meses fueron **dos intentos distintos que no se hablaban**: la app
+pedía `GET /quotes` esperando bid y ask, y el puente hacía `POST` mandando
+velas. Ninguno de los dos daba lo que el otro esperaba.
 
-| | lo que hay en este repositorio | lo que hace este puente |
+| | antes | ahora |
 |---|---|---|
-| archivo | `app/src/lib/useMT5Quotes.js` | `bridge_mt5.py` |
-| dirección | `GET {VITE_API_URL}/quotes` | `POST .../api/mt5/update` |
-| quién habla | la app **pide** | el puente **empuja** |
-| qué viaja | `bid`, `ask` por par | velas `high/low/close/volume` |
-| cada cuánto | 2 segundos, desde el navegador | 15 segundos, desde el PC |
+| quién habla | la app pedía a un servidor | el puente **publica**, la app **lee un archivo** |
+| qué viaja | velas, sin bid ni ask | bid, ask, **spread** y ticks |
+| dónde | Render (`POST /api/mt5/update`) | rama `datos` (`estado/mt5.json`) |
+| cada cuánto | 15 segundos | 15 minutos |
+| pares | 5 | **18** (los 14 de Swing + los 4 de Intradía) |
 
-**No son dos partes de lo mismo: son dos intentos distintos**, hechos en
-momentos distintos, y ninguno de los dos habla con el otro. Hoy la app tiene
-un enchufe (`useMT5Quotes`) y el puente tiene otro, de otra forma.
+📌 **Por qué nunca funcionó en producción, aunque el servidor estuviera vivo:**
+`VITE_API_URL` valía `http://127.0.0.1:8000`, que es «este mismo aparato» —o
+sea el teléfono de quien abre la app, donde no hay nada—. Y aunque hubiera
+apuntado a un servidor real por `http://`, el navegador lo habría **bloqueado**:
+una página servida por HTTPS no puede llamar a una dirección sin cifrar.
 
-Y lo que cada uno da es distinto de verdad, no es un detalle de formato:
-
-- **`bid`/`ask`** son lo único que da el **spread real del bróker**, que es el
-  número que hoy se estima a mano en `app/scripts/lib/costes.mjs`
-  (`SPREAD_PIPS`) y del que salen TODOS los resultados del banco de pruebas.
-- **`tick_volume`** es lo único que da actividad por vela — justo lo que el
-  pie del reporte diario dice desde siempre que falta.
-
-**Los dos hacen falta.** La forma de arreglarlo no es elegir uno: es que el
-puente mande las dos cosas.
+Leyendo un archivo de `raw.githubusercontent.com` los dos problemas
+desaparecen: es HTTPS y no hay servidor que exponer.
 
 ---
 
-## 3. Lo que este puente NO cubre todavía
+## 3. Lo que este puente todavía NO hace
 
-- **Solo 5 pares**: `USDJPY`, `GBPCAD`, `USDCAD`, `EURUSD`, `GBPUSD`.
-  Swing necesita **14** e Intradía **18**. Ampliar la lista es cambiar una
-  línea, pero **cada símbolo tiene que estar en la Observación del Mercado de
-  MT5** o MT5 no entrega precio de él.
-- **Tres constantes con la misma dirección** (`SERVER_URL`, `URL_SERVIDOR`,
-  `url`). Solo se usa la primera; las otras dos son restos de haberlo escrito
-  a prisa. Se dejan porque el archivo se guarda tal cual.
-- **`H4` se manda sin comprobar que venga algo**, al revés que `M15` y `D1`,
-  que sí llevan su `if`. Si MT5 devuelve vacío, se manda una lista vacía.
+- **No lee símbolos con sufijo automáticamente.** Si el bróker nombrara los
+  pares `EURUSD.r` en vez de `EURUSD`, habría que ajustar la lista `SYMBOLS`.
+  Los de Néstor **no llevan sufijo** (comprobado en su MT5), así que hoy no
+  hace falta — y el puente avisa por pantalla de cada símbolo que no encuentre
+  en vez de fallar en silencio.
+- **No manda velas históricas.** Solo el precio de ahora y el tick volume del
+  día en curso. El barrido sigue sacando su historia de Twelve Data, que da
+  300 días y no depende de que el computador de Néstor esté encendido.
+- **Solo publica mientras esa ventana esté abierta.** No es un servicio: es un
+  programa que corre en su PC. La app lo enseña con la hora a la que se tomó,
+  así que apagarlo no rompe nada.
 
 ---
 
@@ -176,17 +272,20 @@ servidor, no podría operar con la cuenta de Néstor desde ahí.
 
 ---
 
-## 7. Lo que habría que decidir antes de seguir
+## 7. Las tres decisiones, ya tomadas (2026-09-08)
 
-Nada de esto se hace sin que Néstor lo confirme:
+Las tres las confirmó Néstor y las tres están hechas:
 
-1. **Una sola forma, no dos.** O el puente empieza a mandar también `bid` y
-   `ask` (y `useMT5Quotes` cambia a leerlos de donde el backend los deje), o
-   se abandona `useMT5Quotes` y la app pasa a leer un archivo publicado.
-2. **Publicar a la rama `datos`, como todo lo demás.** El puente escribiría
-   `estado/mt5.json` igual que el vigía escribe `barrido.json`. Ventaja: no
-   hace falta el servidor de Render en absoluto, ni pagarlo, ni preguntarse si
-   sigue vivo. Con el PC apagado la app enseña el último dato **con su hora**,
-   como ya hace con «Sin conexión — mostrando el barrido guardado del…».
-3. **Rotularlo por lo que es.** Es el spread de **la cuenta de Néstor en
-   AvaTrade**, no el del suscriptor. Nunca se puede llamar «tu spread».
+1. ✅ **Una sola forma.** El puente manda `bid` y `ask` (de ahí sale el
+   spread) **y** el tick volume, y la app lee un archivo publicado. Se acabó
+   el desajuste entre las dos mitades.
+2. ✅ **Publica a la rama `datos`**, como todo lo demás del proyecto. Render
+   se apaga: sin servidor no hay agujeros que tapar, ni servicio que pagar, ni
+   preguntarse si sigue vivo.
+3. ✅ **Rotulado por lo que es.** El archivo trae el campo `cuenta` y la
+   pantalla lo enseña arriba, no en la letra pequeña: es el spread de **la
+   cuenta de Néstor en AvaTrade**, no el del suscriptor. Nunca «tu spread».
+
+⚠️ **Lo que sigue pendiente**, y no es de código: que Néstor cree el permiso de
+GitHub (§0) y deje el puente corriendo. Hasta entonces la app enseña «Todavía
+no hay precios del bróker» — que es la verdad, no un error.

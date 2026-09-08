@@ -1,65 +1,76 @@
-import { useState } from 'react'
 import { useIdioma } from '../lib/i18n'
-import { useMT5Quotes } from '../lib/useMT5Quotes'
+import { minutosDesde, useMT5Quotes } from '../lib/useMT5Quotes'
 
-// Precios en vivo del bróker, vía el puente de MetaTrader 5.
+// EL SPREAD REAL DEL BRÓKER.
 //
-// Arranca apagada a propósito. Son 30 peticiones por minuto: para quien no
-// tenga el puente encendido —que hoy es todo el mundo menos el computador
-// donde corre MT5— serían 30 fallos por minuto sin ningún beneficio. Se
-// enciende cuando se quiere ver, y se apaga sola al salir de la pestaña.
+// Lo que de verdad cuesta abrir una operación, medido en la cuenta de Néstor
+// en AvaTrade. Hasta hoy la app solo tenía una tabla ESTIMADA escrita a mano.
 //
-// La otra mitad del archivo es explicar el caso de "no conecta", que va a ser
-// el más común. Un error a secas dejaría a Néstor sin saber si es culpa del
-// puente, del celular o de la app, y aquí la causa casi siempre es la misma y
-// tiene explicación: 127.0.0.1 es "este mismo aparato".
+// ─────────────────────────────────────────────────────────────────────────
+// ⚠️ TRES DECISIONES QUE NO SON ADORNO
+// ─────────────────────────────────────────────────────────────────────────
+//
+// 1. SE DICE DE QUIÉN ES LA CUENTA, SIEMPRE. Es el spread de AvaTrade de
+//    Néstor, no el del suscriptor. Alguien con otro bróker verá números que no
+//    son los suyos, y tiene derecho a saberlo antes de fiarse. Por eso el
+//    rótulo va arriba y no en la letra pequeña, y por eso el propio archivo
+//    publicado trae el campo `cuenta` en vez de escribirlo aquí a mano.
+//
+// 2. SE DICE DE CUÁNDO ES LA FOTO. El puente publica cada 15 minutos y solo
+//    mientras el computador de Néstor esté encendido. Un número sin hora al
+//    lado se lee como «ahora mismo», y a las nueve de la noche eso sería
+//    mentira. Es el mismo criterio del aviso «Sin conexión — mostrando el
+//    barrido guardado del [fecha]» que ya existe.
+//
+// 3. YA NO HAY BOTÓN DE CONECTAR. Antes lo había porque eran 30 peticiones por
+//    minuto a un servidor que casi nadie tenía. Ahora es un archivo pequeño
+//    cada dos minutos, así que se enseña y ya.
+
+const TEXTO = { margin: 0, fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.55 }
+const CABECERA = { fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.4 }
 
 export default function CotizacionesVivo() {
-  const { t } = useIdioma()
-  const [encendido, setEncendido] = useState(false)
-  const { quotes, estado, actualizadoEl, base } = useMT5Quotes({ activo: encendido })
+  const { t, locale } = useIdioma()
+  const { quotes, estado, actualizadoEl, cuenta } = useMT5Quotes()
 
   const filas = Object.values(quotes)
-  const local = /127\.0\.0\.1|localhost/.test(base)
+  const minutos = actualizadoEl ? minutosDesde(actualizadoEl) : null
 
   return (
     <div className="card">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 600 }}>{t('vivo.titulo')}</div>
-          {encendido && estado === 'ok' && (
-            <span className="mono" style={{ fontSize: 11, color: 'var(--green)' }}>
-              ● {t('vivo.enVivo')}
-            </span>
-          )}
-        </div>
+        <div style={{ fontSize: 13.5, fontWeight: 600 }}>{t('vivo.titulo')}</div>
 
-        <p style={TEXTO}>{t('vivo.desc')}</p>
+        {/* De quién es. Arriba, no en la letra pequeña. */}
+        <p style={TEXTO}>{t('vivo.desc', { cuenta: cuenta || t('vivo.cuentaGenerica') })}</p>
 
-        {!encendido && (
-          <button className="btn btn-primary" onClick={() => setEncendido(true)} style={{ padding: '0 16px' }}>
-            {t('vivo.conectar')}
-          </button>
-        )}
+        {estado === 'cargando' && <p style={TEXTO}>{t('vivo.cargando')}</p>}
 
-        {encendido && estado === 'conectando' && <p style={TEXTO}>{t('vivo.conectando')}</p>}
-
-        {encendido && estado === 'sin-puente' && (
-          <div style={{ padding: 12, border: '1px solid var(--amber)', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ ...TEXTO, color: 'var(--amber)', fontWeight: 600 }}>{t('vivo.sinPuente')}</div>
-            <p style={TEXTO}>{t('vivo.sinPuenteQue', { url: base })}</p>
-            {local && <p style={TEXTO}>{t('vivo.sinPuenteLocal')}</p>}
+        {estado === 'sin-datos' && (
+          <div style={{ padding: 12, border: '1px solid var(--border)', borderRadius: 8 }}>
+            <p style={TEXTO}>{t('vivo.sinDatos')}</p>
           </div>
         )}
 
-        {encendido && estado === 'error' && (
-          <div style={{ padding: 12, border: '1px solid oklch(0.62 0.13 25)', borderRadius: 8, color: 'oklch(0.8 0.1 25)', fontSize: 12.5, lineHeight: 1.55 }}>
-            {t('vivo.error')}
-          </div>
-        )}
-
-        {encendido && filas.length > 0 && (
+        {filas.length > 0 && (
           <>
+            {/* ⚠️ El aviso de foto vieja va ARRIBA de la tabla, no debajo.
+                Debajo se lee después de haber creído los números. */}
+            {minutos != null && minutos > 60 && (
+              <div
+                style={{
+                  padding: '10px 12px',
+                  border: '1px solid var(--amber)',
+                  borderRadius: 6,
+                  color: 'var(--amber)',
+                  fontSize: 12,
+                  lineHeight: 1.5,
+                }}
+              >
+                {t('vivo.vieja', { h: Math.floor(minutos / 60) })}
+              </div>
+            )}
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: '6px 10px', fontSize: 12.5, alignItems: 'center' }}>
               <span style={CABECERA}>{t('vivo.par')}</span>
               <span style={{ ...CABECERA, textAlign: 'right' }}>{t('vivo.bid')}</span>
@@ -69,17 +80,18 @@ export default function CotizacionesVivo() {
                 <Fila key={q.par} q={q} />
               ))}
             </div>
+
             <p style={{ ...TEXTO, fontSize: 11.5, color: 'var(--text-muted)' }}>
-              {t('vivo.pie')}
-              {actualizadoEl ? ` · ${actualizadoEl.toLocaleTimeString()}` : ''}
+              {t('vivo.pie', {
+                hora: new Date(actualizadoEl).toLocaleString(locale, {
+                  day: 'numeric',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }),
+              })}
             </p>
           </>
-        )}
-
-        {encendido && (
-          <button className="btn-ghost" onClick={() => setEncendido(false)}>
-            {t('vivo.desconectar')}
-          </button>
         )}
       </div>
     </div>
@@ -89,35 +101,27 @@ export default function CotizacionesVivo() {
 function Fila({ q }) {
   return (
     <>
-      <span className="mono" style={{ fontWeight: 600 }}>
+      {/* `dir="ltr"` fijo en todo: son códigos y números, y en árabe se
+          dibujarían al revés. Es el error que ya mordió cuatro veces aquí. */}
+      <span className="mono" dir="ltr" style={{ fontWeight: 600 }}>
         {q.par}
       </span>
-      <span className="mono" style={{ textAlign: 'right' }}>
+      <span className="mono" dir="ltr" style={{ textAlign: 'right' }}>
         {q.bid.toFixed(q.dec)}
       </span>
-      <span className="mono" style={{ textAlign: 'right' }}>
+      <span className="mono" dir="ltr" style={{ textAlign: 'right' }}>
         {q.ask.toFixed(q.dec)}
       </span>
       {/* El spread se pinta en ámbar cuando pasa de 3 pips: por encima de ahí
           se come una parte seria de un objetivo corto, y conviene verlo antes
           de entrar, no después. */}
-      <span className="mono" style={{ textAlign: 'right', color: q.spread > 3 ? 'var(--amber)' : 'var(--text-secondary)' }}>
+      <span
+        className="mono"
+        dir="ltr"
+        style={{ textAlign: 'right', color: q.spread > 3 ? 'var(--amber)' : 'var(--text-secondary)' }}
+      >
         {q.spread.toFixed(1)}
       </span>
     </>
   )
-}
-
-const TEXTO = {
-  margin: 0,
-  fontSize: 12.5,
-  color: 'var(--text-secondary)',
-  lineHeight: 1.55,
-}
-
-const CABECERA = {
-  fontSize: 10.5,
-  letterSpacing: '0.06em',
-  textTransform: 'uppercase',
-  color: 'var(--text-muted)',
 }

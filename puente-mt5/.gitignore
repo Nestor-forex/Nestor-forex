@@ -1,0 +1,10 @@
+# EL PERMISO DE GITHUB NUNCA SE SUBE.
+#
+# `bridge_mt5.py` lo busca en un archivo `token.txt` al lado suyo. Este
+# repositorio es PUBLICO: si ese archivo se colara en un commit, el permiso
+# quedaria a la vista de cualquiera — el mismo agujero que ya se cerro con la
+# llave de Twelve Data el 2026-09-03.
+#
+# Esta linea es una red de seguridad, no la unica proteccion: el archivo vive
+# en el computador de Nestor, no aqui.
+token.txt
