@@ -306,7 +306,7 @@ export default {
     previsto: 'previsto',
     anterior: 'anterior',
     viejo: 'Este calendário está há mais de um dia sem atualizar. Pode faltar algo do que vem.',
-    pie: 'Só se mostram os dados de impacto alto e médio das 8 moedas da varredura; os de impacto baixo ficam de fora porque não movem uma vela diária. As horas são as do seu telemóvel. Fonte: ForexFactory.',
+    pie: 'Só se mostram os dados de impacto alto e médio das 8 moedas da varredura; os de impacto baixo ficam de fora porque encobririam os que importam. As horas são as do seu telemóvel. Fonte: ForexFactory.',
   },
   correl: {
     titulo: (v) => `Pares que se movem quase igual (${v.n})`,
@@ -355,7 +355,7 @@ export default {
 
   vivo: {
     titulo: 'O que custa abrir a operação',
-    desc: (v) => `Preço de compra e de venda direto do MetaTrader 5. É a única coisa que mostra o spread REAL que o corretor cobra — a varredura acima trabalha com velas diárias e não o sabe. ⚠️ São os de ${v.cuenta}: se o seu corretor for outro, os seus números serão diferentes.`,
+    desc: (v) => `Preço de compra e de venda direto do MetaTrader 5. É a única coisa que mostra o spread REAL que o corretor cobra — a varredura acima trabalha com velas e não o sabe. ⚠️ São os de ${v.cuenta}: se o seu corretor for outro, os seus números serão diferentes.`,
     cuentaGenerica: 'uma conta real',
     cargando: 'A procurar os últimos preços…',
     sinDatos: 'Ainda não há preços do corretor. A ponte só os publica enquanto o computador onde corre o MetaTrader 5 estiver ligado.',

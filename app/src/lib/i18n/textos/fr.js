@@ -306,7 +306,7 @@ export default {
     previsto: 'prévu',
     anterior: 'précédent',
     viejo: 'Ce calendrier n\'a pas été mis à jour depuis plus d\'un jour. Il peut manquer quelque chose.',
-    pie: 'Seules les données à fort et moyen impact des 8 devises du balayage sont affichées ; celles à faible impact sont écartées car elles ne bougent pas une bougie journalière. Les heures sont celles de votre téléphone. Source : ForexFactory.',
+    pie: 'Seules les données à fort et moyen impact des 8 devises du balayage sont affichées ; celles à faible impact sont écartées car elles masqueraient celles qui comptent. Les heures sont celles de votre téléphone. Source : ForexFactory.',
   },
   correl: {
     titulo: (v) => `Paires qui bougent presque pareil (${v.n})`,
@@ -355,7 +355,7 @@ export default {
 
   vivo: {
     titulo: 'Ce que coûte l\'ouverture',
-    desc: (v) => `Prix d'achat et de vente directement depuis MetaTrader 5. C'est la seule chose qui montre le spread RÉEL que prend le courtier — le balayage ci-dessus travaille sur bougies journalières et ne le sait pas. ⚠️ Ils viennent de ${v.cuenta} : si votre courtier est un autre, vos chiffres seront différents.`,
+    desc: (v) => `Prix d'achat et de vente directement depuis MetaTrader 5. C'est la seule chose qui montre le spread RÉEL que prend le courtier — le balayage ci-dessus travaille sur des bougies et ne le sait pas. ⚠️ Ils viennent de ${v.cuenta} : si votre courtier est un autre, vos chiffres seront différents.`,
     cuentaGenerica: 'un compte réel',
     cargando: 'Récupération des derniers prix…',
     sinDatos: 'Pas encore de prix du courtier. Le pont ne les publie que pendant que l\'ordinateur qui fait tourner MetaTrader 5 est allumé.',

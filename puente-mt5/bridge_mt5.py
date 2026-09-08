@@ -71,14 +71,26 @@ CADA_MINUTOS = 15
 # Los simbolos a vigilar. Son los 14 pares de Swing mas los 4 que solo usa
 # Intradia, para que un solo puente sirva a las dos apps.
 #
+# ⚠️ ESTA LISTA SE EQUIVOCO EL 2026-09-08, Y CONVIENE SABER POR QUE.
+# Los 4 de Intradia se escribieron DE MEMORIA y salieron dos mal: iban EURJPY
+# y CADJPY, que no usa ninguna de las dos apps, y faltaban NZDJPY y AUDNZD,
+# que Intradia si usa. Nada fallo —el puente publico 18 pares y parecia
+# correcto— pero eran 18 pares equivocados: Intradia se habria quedado sin
+# precio en dos de los suyos y Nestor tenia dos simbolos abiertos en MT5 para
+# nada. Salieron de comparar con `src/lib/pairs.js` de cada repositorio.
+#
+# La lista de verdad esta en `app/src/lib/pairs.js` de las dos apps, y
+# `app/scripts/prueba-mt5.mjs` (bloque 7) compara esta contra aquella y falla
+# si vuelven a separarse. Al tocar esta lista, correr esa prueba.
+#
 # ⚠️ Si un simbolo NO esta en la Observacion del Mercado de MT5, MT5 no da su
 # precio y el puente lo salta con un aviso. No es un error del puente.
 SYMBOLS = [
     # los 14 de Swing
     "EURUSD", "GBPUSD", "USDJPY", "USDCHF", "USDCAD", "AUDUSD", "NZDUSD",
     "EURCHF", "EURCAD", "EURNZD", "GBPCAD", "GBPJPY", "NZDCHF", "NZDCAD",
-    # los que ademas usa Intradia
-    "EURGBP", "EURJPY", "AUDJPY", "CADJPY",
+    # los 4 que ademas usa Intradia
+    "AUDJPY", "NZDJPY", "AUDNZD", "EURGBP",
 ]
 
 # ─────────────────────────────────────────────────────────────────────────

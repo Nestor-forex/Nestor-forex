@@ -2892,3 +2892,123 @@ se renderizaban a la vez sobre una variable global y el último pisaba a los
 otros dos — los tres salían «sin datos» y parecía un fallo de la app. Se
 separó en tres cargas de página. **Antes de creerse que la app está rota,
 comprobar que el banco de pruebas mide lo que dice.**
+
+---
+
+# Intradía se puso al día: calendario y spread real (2026-09-08)
+
+Néstor preguntó «¿hiciste cambios también en Intradía?». La respuesta era **no
+—todo lo del día había sido solo en Swing—** y al ir a mirar qué le faltaba
+salió un error mío que llevaba horas publicado sin que nada fallara.
+
+## ⚠️ EL ERROR: el puente vigilaba 18 pares, y dos no los usa nadie
+
+`SYMBOLS` en `puente-mt5/bridge_mt5.py` se escribió **de memoria**. Los 14 de
+Swing salieron bien; los 4 «que además usa Intradía» salieron así:
+
+| escrito | real (`pairs.js` de Intradía) |
+|---|---|
+| EUR/GBP ✅ · AUD/JPY ✅ | EUR/GBP · AUD/JPY |
+| **EUR/JPY ❌ · CAD/JPY ❌** | **NZD/JPY · AUD/NZD** |
+
+**Y no falló nada.** El puente publicó 18 pares con precios reales, la cuenta
+cuadraba (18 = 14 + 4) y el archivo se veía perfecto. Néstor incluso añadió
+EURJPY y CADJPY a su Observación del Mercado siguiendo esa lista. Solo se vio
+al abrir el `pairs.js` del otro repositorio y comparar par por par.
+
+**Consecuencia práctica:** la tarjeta de precios de Intradía enseña hoy 16 de
+sus 18 pares. Se comprobó en el navegador con el archivo real de producción: la
+tabla sale entera menos NZD/JPY y AUD/NZD.
+
+### El arreglo, que no es «tener más cuidado»
+
+`app/scripts/prueba-mt5.mjs` bloque 7: lee `bridge_mt5.py` **como texto** (Node
+no importa Python, y el puente necesita MetaTrader5 instalado), saca `SYMBOLS`,
+y exige cuatro cosas — que estén los 14 de Swing (sacados de `pairs.js`, así que
+si Swing añade un par lo pide solo), que estén los 4 de Intradía, que no haya
+ninguno repetido, y **que no sobre ninguno**. Esa última es la que cazó el
+error: EUR/JPY y CAD/JPY no rompían nada, solo hacían trabajar a MT5 de balde.
+
+Comprobado que **muerde**: con la lista vieja puesta a propósito fallan dos
+comprobaciones y nombran los cuatro pares. La lista buena la deja en verde.
+
+⚠️ Los 4 de Intradía van **escritos a mano** en esa prueba y no hay forma de
+evitarlo: su `pairs.js` vive en el otro repositorio y la prueba corre sin red.
+Están escritos ahí Y en la nota de PRIMOS de `pairs.js` en `gemelos.mjs`.
+
+## Lo que se portó a Intradía, y lo que NO
+
+| | portado | por qué |
+|---|---|---|
+| Calendario económico | ✅ | En Intradía pesa MÁS: una operación empieza y acaba dentro de esas horas |
+| Precios y spread del bróker | ✅ | El puente ya publicaba los 18 pares a propósito |
+| Correlación entre pares | ❌ | La ventana de 60 sesiones son 60 HORAS ahí: 2,5 días. Elegir la de intradía pide mirar SUS datos |
+| Clima del par | ❌ | Ya estaba decidido: los umbrales de ATR no se pueden copiar |
+| Mediciones en pantalla | ❌ | Son las de cada app; enseñar las de la hermana sería mentir con números verdaderos |
+
+## Seis archivos nuevos son GEMELOS, y uno de ellos es la propia lista
+
+`calendario.js`, `Calendario.jsx`, `publicar-calendario.mjs`,
+`prueba-calendario.mjs`, `useMT5Quotes.js` y `CotizacionesVivo.jsx`. Más
+`scripts/gemelos.mjs` **a sí mismo**: es el archivo que dice qué no puede
+separarse, así que es el último que puede permitirse separarse — si se le añade
+un gemelo en una app y no en la otra, cada repositorio vigila una lista distinta
+y ninguno lo dice. Ya eran idénticos por casualidad; ahora está comprobado.
+
+Para que lo fueran hubo que quitar tres frases que decían «vela diaria»:
+
+- **`calendario.js`, el filtro de impacto bajo.** Decía «ninguno mueve una vela
+  diaria». En velas de una hora sí mueven algo, así que la tentación era
+  dejarlos en Intradía. Pero el motivo real de quitarlos **no es que no muevan
+  el precio: es que treinta líneas de ruido tapan las dos que importan**, y eso
+  vale igual en las dos. Queda idéntico, con el porqué escrito dentro.
+- **`calendario.js`, las 48 horas.** Decía «aquí cada vela es un día». No mide
+  cuánto dura una operación: mide **hasta dónde se ve venir algo**. Saber que
+  hay Fed esta noche cambia lo que se hace esta mañana en las dos.
+- **`vivo.desc` en los 13 idiomas.** «trabaja con velas diarias» → «trabaja con
+  velas». Y `calendario.pie` pasó a decir el motivo verdadero.
+
+📌 Las tres se reescribieron **neutras en las DOS apps** en vez de crear una
+diferencia nueva. Cada frase con «diaria» dentro de un archivo gemelo es una
+divergencia esperando a ocurrir.
+
+## Los dos que siguen siendo PRIMOS
+
+- **`useCalendario.js`**: cada app publica y lee SU calendario. El contenido es
+  el mismo —las 8 divisas coinciden— pero si Intradía leyera el archivo de
+  Swing, un fallo del workflow de Swing la dejaría sin calendario y nadie sabría
+  dónde buscar. Bajar el feed no cuesta ni un crédito: la independencia sale
+  gratis. De paso, la clave de caché pasó de `nf_calendario_v1` (sin prefijo, en
+  las dos) a `clave('calendario_v1')`.
+- **`prueba-mt5.mjs`**: el bloque 7 abre el puente, y el puente vive en un solo
+  sitio. Un puente, una casa, una comprobación.
+
+## ⚠️ El puente es UNO y sirve a las dos apps
+
+`useMT5Quotes.js` de Intradía apunta a la rama `datos` **de Swing**, que es
+donde vive `bridge_mt5.py`. Por eso el archivo es gemelo exacto: la dirección es
+la misma y cada app filtra con su propio `PAIR_NAMES`. Dos puentes serían dos
+programas que Néstor tendría que arrancar cada mañana.
+
+## Cómo se verificó
+
+Lint, build y las 18 pruebas sin internet en Intradía (solo falla
+`prueba-aviso-real`, que pide el secreto VAPID y manda un aviso de verdad).
+Comprobado por máquina que **todas** las claves de i18n que usan los dos
+componentes existen en el diccionario de Intradía, incluidas las nueve
+categorías y los tres niveles de impacto — un `t()` sin clave no da error, sale
+en blanco.
+
+Y en **Chromium**, componente aislado (las dos tarjetas están detrás de
+Firebase), con el `calendario.json` y el `mt5.json` **reales de producción**, en
+cinco cargas de página separadas:
+
+| caso | resultado |
+|---|---|
+| español | 6 eventos agrupados por día, con categoría entre paréntesis; 16 pares con su spread |
+| **árabe** | títulos en árabe, y los códigos de par y los números en `ltr` — comprobado con el CSS calculado |
+| calendario vacío | **no pinta absolutamente nada** |
+| calendario nulo | ídem |
+| puente apagado | «Todavía no hay precios del bróker», sin mensaje de error rojo |
+
+Cero errores de consola en todos.

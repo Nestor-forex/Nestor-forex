@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 
+import { clave } from './identidad.js'
+
 // Baja el calendario económico que publica `scripts/publicar-calendario.mjs`.
 //
 // Va en un archivo APARTE del barrido y en su propio hook, a propósito:
@@ -12,7 +14,9 @@ import { useEffect, useState } from 'react'
 const URL_CALENDARIO =
   'https://raw.githubusercontent.com/Nestor-forex/Nestor-forex/datos/estado/calendario.json'
 
-const CACHE_KEY = 'nf_calendario_v1'
+// Con el prefijo de ESTA app: quien tenga las dos instaladas no debe pisarse la
+// caché entre ellas. Ver `identidad.js`.
+const CACHE_KEY = clave('calendario_v1')
 const LIMITE_MS = 12_000
 
 // ⚠️ ESTE HOOK NUNCA DEVUELVE UN ERROR A LA PANTALLA.

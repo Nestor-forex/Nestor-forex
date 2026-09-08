@@ -306,7 +306,7 @@ export default {
     previsto: 'Prognose',
     anterior: 'zuvor',
     viejo: 'Dieser Kalender wurde seit über einem Tag nicht aktualisiert. Es könnte etwas fehlen.',
-    pie: 'Gezeigt werden nur Termine mit hoher und mittlerer Wirkung für die 8 Währungen des Scans; geringe Wirkung bleibt außen vor, weil sie eine Tageskerze nicht bewegt. Die Zeiten sind die Ihres Telefons. Quelle: ForexFactory.',
+    pie: 'Gezeigt werden nur Termine mit hoher und mittlerer Wirkung für die 8 Währungen des Scans; geringe Wirkung bleibt außen vor, weil sie die wichtigen überdecken würde. Die Zeiten sind die Ihres Telefons. Quelle: ForexFactory.',
   },
   correl: {
     titulo: (v) => `Paare, die sich fast gleich bewegen (${v.n})`,
@@ -355,7 +355,7 @@ export default {
 
   vivo: {
     titulo: 'Was die Eröffnung kostet',
-    desc: (v) => `Geld- und Briefkurs direkt aus MetaTrader 5. Nur das zeigt den ECHTEN Spread, den der Broker nimmt — der Scan oben arbeitet mit Tageskerzen und kennt ihn nicht. ⚠️ Sie stammen von ${v.cuenta}: bei einem anderen Broker sind Ihre Zahlen andere.`,
+    desc: (v) => `Geld- und Briefkurs direkt aus MetaTrader 5. Nur das zeigt den ECHTEN Spread, den der Broker nimmt — der Scan oben arbeitet mit Kerzen und kennt ihn nicht. ⚠️ Sie stammen von ${v.cuenta}: bei einem anderen Broker sind Ihre Zahlen andere.`,
     cuentaGenerica: 'einem Echtgeldkonto',
     cargando: 'Aktuelle Kurse werden geholt…',
     sinDatos: 'Noch keine Broker-Kurse. Die Brücke veröffentlicht sie nur, solange der Rechner mit MetaTrader 5 eingeschaltet ist.',
