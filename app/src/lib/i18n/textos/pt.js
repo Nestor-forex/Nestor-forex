@@ -284,6 +284,13 @@ export default {
     estadoPendiente: 'pendente',
   },
 
+  correl: {
+    titulo: (v) => `Pares que se movem quase igual (${v.n})`,
+    intro: 'Antes de abrir duas operações ao mesmo tempo, veja se estes pares andam juntos. Se andam, você não está dividindo o risco: está fazendo a mesma aposta com o dobro do tamanho.',
+    juntos: 'Movem-se juntos',
+    opuestos: 'Movem-se ao contrário',
+    pie: 'Medido sobre as variações de preço das últimas 60 sessões. De 0 a 1: quanto mais perto de 1, mais parecidos. O sinal de menos significa que vão em direções opostas, e isso é o mesmo risco.',
+  },
   glosario: {
     titulo: 'O que significam estes termos?',
     terminos: [

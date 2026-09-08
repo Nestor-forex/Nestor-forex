@@ -2177,6 +2177,10 @@ existe código enchufado a la app del que la memoria no dice ni una palabra.
 
 ## Lo pendiente cuando se retome
 
+📌 **Parte de esto ya está resuelto** — ver «El puente de MT5 apareció» al final
+de este archivo: los archivos aparecieron el mismo día y están en `puente-mt5/`.
+Lo que sigue abajo se deja como estaba porque explica de dónde venía la pregunta.
+
 1. Escribir (o recuperar) el servidor de Python y **guardarlo en el repo**.
 2. Decidir dónde vive: en el computador de Néstor solo sirve para él y solo
    con MT5 abierto. Para los suscriptores haría falta un servidor de verdad, y
@@ -2360,3 +2364,137 @@ dejaría de ser una suposición.
 2. Si Néstor encuentra el puente viejo en su computador (no recuerda dónde
    está). Si no aparece, **se escribe de cero y esta vez SÍ va al repositorio**,
    que es la causa del problema: la mitad JS se guardó y la de Python no.
+
+---
+
+# La pantalla de la correlación (2026-09-08)
+
+`app/src/components/Correlacion.jsx`, tarjeta plegable en el tablero completo,
+justo debajo del glosario. Cierra la #2 de la fase de información.
+
+## Tres decisiones de diseño que no son adorno
+
+⚠️ **NO ES UNA MATRIZ.** Con 14 pares serían 91 casillas, ilegibles en un
+teléfono y sin jerarquía ninguna: el que va a 0,02 ocuparía lo mismo que el que
+va a 0,95. Se enseña la LISTA de los que pasan el umbral, ordenada por tamaño,
+que es exactamente lo que hay que mirar antes de abrir dos operaciones.
+
+⚠️ **Las negativas se pintan IGUAL DE GRANDES**, con su propia etiqueta («Se
+mueven al revés»). Dos pares a −0,9 abren y cierran la misma apuesta.
+Empequeñecerlas por ser negativas sería esconder la mitad del riesgo.
+
+⚠️ **El número NO se pinta de verde ni de rojo.** Aquí ninguno de los dos lados
+es «bueno» —los dos son el mismo riesgo— y el color sugeriría lo contrario. Es
+la decisión OPUESTA a la de `SetupDetalle`, donde el color va por lo que
+significa en plata; aquí no significa nada en plata.
+
+Va plegada por defecto, como el glosario, con **el número de parejas en el
+título** para que se sepa si vale la pena abrirla sin abrirla.
+
+## Verificado en Chromium, y qué se miró
+
+Con las correlaciones **reales del barrido de producción**, componente aislado
+(el tablero está detrás de Firebase — misma técnica que con `HistorialTab`).
+
+| qué se comprobó | resultado |
+|---|---|
+| Español | «Pares que se mueven casi igual (14)», 14 filas ordenadas |
+| **Árabe** | título en árabe y **los códigos de par siguen en `ltr`** ✅ |
+| Tarjeta vacía | **no pinta absolutamente nada** — ni título ni «no hay» |
+| Errores de consola | **ninguno**; la página pide 3 archivos y los 3 cargan |
+
+📌 Lo del árabe se comprobó **a propósito y con el CSS calculado**
+(`getComputedStyle(...).direction === 'ltr'`), no de vista: es el error que ya
+mordió dos veces en este repo (el gráfico y el clima). `dir="ltr"` fijo en los
+nombres de par y en el número.
+
+📌 Y la tarjeta vacía se comprobó **en la misma página**, renderizando dos: una
+con datos y otra sin. Un barrido viejo sin `correl` no debe dejar una tarjeta
+huérfana que haga pensar que la app está rota.
+
+## Los textos, en los 13 idiomas
+
+Cinco claves nuevas (`correl.*`). `titulo` es **función en los 13** porque lleva
+el número dentro y cada idioma ordena la frase distinto. Comprobado con
+`prueba-idiomas.mjs`.
+
+⚠️ Detalle del entorno, para la próxima vez: el banco de pruebas aislado hay que
+construirlo **DENTRO de `app/`** (una carpeta temporal), no en el scratchpad, o
+Vite no resuelve `react-dom/client`. Y Playwright necesita
+`executablePath: '/opt/pw-browsers/chromium'`.
+
+---
+
+# El puente de MT5 apareció, y desmiente algo que dije ese mismo día (2026-09-08)
+
+Néstor encontró en su computador los dos archivos que faltaban y los pegó en el
+chat. Están guardados **tal cual, sin cambiar una línea**, en `puente-mt5/`
+(`bridge_mt5.py`, `Iniciar_Ecosistema.bat` y un `README.md` con el detalle
+completo). Se guardan como DOCUMENTO: ni el build ni ningún workflow los toca.
+
+## 📌 Lo que desmienten
+
+Esa misma mañana le dije que **su PC no podía servir de servidor** por el
+bloqueo de contenido mixto (una página HTTPS no puede llamar a `http://`), y
+que saltárselo pedía dominio, certificado, IP fija y abrir un puerto.
+
+**El diagnóstico era correcto y la pregunta ya estaba resuelta desde antes.** El
+puente **nunca recibió visitas**: hace `POST` a
+`https://nestor-forex-backend.onrender.com/api/mt5/update`, o sea a un servidor
+alojado **con HTTPS**, al que su PC solo le ESCRIBE. Es exactamente el patrón
+que le propuse como novedad —«que tu PC no reciba visitas: que publique»— y que
+él ya venía usando.
+
+⚠️ **Cuarta vez que se construye o se diseña algo que ya existía en el
+proyecto.** Aquí ni siquiera es que la memoria mintiera: es que nadie miró. La
+regla del 2026-09-04 sigue siendo la misma y hay que aplicarla antes de
+diseñar, no después: **buscarlo primero en el repositorio y preguntarle a
+Néstor qué tiene en su máquina.**
+
+## ⚠️ LAS DOS MITADES NO ENCAJAN, y hay que decidirlo antes de tocar nada
+
+| | `app/src/lib/useMT5Quotes.js` (repo) | `bridge_mt5.py` (PC) |
+|---|---|---|
+| dirección | `GET {VITE_API_URL}/quotes` | `POST .../api/mt5/update` |
+| quién habla | la app **pide** | el puente **empuja** |
+| qué viaja | `bid`, `ask` | velas `high/low/close/volume` |
+| cada cuánto | 2 s, desde el navegador | 15 s, desde el PC |
+
+No son dos partes de lo mismo: son **dos intentos distintos** que no se hablan.
+Y la diferencia no es de formato — **`bid`/`ask` son lo único que da el spread
+real** (hoy estimado a mano en `SPREAD_PIPS`, de donde salen TODOS los números
+del banco de pruebas) y **`tick_volume` es lo único que da actividad por vela**,
+justo lo que el pie del reporte dice desde siempre que falta. **Hacen falta los
+dos**, así que la salida no es elegir uno.
+
+## Lo que falta y lo que hay que preguntar
+
+- **Solo 5 pares** (`USDJPY`, `GBPCAD`, `USDCAD`, `EURUSD`, `GBPUSD`); Swing
+  necesita 14 e Intradía 18. Y cada símbolo tiene que estar en la Observación
+  del Mercado de MT5 o MT5 no lo entrega.
+- ⚠️ **`nestor-forex-backend` (su `server.js`) sigue sin estar en ningún
+  repositorio.** Es el siguiente archivo que hay que traer, por la misma razón
+  que estos dos.
+- Tres preguntas sin respuesta: ¿el servicio de Render sigue vivo? ¿el `POST`
+  pide alguna contraseña —si no, **cualquiera puede mandarle precios falsos**—?
+  ¿el servidor guarda historial o solo el último dato?
+
+## ✅ Lo que sí está bien
+
+**No hay ninguna credencial en estos archivos.** `mt5.initialize()` se llama
+**sin argumentos**: se engancha al MT5 que ya está abierto con la sesión
+iniciada a mano. Por eso se pueden guardar en un repositorio público. Y el
+puente **solo LEE** (`copy_rates_from_pos`, `symbol_info_tick`): no abre, no
+cierra y no modifica nada, así que ni metiéndose en el servidor se podría
+operar con su cuenta.
+
+## La recomendación cuando se retome
+
+**Publicar a la rama `datos`**, como todo lo demás del proyecto: el puente
+escribe `estado/mt5.json` igual que el vigía escribe `barrido.json`. Así el
+servidor de Render deja de hacer falta —ni pagarlo, ni preguntarse si sigue
+vivo— y con el PC apagado la app enseña el último dato **con su hora**, como ya
+hace con «Sin conexión — mostrando el barrido guardado del…».
+
+⚠️ Y rotularlo por lo que es: el spread de **la cuenta de Néstor en AvaTrade**,
+nunca «tu spread».

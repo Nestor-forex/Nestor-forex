@@ -284,6 +284,13 @@ export default {
     estadoPendiente: 'offen',
   },
 
+  correl: {
+    titulo: (v) => `Paare, die sich fast gleich bewegen (${v.n})`,
+    intro: 'Bevor Sie zwei Positionen gleichzeitig eröffnen, prüfen Sie, ob diese Paare zusammen laufen. Wenn ja, verteilen Sie das Risiko nicht: Sie setzen dieselbe Wette in doppelter Größe.',
+    juntos: 'Sie laufen zusammen',
+    opuestos: 'Sie laufen gegenläufig',
+    pie: 'Gemessen an den Kursänderungen der letzten 60 Sitzungen. Von 0 bis 1: je näher an 1, desto ähnlicher. Ein Minuszeichen bedeutet Gegenrichtung, und das ist dasselbe Risiko.',
+  },
   glosario: {
     titulo: 'Was bedeuten diese Begriffe?',
     terminos: [
