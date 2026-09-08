@@ -2269,3 +2269,94 @@ puede ver, y por eso la correlación medida aporta algo que la regla de dedo no.
 **Falta la pantalla.** El dato ya se calcula, se publica y está probado; la
 tarjeta en el tablero va aparte y con revisión en navegador, como manda la
 costumbre de este repo para todo lo visual.
+
+---
+
+# La correlación, explicada para suscriptores (2026-09-08)
+
+Néstor pidió guardar esto **tal cual** para la exposición a suscriptores, «sobre
+todo principiantes». Son tres decisiones técnicas contadas en lenguaje llano, y
+funcionan como argumento de venta porque **cada una es una forma de mentir que
+la app decidió no usar**:
+
+> **1. Se calcula sobre los cambios de cada día, no sobre el precio.**
+> Hice una prueba con un mercado inventado: el método malo da **+0,99** y el
+> bueno **−1,00** sobre los mismos datos. Casi todo el mundo lo hace mal.
+>
+> **2. Cuando no se puede calcular dice «no lo sé», no «cero».**
+> Si dijera cero, tú abrirías los dos pares creyendo que estás diversificando.
+>
+> **3. Las negativas cuentan igual.**
+> Dos pares a −0,9 abren y cierran la misma apuesta: pagas dos spreads para
+> nada.
+
+📌 **Por qué esto vende:** no es «nuestra app es mejor», es «así es como se hace
+bien y aquí está el número que lo demuestra». Un principiante aprende algo
+verdadero leyéndolo, y eso es exactamente el producto — información, no
+promesas. Es del mismo tipo que la explicación del volumen y la de TradingView.
+
+---
+
+# ¿Puede el computador de Néstor ser el servidor? (2026-09-08)
+
+Preguntó si su PC puede servir el puente de MT5 a los suscriptores,
+manteniéndolo encendido de 6 am a 4 pm de lunes a viernes y avisándoles.
+
+Mandó **foto de su MT5 real** (Ava-Real 1-MT5, Ava Trade Markets Ltd), con la
+ventana de Observación del Mercado enseñando Bid y Ask por símbolo — que es
+justo lo que `useMT5Quotes` lee. Dato útil: **sus símbolos no llevan sufijo**
+(`AUDCAD`, `AUDUSD`, no `AUDUSD.r`), así que `normalizarPar` funciona tal cual.
+
+## ⚠️ Lo que hace inviable exponer su PC directamente
+
+**No es la disponibilidad: es que el navegador lo va a bloquear.** La app se
+sirve por **HTTPS** desde GitHub Pages, y un navegador **rechaza** que una
+página HTTPS llame a una dirección `http://`. Se llama bloqueo de contenido
+mixto y no se puede desactivar desde la página.
+
+Para saltarlo haría falta: dominio propio + certificado + IP fija (la de una
+casa cambia sola) + abrir un puerto del router al mundo entero — **con MT5 y su
+cuenta REAL corriendo en esa misma máquina**.
+
+## ✅ La solución, y es la que el proyecto ya usa
+
+**Que su PC no reciba visitas: que PUBLIQUE.** El puente escribe
+`estado/mt5.json` en la rama `datos` cada N minutos, exactamente como el vigía
+publica `barrido.json`, y la app lo lee de ahí.
+
+| | exponer el PC | publicar a la rama `datos` |
+|---|---|---|
+| HTTPS | ❌ bloqueado por el navegador | ✅ ya es HTTPS |
+| IP de casa | ❌ cambia sola | ✅ no hace falta |
+| Puertos del router | ❌ abiertos al mundo | ✅ ninguno |
+| Si el PC está apagado | ❌ la app falla | ✅ enseña el último dato con su hora |
+| Riesgo sobre la cuenta real | alto | ninguno: solo salidas |
+
+📌 Con eso el horario deja de ser un problema que hay que anunciar y pasa a ser
+un detalle: la app enseña «spread de AvaTrade a las 15:40» y el suscriptor sabe
+cuándo se tomó. Es el mismo patrón del aviso «Sin conexión — mostrando el
+barrido guardado del [fecha]» que ya existe.
+
+## ⚠️ La honestidad que hay que poner en pantalla
+
+Es **el spread de la cuenta de Néstor en AvaTrade**, no el del suscriptor. Hay
+que rotularlo así y nunca como «tu spread»: un suscriptor con otro bróker vería
+números que no son los suyos. Sigue siendo útil —es un spread REAL de un bróker
+real, mucho mejor que la tabla estimada `SPREAD_PIPS`— pero solo si se dice de
+quién es.
+
+## Lo que ganaría el proyecto, aparte de la pantalla
+
+**Sustituir `SPREAD_PIPS` por medidas reales.** Hoy esa tabla está escrita a
+mano «en el lado alto de lo normal», y de ella salen TODOS los números del
+banco de pruebas. Con spreads reales por par, medidos a distintas horas,
+dejaría de ser una suposición.
+
+## Antes de construirlo hay que comprobar dos cosas
+
+1. Que los **14 pares de la app** estén en la Observación del Mercado de MT5.
+   En la foto se ven ~13 símbolos y la lista está cortada; MT5 solo entrega
+   precio de los símbolos que están ahí.
+2. Si Néstor encuentra el puente viejo en su computador (no recuerda dónde
+   está). Si no aparece, **se escribe de cero y esta vez SÍ va al repositorio**,
+   que es la causa del problema: la mitad JS se guardó y la de Python no.
