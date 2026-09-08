@@ -10,6 +10,7 @@ import BarraFuerza from './BarraFuerza'
 import Sparkline from './Sparkline'
 import Glosario from './Glosario'
 import ClimaMercado from './ClimaMercado'
+import Correlacion from './Correlacion'
 
 function Chip({ children, color }) {
   return (
@@ -114,7 +115,7 @@ function RazonList({ items, emptyText }) {
   )
 }
 
-export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], corte }) {
+export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], correlaciones = [], corte }) {
   const { t, locale } = useIdioma()
   const fecha = useMemo(() => fmtFechaHoy(locale), [locale])
   const sesion = t(claveSesionActiva())
@@ -159,6 +160,11 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
         </section>
 
         <Glosario />
+
+        {/* Debajo del glosario a proposito: es contexto de RIESGO, no una
+            senal. Va antes de las tablas para que se lea al decidir cuantas
+            operaciones abrir, no despues de haberlas elegido. */}
+        <Correlacion correlaciones={correlaciones} />
 
         {stale && (
           <div style={{ padding: '12px 14px', border: '1px solid var(--amber)', borderRadius: 6, color: 'var(--amber)', fontSize: 13, lineHeight: 1.5 }}>

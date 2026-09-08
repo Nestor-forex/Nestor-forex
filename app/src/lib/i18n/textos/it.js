@@ -280,6 +280,13 @@ export default {
     estadoPendiente: 'in attesa',
   },
 
+  correl: {
+    titulo: (v) => `Coppie che si muovono quasi uguale (${v.n})`,
+    intro: 'Prima di aprire due operazioni insieme, guarda se queste coppie vanno a braccetto. Se sì, non stai distribuendo il rischio: stai facendo la stessa scommessa al doppio.',
+    juntos: 'Si muovono insieme',
+    opuestos: 'Si muovono al contrario',
+    pie: 'Misurato sulle variazioni di prezzo delle ultime 60 sedute. Da 0 a 1: più vicino a 1, più si somigliano. Il segno meno indica direzioni opposte, ed è lo stesso rischio.',
+  },
   glosario: {
     titulo: 'Cosa significano questi termini?',
     terminos: [

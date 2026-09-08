@@ -284,6 +284,13 @@ export default {
     estadoPendiente: 'en attente',
   },
 
+  correl: {
+    titulo: (v) => `Paires qui bougent presque pareil (${v.n})`,
+    intro: 'Avant d\'ouvrir deux positions à la fois, regardez si ces paires vont ensemble. Si oui, vous ne répartissez pas le risque : vous faites le même pari en double.',
+    juntos: 'Elles vont ensemble',
+    opuestos: 'Elles vont en sens inverse',
+    pie: 'Mesuré sur les variations de prix des 60 dernières séances. De 0 à 1 : plus c\'est proche de 1, plus elles se ressemblent. Le signe moins indique des sens opposés, et c\'est le même risque.',
+  },
   glosario: {
     titulo: 'Que veulent dire ces termes ?',
     terminos: [

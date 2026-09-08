@@ -2360,3 +2360,61 @@ dejaría de ser una suposición.
 2. Si Néstor encuentra el puente viejo en su computador (no recuerda dónde
    está). Si no aparece, **se escribe de cero y esta vez SÍ va al repositorio**,
    que es la causa del problema: la mitad JS se guardó y la de Python no.
+
+---
+
+# La pantalla de la correlación (2026-09-08)
+
+`app/src/components/Correlacion.jsx`, tarjeta plegable en el tablero completo,
+justo debajo del glosario. Cierra la #2 de la fase de información.
+
+## Tres decisiones de diseño que no son adorno
+
+⚠️ **NO ES UNA MATRIZ.** Con 14 pares serían 91 casillas, ilegibles en un
+teléfono y sin jerarquía ninguna: el que va a 0,02 ocuparía lo mismo que el que
+va a 0,95. Se enseña la LISTA de los que pasan el umbral, ordenada por tamaño,
+que es exactamente lo que hay que mirar antes de abrir dos operaciones.
+
+⚠️ **Las negativas se pintan IGUAL DE GRANDES**, con su propia etiqueta («Se
+mueven al revés»). Dos pares a −0,9 abren y cierran la misma apuesta.
+Empequeñecerlas por ser negativas sería esconder la mitad del riesgo.
+
+⚠️ **El número NO se pinta de verde ni de rojo.** Aquí ninguno de los dos lados
+es «bueno» —los dos son el mismo riesgo— y el color sugeriría lo contrario. Es
+la decisión OPUESTA a la de `SetupDetalle`, donde el color va por lo que
+significa en plata; aquí no significa nada en plata.
+
+Va plegada por defecto, como el glosario, con **el número de parejas en el
+título** para que se sepa si vale la pena abrirla sin abrirla.
+
+## Verificado en Chromium, y qué se miró
+
+Con las correlaciones **reales del barrido de producción**, componente aislado
+(el tablero está detrás de Firebase — misma técnica que con `HistorialTab`).
+
+| qué se comprobó | resultado |
+|---|---|
+| Español | «Pares que se mueven casi igual (14)», 14 filas ordenadas |
+| **Árabe** | título en árabe y **los códigos de par siguen en `ltr`** ✅ |
+| Tarjeta vacía | **no pinta absolutamente nada** — ni título ni «no hay» |
+| Errores de consola | **ninguno**; la página pide 3 archivos y los 3 cargan |
+
+📌 Lo del árabe se comprobó **a propósito y con el CSS calculado**
+(`getComputedStyle(...).direction === 'ltr'`), no de vista: es el error que ya
+mordió dos veces en este repo (el gráfico y el clima). `dir="ltr"` fijo en los
+nombres de par y en el número.
+
+📌 Y la tarjeta vacía se comprobó **en la misma página**, renderizando dos: una
+con datos y otra sin. Un barrido viejo sin `correl` no debe dejar una tarjeta
+huérfana que haga pensar que la app está rota.
+
+## Los textos, en los 13 idiomas
+
+Cinco claves nuevas (`correl.*`). `titulo` es **función en los 13** porque lleva
+el número dentro y cada idioma ordena la frase distinto. Comprobado con
+`prueba-idiomas.mjs`.
+
+⚠️ Detalle del entorno, para la próxima vez: el banco de pruebas aislado hay que
+construirlo **DENTRO de `app/`** (una carpeta temporal), no en el scratchpad, o
+Vite no resuelve `react-dom/client`. Y Playwright necesita
+`executablePath: '/opt/pw-browsers/chromium'`.

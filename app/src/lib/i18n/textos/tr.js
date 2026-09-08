@@ -279,6 +279,13 @@ export default {
     estadoPendiente: 'beklemede',
   },
 
+  correl: {
+    titulo: (v) => `Neredeyse aynı hareket eden pariteler (${v.n})`,
+    intro: 'Aynı anda iki işlem açmadan önce, bu paritelerin birlikte hareket edip etmediğine bakın. Ediyorlarsa riski dağıtmıyorsunuz: aynı bahsi iki katı büyüklükte oynuyorsunuz.',
+    juntos: 'Birlikte hareket ediyorlar',
+    opuestos: 'Ters hareket ediyorlar',
+    pie: 'Son 60 seansın fiyat değişimleri üzerinden ölçüldü. 0 ile 1 arası: 1\'e ne kadar yakınsa o kadar benzer. Eksi işareti ters yönleri gösterir ve bu aynı risktir.',
+  },
   glosario: {
     titulo: 'Bu terimler ne demek?',
     terminos: [

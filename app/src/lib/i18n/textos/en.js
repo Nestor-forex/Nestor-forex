@@ -284,6 +284,13 @@ export default {
     estadoPendiente: 'pending',
   },
 
+  correl: {
+    titulo: (v) => `Pairs that move almost alike (${v.n})`,
+    intro: 'Before opening two trades at once, check whether these pairs move together. If they do, you are not spreading risk: you are making the same bet at double the size.',
+    juntos: 'They move together',
+    opuestos: 'They move opposite',
+    pie: 'Measured on the price changes of the last 60 sessions. From 0 to 1: the closer to 1, the more alike. A minus sign means they move in opposite directions, and that is the same risk.',
+  },
   glosario: {
     titulo: 'What do these terms mean?',
     terminos: [

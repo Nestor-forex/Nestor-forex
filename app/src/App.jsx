@@ -220,6 +220,7 @@ export default function App() {
             vigilancia={mercado.vigilancia}
             setups={mercado.setups}
             setupsReversion={mercado.setupsReversion}
+            correlaciones={mercado.correlaciones}
             corte={mercado.corte}
           />
         )}
