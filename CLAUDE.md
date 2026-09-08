@@ -2641,3 +2641,95 @@ cambiarla si la usa en algún sitio real.
 ⚠️ **Cuando se tape ese agujero, la contraseña va como variable de entorno en
 Render y como secreto de GitHub**, nunca en un archivo. Igual que
 `TWELVEDATA_KEY` el 2026-09-03.
+
+---
+
+# El agujero del backend: NO hay que taparlo, hay que APAGAR el servidor (2026-09-08)
+
+Néstor dijo, con razón, que un agujero de seguridad hay que arreglarlo en el
+momento «porque después se queda olvidado». Al ir a taparlo aparecieron dos
+cosas que cambian cuál es el arreglo correcto.
+
+## 1. La app publicada NUNCA llama a Render
+
+```
+app/.env.production:  VITE_API_URL=http://127.0.0.1:8000
+```
+
+Eso es **el propio aparato de quien abre la app**. Comprobado también sobre el
+build: la palabra `onrender` **no aparece** en `dist/`, y las únicas
+direcciones que quedan compiladas son las de Firebase, `raw.githubusercontent`
+y ese `127.0.0.1`.
+
+O sea que **nada de lo publicado lee ese servidor**. Y aunque `VITE_API_URL`
+apuntara a Render, `CotizacionesVivo` arranca APAGADA y solo pide algo si
+alguien pulsa el botón — así que tampoco hay un panel roto a la vista de nadie.
+
+📌 Y de paso explica por qué el puente «nunca funcionó» en producción: una
+página HTTPS llamando a `http://127.0.0.1` es el bloqueo de contenido mixto,
+justo lo descrito esa misma mañana. La mitad JS lleva meses sin poder funcionar.
+
+## 2. `nestor-forex-backend` NO está en GitHub
+
+La cuenta solo tiene **dos** repositorios: `Nestor-forex` y
+`Nestor-forex-intradia`. El backend vive únicamente en el PC de Néstor y en
+Render.
+
+⚠️ **Consecuencia que hay que tener clarísima:** `puente-mt5/server.js` de este
+repositorio es una **copia de respaldo**, no el código que corre. Arreglarlo
+aquí **NO arregla el servidor vivo**. Haría falta que Néstor lo cambiara en su
+máquina y lo volviera a desplegar.
+
+## ✅ El arreglo, entonces, es APAGAR el servicio de Render
+
+No es pereza, es que endurecer un servidor que no usa nadie es trabajo tirado:
+
+| | tapar el agujero | apagar el servicio |
+|---|---|---|
+| ¿cierra el `POST` abierto? | sí | **sí, del todo** |
+| ¿cierra el `cors()` abierto? | sí | **sí, del todo** |
+| ¿rompe algo publicado? | no | **no — nada lo lee** |
+| ¿hay que desplegar? | **sí**, y Néstor no sabe | no, un clic |
+| ¿sirve si luego se abandona Render? | no, se tira | — |
+
+Y encaja con la recomendación que ya estaba escrita: cuando se retome el
+puente, que **publique a la rama `datos`** como todo lo demás. Sin servidor no
+hay agujeros que tapar, ni servicio que pagar, ni preguntarse si sigue vivo.
+
+⚠️ **Si algún día se decide MANTENER Render**, entonces sí hay que hacer las
+dos cosas —contraseña en el `POST` y `cors()` restringido a los orígenes de las
+dos apps— y la contraseña va como variable de entorno en Render y secreto de
+GitHub, **nunca escrita en el archivo**: los dos repositorios son públicos.
+
+---
+
+# ¿Para qué pasar los spreads a mano si el puente es justo para eso? (2026-09-08)
+
+Néstor preguntó exactamente eso, y **tenía razón**. Queda escrito porque la
+pregunta destapa que yo le estaba pidiendo trabajo que el puente hace mejor.
+
+## La respuesta corta: sí, el puente los sustituye. Pero HOY no da ninguno
+
+⚠️ **El puente tal como está no manda spread.** `bridge_mt5.py` manda velas
+(`high`, `low`, `close`, `tick_volume`). El spread sale de `bid` y `ask`, y eso
+**no lo manda nadie**: lo espera `useMT5Quotes.js`, la mitad que no encaja.
+
+Así que hoy la elección real es:
+
+| | qué da | cuándo |
+|---|---|---|
+| Néstor leyendo la pantalla | 18 números, un instante, una sesión | 5 minutos |
+| El puente arreglado | los mismos 18, **muchas veces al día y solos** | días de trabajo |
+
+**El puente gana por goleada en cuanto funcione** — muchas muestras a distintas
+horas en vez de una foto— así que la lectura a mano es un **parche mientras
+tanto**, y solo vale la pena si el puente se demora.
+
+## Lo que NO cambia con el puente, y hay que decirlo igual
+
+Sea a mano o automático, es **el spread de la cuenta de Néstor en AvaTrade**.
+No es el del suscriptor. Eso hay que rotularlo siempre, y el puente no lo
+arregla.
+
+📌 **Lección para mí:** antes de pedirle trabajo manual, comprobar si algo que
+ya estamos construyendo lo hace solo. Él lo vio y yo no.
