@@ -1,3 +1,4 @@
+import { matrizCorrelacion, paresQueVanJuntos } from './correlacion.js'
 import { crearT } from './i18n/crearT.js'
 import { IDIOMA_BASE } from './i18n/idiomas.js'
 import { VENTAS_PAUSADAS } from './reglas.js'
@@ -198,9 +199,16 @@ export function computarBarrido(fechas, rates, rangosPar = null) {
   const esc = {}
   CCY.forEach((c) => (esc[c] = ((raw[c] - mn) / (mx - mn)) * 10))
 
+  // Los cierres completos de cada par, que NO viajan dentro de `pares` (serían
+  // 300 números por par en el archivo que baja cada miembro). Se guardan aquí
+  // solo el tiempo suficiente para calcular la correlación, unas líneas más
+  // abajo, y se quedan en este ámbito.
+  const seriesCierre = []
+
   const pares = PAIRS.map(([b, q]) => {
     const nombre = b + '/' + q
     const closes = fechas.map((_, i) => px(b, q, i))
+    seriesCierre.push({ name: nombre, serie: closes })
     // Con velas reales, el máximo y el mínimo de cada día. Sin ellas se usa el
     // cierre como las dos cosas, que es exactamente el comportamiento viejo.
     const highs = fechas.map((d, i) => rangosPar?.[d]?.[nombre]?.h ?? closes[i])
@@ -269,7 +277,17 @@ export function computarBarrido(fechas, rates, rangosPar = null) {
   const ratesUSD = { USD: 1 }
   CCY.slice(1).forEach((c) => (ratesUSD[c] = rates[fechas[L]][c]))
 
-  return { fechas, ultima: fechas[L], raw, esc, pares, ratesUSD }
+  // Qué pares se mueven juntos. Es GESTIÓN DE RIESGO, no una predicción: no
+  // dice a dónde va el precio, dice si abrir dos operaciones son dos apuestas
+  // o una del doble de tamaño. Ver la cabecera de `correlacion.js`.
+  //
+  // Va aquí y no en el navegador porque necesita los cierres COMPLETOS, y el
+  // barrido publicado solo lleva los últimos 20 de cada par. Ocupa ~2 KB (91
+  // parejas de los 14 pares), contra los ~370 KB que costaría mandar 60
+  // cierres por par para calcularlo allá.
+  const correl = matrizCorrelacion(seriesCierre)
+
+  return { fechas, ultima: fechas[L], raw, esc, pares, ratesUSD, correl }
 }
 
 // EL FILTRO DE "NO PERSEGUIR", APAGADO HASTA QUE SE MIDA AQUÍ.
@@ -767,5 +785,28 @@ export function derivarVista(
 
   const corte = t('calc_barrido.corte', { fecha: data.ultima })
 
-  return { monedas, pares, compras, ventas, vigilancia, reversiones, setups, setupsReversion, setupsCaida, corte }
+  // Las parejas que se mueven juntas, ya filtradas a las que importan. Pasa
+  // tal cual desde el barrido publicado: `derivarVista` no la calcula porque
+  // no tiene los cierres completos, solo la lleva a la pantalla.
+  //
+  // ⚠️ A diferencia de `setupsCaida`, aquí un barrido viejo SIN `correl` no
+  // revienta: se devuelve lista vacía y la tarjeta no aparece. Es la decisión
+  // contraria y a propósito — allá una lista vacía se confundiría con «hoy no
+  // hubo señales» y borraría historial en silencio; aquí lo único que pasa es
+  // que no se ve una tarjeta informativa hasta que el vigía vuelva a correr.
+  const correlaciones = paresQueVanJuntos(data.correl)
+
+  return {
+    monedas,
+    pares,
+    compras,
+    ventas,
+    vigilancia,
+    reversiones,
+    setups,
+    setupsReversion,
+    setupsCaida,
+    correlaciones,
+    corte,
+  }
 }

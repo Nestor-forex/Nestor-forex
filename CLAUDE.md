@@ -2094,3 +2094,178 @@ para la misma hora, y eso solo puede pasar si no es una medición del mercado.
 📌 **Y ya lo decimos**: el pie del reporte diario lleva desde siempre «Sin
 datos de MT5 no hay tick volume ni spread real del bróker». Esto solo lo
 explica.
+
+---
+
+# La sonda respondió: ForexFactory (2026-09-08)
+
+Lanzada desde Actions, que es donde no hay bloqueo de red. Resultado:
+
+| fuente | qué pasó |
+|---|---|
+| **ForexFactory (FairEconomy)** | ✅ **200, 80 eventos, 75 de nuestras 8 divisas** |
+| ForexFactory por CDN | no responde (`cdn-nfs` no existe) |
+| Trading Economics invitado | **410: «the guest account has been discontinued»** |
+| TradingView | 403 |
+
+**La forma exacta de los datos**, que era lo que no se podía adivinar:
+
+```json
+{"title":"ANZ Job Advertisements m/m","country":"AUD",
+ "date":"2026-09-06T21:30:00-04:00","impact":"Low",
+ "forecast":"","previous":"0.8%"}
+```
+
+Campos: `title` · `country` · `date` · `impact` · `forecast` · `previous`.
+
+📌 **Dos regalos que no se esperaban:** `country` ya viene como CÓDIGO DE
+DIVISA (`AUD`, `USD`…), o sea que no hay que traducir país→divisa; y `date` es
+ISO con huso, así que `new Date()` lo entiende solo. 10,8 KB por semana.
+
+⚠️ El feed cubre **la semana en curso**. Para el vigía diario sobra, pero si
+algún día se quiere «los próximos 7 días» hay que mirar si existe otro archivo.
+
+---
+
+# El COT se lee del archivo oficial, sin librerías (decidido 2026-09-08)
+
+Néstor preguntó qué es una «librería» y, al explicárselo, pidió expresamente
+dejar escrita la decisión: **leer el archivo oficial nosotros mismos cuando sea
+suficientemente simple, para no depender de nadie.**
+
+Queda así para el COT (CFTC). El motivo no es orgullo:
+
+- una librería de un tercero **se abandona, cambia o desaparece**, y el día que
+  pase la app se rompe sin que nadie haya tocado nada;
+- es código ajeno corriendo con nuestros permisos;
+- y la CFTC publica una **API oficial abierta** (Socrata,
+  `publicreporting.cftc.gov`) que devuelve JSON: no hay nada que descomprimir
+  ni ningún formato viejo que descifrar. La librería ahorraría poco.
+
+📌 Es la misma lógica que ya llevó a leer el informe del bróker con código
+propio en vez de conectarse por API, y a que `velas.mjs` pida los 14 pares
+directo. **Menos piezas de otros = menos formas de romperse en silencio.**
+
+---
+
+# ⚠️ HALLAZGO: el puente a MT5 YA EXISTE y no estaba documentado (2026-09-08)
+
+Néstor pidió «armemos un puente de mis apps a MT5 + AvaTrade». Al ir a
+diseñarlo apareció que **la mitad ya está construida y funcionando**:
+
+```
+app/src/lib/useMT5Quotes.js       # el lector, con normalización de símbolos
+app/src/components/CotizacionesVivo.jsx
+app/scripts/prueba-mt5.mjs
+app/src/App.jsx:180               # ← YA ESTÁ ENCHUFADO EN LA APP
+```
+
+Lee `GET /quotes` de un servidor de Python (FastAPI) que corre en el computador
+de Néstor junto a MT5 y da **Bid, Ask y el spread REAL del bróker** — justo lo
+que el pie del reporte dice que falta. La dirección sale de `VITE_API_URL`.
+
+## ⚠️ Lo que FALTA, y es la mitad que importa
+
+**El servidor de Python NO está en este repositorio.** No hay ni un `.py`. O
+sea que hoy la app tiene el enchufe pero no hay nada al otro lado salvo que
+Néstor tenga ese servidor en su máquina.
+
+📌 **Y CLAUDE.md nunca lo mencionó.** Es el reverso exacto de la lección del
+2026-09-04 («que algo esté en la memoria no quiere decir que exista»): aquí
+existe código enchufado a la app del que la memoria no dice ni una palabra.
+**Antes de construir algo, buscarlo en el repositorio.**
+
+## Lo pendiente cuando se retome
+
+1. Escribir (o recuperar) el servidor de Python y **guardarlo en el repo**.
+2. Decidir dónde vive: en el computador de Néstor solo sirve para él y solo
+   con MT5 abierto. Para los suscriptores haría falta un servidor de verdad, y
+   eso es infraestructura nueva con costo.
+3. ⚠️ **Nunca meter credenciales del bróker en la app** — es el mismo agujero
+   que llevó a elegir «importar archivo» en vez de API, y aquí daría acceso al
+   DINERO de alguien.
+4. Con esto sí habría **spread real por par**, que hoy es una tabla estimada
+   `SPREAD_PIPS` a mano.
+
+---
+
+# El argumento de los principiantes (guardado a petición suya, 2026-09-08)
+
+Néstor pidió guardarlo tal cual para la exposición final a los suscriptores.
+Es, hasta hoy, **el mejor argumento de venta que ha salido en toda la
+conversación**:
+
+> Alguien que empieza **no tiene una hora al día y además no sabe qué mirar**.
+> TradingView no le sirve para eso. Esta app sí.
+
+Es más fuerte que el argumento del tiempo a secas, porque son **dos carencias
+a la vez** y TradingView solo podría resolver la primera. Un principiante
+delante de TradingView tiene todas las herramientas y ninguna idea de cuál
+usar; delante de esta app tiene cuatro pestañas y una lista corta.
+
+📌 Y lo dice alguien que **fue ese principiante**: Néstor dice que cuando
+empezó le habría servido y habría pagado por ello. Eso no es una hipótesis de
+marketing, es el único testimonio de primera mano que tiene el proyecto.
+
+---
+
+# Correlación entre pares (2026-09-08). La #2 de la fase de información
+
+```
+app/src/lib/correlacion.js        # la matemática pura
+app/scripts/prueba-correlacion.mjs  # 33 comprobaciones, sin internet
+```
+
+Cumplió lo prometido: **cero datos nuevos y cero créditos**. Se calcula con los
+mismos 300 días que el vigía ya baja.
+
+## Las cuatro decisiones
+
+⚠️ **Sobre los CAMBIOS DIARIOS, nunca sobre el precio.** Correlacionar precios
+a pelo da números altísimos y falsos: dos series que suben durante el año «se
+parecen» aunque su día a día no tenga nada que ver. Hay una prueba con un
+mercado inventado donde el método de precios da **+0,99** y el correcto **−1,00**
+sobre los mismos datos.
+
+⚠️ **`pearson` devuelve `null`, no 0, cuando no se puede calcular.** Un 0 diría
+«estos dos pares no se parecen» y el usuario abriría los dos creyendo que
+diversifica. «No lo sé» y «no se parecen» no son lo mismo.
+
+⚠️ **Las correlaciones NEGATIVAS cuentan igual, y se ordena por valor
+absoluto.** Dos pares a −0,9 abren y cierran la misma apuesta: te quedas
+pagando los dos spreads y nada más. Para el riesgo, −0,9 pesa como +0,9.
+
+⚠️ **Ventana de 60 sesiones**, no 20. Con 20 una coincidencia de dos semanas
+ya se ve como correlación alta y el aviso saltaría por ruido.
+
+## Dónde vive el dato
+
+Se calcula en `computarBarrido` (necesita los cierres COMPLETOS) y **sí se
+publica** en `barrido.json`, al revés que `highs`/`lows`: la app no puede
+recalcularlo porque solo recibe los últimos 20 cierres. Son **2,1 KB medidos**
+—91 parejas— contra los ~370 KB que costaría mandar 60 cierres por par.
+
+⚠️ `derivarVista` **no revienta** si el barrido viejo no trae `correl`:
+devuelve lista vacía y la tarjeta no sale. Es la decisión CONTRARIA a
+`setupsCaida`, y a propósito: allá una lista vacía se confundiría con «hoy no
+hubo señales» y borraría historial; aquí solo se deja de ver una tarjeta.
+
+## Comprobado contra el barrido REAL de producción
+
+Los dos casos más conocidos del Forex salieron correctos, que es la mejor
+señal de que el cálculo está bien:
+
+| pareja | correlación | ¿tiene sentido? |
+|---|---:|---|
+| GBP/JPY y USD/JPY | **+0,95** | sí: las dos las manda el yen |
+| EUR/USD y USD/CHF | **−0,83** | sí: es el par inverso de manual |
+| EUR/USD y GBP/USD | **+0,83** | sí |
+| EUR/NZD y NZD/CAD | −0,87 | sí |
+
+📌 **AUD/USD y NZD/USD no comparten ninguna divisa y se mueven casi igual.** Es
+justo el caso que el aviso del Diario —basado en «comparten una moneda»— NO
+puede ver, y por eso la correlación medida aporta algo que la regla de dedo no.
+
+**Falta la pantalla.** El dato ya se calcula, se publica y está probado; la
+tarjeta en el tablero va aparte y con revisión en navegador, como manda la
+costumbre de este repo para todo lo visual.
