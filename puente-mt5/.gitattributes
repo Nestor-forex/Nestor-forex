@@ -1,0 +1,22 @@
+# LOS .bat SE GUARDAN TAL CUAL, CON SALTOS DE LINEA DE WINDOWS (CRLF).
+#
+# No es una preferencia de estilo. El 2026-09-09 `Iniciar_Puente.bat` no
+# abria NINGUNA ventana al hacer doble clic, y la causa era justo esto: el
+# archivo se escribio en Linux (LF) y `cmd` de Windows no analiza bien un
+# bloque `if ... ( ... )` de varias lineas con saltos LF — aborta el guion y
+# la ventana se cierra antes de que se pueda leer el error.
+#
+# ⚠️ Y AQUI VA `-text`, NO `text eol=crlf`, QUE ES LO QUE PARECE CORRECTO.
+# La diferencia importa por COMO baja Nestor este archivo:
+#
+#   · `text eol=crlf` guarda LF dentro del repositorio y convierte a CRLF
+#     solo al hacer `git checkout`. Nestor no clona el repositorio: baja el
+#     archivo con el boton de descarga de GitHub, y eso entrega los bytes
+#     tal como estan GUARDADOS. O sea que seguiria bajandolo en LF y el
+#     fallo seguiria ahi.
+#   · `-text` le dice a git que no convierta nada en ninguna direccion: lo
+#     que se guarda es exactamente lo que se escribio, CRLF incluido.
+#
+# Comprobado con `git cat-file -p :puente-mt5/Iniciar_Puente.bat`, que
+# ensena lo que el repositorio guarda de verdad — no lo que hay en el disco.
+*.bat -text

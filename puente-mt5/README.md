@@ -72,6 +72,40 @@ documento de lo que hubo.
 (crear acceso directo)**. El `.bat` se apaña solo esté donde esté el acceso
 directo, porque busca su propia carpeta.
 
+⚠️ Ojo con la opción **«Crear acceso directo»** a secas: ésa lo deja **al lado
+del original**, no en el escritorio. La que lo manda al escritorio es la de
+**Enviar a**. Si ya te pasó, no hay que rehacerlo: corta el acceso directo que
+tengas y pégalo en el escritorio.
+
+### ⚠️ Si el doble clic no abre NINGUNA ventana (arreglado el 2026-09-09)
+
+Pasó de verdad, y era un fallo del archivo, no de quien lo abre. Si vuelve a
+pasar, esto es lo que hay que mirar:
+
+**El `.bat` tiene que estar guardado con saltos de línea de Windows (CRLF).**
+La primera versión se escribió en Linux (LF) y llevaba dos bloques
+`if not exist ... ( ... )` repartidos en varias líneas. `cmd` **no analiza bien
+los paréntesis de varias líneas con saltos LF**: aborta el guion entero y la
+ventana se cierra antes de que se pueda leer nada. Desde fuera se ve
+exactamente igual que «no abre».
+
+Están puestas las tres defensas, y las tres hacen falta:
+
+1. El archivo va en **CRLF**.
+2. `puente-mt5/.gitattributes` lleva **`*.bat -text`** — y no `text eol=crlf`,
+   que es lo que parece correcto. Con `eol=crlf` git guardaría LF dentro del
+   repositorio y solo convertiría al hacer `git checkout`; Néstor **no clona**,
+   baja el archivo con el botón de descarga de GitHub, y eso entrega los bytes
+   tal como están guardados. Seguiría bajándolo roto.
+3. El `.bat` ya **no usa bloques de paréntesis**: usa etiquetas y `goto`, que
+   funcionan con cualquier salto de línea. Y no lleva ni un emoji ni una
+   tilde, porque la consola de Windows en español no usa UTF-8 y los sacaría
+   como símbolos raros justo en los mensajes de error.
+
+**Mientras tanto, para arrancar el puente sin el `.bat`:** abre la carpeta,
+haz clic en la barra de direcciones de arriba, escribe `cmd` y pulsa Enter;
+en la ventana negra que sale escribe `python bridge_mt5.py` y Enter.
+
 Si todo va bien verás algo así, y **hay que dejar esa ventana abierta**:
 
 ```

@@ -3070,3 +3070,74 @@ proyecto que un mecanismo convincente resulta ser menos de lo que parecía, y
 Lanzar la sonda (**Actions → «Sonda de las tasas de interés» → Run
 workflow**), leer el log, y **con la forma real delante** escribir el lector.
 Nunca al revés.
+
+---
+
+# El `.bat` no abría ninguna ventana, y era culpa del archivo (2026-09-09)
+
+Néstor pegó el acceso directo en el escritorio, cerró la ventana negra para
+probar, y al hacer doble clic **no pasaba nada**. Ni ventana, ni error.
+
+## La causa, y no era suya
+
+`Iniciar_Puente.bat` se escribió en Linux, o sea con **saltos de línea LF**, y
+llevaba dos bloques así:
+
+```bat
+if not exist "bridge_mt5.py" (
+  echo [ERROR] ...
+  pause
+)
+```
+
+**`cmd` de Windows no analiza bien un bloque de paréntesis de varias líneas
+cuando los saltos son LF.** Aborta el guion entero, y la ventana se cierra
+antes de que dé tiempo a leer nada — desde fuera se ve *exactamente igual* que
+«no abre».
+
+## ⚠️ El detalle que casi deja el arreglo a medias
+
+Lo natural era poner `*.bat text eol=crlf` en un `.gitattributes`. **Habría
+seguido roto**, y el motivo es cómo baja Néstor el archivo:
+
+| | qué guarda el repositorio | qué baja Néstor |
+|---|---|---|
+| `text eol=crlf` | **LF** (convierte solo al hacer `git checkout`) | **LF — roto** |
+| **`-text`** | **CRLF, tal cual se escribió** | **CRLF — bien** |
+
+Él **no clona**: usa el botón de descarga de GitHub, y eso entrega los bytes
+**tal como están guardados**. Comprobado con
+`git cat-file -p :puente-mt5/Iniciar_Puente.bat`, que enseña lo que el
+repositorio guarda de verdad — no lo que hay en el disco. La primera versión
+del arreglo pasaba la comprobación del disco y fallaba la del repositorio.
+
+📌 **La lección, que es la de siempre con otra cara:** comprobar el artefacto
+que la persona va a recibir, no el que uno tiene delante. Es hermana de «el
+banco de pruebas tiene que medir lo que dice medir».
+
+## Las tres defensas, y las tres hacen falta
+
+1. El archivo en **CRLF**.
+2. `puente-mt5/.gitattributes` con **`*.bat -text`** (ver arriba por qué no
+   `eol=crlf`).
+3. El `.bat` **ya no usa bloques de paréntesis**: etiquetas y `goto`, que
+   funcionan con cualquier salto de línea. Es más largo de leer y no se rompe.
+
+Y de paso: **ni un emoji ni una tilde dentro**. La consola de Windows en
+español no usa UTF-8 por defecto y los sacaría como símbolos sin sentido justo
+en los mensajes de error, que es cuando más falta hace entenderlos.
+
+## Dos cosas más que se aprendieron del mismo problema
+
+📌 **La opción «Crear acceso directo» deja el acceso directo AL LADO del
+original**, no en el escritorio. La que lo manda al escritorio es «Enviar a →
+Escritorio». Néstor lo intentó tres veces y las tres se quedaron en la carpeta
+— se veían en su captura, numeradas (2) y (3).
+
+📌 **Se añadió una comprobación de que Python existe** (`where python`). Sin
+ella, Windows dice «no se reconoce como un comando interno o externo», que no
+le dice nada a nadie.
+
+**Para arrancar el puente sin el `.bat`**, mientras tanto: abrir la carpeta,
+clic en la barra de direcciones, escribir `cmd`, Enter, y ahí
+`python bridge_mt5.py`.
