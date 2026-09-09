@@ -3373,12 +3373,25 @@ forma de exagerar que la app decide no usar, contada con el mecanismo delante.**
 > es un «tick». La app te enseña **cuántas veces ha cambiado el precio hoy** en
 > cada par, según el bróker del que salen esos datos.
 >
-> **Para qué te sirve.** Para saber **dónde está pasando algo ahora mismo**. Si
-> el USD/JPY lleva 8.000 cambios y el NZD/CHF lleva 1.900, el yen está siendo
-> negociado con mucha más intensidad esta mañana. Eso te dice dos cosas
-> prácticas: donde hay mucha actividad el precio se mueve de verdad (y suele
-> haber mejor spread), y donde hay poca, un movimiento bonito en el gráfico
-> puede ser cuatro operaciones cruzadas que no llevan a ninguna parte.
+> **Lo PRIMERO, para que no lo leas mal: no dice hacia dónde ni cuánto.** No
+> te dice si va a subir o a bajar, ni si conviene comprar o vender, ni cuántos
+> pips se movió. Solo cuenta **veces**. Un par puede cambiar 8.000 veces y
+> acabar el día exactamente donde empezó.
+>
+> **Para qué te sirve entonces.** Para saber **dónde hay gente ahora mismo**.
+> Si el USD/JPY lleva 8.000 cambios y el NZD/CHF lleva 1.900, el yen está
+> siendo negociado con mucha más intensidad esta mañana. Eso te dice dos cosas
+> prácticas, y ninguna es una dirección:
+>
+> · Donde hay mucha actividad, **entrar y salir cuesta menos y duele menos
+>   equivocarse**: hay quien te compre y quien te venda, el spread suele ser
+>   más estrecho y el precio no salta a trompicones.
+> · Donde hay poca, **desconfía del gráfico**: un movimiento que se ve grande
+>   puede ser cuatro operaciones cruzadas de madrugada. Es el mismo dibujo con
+>   la mitad de gente detrás, y se deshace igual de rápido.
+>
+> Dicho de otro modo: la actividad no elige el par, **ayuda a decidir el
+> MOMENTO** de operar el par que ya elegiste por otras razones.
 >
 > **Y ahora lo que NO es, que es la parte que casi nadie te cuenta.**
 >
@@ -3410,3 +3423,42 @@ su propio dato. Es información, no promesas.
 📌 **Y el detalle que lo hace creíble está en la pantalla, no en la frase:** el
 rótulo va debajo de la tabla, en los 13 idiomas, donde lo lee cualquiera que
 mire el número. No en un glosario aparte que nadie abre.
+
+## 📌 Néstor leyó la columna y preguntó lo correcto (2026-09-09, el mismo día)
+
+> **«¿a qué te refieres con el par que se está moviendo más? ¿más para pérdidas
+> o más para ganancias? ¿el que más se mueve es el mejor para operarlo según su
+> dirección?»**
+
+**La pregunta señala un error MÍO de redacción en el chat, no de la app.** Yo
+resumí la columna como «para ver de un vistazo qué par se está moviendo más», y
+esa frase dice dos cosas falsas a la vez:
+
+1. **«moviéndose más» suena a distancia**, y esto cuenta VECES, no pips. Un par
+   puede cambiar 8.000 veces y cerrar donde abrió.
+2. **«moviéndose» invita a preguntar hacia dónde**, y la actividad no tiene
+   dirección ninguna. No dice comprar ni vender.
+
+📌 Es exactamente la lección del 2026-09-04 —**una etiqueta equivocada es un
+error de medición**— aplicada a una frase de chat en vez de a una tabla. El
+número era correcto y el rótulo que le puse encima inducía la conclusión
+contraria.
+
+## Lo que se cambió por esa pregunta
+
+El pie de la columna **ahora lo dice de frente y en primer lugar**, en los 13
+idiomas de las dos apps:
+
+> «NO dice hacia dónde ni cuánto: un par puede cambiar 8.000 veces y acabar
+> donde empezó.»
+
+⚠️ **Y va ANTES de la parte del volumen, no después.** El orden no es estético:
+la confusión que más dinero cuesta es leer actividad como dirección, no
+confundirla con volumen. Lo primero que se lee es lo que se recuerda — la misma
+razón por la que en `medicion.js` el acierto va antes que «se pierden 3 centavos
+por dólar», y no al revés.
+
+📌 **Y la regla general que deja este día:** cuando Néstor pregunta «¿esto qué
+me quiere decir?», la respuesta correcta casi nunca es explicárselo en el chat.
+Es meter la explicación EN LA PANTALLA, porque el suscriptor que se lo pregunte
+mañana no me tiene a mí al lado. Pasó igual con el calendario el 2026-09-08.
