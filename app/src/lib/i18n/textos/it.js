@@ -410,6 +410,21 @@ export default {
     caducada: 'Senza dati',
   },
 
+  tasas: {
+    titulo: 'Quanto costa tenerla aperta',
+    aviso:
+      "⚠️ Questo NON è lo swap che ti addebiterà il broker. È la differenza fra i tassi delle banche centrali, da cui lo swap NASCE. Il tuo broker aggiunge un margine che nessuno pubblica ed è asimmetrico: in una direzione paghi e nell'altra a volte incassi, ma quasi mai lo stesso. Dà il verso e l'ordine di grandezza, non la cifra.",
+    intro:
+      "La valuta a sinistra della coppia paga questa differenza all'anno rispetto a quella a destra. Più in alto sta, più pesa tenere quella posizione aperta notte dopo notte.",
+    lado: {
+      compra: 'Di solito gioca a favore se compri',
+      venta: 'Di solito gioca a favore se vendi',
+      neutro: 'Quasi lo stesso tasso: pesa appena',
+    },
+    cabeceraSueltas: 'Tasso di ogni banca centrale',
+    pie: (v) => `Fonte: BIS (Banca dei Regolamenti Internazionali). Ogni riga porta la data del SUO dato: un tasso di riferimento cambia solo il giorno in cui la banca centrale si riunisce. Il più vecchio è di ${v.dias} giorni fa.`,
+  },
+
   errores: {
     'auth/email-already-in-use': 'Questa e-mail ha già un account. Prova con "Accedi".',
     'auth/invalid-email': 'Questa e-mail non sembra valida.',

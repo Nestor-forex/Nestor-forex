@@ -3533,3 +3533,111 @@ del mercado: habla de **cómo está construida la app**. Un suscriptor no puede
 comprobar si nuestro RSI está bien calculado, pero sí puede comprobar que le
 avisamos antes de impresionarle. Es del mismo tipo que las tres decisiones de la
 correlación y la del swap.
+
+---
+
+# Las tasas ya se ven en la app (2026-09-09). La #3 de la fase de información
+
+Néstor preguntó **«¿lo de las tasas de interés dónde quedó para poderlas
+ver?»** y la respuesta honesta era: **en ninguna parte**. La sonda solo sirvió
+para saber de dónde sacarlas; el dato vivía únicamente dentro del log de un
+workflow. Esto lo pone en pantalla.
+
+```
+app/src/lib/tasas.js              # cuentas puras (Node + navegador)   GEMELO
+app/scripts/publicar-tasas.mjs    # baja del BIS y escribe el archivo  GEMELO
+app/src/components/Tasas.jsx      # la tarjeta                          GEMELO
+app/scripts/prueba-tasas.mjs      # 70 comprobaciones, sin internet     GEMELO
+app/src/lib/useTasas.js           # lo lee desde la app                 PRIMO
+.github/workflows/tasas.yml       # una vez al día, 06:20 UTC
+```
+
+**En las DOS apps.** Son 50 gemelos ahora (eran 46).
+
+## Dónde está, y por qué ahí
+
+**Pestaña Barrido, justo DEBAJO de «Lo que cuesta abrir la operación».** No es
+casual: son las dos mitades del peaje. Aquella enseña el spread, que se paga
+UNA VEZ al entrar; ésta, de dónde sale lo que se paga (o se cobra) CADA NOCHE
+que la operación siga abierta. Separarlas obligaría a buscar en dos pantallas
+lo que es la misma pregunta.
+
+⚠️ **En Intradía NO sobra por llamarse Intradía**, y está medido: el **52 % de
+las operaciones reales de esa app cruzaron al menos una noche** (Fase 2,
+2026-09-02). La intención era no pagar swap; lo que pasa de verdad es otra cosa.
+
+## Las decisiones que no hay que ablandar
+
+⚠️⚠️ **EL AVISO DE QUE ESTO NO ES EL SWAP VA PRIMERO, ANTES DE NINGÚN NÚMERO.**
+El banco central pone la referencia; el bróker le suma un margen que no publica
+nadie y que además es asimétrico. La pantalla nunca dice «vas a cobrar X»: dice
+hacia qué lado **suele** jugar. Es el mismo criterio que con la actividad —
+lo primero que se lee es lo que se recuerda, así que lo primero que se dice
+tiene que ser lo que más caro sale ignorar.
+
+⚠️ **`UMBRAL_NEUTRO = 0.25` y el número no es estético.** El margen del bróker
+está típicamente entre 0,5 y 1,5 puntos anuales, así que una diferencia de dos
+décimas se la come entera y el signo deja de significar nada. Por debajo de
+0,25 la pantalla dice «apenas pesa» en vez de recomendar un lado.
+
+⚠️ **Nada se pinta de verde ni de rojo.** Que la diferencia favorezca a la
+compra no es «bueno»: depende de hacia dónde vaya a operar quien mira. Misma
+decisión que en `Correlacion.jsx`.
+
+⚠️ **Cada fila enseña LA FECHA DE SU DATO, no la de la consulta.** Una tasa de
+referencia solo cambia el día que se reúne el banco central, así que ver una
+fecha de hace semanas es NORMAL. Sin enseñarla, ese dato se leería como de hoy.
+
+⚠️ **Si falta alguna de las ocho, el publicador NO publica y falla.** Es más
+estricto que el calendario a propósito: aquí una ausencia borra filas enteras
+de la pantalla (sin JPY desaparecen los tres pares con yen) y parecería que la
+app se olvidó de ellos. El archivo anterior sigue siendo válido — estas tasas
+cambian una vez cada varias semanas.
+
+⚠️ **Una tasa que falta devuelve `null`, nunca 0.** Un 0 diría «las dos pagan
+lo mismo», que es una afirmación. Misma decisión que `pearson` en
+`correlacion.js`.
+
+## 📌 Los dos errores que las pruebas cazaron
+
+**1. El CSV NO se puede partir por comas.** Dos de las quince columnas
+(`COMPILATION` y `TITLE`) llevan comas DENTRO, entre comillas — una fila real
+dice `"From 1 Jun 1994 onwards: Central bank target, overnight rate; …"`.
+Partir a pelo corre las columnas de sitio y `OBS_VALUE` sale texto: **no falla,
+devuelve basura**. Comprobado que la prueba MUERDE: al sustituir el partidor
+por `split(',')` fallan **11 comprobaciones**, y se miró el archivo con el daño
+puesto antes de darlo por bueno.
+
+**2. Una comprobación mía no comprobaba el código, sino los datos de mentira.**
+Escribí «entre los cinco primeros de la lista hay alguno negativo» para probar
+que se ordena por valor ABSOLUTO — y falló, porque con esas ocho tasas los
+cinco mayores resultaron ser todos positivos. Reescrita con un caso hecho a
+propósito (−9 contra +1) que sí exige lo que dice exigir. Es «la prueba tiene
+que medir lo que dice medir», otra vez.
+
+## Cómo se verificó
+
+Las 70 comprobaciones sin internet, lint, build y **todas** las pruebas de los
+dos repos. Y en **Chromium**, componente aislado, 390 px, cuatro cargas:
+
+| caso | resultado |
+|---|---|
+| español | 14 pares ordenados por diferencia absoluta + las 8 tasas con su fecha |
+| **árabe** | todo traducido, y los 52 elementos `ltr` comprobados con el CSS calculado |
+| archivo con `tasas: {}` | **no pinta absolutamente nada** |
+| archivo que no existe (404) | ídem |
+
+`scrollWidth == clientWidth` en los cuatro. Cero errores de la app (el único
+error de consola es el 404 que el propio banco de pruebas provoca a propósito).
+
+⚠️ **Los números del navegador eran de mentira menos tres.** De la sonda real
+solo se leen enteros `US 3,625`, `CH 0` y, vía BCE, el euro en `2,4`; los otros
+cinco se inventaron plausibles para probar cómo se PINTA. Los reales llegarán
+con la primera corrida del workflow.
+
+## Lo que queda por comprobar con datos reales
+
+📌 **Contrastar `XM` del BIS con el BCE.** La sonda dejó el valor del BIS
+cortado en el log y el BCE dijo 2,4 — **no está comprobado que coincidan**. Es
+justo para lo que el BCE estaba en la sonda. Mirar el log de la primera
+corrida.
