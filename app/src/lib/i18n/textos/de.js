@@ -414,6 +414,21 @@ export default {
     caducada: 'Keine Daten',
   },
 
+  tasas: {
+    titulo: 'Was es kostet, sie offen zu halten',
+    aviso:
+      '⚠️ Das ist NICHT der Swap, den dein Broker dir berechnet. Es ist die Differenz zwischen den Leitzinsen der Zentralbanken, aus der der Swap ENTSTEHT. Dein Broker schlägt eine Marge auf, die niemand veröffentlicht, und sie ist ungleich: in einer Richtung zahlst du, in der anderen bekommst du manchmal etwas, aber fast nie gleich viel. Es zeigt Richtung und ungefähre Größe, nicht den Betrag.',
+    intro:
+      'Die Währung links im Paar zahlt diese Differenz pro Jahr gegenüber der rechten. Je weiter oben, desto mehr wiegt es, diese Position Nacht für Nacht offen zu halten.',
+    lado: {
+      compra: 'Spielt meist zu deinen Gunsten, wenn du kaufst',
+      venta: 'Spielt meist zu deinen Gunsten, wenn du verkaufst',
+      neutro: 'Fast derselbe Zins: fällt kaum ins Gewicht',
+    },
+    cabeceraSueltas: 'Zins jeder Zentralbank',
+    pie: (v) => `Quelle: BIS (Bank für Internationalen Zahlungsausgleich). Jede Zeile zeigt das Datum IHRER Angabe: ein Leitzins ändert sich nur an dem Tag, an dem die Zentralbank tagt. Die älteste ist ${v.dias} Tage alt.`,
+  },
+
   errores: {
     'auth/email-already-in-use': 'Diese E-Mail hat bereits ein Konto. Versuche es mit "Anmelden".',
     'auth/invalid-email': 'Diese E-Mail sieht nicht gültig aus.',

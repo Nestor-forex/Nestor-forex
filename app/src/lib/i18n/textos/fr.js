@@ -414,6 +414,21 @@ export default {
     caducada: 'Sans données',
   },
 
+  tasas: {
+    titulo: 'Ce que coûte de la garder ouverte',
+    aviso:
+      "⚠️ Ce n'est PAS le swap que ton courtier va te facturer. C'est l'écart entre les taux des banques centrales, d'où le swap PROVIENT. Ton courtier y ajoute une marge que personne ne publie, et elle est inégale : dans un sens tu paies, dans l'autre tu encaisses parfois, mais presque jamais autant. Cela donne le sens et l'ordre de grandeur, pas le montant.",
+    intro:
+      "La devise de gauche de la paire paie cet écart par an face à celle de droite. Plus c'est haut dans la liste, plus il pèse de garder cette position ouverte nuit après nuit.",
+    lado: {
+      compra: 'Joue en général en ta faveur si tu achètes',
+      venta: 'Joue en général en ta faveur si tu vends',
+      neutro: 'Presque le même taux : cela pèse à peine',
+    },
+    cabeceraSueltas: 'Taux de chaque banque centrale',
+    pie: (v) => `Source : BIS (Banque des règlements internationaux). Chaque ligne affiche la date de SA donnée : un taux directeur ne change que le jour où la banque centrale se réunit. La plus ancienne date de ${v.dias} jours.`,
+  },
+
   errores: {
     'auth/email-already-in-use': 'Cet e-mail a déjà un compte. Essaie « Se connecter ».',
     'auth/invalid-email': "Cet e-mail ne semble pas valide.",
