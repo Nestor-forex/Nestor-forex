@@ -3641,3 +3641,49 @@ con la primera corrida del workflow.
 cortado en el log y el BCE dijo 2,4 — **no está comprobado que coincidan**. Es
 justo para lo que el BCE estaba en la sonda. Mirar el log de la primera
 corrida.
+
+## ✅ Corrió con datos REALES, y el contraste con el BCE tenía respuesta
+
+Primera corrida el 2026-09-09 a las 07:29 UTC, en las dos apps. **320 bytes**,
+las ocho divisas, y **los dos archivos publicados salieron idénticos**
+(comprobado bajándolos los dos y comparándolos, no supuesto).
+
+| divisa | tasa | fecha del dato |
+|---|---:|---|
+| AUD | 4,350 % | 2026-08-27 |
+| GBP | 3,750 % | 2026-08-28 |
+| USD | 3,625 % | 2026-09-01 |
+| NZD | 2,500 % | 2026-08-28 |
+| CAD | 2,250 % | 2026-08-31 |
+| EUR | 2,250 % | 2026-09-01 |
+| JPY | 1,000 % | 2026-09-01 |
+| CHF | 0,000 % | 2026-09-01 |
+
+Las tres diferencias más grandes: **USD/CHF +3,63 · GBP/JPY +2,75 ·
+USD/JPY +2,63**, todas a favor de comprar. Y el dato más viejo tenía 13 días,
+que es exactamente lo normal aquí.
+
+### 📌 El BIS dice 2,25 para el euro y el BCE dijo 2,4. NO se contradicen
+
+Quedaba anotado como pendiente y la respuesta estaba **en el propio CSV del
+BIS**, en su columna `COMPILATION`, que la sonda había traído sin que nadie la
+leyera:
+
+> «From 18 Sep 2024 onwards: official central bank steering rate is the
+> **deposit facility rate**, fixed rate; from 15 Oct 2008 to 17 Sep 2024:
+> …**main refinancing operations**, fixed rate»
+
+O sea que **son dos tasas distintas del mismo banco**: la sonda pidió al BCE la
+de operaciones principales de financiación (2,4) y el BIS publica, desde
+septiembre de 2024, la de facilidad de depósito (2,25). Los 0,15 de diferencia
+no son un fallo: es que miden cosas distintas.
+
+⚠️ **Y la que usa el BIS es la que sirve aquí**, según el texto del propio BIS:
+desde 2024 la facilidad de depósito **es** la tasa de referencia efectiva del
+BCE, que es la que sigue el dinero a un día — que es de lo que sale el swap.
+No hay nada que corregir.
+
+📌 **La lección práctica:** el dato para resolver la duda llevaba desde el
+primer día dentro de la respuesta de la sonda, en una columna que el lector
+descarta a propósito. **Antes de dar una diferencia por sospechosa, releer la
+respuesta cruda entera** — la sonda no está solo para elegir la dirección.
