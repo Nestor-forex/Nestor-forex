@@ -3281,3 +3281,255 @@ No es un fallo: nunca se decidió enseñarlo. Pero **si algún día se enseña, 
 que rotularlo por lo que es** — cuántas VECES cambió el precio en un solo
 bróker, no volumen — con el texto que ya está escrito en este archivo bajo «Lo
 que NO se puede tener en Forex».
+
+---
+
+# La actividad (tick volume) ya se ve en pantalla (2026-09-09). En las dos apps
+
+Néstor lo pidió al leer la nota de arriba: **«el tick volume se está publicando
+cada 15 minutos y no lo mira nadie… quiero que esto lo mostremos en las apps»**.
+Tenía razón: llevaba un día entero llegando a la nada.
+
+Cambio **emparejado y gemelo**: `CotizacionesVivo.jsx` idéntico en los dos
+repositorios, misma rama en los dos, más dos claves nuevas (`vivo.actividad` y
+`vivo.actividadPie`) en los 13 diccionarios de cada app.
+
+## Qué se enseña, y cómo
+
+Una quinta columna en la tarjeta «Lo que cuesta abrir la operación»: el número
+y una barrita con la proporción respecto al par más activo de **esa misma
+lectura**. Debajo, el rótulo honesto de lo que es y de lo que no es.
+
+## Las cuatro decisiones que no hay que ablandar
+
+⚠️ **No se llama «volumen» en ninguna parte de la pantalla.** Se llama
+ACTIVIDAD. En Forex no existe un volumen real —no hay bolsa central que apunte
+las operaciones—, así que nadie tiene el total. El dato no es basura y hay
+operadores con experiencia que lo usan sabiendo lo que es; **el problema sería
+el rótulo, no el dato**. Ver «Lo que NO se puede tener en Forex» más arriba.
+
+⚠️ **Solo compara pares entre sí, nunca días entre sí.** Los 18 números salen
+del MISMO instante, del MISMO día y del MISMO bróker: compararlos unos con
+otros es legítimo. Compararlos con los de ayer no lo sería, porque es el
+`tick_volume` de la vela diaria **EN CURSO** y crece hasta el cierre. Por eso la
+barra se mide contra el par más activo de esa lectura y no hay ni una
+comparación con nada anterior. La frase «el día va a medias» está en los 13
+idiomas a propósito.
+
+⚠️ **La barra va en color neutro.** Ni verde ni rojo: mucha actividad no es
+buena ni mala, y el color afirmaría lo contrario. Misma decisión que en
+`Correlacion.jsx`, y misma regla general — **antes de pintar algo de color,
+preguntarse qué afirma ese color**.
+
+⚠️ **Si NINGÚN par trae actividad, la columna entera desaparece.** Pasa con un
+archivo publicado por un puente viejo, y una columna de guiones se lee como que
+la app está rota. Si solo faltan algunos, sale `—` y no `0`: un cero diría «no
+se movió», que es una afirmación, y no sabemos nada.
+
+## 📌 Dos cosas que solo se vieron en el navegador, y las dos eran reales
+
+**1. El separador de miles hacía que el número pareciera un precio.** Se usaba
+`toLocaleString(locale)`, que en español agrupa con PUNTO: salía «2.926» justo
+al lado de una columna de precios donde el punto es el decimal («1.16290»). Y
+en árabe el mismo formateador sacaba cifras árabo-índicas mientras los precios
+de la misma tabla iban en cifras latinas — **dos sistemas de dígitos en una
+tabla de números**. El entero pelado no tiene ninguno de los dos problemas.
+
+**2. La barra se leía como un SUBRAYADO del número.** El riel iba del ancho del
+número y en un color casi invisible, así que solo se veía la parte llena: sin el
+riel entero detrás no hay contra qué comparar, y una barra sin referencia no
+dice nada. Ahora el riel mide siempre 38 px y se ve.
+
+Ninguna de las dos las ve un build ni un `lint`. Es la cuarta o quinta vez que
+esta pantalla concreta lo demuestra.
+
+## Cómo se verificó
+
+Chromium, componente aislado (la tarjeta está detrás de Firebase), a 390 px de
+ancho y con el `mt5.json` **real de producción**, en cuatro cargas separadas:
+
+| caso | resultado |
+|---|---|
+| español | 14 pares con su actividad y 14 barras; USD/JPY y GBP/JPY las más llenas |
+| **árabe** | cabecera en árabe, y pares y números en `ltr` — comprobado con el CSS calculado |
+| ningún par con `ticks` | la columna **no existe**: 4 columnas, 0 barras, y el pie de actividad tampoco sale |
+| unos sí y otros no | la columna se queda y los que faltan salen con `—` |
+
+Cero errores de consola en los cuatro, y **`scrollWidth == clientWidth` en los
+cuatro**: la quinta columna no obliga a desplazar la pantalla de lado en un
+teléfono, que era el riesgo de añadirla.
+
+---
+
+# La actividad, explicada para suscriptores (2026-09-09)
+
+Néstor la pidió con estas palabras: **«quiero una explicación sencilla para que
+guardes para los suscriptores de qué es eso, para qué se usa o para qué les
+puede servir»**. Va con las otras cuatro del mismo tipo —el volumen,
+TradingView, la correlación y el swap— y funciona por el mismo motivo: **es una
+forma de exagerar que la app decide no usar, contada con el mecanismo delante.**
+
+> **Qué es.** Cada vez que el precio de un par cambia, aunque sea un punto, eso
+> es un «tick». La app te enseña **cuántas veces ha cambiado el precio hoy** en
+> cada par, según el bróker del que salen esos datos.
+>
+> **Lo PRIMERO, para que no lo leas mal: no dice hacia dónde ni cuánto.** No
+> te dice si va a subir o a bajar, ni si conviene comprar o vender, ni cuántos
+> pips se movió. Solo cuenta **veces**. Un par puede cambiar 8.000 veces y
+> acabar el día exactamente donde empezó.
+>
+> **Para qué te sirve entonces.** Para saber **dónde hay gente ahora mismo**.
+> Si el USD/JPY lleva 8.000 cambios y el NZD/CHF lleva 1.900, el yen está
+> siendo negociado con mucha más intensidad esta mañana. Eso te dice dos cosas
+> prácticas, y ninguna es una dirección:
+>
+> · Donde hay mucha actividad, **entrar y salir cuesta menos y duele menos
+>   equivocarse**: hay quien te compre y quien te venda, el spread suele ser
+>   más estrecho y el precio no salta a trompicones.
+> · Donde hay poca, **desconfía del gráfico**: un movimiento que se ve grande
+>   puede ser cuatro operaciones cruzadas de madrugada. Es el mismo dibujo con
+>   la mitad de gente detrás, y se deshace igual de rápido.
+>
+> Dicho de otro modo: la actividad no elige el par, **ayuda a decidir el
+> MOMENTO** de operar el par que ya elegiste por otras razones.
+>
+> **Y ahora lo que NO es, que es la parte que casi nadie te cuenta.**
+>
+> Esto **no es volumen**. Volumen sería «cuánto dinero se movió», y en Forex ese
+> número **no existe**: las acciones se negocian en una bolsa —la de Nueva York,
+> la de Madrid— que apunta cada operación, pero el Forex es una red de bancos
+> negociando entre sí. **No hay un sitio, así que no hay un total.** No lo
+> tenemos nosotros y no lo tiene nadie.
+>
+> Cuando otra plataforma te enseña «volumen» de Forex, te está enseñando esto
+> mismo: cuántas veces cambió el precio **en su propio bróker**. La prueba es
+> fácil de ver: abre dos plataformas distintas a la misma hora y te darán
+> números diferentes. Eso solo puede pasar si no es una medición del mercado.
+>
+> **No te digo que sea un dato malo** — no lo es, y hay operadores con
+> experiencia que lo usan muy bien sabiendo lo que es. Lo que no vamos a hacer
+> es llamarlo volumen, porque no lo es.
+>
+> **Un último detalle, para que no lo leas mal.** El número cuenta el día que
+> va corriendo, así que a las nueve de la mañana es pequeño y a las cinco de la
+> tarde es grande. Sirve para comparar **unos pares con otros en este momento**,
+> no para comparar el de hoy con el de ayer.
+
+📌 **Por qué esto vende, igual que las otras cuatro:** el suscriptor aprende
+algo verdadero y comprobable —que el «volumen» de Forex que le enseñan por ahí
+es el contador de un solo bróker— y de paso ve que la app dice hasta dónde llega
+su propio dato. Es información, no promesas.
+
+📌 **Y el detalle que lo hace creíble está en la pantalla, no en la frase:** el
+rótulo va debajo de la tabla, en los 13 idiomas, donde lo lee cualquiera que
+mire el número. No en un glosario aparte que nadie abre.
+
+## 📌 Néstor leyó la columna y preguntó lo correcto (2026-09-09, el mismo día)
+
+> **«¿a qué te refieres con el par que se está moviendo más? ¿más para pérdidas
+> o más para ganancias? ¿el que más se mueve es el mejor para operarlo según su
+> dirección?»**
+
+**La pregunta señala un error MÍO de redacción en el chat, no de la app.** Yo
+resumí la columna como «para ver de un vistazo qué par se está moviendo más», y
+esa frase dice dos cosas falsas a la vez:
+
+1. **«moviéndose más» suena a distancia**, y esto cuenta VECES, no pips. Un par
+   puede cambiar 8.000 veces y cerrar donde abrió.
+2. **«moviéndose» invita a preguntar hacia dónde**, y la actividad no tiene
+   dirección ninguna. No dice comprar ni vender.
+
+📌 Es exactamente la lección del 2026-09-04 —**una etiqueta equivocada es un
+error de medición**— aplicada a una frase de chat en vez de a una tabla. El
+número era correcto y el rótulo que le puse encima inducía la conclusión
+contraria.
+
+## Lo que se cambió por esa pregunta
+
+El pie de la columna **ahora lo dice de frente y en primer lugar**, en los 13
+idiomas de las dos apps:
+
+> «NO dice hacia dónde ni cuánto: un par puede cambiar 8.000 veces y acabar
+> donde empezó.»
+
+⚠️ **Y va ANTES de la parte del volumen, no después.** El orden no es estético:
+la confusión que más dinero cuesta es leer actividad como dirección, no
+confundirla con volumen. Lo primero que se lee es lo que se recuerda — la misma
+razón por la que en `medicion.js` el acierto va antes que «se pierden 3 centavos
+por dólar», y no al revés.
+
+📌 **Y la regla general que deja este día:** cuando Néstor pregunta «¿esto qué
+me quiere decir?», la respuesta correcta casi nunca es explicárselo en el chat.
+Es meter la explicación EN LA PANTALLA, porque el suscriptor que se lo pregunte
+mañana no me tiene a mí al lado. Pasó igual con el calendario el 2026-09-08.
+
+---
+
+# La actividad, versión ampliada para suscriptores (2026-09-09)
+
+Néstor pidió guardar también la explicación de POR QUÉ el aviso va primero, y
+«si puedes agregar algo más claro, mejor». Esto sustituye a nada: se suma a «La
+actividad, explicada para suscriptores» de más arriba, que sigue siendo el
+texto base. Aquí van las tres piezas que lo hacen entendible de una lectura.
+
+## 1. La comparación que lo explica sin tecnicismos
+
+> Imagina que cuentas **cuánta gente entra y sale de una tienda** en una hora.
+>
+> Ese número te dice si la tienda está movida. **No te dice si la tienda gana
+> dinero, ni si subieron los precios, ni si te conviene comprar allí.**
+>
+> La actividad de un par de divisas es exactamente eso: **el conteo de gente en
+> la puerta.** Nada más, y nada menos.
+
+📌 Funciona porque separa las dos preguntas que la gente junta sin darse cuenta:
+*«¿está pasando algo?»* y *«¿qué está pasando?»*. La actividad contesta la
+primera. La segunda no la contesta esta columna — ni ninguna otra sin arriesgar
+una opinión.
+
+## 2. El matiz honesto que casi nadie dice: mucha actividad no es «mejor»
+
+Hay dos clases de actividad alta y **no significan lo mismo**:
+
+| | qué es | qué le pasa al spread |
+|---|---|---|
+| **Sostenida** (Londres, Londres-Nueva York) | mucha gente negociando durante horas | se **estrecha**: es más fácil entrar y salir |
+| **De golpe** (sale una noticia) | todos reaccionando en el mismo minuto | se **abre**, y el precio puede saltarse tu stop |
+
+> Así que «este par tiene mucha actividad» **no quiere decir «este par es el
+> bueno»**. Quiere decir «aquí hay gente». Si esa gente apareció toda de golpe
+> porque acaba de salir un dato, el mejor momento para entrar es justo el que no
+> es. **Para eso está la tarjeta del calendario, unos centímetros más arriba:
+> mira si hay una noticia a esa hora antes de fiarte del número.**
+
+⚠️ Esto es lo que hace creíble el resto del argumento, y por eso se guarda: la
+tentación de vender la actividad como «entra donde hay movimiento» es enorme y
+sería medio verdad. Media verdad en un producto de trading es una mentira con
+buenos modales.
+
+## 3. La frase de una línea, que es la que hay que recordar
+
+> **La actividad no elige el par. Ayuda a elegir el MOMENTO del par que ya
+> elegiste por otras razones.**
+
+## Por qué el aviso va PRIMERO, y no al final (esto también va a la landing)
+
+> Nos habrás visto poner la advertencia antes que la explicación. Es a
+> propósito.
+>
+> De todas las formas de leer mal este número, **la que cuesta dinero es
+> confundir actividad con dirección**: creer que «el que más se mueve» es el que
+> hay que comprar. Confundirla con volumen no le hace perder plata a nadie —
+> solo es inexacto.
+>
+> Lo primero que se lee es lo que se recuerda, así que lo primero que decimos es
+> lo que más caro sale ignorar. Es la misma razón por la que en la pantalla de
+> mediciones ponemos «55 % de acierto» **y justo debajo** «y aun así se pierden
+> 3 centavos por cada dólar arriesgado», y no al revés: puesto al revés, el
+> porcentaje se lee como la conclusión.
+
+📌 **Este último bloque es de los que más valen para vender**, porque no habla
+del mercado: habla de **cómo está construida la app**. Un suscriptor no puede
+comprobar si nuestro RSI está bien calculado, pero sí puede comprobar que le
+avisamos antes de impresionarle. Es del mismo tipo que las tres decisiones de la
+correlación y la del swap.
