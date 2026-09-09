@@ -3141,3 +3141,51 @@ le dice nada a nadie.
 **Para arrancar el puente sin el `.bat`**, mientras tanto: abrir la carpeta,
 clic en la barra de direcciones, escribir `cmd`, Enter, y ahí
 `python bridge_mt5.py`.
+
+## Y el motivo REAL era otro: Smart App Control (2026-09-09)
+
+📌 **Corrección, y es del tipo que este archivo lleva meses coleccionando.**
+El apartado de arriba diagnostica los saltos de línea con seguridad y dice
+«encontrado, es culpa mía». **Era un fallo real y el arreglo se queda** — con
+LF ese `.bat` habría fallado igual—, **pero NO era lo que le estaba pasando a
+Néstor.**
+
+Lo que salía en su pantalla, y solo se supo cuando mandó la foto:
+
+> **Control Inteligente de Aplicaciones ha bloqueado un archivo que podría no
+> ser seguro.** «Este archivo se bloqueó porque este tipo de archivos de
+> Internet pueden ser peligrosos.»
+
+Es **Smart App Control** de Windows 11: bloquea lo descargado de internet. Se
+pulsa «De acuerdo» y no pasa nada más — desde fuera, otra vez, idéntico a «no
+abre».
+
+⚠️ **Quinta vez que presento un mecanismo convincente antes de tener la
+prueba.** Y aquí con un agravante que conviene ver: el mecanismo era **cierto**
+—el archivo tenía ese defecto— y aun así **no era la causa**. Un defecto real
+que explicaría el síntoma sigue sin ser el diagnóstico. La lección práctica es
+la de siempre en este proyecto y sigue costando: **pedir la captura antes de
+teorizar**, exactamente como está escrito arriba del todo sobre el «no veo
+nada nuevo» del 2026-07-30.
+
+### ⚠️ LO QUE NO HAY QUE HACER: apagar esa protección
+
+Windows **no deja volver a encender Smart App Control sin reinstalar el sistema
+entero**. Es un camino de una sola dirección. Nunca proponérselo a Néstor ni a
+un suscriptor.
+
+### Las dos salidas, y por qué la primera es mejor
+
+**A. Que el acceso directo llame a `cmd`, no al `.bat`.** Target
+`cmd.exe /k python bridge_mt5.py` y la carpeta del puente en «Iniciar en».
+**No hay nada que descargar, así que no hay nada que bloquear**: `cmd.exe` es
+un programa del propio Windows, firmado. Hace exactamente lo mismo que el
+`.bat` por un camino que Windows no toca.
+
+**B. Desbloquear el archivo** (Propiedades → casilla «Desbloquear»). Funciona,
+pero **hay que repetirlo cada vez que se vuelva a bajar**.
+
+📌 **Consecuencia de diseño, no solo de soporte:** un `.bat` descargado es
+frágil en Windows 11 por construcción. Si algún día se le da esto a
+suscriptores, la instrucción por defecto tiene que ser la A — o habrá que
+firmar el archivo, que cuesta dinero y no lo vale para tres líneas.
