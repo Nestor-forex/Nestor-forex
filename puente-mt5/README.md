@@ -72,6 +72,82 @@ documento de lo que hubo.
 (crear acceso directo)**. El `.bat` se apaña solo esté donde esté el acceso
 directo, porque busca su propia carpeta.
 
+⚠️ Ojo con la opción **«Crear acceso directo»** a secas: ésa lo deja **al lado
+del original**, no en el escritorio. La que lo manda al escritorio es la de
+**Enviar a**. Si ya te pasó, no hay que rehacerlo: corta el acceso directo que
+tengas y pégalo en el escritorio.
+
+### ⚠️⚠️ «Control Inteligente de Aplicaciones ha bloqueado un archivo»
+
+**Ésta es la causa más probable de que un `.bat` no arranque en Windows 11, y
+la primera que hay que mirar.** Windows 11 trae *Smart App Control* (Control
+Inteligente de Aplicaciones), que **bloquea los archivos descargados de
+internet**. Sale un cartel, se pulsa «De acuerdo» y no pasa nada más.
+
+⚠️ **NO SE APAGA ESA PROTECCIÓN.** Windows **no permite volver a encenderla
+sin reinstalar el sistema entero**. Es un camino de una sola dirección, y no
+hace falta tomarlo: hay dos salidas mejores.
+
+#### Salida A — el acceso directo llama a `cmd`, no al `.bat` (recomendada)
+
+Es la buena porque **no hay nada que descargar**, así que no hay nada que
+bloquear: `cmd.exe` es un programa del propio Windows, firmado y de confianza.
+
+1. Copia la ruta de la carpeta del puente: ábrela, haz clic en la barra de
+   direcciones de arriba y copia con `Ctrl + C` lo que salga.
+2. Clic derecho en un sitio vacío del escritorio → **Nuevo** → **Acceso
+   directo**.
+3. Donde pide la ubicación, escribe exactamente:
+   `cmd.exe /k python bridge_mt5.py`
+4. **Siguiente**, ponle de nombre `Puente MT5`, **Finalizar**.
+5. Clic derecho en el icono nuevo → **Propiedades** → en la casilla
+   **«Iniciar en»** pega la ruta del paso 1 → **Aceptar**.
+
+Doble clic y arranca. Es exactamente lo mismo que hacía el `.bat`, pero por un
+camino que Windows no bloquea.
+
+#### Salida B — desbloquear el archivo descargado
+
+Más corta, pero hay que repetirla **cada vez que se vuelva a bajar el archivo**:
+
+1. Clic derecho sobre `Iniciar_Puente.bat` **en su carpeta** (no sobre el
+   acceso directo del escritorio) → **Propiedades**.
+2. Abajo de la pestaña **General**, si aparece «Seguridad: este archivo procede
+   de otro equipo…», marca la casilla **Desbloquear**.
+3. **Aceptar**.
+
+📌 Si no aparece esa casilla, es que el archivo ya no lleva la marca de
+internet y el bloqueo viene de otro sitio: usa la Salida A.
+
+### ⚠️ Si el doble clic no abre NINGUNA ventana (arreglado el 2026-09-09)
+
+Pasó de verdad, y era un fallo del archivo, no de quien lo abre. Si vuelve a
+pasar, esto es lo que hay que mirar:
+
+**El `.bat` tiene que estar guardado con saltos de línea de Windows (CRLF).**
+La primera versión se escribió en Linux (LF) y llevaba dos bloques
+`if not exist ... ( ... )` repartidos en varias líneas. `cmd` **no analiza bien
+los paréntesis de varias líneas con saltos LF**: aborta el guion entero y la
+ventana se cierra antes de que se pueda leer nada. Desde fuera se ve
+exactamente igual que «no abre».
+
+Están puestas las tres defensas, y las tres hacen falta:
+
+1. El archivo va en **CRLF**.
+2. `puente-mt5/.gitattributes` lleva **`*.bat -text`** — y no `text eol=crlf`,
+   que es lo que parece correcto. Con `eol=crlf` git guardaría LF dentro del
+   repositorio y solo convertiría al hacer `git checkout`; Néstor **no clona**,
+   baja el archivo con el botón de descarga de GitHub, y eso entrega los bytes
+   tal como están guardados. Seguiría bajándolo roto.
+3. El `.bat` ya **no usa bloques de paréntesis**: usa etiquetas y `goto`, que
+   funcionan con cualquier salto de línea. Y no lleva ni un emoji ni una
+   tilde, porque la consola de Windows en español no usa UTF-8 y los sacaría
+   como símbolos raros justo en los mensajes de error.
+
+**Mientras tanto, para arrancar el puente sin el `.bat`:** abre la carpeta,
+haz clic en la barra de direcciones de arriba, escribe `cmd` y pulsa Enter;
+en la ventana negra que sale escribe `python bridge_mt5.py` y Enter.
+
 Si todo va bien verás algo así, y **hay que dejar esa ventana abierta**:
 
 ```

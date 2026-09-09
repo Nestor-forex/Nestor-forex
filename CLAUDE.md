@@ -3012,3 +3012,272 @@ cinco cargas de página separadas:
 | puente apagado | «Todavía no hay precios del bróker», sin mensaje de error rojo |
 
 Cero errores de consola en todos.
+
+---
+
+# Tasas de interés: la sonda, primero (2026-09-08)
+
+La **#3 de la fase de información**. Néstor la pidió después del calendario.
+Va por el mismo camino que aquél: **sonda primero, lector después.**
+
+```
+app/scripts/sonda-tasas.mjs        # pide, cuenta y enseña. No interpreta
+.github/workflows/sonda-tasas.yml  # solo a mano
+```
+
+La red de estas sesiones **bloquea las tres candidatas** — comprobado, no
+supuesto: `stats.bis.org`, `data-api.ecb.europa.eu` y `api.frankfurter.app`
+devuelven `Host not in allowlist` del proxy. Así que desde aquí no se puede
+ver ni si responden.
+
+## La candidata buena, y por qué
+
+**BIS, dataflow `WS_CBPOL`.** Publica la tasa de referencia de unos cuarenta
+bancos centrales **con la misma definición para todos**, sin llave. Es la
+fuente que republican los demás, FRED incluido: ir al BIS es ir al original.
+Encaja con la decisión del COT del mismo día — leer el archivo oficial
+nosotros mismos y no depender de nadie.
+
+Se sondean **cuatro formas de la dirección** (v1 y v2, CSV y JSON) porque la
+API del BIS cambió y desde aquí no se puede comprobar cuál está viva. Más el
+BCE como contraste para el euro, y **FRED SIN llave a propósito**, para dejar
+comprobado que la pide en vez de suponerlo.
+
+Códigos de país en el BIS: `USD→US · EUR→XM · GBP→GB · JPY→JP · CHF→CH ·
+CAD→CA · AUD→AU · NZD→NZ`. **`XM` es el área del euro**, no un país: la tasa
+la pone el BCE para los veinte.
+
+## ⚠️⚠️ LO QUE NO HAY QUE EXAGERAR CUANDO LLEGUEN LOS DATOS
+
+**La diferencia de tasas NO ES EL SWAP.** Es de dónde SALE, que no es lo mismo:
+
+- el banco central pone la referencia;
+- el bróker le añade un margen que **no publica nadie**;
+- y ese margen es **asimétrico**: en una dirección pagas y en la otra a veces
+  cobras, pero casi nunca tanto como pagarías al revés.
+
+O sea que esto da **el signo y el orden de magnitud**, no el número. El banco
+de pruebas **seguirá barriendo varios niveles de swap**; lo que cambia es que
+dejará de barrerlos a ciegas — sabremos cuáles son plausibles y en qué pares
+el swap juega a favor.
+
+📌 Queda escrito ANTES de ver los datos, a propósito. Es la cuarta vez en este
+proyecto que un mecanismo convincente resulta ser menos de lo que parecía, y
+«ya sabemos el swap» es justo la frase que se diría sola al ver la tabla.
+
+## Lo siguiente
+
+Lanzar la sonda (**Actions → «Sonda de las tasas de interés» → Run
+workflow**), leer el log, y **con la forma real delante** escribir el lector.
+Nunca al revés.
+
+---
+
+# El `.bat` no abría ninguna ventana, y era culpa del archivo (2026-09-09)
+
+Néstor pegó el acceso directo en el escritorio, cerró la ventana negra para
+probar, y al hacer doble clic **no pasaba nada**. Ni ventana, ni error.
+
+## La causa, y no era suya
+
+`Iniciar_Puente.bat` se escribió en Linux, o sea con **saltos de línea LF**, y
+llevaba dos bloques así:
+
+```bat
+if not exist "bridge_mt5.py" (
+  echo [ERROR] ...
+  pause
+)
+```
+
+**`cmd` de Windows no analiza bien un bloque de paréntesis de varias líneas
+cuando los saltos son LF.** Aborta el guion entero, y la ventana se cierra
+antes de que dé tiempo a leer nada — desde fuera se ve *exactamente igual* que
+«no abre».
+
+## ⚠️ El detalle que casi deja el arreglo a medias
+
+Lo natural era poner `*.bat text eol=crlf` en un `.gitattributes`. **Habría
+seguido roto**, y el motivo es cómo baja Néstor el archivo:
+
+| | qué guarda el repositorio | qué baja Néstor |
+|---|---|---|
+| `text eol=crlf` | **LF** (convierte solo al hacer `git checkout`) | **LF — roto** |
+| **`-text`** | **CRLF, tal cual se escribió** | **CRLF — bien** |
+
+Él **no clona**: usa el botón de descarga de GitHub, y eso entrega los bytes
+**tal como están guardados**. Comprobado con
+`git cat-file -p :puente-mt5/Iniciar_Puente.bat`, que enseña lo que el
+repositorio guarda de verdad — no lo que hay en el disco. La primera versión
+del arreglo pasaba la comprobación del disco y fallaba la del repositorio.
+
+📌 **La lección, que es la de siempre con otra cara:** comprobar el artefacto
+que la persona va a recibir, no el que uno tiene delante. Es hermana de «el
+banco de pruebas tiene que medir lo que dice medir».
+
+## Las tres defensas, y las tres hacen falta
+
+1. El archivo en **CRLF**.
+2. `puente-mt5/.gitattributes` con **`*.bat -text`** (ver arriba por qué no
+   `eol=crlf`).
+3. El `.bat` **ya no usa bloques de paréntesis**: etiquetas y `goto`, que
+   funcionan con cualquier salto de línea. Es más largo de leer y no se rompe.
+
+Y de paso: **ni un emoji ni una tilde dentro**. La consola de Windows en
+español no usa UTF-8 por defecto y los sacaría como símbolos sin sentido justo
+en los mensajes de error, que es cuando más falta hace entenderlos.
+
+## Dos cosas más que se aprendieron del mismo problema
+
+📌 **La opción «Crear acceso directo» deja el acceso directo AL LADO del
+original**, no en el escritorio. La que lo manda al escritorio es «Enviar a →
+Escritorio». Néstor lo intentó tres veces y las tres se quedaron en la carpeta
+— se veían en su captura, numeradas (2) y (3).
+
+📌 **Se añadió una comprobación de que Python existe** (`where python`). Sin
+ella, Windows dice «no se reconoce como un comando interno o externo», que no
+le dice nada a nadie.
+
+**Para arrancar el puente sin el `.bat`**, mientras tanto: abrir la carpeta,
+clic en la barra de direcciones, escribir `cmd`, Enter, y ahí
+`python bridge_mt5.py`.
+
+## Y el motivo REAL era otro: Smart App Control (2026-09-09)
+
+📌 **Corrección, y es del tipo que este archivo lleva meses coleccionando.**
+El apartado de arriba diagnostica los saltos de línea con seguridad y dice
+«encontrado, es culpa mía». **Era un fallo real y el arreglo se queda** — con
+LF ese `.bat` habría fallado igual—, **pero NO era lo que le estaba pasando a
+Néstor.**
+
+Lo que salía en su pantalla, y solo se supo cuando mandó la foto:
+
+> **Control Inteligente de Aplicaciones ha bloqueado un archivo que podría no
+> ser seguro.** «Este archivo se bloqueó porque este tipo de archivos de
+> Internet pueden ser peligrosos.»
+
+Es **Smart App Control** de Windows 11: bloquea lo descargado de internet. Se
+pulsa «De acuerdo» y no pasa nada más — desde fuera, otra vez, idéntico a «no
+abre».
+
+⚠️ **Quinta vez que presento un mecanismo convincente antes de tener la
+prueba.** Y aquí con un agravante que conviene ver: el mecanismo era **cierto**
+—el archivo tenía ese defecto— y aun así **no era la causa**. Un defecto real
+que explicaría el síntoma sigue sin ser el diagnóstico. La lección práctica es
+la de siempre en este proyecto y sigue costando: **pedir la captura antes de
+teorizar**, exactamente como está escrito arriba del todo sobre el «no veo
+nada nuevo» del 2026-07-30.
+
+### ⚠️ LO QUE NO HAY QUE HACER: apagar esa protección
+
+Windows **no deja volver a encender Smart App Control sin reinstalar el sistema
+entero**. Es un camino de una sola dirección. Nunca proponérselo a Néstor ni a
+un suscriptor.
+
+### Las dos salidas, y por qué la primera es mejor
+
+**A. Que el acceso directo llame a `cmd`, no al `.bat`.** Target
+`cmd.exe /k python bridge_mt5.py` y la carpeta del puente en «Iniciar en».
+**No hay nada que descargar, así que no hay nada que bloquear**: `cmd.exe` es
+un programa del propio Windows, firmado. Hace exactamente lo mismo que el
+`.bat` por un camino que Windows no toca.
+
+**B. Desbloquear el archivo** (Propiedades → casilla «Desbloquear»). Funciona,
+pero **hay que repetirlo cada vez que se vuelva a bajar**.
+
+📌 **Consecuencia de diseño, no solo de soporte:** un `.bat` descargado es
+frágil en Windows 11 por construcción. Si algún día se le da esto a
+suscriptores, la instrucción por defecto tiene que ser la A — o habrá que
+firmar el archivo, que cuesta dinero y no lo vale para tres líneas.
+
+---
+
+# El swap, explicado para suscriptores (guardado a petición suya, 2026-09-09)
+
+Néstor pidió guardar esto **tal cual** para la exposición a suscriptores:
+«en su momento veremos cómo la agregamos como información general». Va con las
+otras tres del mismo tipo —la del volumen, la de TradingView y la de la
+correlación—, y funciona por el mismo motivo: **es una forma de exagerar que la
+app decide no usar, contada con el mecanismo delante.**
+
+> **De dónde salen las tasas.** La candidata fuerte es el **BIS** (Banco de
+> Pagos Internacionales): publica la tasa de referencia de unos 40 bancos
+> centrales **con la misma definición para todos** y sin llave. Es de donde
+> copian los demás.
+>
+> **Una cosa que quiero dejarte clara desde ahora, antes de ver ningún número:**
+>
+> **La diferencia de tasas NO es el swap.** El banco central pone la
+> referencia, pero el bróker le suma su margen — y ese margen **no lo publica
+> nadie**, y además es **desigual**: en una dirección pagas, en la otra a veces
+> cobras, pero casi nunca lo mismo.
+>
+> Lo que esto nos da es **el signo y el tamaño aproximado**: en qué pares el
+> swap juega a tu favor y en cuáles en contra. Seguiremos probando varios
+> niveles en el banco de pruebas, pero **ya no a ciegas**. Lo escribí así en el
+> código **antes** de mirar los datos, a propósito.
+
+📌 **Por qué esto vende, igual que las otras tres:** el suscriptor aprende algo
+verdadero y comprobable —que el swap que le cobran no es la resta de las tasas—
+y de paso ve que la app dice hasta dónde llega su propio dato. Es información,
+no promesas.
+
+📌 **Y el detalle que lo hace creíble está en el repositorio, no en la frase:**
+la advertencia está escrita dentro de `app/scripts/sonda-tasas.mjs` con fecha
+anterior a los datos. Si algún día alguien pregunta si eso se dijo antes o
+después de ver la tabla, el historial de commits lo contesta.
+
+---
+
+# «¿Por qué dice que no hay datos de MT5 si ya los recibe?» (2026-09-09)
+
+La preguntó Néstor leyendo la app, y **tenía razón**. Es el mismo patrón que
+este archivo lleva meses coleccionando: **al cambiar algo, mirar también quién
+lo NOMBRA.** El puente empezó a publicar bid/ask el 2026-09-08 y el texto del
+pie se quedó como estaba.
+
+## El estado real, comprobado en el código antes de contestar
+
+| dato | ¿llega de MT5? | ¿lo usa alguien? |
+|---|---|---|
+| bid, ask y **spread real** | ✅ 18 pares cada 15 min | ✅ **solo** la tarjeta «Lo que cuesta abrir la operación» |
+| **tick volume** | ✅ viaja en `estado/mt5.json` | ❌ **nadie lo pinta** — `useMT5Quotes` lo lee y ahí se queda |
+| el barrido / el tablero | ❌ | velas de Twelve Data, sin tocar MT5 |
+| el reporte diario | ❌ | `reporte-diario.mjs` no menciona MT5 ni una vez |
+| el banco de pruebas | ❌ | `SPREAD_PIPS` sigue escrita a mano |
+
+📌 **La frase no era del todo falsa, y esa es la parte interesante.** Donde
+está escrita describe **el barrido**, y el barrido efectivamente no usa ninguno
+de los dos. Lo que la volvía engañosa es que, leída en la app, está a pocos
+centímetros de una tarjeta que **sí** enseña el spread real del bróker.
+
+## Cómo quedó
+
+> «El barrido no usa tick volume ni el spread del bróker — la liquidez se
+> estima cualitativamente. El spread REAL del bróker se muestra aparte,
+> mientras el puente de MT5 esté encendido.»
+
+En **los 13 idiomas y en las DOS apps**, más el `fakeData.js` de cada una.
+
+⚠️ **A propósito NO se nombra la tarjeta** («Lo que cuesta abrir la
+operación»). Ese título está traducido en cada idioma, así que citarlo obligaría
+a mantener dos textos en sintonía en trece sitios — y el día que cambiara el
+título, doce quedarían mintiendo.
+
+📌 **Y ocho idiomas de Intradía tenían la frase redactada DISTINTA**, así que el
+reemplazo falló ahí en la primera pasada. Se trajo el texto exacto de cada uno
+en vez de suponer que coincidían. Es lo que tiene que pasar cuando un script de
+reemplazo exige encontrar el original **exactamente una vez**: si hubiera hecho
+`replace` a ciegas, esos ocho se habrían quedado viejos en silencio.
+
+## ⚠️ Lo que esta pregunta deja pendiente
+
+**El tick volume se está publicando y no lo mira nadie.** El puente lo saca de
+la vela diaria en curso, viaja en `estado/mt5.json` y `useMT5Quotes` lo
+normaliza — pero `CotizacionesVivo` no lo pinta. O sea que hay un dato real
+llegando cada 15 minutos a la nada.
+
+No es un fallo: nunca se decidió enseñarlo. Pero **si algún día se enseña, hay
+que rotularlo por lo que es** — cuántas VECES cambió el precio en un solo
+bróker, no volumen — con el texto que ya está escrito en este archivo bajo «Lo
+que NO se puede tener en Forex».

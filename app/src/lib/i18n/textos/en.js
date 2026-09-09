@@ -89,7 +89,7 @@ export default {
       '1-2% of capital per trade. Several positions in the same currency are not independent trades — they are a single, larger bet.',
     limitacionesTitulo: 'Limitations:',
     limitaciones:
-      'Real daily candles with high, low and close: the ATR is a true Wilder ATR and supports and resistances come from real highs and lows. One candle per day, no intraday. Without MT5 data there is no tick volume or real broker spread — liquidity is estimated qualitatively.',
+      'Real daily candles with high, low and close: the ATR is a true Wilder ATR and supports and resistances come from real highs and lows. One candle per day, no intraday. The scan does not use tick volume or the broker spread — liquidity is estimated qualitatively. The REAL broker spread is shown separately, while the MT5 bridge is running.',
     educativo: 'Educational analysis, not personalized financial advice. Trading Forex carries risk of loss.',
     descargarMd: '↓ Download .md report',
     pieFuerza: "Weighted average of each currency's % change against the other 7 (1d 20%, 5d 40%, 20d 40%), rescaled 0-10.",

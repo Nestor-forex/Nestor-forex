@@ -85,7 +85,7 @@ export default {
       'İşlem başına sermayenin %1-2’si. Aynı para biriminde birden fazla pozisyon bağımsız işlem değildir — tek ve daha büyük bir bahistir.',
     limitacionesTitulo: 'Sınırlar:',
     limitaciones:
-      'Yüksek, düşük ve kapanış içeren gerçek günlük mumlar: ATR gerçek bir Wilder ATR’ıdır ve destek ile direnç seviyeleri gerçek yüksek ve düşük değerlerden gelir. Günde bir mum, gün içi veri yok. MT5 verisi olmadan tick volume ve aracı kurumun gerçek spread’i yoktur — likidite niteliksel olarak tahmin edilir.',
+      'Yüksek, düşük ve kapanış içeren gerçek günlük mumlar: ATR gerçek bir Wilder ATR’ıdır ve destek ile direnç seviyeleri gerçek yüksek ve düşük değerlerden gelir. Günde bir mum, gün içi veri yok. Tarama ne tick volume ne de aracı kurumun spread’ini kullanır — likidite niteliksel olarak tahmin edilir. Aracı kurumun GERÇEK spread’i, MT5 köprüsü çalıştığı sürece ayrıca gösterilir.',
     educativo: 'Eğitim amaçlı analiz, kişiye özel yatırım tavsiyesi değildir. Forex işlemleri zarar riski taşır.',
     descargarMd: '↓ .md raporunu indir',
     pieFuerza: 'Her para biriminin diğer 7’sine karşı yüzde değişiminin ağırlıklı ortalaması (1g %20, 5g %40, 20g %40), 0-10 aralığına ölçeklenmiş.',

@@ -89,7 +89,7 @@ export default {
       "1-2 % du capital par opération. Plusieurs positions sur la même devise ne sont pas des opérations indépendantes — c'est un seul pari, en plus gros.",
     limitacionesTitulo: 'Limites :',
     limitaciones:
-      "Bougies journalières réelles avec plus haut, plus bas et clôture : l'ATR est un vrai ATR de Wilder et les supports et résistances proviennent des plus hauts et plus bas réels. Une bougie par jour, sans intraday. Sans données MT5, il n'y a ni tick volume ni spread réel du courtier — la liquidité est estimée qualitativement.",
+      "Bougies journalières réelles avec plus haut, plus bas et clôture : l'ATR est un vrai ATR de Wilder et les supports et résistances proviennent des plus hauts et plus bas réels. Une bougie par jour, sans intraday. Le balayage n'utilise ni tick volume ni le spread du courtier — la liquidité est estimée qualitativement. Le spread RÉEL du courtier est affiché à part, tant que le pont MT5 est allumé.",
     educativo: 'Analyse éducative, pas un conseil financier personnalisé. Trader le Forex comporte un risque de perte.',
     descargarMd: '↓ Télécharger le rapport .md',
     pieFuerza: 'Moyenne pondérée de la variation en % de chaque devise face aux 7 autres (1j 20%, 5j 40%, 20j 40%), ramenée à 0-10.',
