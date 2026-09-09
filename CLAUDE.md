@@ -3281,3 +3281,132 @@ No es un fallo: nunca se decidió enseñarlo. Pero **si algún día se enseña, 
 que rotularlo por lo que es** — cuántas VECES cambió el precio en un solo
 bróker, no volumen — con el texto que ya está escrito en este archivo bajo «Lo
 que NO se puede tener en Forex».
+
+---
+
+# La actividad (tick volume) ya se ve en pantalla (2026-09-09). En las dos apps
+
+Néstor lo pidió al leer la nota de arriba: **«el tick volume se está publicando
+cada 15 minutos y no lo mira nadie… quiero que esto lo mostremos en las apps»**.
+Tenía razón: llevaba un día entero llegando a la nada.
+
+Cambio **emparejado y gemelo**: `CotizacionesVivo.jsx` idéntico en los dos
+repositorios, misma rama en los dos, más dos claves nuevas (`vivo.actividad` y
+`vivo.actividadPie`) en los 13 diccionarios de cada app.
+
+## Qué se enseña, y cómo
+
+Una quinta columna en la tarjeta «Lo que cuesta abrir la operación»: el número
+y una barrita con la proporción respecto al par más activo de **esa misma
+lectura**. Debajo, el rótulo honesto de lo que es y de lo que no es.
+
+## Las cuatro decisiones que no hay que ablandar
+
+⚠️ **No se llama «volumen» en ninguna parte de la pantalla.** Se llama
+ACTIVIDAD. En Forex no existe un volumen real —no hay bolsa central que apunte
+las operaciones—, así que nadie tiene el total. El dato no es basura y hay
+operadores con experiencia que lo usan sabiendo lo que es; **el problema sería
+el rótulo, no el dato**. Ver «Lo que NO se puede tener en Forex» más arriba.
+
+⚠️ **Solo compara pares entre sí, nunca días entre sí.** Los 18 números salen
+del MISMO instante, del MISMO día y del MISMO bróker: compararlos unos con
+otros es legítimo. Compararlos con los de ayer no lo sería, porque es el
+`tick_volume` de la vela diaria **EN CURSO** y crece hasta el cierre. Por eso la
+barra se mide contra el par más activo de esa lectura y no hay ni una
+comparación con nada anterior. La frase «el día va a medias» está en los 13
+idiomas a propósito.
+
+⚠️ **La barra va en color neutro.** Ni verde ni rojo: mucha actividad no es
+buena ni mala, y el color afirmaría lo contrario. Misma decisión que en
+`Correlacion.jsx`, y misma regla general — **antes de pintar algo de color,
+preguntarse qué afirma ese color**.
+
+⚠️ **Si NINGÚN par trae actividad, la columna entera desaparece.** Pasa con un
+archivo publicado por un puente viejo, y una columna de guiones se lee como que
+la app está rota. Si solo faltan algunos, sale `—` y no `0`: un cero diría «no
+se movió», que es una afirmación, y no sabemos nada.
+
+## 📌 Dos cosas que solo se vieron en el navegador, y las dos eran reales
+
+**1. El separador de miles hacía que el número pareciera un precio.** Se usaba
+`toLocaleString(locale)`, que en español agrupa con PUNTO: salía «2.926» justo
+al lado de una columna de precios donde el punto es el decimal («1.16290»). Y
+en árabe el mismo formateador sacaba cifras árabo-índicas mientras los precios
+de la misma tabla iban en cifras latinas — **dos sistemas de dígitos en una
+tabla de números**. El entero pelado no tiene ninguno de los dos problemas.
+
+**2. La barra se leía como un SUBRAYADO del número.** El riel iba del ancho del
+número y en un color casi invisible, así que solo se veía la parte llena: sin el
+riel entero detrás no hay contra qué comparar, y una barra sin referencia no
+dice nada. Ahora el riel mide siempre 38 px y se ve.
+
+Ninguna de las dos las ve un build ni un `lint`. Es la cuarta o quinta vez que
+esta pantalla concreta lo demuestra.
+
+## Cómo se verificó
+
+Chromium, componente aislado (la tarjeta está detrás de Firebase), a 390 px de
+ancho y con el `mt5.json` **real de producción**, en cuatro cargas separadas:
+
+| caso | resultado |
+|---|---|
+| español | 14 pares con su actividad y 14 barras; USD/JPY y GBP/JPY las más llenas |
+| **árabe** | cabecera en árabe, y pares y números en `ltr` — comprobado con el CSS calculado |
+| ningún par con `ticks` | la columna **no existe**: 4 columnas, 0 barras, y el pie de actividad tampoco sale |
+| unos sí y otros no | la columna se queda y los que faltan salen con `—` |
+
+Cero errores de consola en los cuatro, y **`scrollWidth == clientWidth` en los
+cuatro**: la quinta columna no obliga a desplazar la pantalla de lado en un
+teléfono, que era el riesgo de añadirla.
+
+---
+
+# La actividad, explicada para suscriptores (2026-09-09)
+
+Néstor la pidió con estas palabras: **«quiero una explicación sencilla para que
+guardes para los suscriptores de qué es eso, para qué se usa o para qué les
+puede servir»**. Va con las otras cuatro del mismo tipo —el volumen,
+TradingView, la correlación y el swap— y funciona por el mismo motivo: **es una
+forma de exagerar que la app decide no usar, contada con el mecanismo delante.**
+
+> **Qué es.** Cada vez que el precio de un par cambia, aunque sea un punto, eso
+> es un «tick». La app te enseña **cuántas veces ha cambiado el precio hoy** en
+> cada par, según el bróker del que salen esos datos.
+>
+> **Para qué te sirve.** Para saber **dónde está pasando algo ahora mismo**. Si
+> el USD/JPY lleva 8.000 cambios y el NZD/CHF lleva 1.900, el yen está siendo
+> negociado con mucha más intensidad esta mañana. Eso te dice dos cosas
+> prácticas: donde hay mucha actividad el precio se mueve de verdad (y suele
+> haber mejor spread), y donde hay poca, un movimiento bonito en el gráfico
+> puede ser cuatro operaciones cruzadas que no llevan a ninguna parte.
+>
+> **Y ahora lo que NO es, que es la parte que casi nadie te cuenta.**
+>
+> Esto **no es volumen**. Volumen sería «cuánto dinero se movió», y en Forex ese
+> número **no existe**: las acciones se negocian en una bolsa —la de Nueva York,
+> la de Madrid— que apunta cada operación, pero el Forex es una red de bancos
+> negociando entre sí. **No hay un sitio, así que no hay un total.** No lo
+> tenemos nosotros y no lo tiene nadie.
+>
+> Cuando otra plataforma te enseña «volumen» de Forex, te está enseñando esto
+> mismo: cuántas veces cambió el precio **en su propio bróker**. La prueba es
+> fácil de ver: abre dos plataformas distintas a la misma hora y te darán
+> números diferentes. Eso solo puede pasar si no es una medición del mercado.
+>
+> **No te digo que sea un dato malo** — no lo es, y hay operadores con
+> experiencia que lo usan muy bien sabiendo lo que es. Lo que no vamos a hacer
+> es llamarlo volumen, porque no lo es.
+>
+> **Un último detalle, para que no lo leas mal.** El número cuenta el día que
+> va corriendo, así que a las nueve de la mañana es pequeño y a las cinco de la
+> tarde es grande. Sirve para comparar **unos pares con otros en este momento**,
+> no para comparar el de hoy con el de ayer.
+
+📌 **Por qué esto vende, igual que las otras cuatro:** el suscriptor aprende
+algo verdadero y comprobable —que el «volumen» de Forex que le enseñan por ahí
+es el contador de un solo bróker— y de paso ve que la app dice hasta dónde llega
+su propio dato. Es información, no promesas.
+
+📌 **Y el detalle que lo hace creíble está en la pantalla, no en la frase:** el
+rótulo va debajo de la tabla, en los 13 idiomas, donde lo lee cualquiera que
+mire el número. No en un glosario aparte que nadie abre.
