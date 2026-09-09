@@ -128,7 +128,7 @@ export default {
       '1-2% del capital por operación. Varias posiciones en la misma divisa no son operaciones independientes — son una sola apuesta con más tamaño.',
     limitacionesTitulo: 'Limitaciones:',
     limitaciones:
-      'Velas diarias reales con máximo, mínimo y cierre: el ATR es un ATR de Wilder verdadero y los soportes y resistencias salen de los máximos y mínimos reales. Una vela por día, sin intradía. Sin datos de MT5 no hay tick volume ni spread real del bróker — la liquidez se estima cualitativamente.',
+      'Velas diarias reales con máximo, mínimo y cierre: el ATR es un ATR de Wilder verdadero y los soportes y resistencias salen de los máximos y mínimos reales. Una vela por día, sin intradía. El barrido no usa tick volume ni el spread del bróker — la liquidez se estima cualitativamente. El spread REAL del bróker se muestra aparte, mientras el puente de MT5 esté encendido.',
     educativo: 'Análisis educativo, no asesoría financiera personalizada. Operar Forex conlleva riesgo de pérdida.',
     descargarMd: '↓ Descargar reporte .md',
     pieFuerza: 'Promedio ponderado del cambio % de cada divisa contra las otras 7 (1d 20%, 5d 40%, 20d 40%), reescalado 0-10.',

@@ -85,7 +85,7 @@ export default {
       "1-2% del capitale per operazione. Più posizioni sulla stessa valuta non sono operazioni indipendenti — sono un'unica scommessa, solo più grande.",
     limitacionesTitulo: 'Limiti:',
     limitaciones:
-      "Candele giornaliere reali con massimo, minimo e chiusura: l'ATR è un vero ATR di Wilder e i supporti e le resistenze derivano dai massimi e minimi reali. Una candela al giorno, senza intraday. Senza dati MT5 non c'è tick volume né spread reale del broker — la liquidità è stimata qualitativamente.",
+      "Candele giornaliere reali con massimo, minimo e chiusura: l'ATR è un vero ATR di Wilder e i supporti e le resistenze derivano dai massimi e minimi reali. Una candela al giorno, senza intraday. La scansione non usa il tick volume né lo spread del broker — la liquidità è stimata qualitativamente. Lo spread REALE del broker si vede a parte, finché il ponte MT5 è acceso.",
     educativo: 'Analisi didattica, non consulenza finanziaria personalizzata. Fare trading sul Forex comporta rischio di perdita.',
     descargarMd: '↓ Scarica il report .md',
     pieFuerza: 'Media ponderata della variazione % di ogni valuta contro le altre 7 (1g 20%, 5g 40%, 20g 40%), riscalata 0-10.',

@@ -89,7 +89,7 @@ export default {
       '1-2 % des Kapitals pro Trade. Mehrere Positionen in derselben Währung sind keine unabhängigen Trades — sie sind eine einzige, größere Wette.',
     limitacionesTitulo: 'Einschränkungen:',
     limitaciones:
-      'Echte Tageskerzen mit Hoch, Tief und Schlusskurs: Der ATR ist ein echter Wilder-ATR, und Unterstützungen und Widerstände stammen aus den realen Hochs und Tiefs. Eine Kerze pro Tag, kein Intraday. Ohne MT5-Daten gibt es kein Tick-Volumen und keinen echten Broker-Spread — die Liquidität wird qualitativ geschätzt.',
+      'Echte Tageskerzen mit Hoch, Tief und Schlusskurs: Der ATR ist ein echter Wilder-ATR, und Unterstützungen und Widerstände stammen aus den realen Hochs und Tiefs. Eine Kerze pro Tag, kein Intraday. Der Scan nutzt weder Tick-Volumen noch den Broker-Spread — die Liquidität wird qualitativ geschätzt. Der ECHTE Broker-Spread wird separat angezeigt, solange die MT5-Brücke läuft.',
     educativo: 'Bildungsanalyse, keine persönliche Finanzberatung. Forex-Handel birgt Verlustrisiko.',
     descargarMd: '↓ Bericht als .md herunterladen',
     pieFuerza: 'Gewichteter Durchschnitt der prozentualen Veränderung jeder Währung gegenüber den anderen 7 (1T 20%, 5T 40%, 20T 40%), auf 0-10 skaliert.',

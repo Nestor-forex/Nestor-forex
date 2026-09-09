@@ -3226,3 +3226,58 @@ no promesas.
 la advertencia está escrita dentro de `app/scripts/sonda-tasas.mjs` con fecha
 anterior a los datos. Si algún día alguien pregunta si eso se dijo antes o
 después de ver la tabla, el historial de commits lo contesta.
+
+---
+
+# «¿Por qué dice que no hay datos de MT5 si ya los recibe?» (2026-09-09)
+
+La preguntó Néstor leyendo la app, y **tenía razón**. Es el mismo patrón que
+este archivo lleva meses coleccionando: **al cambiar algo, mirar también quién
+lo NOMBRA.** El puente empezó a publicar bid/ask el 2026-09-08 y el texto del
+pie se quedó como estaba.
+
+## El estado real, comprobado en el código antes de contestar
+
+| dato | ¿llega de MT5? | ¿lo usa alguien? |
+|---|---|---|
+| bid, ask y **spread real** | ✅ 18 pares cada 15 min | ✅ **solo** la tarjeta «Lo que cuesta abrir la operación» |
+| **tick volume** | ✅ viaja en `estado/mt5.json` | ❌ **nadie lo pinta** — `useMT5Quotes` lo lee y ahí se queda |
+| el barrido / el tablero | ❌ | velas de Twelve Data, sin tocar MT5 |
+| el reporte diario | ❌ | `reporte-diario.mjs` no menciona MT5 ni una vez |
+| el banco de pruebas | ❌ | `SPREAD_PIPS` sigue escrita a mano |
+
+📌 **La frase no era del todo falsa, y esa es la parte interesante.** Donde
+está escrita describe **el barrido**, y el barrido efectivamente no usa ninguno
+de los dos. Lo que la volvía engañosa es que, leída en la app, está a pocos
+centímetros de una tarjeta que **sí** enseña el spread real del bróker.
+
+## Cómo quedó
+
+> «El barrido no usa tick volume ni el spread del bróker — la liquidez se
+> estima cualitativamente. El spread REAL del bróker se muestra aparte,
+> mientras el puente de MT5 esté encendido.»
+
+En **los 13 idiomas y en las DOS apps**, más el `fakeData.js` de cada una.
+
+⚠️ **A propósito NO se nombra la tarjeta** («Lo que cuesta abrir la
+operación»). Ese título está traducido en cada idioma, así que citarlo obligaría
+a mantener dos textos en sintonía en trece sitios — y el día que cambiara el
+título, doce quedarían mintiendo.
+
+📌 **Y ocho idiomas de Intradía tenían la frase redactada DISTINTA**, así que el
+reemplazo falló ahí en la primera pasada. Se trajo el texto exacto de cada uno
+en vez de suponer que coincidían. Es lo que tiene que pasar cuando un script de
+reemplazo exige encontrar el original **exactamente una vez**: si hubiera hecho
+`replace` a ciegas, esos ocho se habrían quedado viejos en silencio.
+
+## ⚠️ Lo que esta pregunta deja pendiente
+
+**El tick volume se está publicando y no lo mira nadie.** El puente lo saca de
+la vela diaria en curso, viaja en `estado/mt5.json` y `useMT5Quotes` lo
+normaliza — pero `CotizacionesVivo` no lo pinta. O sea que hay un dato real
+llegando cada 15 minutos a la nada.
+
+No es un fallo: nunca se decidió enseñarlo. Pero **si algún día se enseña, hay
+que rotularlo por lo que es** — cuántas VECES cambió el precio en un solo
+bróker, no volumen — con el texto que ya está escrito en este archivo bajo «Lo
+que NO se puede tener en Forex».
