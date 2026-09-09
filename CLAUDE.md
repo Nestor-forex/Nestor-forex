@@ -3462,3 +3462,74 @@ por dólar», y no al revés.
 me quiere decir?», la respuesta correcta casi nunca es explicárselo en el chat.
 Es meter la explicación EN LA PANTALLA, porque el suscriptor que se lo pregunte
 mañana no me tiene a mí al lado. Pasó igual con el calendario el 2026-09-08.
+
+---
+
+# La actividad, versión ampliada para suscriptores (2026-09-09)
+
+Néstor pidió guardar también la explicación de POR QUÉ el aviso va primero, y
+«si puedes agregar algo más claro, mejor». Esto sustituye a nada: se suma a «La
+actividad, explicada para suscriptores» de más arriba, que sigue siendo el
+texto base. Aquí van las tres piezas que lo hacen entendible de una lectura.
+
+## 1. La comparación que lo explica sin tecnicismos
+
+> Imagina que cuentas **cuánta gente entra y sale de una tienda** en una hora.
+>
+> Ese número te dice si la tienda está movida. **No te dice si la tienda gana
+> dinero, ni si subieron los precios, ni si te conviene comprar allí.**
+>
+> La actividad de un par de divisas es exactamente eso: **el conteo de gente en
+> la puerta.** Nada más, y nada menos.
+
+📌 Funciona porque separa las dos preguntas que la gente junta sin darse cuenta:
+*«¿está pasando algo?»* y *«¿qué está pasando?»*. La actividad contesta la
+primera. La segunda no la contesta esta columna — ni ninguna otra sin arriesgar
+una opinión.
+
+## 2. El matiz honesto que casi nadie dice: mucha actividad no es «mejor»
+
+Hay dos clases de actividad alta y **no significan lo mismo**:
+
+| | qué es | qué le pasa al spread |
+|---|---|---|
+| **Sostenida** (Londres, Londres-Nueva York) | mucha gente negociando durante horas | se **estrecha**: es más fácil entrar y salir |
+| **De golpe** (sale una noticia) | todos reaccionando en el mismo minuto | se **abre**, y el precio puede saltarse tu stop |
+
+> Así que «este par tiene mucha actividad» **no quiere decir «este par es el
+> bueno»**. Quiere decir «aquí hay gente». Si esa gente apareció toda de golpe
+> porque acaba de salir un dato, el mejor momento para entrar es justo el que no
+> es. **Para eso está la tarjeta del calendario, unos centímetros más arriba:
+> mira si hay una noticia a esa hora antes de fiarte del número.**
+
+⚠️ Esto es lo que hace creíble el resto del argumento, y por eso se guarda: la
+tentación de vender la actividad como «entra donde hay movimiento» es enorme y
+sería medio verdad. Media verdad en un producto de trading es una mentira con
+buenos modales.
+
+## 3. La frase de una línea, que es la que hay que recordar
+
+> **La actividad no elige el par. Ayuda a elegir el MOMENTO del par que ya
+> elegiste por otras razones.**
+
+## Por qué el aviso va PRIMERO, y no al final (esto también va a la landing)
+
+> Nos habrás visto poner la advertencia antes que la explicación. Es a
+> propósito.
+>
+> De todas las formas de leer mal este número, **la que cuesta dinero es
+> confundir actividad con dirección**: creer que «el que más se mueve» es el que
+> hay que comprar. Confundirla con volumen no le hace perder plata a nadie —
+> solo es inexacto.
+>
+> Lo primero que se lee es lo que se recuerda, así que lo primero que decimos es
+> lo que más caro sale ignorar. Es la misma razón por la que en la pantalla de
+> mediciones ponemos «55 % de acierto» **y justo debajo** «y aun así se pierden
+> 3 centavos por cada dólar arriesgado», y no al revés: puesto al revés, el
+> porcentaje se lee como la conclusión.
+
+📌 **Este último bloque es de los que más valen para vender**, porque no habla
+del mercado: habla de **cómo está construida la app**. Un suscriptor no puede
+comprobar si nuestro RSI está bien calculado, pero sí puede comprobar que le
+avisamos antes de impresionarle. Es del mismo tipo que las tres decisiones de la
+correlación y la del swap.
