@@ -3189,3 +3189,40 @@ pero **hay que repetirlo cada vez que se vuelva a bajar**.
 frágil en Windows 11 por construcción. Si algún día se le da esto a
 suscriptores, la instrucción por defecto tiene que ser la A — o habrá que
 firmar el archivo, que cuesta dinero y no lo vale para tres líneas.
+
+---
+
+# El swap, explicado para suscriptores (guardado a petición suya, 2026-09-09)
+
+Néstor pidió guardar esto **tal cual** para la exposición a suscriptores:
+«en su momento veremos cómo la agregamos como información general». Va con las
+otras tres del mismo tipo —la del volumen, la de TradingView y la de la
+correlación—, y funciona por el mismo motivo: **es una forma de exagerar que la
+app decide no usar, contada con el mecanismo delante.**
+
+> **De dónde salen las tasas.** La candidata fuerte es el **BIS** (Banco de
+> Pagos Internacionales): publica la tasa de referencia de unos 40 bancos
+> centrales **con la misma definición para todos** y sin llave. Es de donde
+> copian los demás.
+>
+> **Una cosa que quiero dejarte clara desde ahora, antes de ver ningún número:**
+>
+> **La diferencia de tasas NO es el swap.** El banco central pone la
+> referencia, pero el bróker le suma su margen — y ese margen **no lo publica
+> nadie**, y además es **desigual**: en una dirección pagas, en la otra a veces
+> cobras, pero casi nunca lo mismo.
+>
+> Lo que esto nos da es **el signo y el tamaño aproximado**: en qué pares el
+> swap juega a tu favor y en cuáles en contra. Seguiremos probando varios
+> niveles en el banco de pruebas, pero **ya no a ciegas**. Lo escribí así en el
+> código **antes** de mirar los datos, a propósito.
+
+📌 **Por qué esto vende, igual que las otras tres:** el suscriptor aprende algo
+verdadero y comprobable —que el swap que le cobran no es la resta de las tasas—
+y de paso ve que la app dice hasta dónde llega su propio dato. Es información,
+no promesas.
+
+📌 **Y el detalle que lo hace creíble está en el repositorio, no en la frase:**
+la advertencia está escrita dentro de `app/scripts/sonda-tasas.mjs` con fecha
+anterior a los datos. Si algún día alguien pregunta si eso se dijo antes o
+después de ver la tabla, el historial de commits lo contesta.
