@@ -1,0 +1,89 @@
+name: COT (posiciones institucionales)
+
+# Baja de la CFTC cuántos futuros de cada divisa tienen comprados y vendidos los
+# grandes operadores, y lo publica en `estado/cot.json` de la rama `datos`. La
+# app lo lee de ahí.
+#
+# Ver la cabecera de `app/scripts/publicar-cot.mjs` para por qué esto NO vive
+# dentro del vigía (el mismo motivo que el calendario y las tasas: el vigía
+# escribe el historial, y eso es lo único irreparable del proyecto).
+#
+# ⚠️ NO GASTA CRÉDITOS DE TWELVE DATA ni necesita ningún secreto: son datos
+# públicos de un organismo oficial y Socrata responde sin llave. Por eso este
+# workflow no lleva `env` con `TWELVEDATA_KEY`.
+
+on:
+  schedule:
+    # UNA VEZ AL DÍA aunque el dato sea SEMANAL, y no es desperdicio.
+    #
+    # La CFTC publica los viernes sobre las 19:30 UTC con los datos del martes
+    # anterior. Lo suyo sería correr los viernes por la tarde y ya. Pero está
+    # medido en este proyecto que **el reloj de GitHub se salta horas** —el
+    # vigía de Swing perdió el viernes 5 de septiembre entero— y con una sola
+    # corrida semanal un salto costaría una semana de retraso en pantalla.
+    #
+    # Correr a diario no cuesta nada (ni un crédito, y el `git diff` de abajo
+    # hace que los días sin dato nuevo no dejen ni un commit) y convierte un
+    # fallo de una semana en un fallo de un día.
+    #
+    # 07:20 UTC: después de las tasas (06:20) y muy antes del vigía (15:50).
+    - cron: '20 7 * * *'
+  workflow_dispatch:
+
+# Escribe en la rama `datos`: por defecto el token de Actions es de solo
+# lectura.
+permissions:
+  contents: write
+
+concurrency:
+  group: cot
+  cancel-in-progress: false
+
+jobs:
+  cot:
+    runs-on: ubuntu-latest
+    # Sin esto GitHub deja correr un trabajo hasta SEIS HORAS, y con
+    # `concurrency` sin cancelar, una corrida atascada bloquearía las
+    # siguientes media jornada. Lo normal aquí son segundos.
+    timeout-minutes: 5
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - name: Traer los datos
+        uses: actions/checkout@v4
+        with:
+          ref: datos
+          path: datos
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # No hace falta `npm ci`: el publicador solo usa `fetch` y `node:fs`, que
+      # vienen con Node, más funciones puras de `src/lib/`.
+      - name: Bajar y preparar
+        working-directory: app
+        env:
+          VIGIA_DATOS: ${{ github.workspace }}/datos
+        run: node scripts/publicar-cot.mjs
+
+      - name: Guardar
+        working-directory: datos
+        run: |
+          git config user.name 'COT Nestor Forex Swing'
+          git config user.email 'noreply@anthropic.com'
+          git add estado/cot.json
+          # Lo NORMAL es que no cambie nada seis días de cada siete: el informe
+          # es semanal. Un día sin commit no es un fallo.
+          if git diff --cached --quiet; then
+            echo 'El COT no cambió desde la última vez.'
+            exit 0
+          fi
+          git commit -m "COT $(date -u +'%Y-%m-%d')"
+          for i in 1 2 3; do
+            git pull --rebase origin datos && git push origin HEAD:datos && exit 0
+            sleep $((i * 5))
+          done
+          echo 'No se pudo guardar tras 3 intentos.'
+          exit 1
