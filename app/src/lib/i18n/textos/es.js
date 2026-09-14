@@ -476,6 +476,19 @@ export default {
     pie: (v) => `Fuente: BIS (Banco de Pagos Internacionales). Cada fila lleva la fecha de SU dato: una tasa de referencia solo cambia el día que se reúne el banco central. El más antiguo es de hace ${v.dias} días.`,
   },
 
+  cot: {
+    titulo: 'Lo que tienen comprado los grandes',
+    aviso: '⚠️ Esto NO dice comprar ni vender. Son posiciones en futuros del CME, una parte pequeña del mercado Forex, y llegan con días de retraso: la CFTC publica los viernes con los datos del martes anterior. Y un posicionamiento extremo unos lo leen como que la tendencia sigue y otros como que se va a dar la vuelta. No está medido cuál acierta.',
+    intro: 'Cuánto tienen comprado o vendido los fondos especulativos —lo que la CFTC llama leveraged funds— en cada divisa, como porcentaje de todos los contratos abiertos. Cada divisa va contra el dólar.',
+    comprados: 'Netos comprados',
+    vendidos: 'Netos vendidos',
+    igualados: 'Igualados',
+    cambio: (v) => `${v.n} contratos esta semana`,
+    sinCambio: 'Sin cambio esta semana',
+    indice: 'El dólar contra una cesta, no contra una sola divisa',
+    pie: (v) => `Fuente: CFTC, informe del ${v.fecha} (hace ${v.dias} días). Solo futuros, sin opciones. Entre 3 y 10 días de antigüedad es lo normal: se publica los viernes con los datos del martes. La barra solo sirve para comparar de un vistazo; el número es el dato.`,
+  },
+
   errores: {
     'auth/email-already-in-use': 'Ese correo ya tiene una cuenta. Prueba en "Ingresar".',
     'auth/invalid-email': 'Ese correo no parece válido.',

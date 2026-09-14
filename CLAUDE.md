@@ -3687,3 +3687,121 @@ No hay nada que corregir.
 primer día dentro de la respuesta de la sonda, en una columna que el lector
 descarta a propósito. **Antes de dar una diferencia por sospechosa, releer la
 respuesta cruda entera** — la sonda no está solo para elegir la dirección.
+
+---
+
+# El COT ya se ve en la app (2026-09-14). La #4 de la fase de información
+
+```
+app/scripts/sonda-cot.mjs      la sonda (4 corridas; el detalle en app/CLAUDE.md)
+app/src/lib/cot.js             las cuentas puras (Node + navegador)
+app/scripts/publicar-cot.mjs   baja de la CFTC y escribe estado/cot.json
+app/src/lib/useCot.js          lo lee desde la app
+app/src/components/Cot.jsx     la tarjeta, en la pestaña Barrido
+app/scripts/prueba-cot.mjs     98 comprobaciones, sin internet
+.github/workflows/cot.yml      una vez al día, 07:20 UTC
+```
+
+**Fuente: `TFF_All` (`udgc-27he`) de la CFTC**, elegido CON LA SONDA. Sin llave,
+sin secretos y **sin gastar un crédito de Twelve Data**.
+
+⚠️ **SOLO EN SWING.** El COT es semanal y llega con entre 3 y 10 días de
+retraso. Para operaciones de horas a días todavía dice algo; para una que abre
+y cierra el mismo día, no. Si se quiere en Intradía, que sea con un motivo
+escrito y no por simetría.
+
+## ⚠️ La trampa que más cerca estuvo de colarse
+
+**`TFF_All` son DOS informes en la misma tabla** (`FutOnly` y `Combined`), y
+pedir sin fijar `futonly_or_combined` devuelve uno de los dos **según le
+apetezca al servidor**. No falla: devuelve un número plausible del informe que
+no era. En EURO FX el mismo día, 942.464 contra 1.056.521 de interés abierto y
+94.808 contra 81.335 de fondos largos — **un 14 %**.
+
+Es la misma familia de fallo que el ATR de cierre a cierre del 2026-08-09: un
+dato correcto **de una cosa distinta de la que uno cree estar midiendo**.
+
+📌 Comprobado en producción, no solo en las pruebas: los ocho números
+publicados cuadran con las filas `FutOnly` y no con las `Combined`.
+
+## ⚠️ Tres de los ocho nombres de contrato estaban MUERTOS
+
+`NEW ZEALAND DOLLAR` → **`NZ DOLLAR`** · `U.S. DOLLAR INDEX` → **`USD INDEX`** ·
+`BRITISH POUND STERLING` → **`BRITISH POUND`**.
+
+**Un contrato muerto no da error**: sigue en la tabla y devuelve su último dato,
+de hace años, sin decir que es viejo. Por eso la pregunta que decide no es «¿está
+en la lista de contratos?» sino **«¿tiene fila en el ÚLTIMO informe?»**.
+
+📌 **Y el motivo del error es el de siempre con otra cara:** los leí de una lista
+que **un filtro mío había recortado**. `PARECE_DIVISA` pedía «DOLLAR INDEX» y el
+contrato vivo se llama «USD INDEX», así que el filtro **escondía justo lo que se
+buscaba**. `CONTRATOS_MUERTOS` los guarda y hay una comprobación que falla si
+alguno vuelve a colarse.
+
+## Las decisiones de pantalla que no hay que ablandar
+
+⚠️ **EL AVISO VA PRIMERO, ANTES DE NINGÚN NÚMERO.** Igual que en `Tasas.jsx` y
+en la actividad. Aquí lo caro es leerlo como «compra lo que compran los grandes».
+
+⚠️ **NADA SE PINTA DE VERDE NI DE ROJO, y el signo va en la POSICIÓN.** La barra
+sale del centro a la derecha si están comprados y a la izquierda si están
+vendidos. La posición dice hacia qué lado sin decir «esto es bueno» — que es
+justo lo que hace falta, porque media industria lee un extremo como continuación
+y la otra media como vuelta.
+
+⚠️ **ESCALA FIJA (25 %), no «el mayor de hoy».** Al revés que en la columna de
+actividad, y a propósito: con escala relativa, una semana en la que nadie
+estuviera posicionado seguiría enseñando una barra llena. La escala fija deja
+las semanas tranquilas con barras cortas.
+
+⚠️ **NADA DEVUELVE UN VEREDICTO.** No hay `lado`, ni `compra`, ni `venta`. El
+COT es un **FILTRO**, no información: cambiaría las señales y no ha pasado por
+el banco de pruebas. Hay una comprobación dedicada solo a eso, para que añadir
+un veredicto obligue a venir a borrarla — o sea, a propósito y no de pasada.
+
+⚠️ **Si falta una de las ocho no se publica nada y el workflow falla.** El fallo
+que esto caza ya ocurrió: la CFTC renombra contratos.
+
+⚠️ **A DIARIO aunque el dato sea semanal.** El reloj de GitHub se salta horas
+(el vigía perdió el viernes 5 de septiembre entero); con una corrida semanal un
+salto costaría una semana.
+
+## Lo que solo se vio MIRANDO la captura
+
+Las 98 comprobaciones y las 13 del navegador pasaban, y aun así:
+
+📌 **«+13,302» estaba mal en español.** Usaba `toLocaleString('en-US')` al lado
+de un «−16.6 %»: en español esa coma es el decimal, así que el número grande se
+leía como pequeño. Ahora va entero pelado, **la misma decisión que en la columna
+de actividad y por las mismas dos razones** (la otra: en árabe saldrían cifras
+árabo-índicas junto a porcentajes en latinas).
+
+📌 **La marca del cero no se veía.** Era de 1 px dentro del riel y en un tono
+casi idéntico: no había forma de saber desde dónde salía la barra, y una barra
+sin referencia no dice nada. Ahora **sobresale** del riel y se lee como un eje.
+Es la misma lección que la barrita de actividad.
+
+📌 **Y en árabe se mezclaban dos sistemas de dígitos en la MISMA frase:**
+`٨ سبتمبر ٢٠٢٦ (قبل 6 يوماً)`. La regla que sale de aquí, y que ya estaba
+implícita en el resto de la app: **dentro de una frase traducida los números
+siguen al idioma; en las columnas de datos van en cifras latinas, `mono` y
+`ltr` fijo, como los precios.**
+
+## Cómo se verificó
+
+19 pruebas sin internet (gemelos incluido: los 50 siguen idénticos), lint, build,
+y **Chromium a 390 px** con el `cot.json` real de producción en cuatro cargas
+separadas: español, árabe, archivo vacío y 404. Cero errores de consola, cero
+desplazamiento lateral, y `dir` comprobado con el CSS calculado en los 24
+elementos de datos **y en las 8 barras** — una barra que heredara `rtl` diría lo
+contrario de lo que pasa.
+
+**Comprobado que las pruebas muerden**, con el daño verificado en su sitio antes
+de darlas por buenas: cambiar el informe a `Combined` tumba 2 · devolver el NZD a
+su nombre muerto tumba 9 · quitar la línea que distingue el vacío del cero tumba 5.
+
+📌 **Y dos fallos del banco de pruebas antes que de la app:** guardaba el idioma
+como JSON (`"es"` en vez de `es`), así que todo salía en inglés; y pedía un CSS
+por una ruta que no existía. **Antes de creerse que la app está rota, comprobar
+que el banco de pruebas mide lo que dice medir.**

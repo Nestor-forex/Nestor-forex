@@ -429,6 +429,19 @@ export default {
     pie: (v) => `Source: BIS (Bank for International Settlements). Each row shows the date of ITS own figure: a policy rate only changes on the day the central bank meets. The oldest is ${v.dias} days old.`,
   },
 
+  cot: {
+    titulo: 'What the big players are holding',
+    aviso: '⚠️ This does NOT say buy or sell. These are positions in CME futures, a small slice of the Forex market, and they arrive days late: the CFTC publishes on Fridays with the previous Tuesday’s data. And extreme positioning is read by some as the trend continuing and by others as a turn coming. Which one is right here has not been measured.',
+    intro: 'How much the speculative funds — what the CFTC calls leveraged funds — are holding long or short in each currency, as a percentage of all open contracts. Each currency is against the dollar.',
+    comprados: 'Net long',
+    vendidos: 'Net short',
+    igualados: 'Balanced',
+    cambio: (v) => `${v.n} contracts this week`,
+    sinCambio: 'No change this week',
+    indice: 'The dollar against a basket, not against a single currency',
+    pie: (v) => `Source: CFTC, report of ${v.fecha} (${v.dias} days ago). Futures only, no options. Between 3 and 10 days old is normal: it is published on Fridays with Tuesday’s data. The bar is only for comparing at a glance; the number is the data.`,
+  },
+
   errores: {
     'auth/email-already-in-use': 'That email already has an account. Try "Sign in".',
     'auth/invalid-email': 'That email does not look valid.',

@@ -429,6 +429,19 @@ export default {
     pie: (v) => `Quelle: BIS (Bank für Internationalen Zahlungsausgleich). Jede Zeile zeigt das Datum IHRER Angabe: ein Leitzins ändert sich nur an dem Tag, an dem die Zentralbank tagt. Die älteste ist ${v.dias} Tage alt.`,
   },
 
+  cot: {
+    titulo: 'Was die großen Marktteilnehmer halten',
+    aviso: '⚠️ Das sagt NICHT kaufen oder verkaufen. Es sind Positionen in CME-Futures, ein kleiner Teil des Forex-Marktes, und sie kommen mit Tagen Verspätung: die CFTC veröffentlicht freitags die Daten vom Dienstag davor. Und eine extreme Positionierung lesen die einen als Fortsetzung des Trends und die anderen als bevorstehende Wende. Was hier zutrifft, ist nicht gemessen.',
+    intro: 'Wie viel die spekulativen Fonds — von der CFTC leveraged funds genannt — in jeder Währung long oder short halten, als Prozentsatz aller offenen Kontrakte. Jede Währung steht gegen den Dollar.',
+    comprados: 'Netto long',
+    vendidos: 'Netto short',
+    igualados: 'Ausgeglichen',
+    cambio: (v) => `${v.n} Kontrakte diese Woche`,
+    sinCambio: 'Keine Änderung diese Woche',
+    indice: 'Der Dollar gegen einen Korb, nicht gegen eine einzelne Währung',
+    pie: (v) => `Quelle: CFTC, Bericht vom ${v.fecha} (vor ${v.dias} Tagen). Nur Futures, ohne Optionen. Zwischen 3 und 10 Tagen alt ist normal: er erscheint freitags mit den Daten vom Dienstag. Der Balken dient nur zum schnellen Vergleich; die Zahl ist der eigentliche Wert.`,
+  },
+
   errores: {
     'auth/email-already-in-use': 'Diese E-Mail hat bereits ein Konto. Versuche es mit "Anmelden".',
     'auth/invalid-email': 'Diese E-Mail sieht nicht gültig aus.',

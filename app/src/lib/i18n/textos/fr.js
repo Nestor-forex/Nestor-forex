@@ -429,6 +429,19 @@ export default {
     pie: (v) => `Source : BIS (Banque des règlements internationaux). Chaque ligne affiche la date de SA donnée : un taux directeur ne change que le jour où la banque centrale se réunit. La plus ancienne date de ${v.dias} jours.`,
   },
 
+  cot: {
+    titulo: 'Ce que détiennent les grands opérateurs',
+    aviso: '⚠️ Ceci ne dit PAS d’acheter ou de vendre. Ce sont des positions sur les futures du CME, une petite partie du marché Forex, et elles arrivent avec plusieurs jours de retard : la CFTC publie le vendredi les données du mardi précédent. Et un positionnement extrême, les uns le lisent comme la poursuite de la tendance et les autres comme un retournement. Ce qui est juste ici n’a pas été mesuré.',
+    intro: 'Combien les fonds spéculatifs — ce que la CFTC appelle leveraged funds — détiennent à l’achat ou à la vente sur chaque devise, en pourcentage de tous les contrats ouverts. Chaque devise est face au dollar.',
+    comprados: 'Net acheteur',
+    vendidos: 'Net vendeur',
+    igualados: 'Équilibré',
+    cambio: (v) => `${v.n} contrats cette semaine`,
+    sinCambio: 'Aucun changement cette semaine',
+    indice: 'Le dollar face à un panier, pas face à une seule devise',
+    pie: (v) => `Source : CFTC, rapport du ${v.fecha} (il y a ${v.dias} jours). Futures seulement, sans options. Entre 3 et 10 jours d’ancienneté est normal : il paraît le vendredi avec les données du mardi. La barre sert seulement à comparer d’un coup d’œil ; le chiffre est la donnée.`,
+  },
+
   errores: {
     'auth/email-already-in-use': 'Cet e-mail a déjà un compte. Essaie « Se connecter ».',
     'auth/invalid-email': "Cet e-mail ne semble pas valide.",

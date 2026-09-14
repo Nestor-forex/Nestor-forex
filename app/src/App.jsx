@@ -9,6 +9,7 @@ import BarridoTab from './components/BarridoTab'
 import AvisosCard from './components/AvisosCard'
 import CotizacionesVivo from './components/CotizacionesVivo'
 import Tasas from './components/Tasas'
+import Cot from './components/Cot'
 import HistorialTab from './components/HistorialTab'
 import TableroCompleto from './components/TableroCompleto'
 import SetupDetalle from './components/SetupDetalle'
@@ -186,6 +187,14 @@ export default function App() {
                       Separarlas obligaría a buscar en dos pantallas lo que es
                       la misma pregunta: cuánto cuesta esta operación. */}
                   <Tasas />
+                  {/* El COT va aquí y no en el tablero porque es, como el
+                      barrido, una foto POR DIVISA: arriba se ve cuál está
+                      fuerte esta semana y aquí al lado cuánto tienen comprado
+                      o vendido los grandes en cada una. Son la misma pregunta
+                      mirada desde dos sitios.
+                      ⚠️ Solo en Swing: el COT es semanal y llega con entre 3 y
+                      10 días de retraso. Ver la cabecera de `useCot.js`. */}
+                  <Cot />
                 </>
               )}
               {tab === 'diario' && (
