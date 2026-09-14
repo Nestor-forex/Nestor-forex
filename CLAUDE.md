@@ -3954,3 +3954,60 @@ marcos, barrido de liquidez, y ahora el COT). El patrón lleva meses siendo el
 mismo y conviene tenerlo escrito: **en esta app, los filtros no funcionan.** Lo
 único que ha medido positivo son reglas de ENTRADA distintas —la reversión y
 «comprar la caída»—, no filtros sobre la entrada que ya existe.
+
+---
+
+# El retraso de GitHub, cerrado por el lado que sí se podía cerrar (2026-09-14)
+
+Néstor: **«creo que esto ya lo hemos hablado y si no recuerdo mal te pedí que lo
+resolviéramos… creo que esos retrasos nos perjudican las app»**.
+
+Lo comprobé antes de contestar, y tenía razón a medias — pero la mitad que
+faltaba es la importante.
+
+## Son DOS problemas distintos que se llaman igual
+
+| | qué es | ¿resuelto? |
+|---|---|---|
+| **A. El reloj se salta corridas** | el cron no dispara; el vigía de Swing perdió el viernes 5 de septiembre ENTERO | ✅ **sí**, el 2026-09-07 (tres crones + `yaCorrioHoy`) |
+| **B. La API tarda en enseñar el resultado** | el trabajo termina en 65 s y el log sigue dando 404 | ❌ **no se había tocado** |
+
+**A sí perjudicaba a la app** —un día de historial que no vuelve— y está
+arreglado. **B nunca la ha perjudicado**: la app no lee logs de Actions, lee
+`barrido.json` de la rama `datos`. Lo único que B estropeaba era que yo pudiera
+mandarle el reporte al chat a su hora.
+
+📌 Decírselo así importa: si le hubiera dado la razón entera, se habría quedado
+creyendo que su app lleva meses sirviendo datos tarde, y no es verdad.
+
+## El arreglo de B: el reporte se PUBLICA, no se lee del log
+
+El mismo patrón que todo lo demás del proyecto. `reporte-diario.mjs` sigue
+imprimiendo entre marcadores **y además** escribe `estado/reporte.json` en la
+rama `datos` cuando se le pasa `VIGIA_DATOS`. Se lee por
+`raw.githubusercontent.com`, que **no pasa por la API de Actions**.
+
+En las DOS apps (`reporte-diario.mjs` es PRIMO: cada una arma su texto).
+
+⚠️ **`generadoEl` va DENTRO del archivo, y es la pieza que evita el desastre.**
+Un archivo que se sobrescribe cada día se lee igual de bien estando viejo, así
+que sin esa marca leer el de ayer y presentarlo como el de hoy sería
+indistinguible de que todo fue bien — **y eso ya pasó una vez**. Quien lo lea
+comprueba que `generadoEl` empieza por la fecha de hoy en UTC.
+
+⚠️ **El log NO se quita.** Si un día falla el guardado en la rama `datos`, el
+reporte sigue existiendo en algún sitio. Dos caminos a propósito.
+
+⚠️ **Y el `git diff --cached --quiet` aquí FALLA en vez de saltarse el commit**,
+al revés que en `cot.yml`. Allí lo normal es que el dato no cambie (es semanal);
+aquí `generadoEl` cambia siempre, así que «no cambió nada» solo puede significar
+que el guion no escribió.
+
+## De paso, dos cosas que llevaban tiempo mal
+
+- **Los workflows del reporte no tenían `timeout-minutes`** — el agujero que ya
+  estaba anotado el 2026-09-03 para los de Swing y nunca se cerró. Ahora 10.
+- **El cron de Swing decía «después de que el BCE publica el cierre del día»**,
+  falso desde el 2026-08-09. Y la cabecera del guion decía que el entorno tiene
+  bloqueado `api.frankfurter.dev`, que tampoco es la fuente. Es otra vez
+  **«al cambiar algo, mirar también quién lo NOMBRA»**.
