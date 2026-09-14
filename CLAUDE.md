@@ -4420,3 +4420,75 @@ propio proyecto — los contenedores que llevan texto traducido deben seguir en
 `rtl`. Reescrita para mirar solo las **hojas** que contienen un número o un
 código de par. Una comprobación que exige lo que no debe exigir es tan inútil
 como una que no exige nada.
+
+---
+
+# El margen de error, explicado para suscriptores (2026-09-14)
+
+Néstor leyó la tarjeta nueva y preguntó qué era el «±». Se lo conté por el chat
+con una moneda, lo entendió a la primera, y **pidió las dos cosas: que la
+comparación fuera A LA PANTALLA, y que la explicación se guardara como las
+otras cinco** —el volumen, TradingView, la correlación, el swap y la
+actividad— para que los suscriptores la lean en la página web **antes de
+suscribirse**.
+
+Va con aquéllas porque funciona por el mismo motivo: **es una forma de exagerar
+que la app decide no usar, contada con el mecanismo delante.** Y ésta es, de
+las seis, la que más directamente desactiva el truco favorito del sector.
+
+## El texto
+
+> **Qué es ese ± que va pegado a cada porcentaje.**
+>
+> Es **cuánto puede moverse ese número solo por casualidad**. No es un margen
+> de error de la app: es el de la muestra. Con pocas operaciones es enorme, y
+> con muchas es pequeño.
+>
+> **Piénsalo con una moneda.** Si la tiras 10 veces y salen 7 caras, no está
+> trucada — eso pasa todo el rato. Si la tiras 400 veces y salen 280, ahí sí
+> pasa algo. **Es el mismo 70 % las dos veces**, y significan cosas
+> completamente distintas.
+>
+> Tus operaciones son igual. Por eso cada porcentaje de la app va con su ±
+> al lado:
+>
+> | operaciones | margen | qué quiere decir |
+> |---:|---:|---|
+> | 10 | ±31 | un 40 % y un 70 % **son el mismo número** |
+> | 25 | ±20 | sigue sin decirte casi nada |
+> | 100 | ±10 | ya empieza a significar algo |
+> | 400 | ±5 | ahora sí |
+>
+> **Y por qué te lo contamos en vez de callarnos.** Porque el número sin el ±
+> al lado es el truco más viejo de este negocio: enseñar «87 % de acierto» sin
+> decir que son quince operaciones. No es mentira — es que no significa nada, y
+> se lee como si significara todo.
+>
+> Nos pasó **aquí dentro**. El dueño de la app abrió su Historial y vio **89 %
+> de acierto**. Sonaba a que algo funcionaba de maravilla. Eran **9
+> operaciones**: con una moneda cargada al 55 % sacar 8 o 9 aciertos de 9 pasa
+> **una de cada 26 veces**. O sea que ese 89 % era perfectamente compatible con
+> no tener ninguna ventaja.
+>
+> Esa es la razón de que el ± exista en la pantalla. No para que desconfíes de
+> tus números: **para que sepas cuándo ya se pueden creer.**
+
+## Las dos decisiones que lo sostienen, por si alguien las mueve
+
+⚠️ **El margen es el del PEOR caso a propósito** (`98/√n`, que es p = 0,5). Un
+margen que se afina a favor propio serviría para presumir, no para decidir
+sobre dinero. Es la misma elección que hace el resolver al contar como PERDIDA
+el día que toca stop y objetivo.
+
+⚠️ **En pantalla va primero el ± y DESPUÉS la moneda**, no al revés. El ±
+explica qué es el número; la moneda lo hace entender. Puesta delante, la moneda
+se lee como una curiosidad suelta y nadie la conecta con el símbolo que tiene
+al lado de cada cifra. Hay una comprobación en `prueba-diario.mjs` (bloque 9)
+que falla si alguien invierte el orden, y otra que exige la clave en los 13
+idiomas — una mitad traducida y la otra en español sería peor que nada.
+
+📌 **Y la regla general que este día vuelve a confirmar**, ya escrita el
+2026-09-09: cuando Néstor pregunta «¿esto qué me quiere decir?», la respuesta
+correcta casi nunca es explicárselo en el chat. **Es meter la explicación EN LA
+PANTALLA**, porque el suscriptor que se lo pregunte mañana no me tiene a mí al
+lado. Van tres veces: el calendario, la actividad y ahora el margen.
