@@ -3805,3 +3805,152 @@ su nombre muerto tumba 9 · quitar la línea que distingue el vacío del cero tu
 como JSON (`"es"` en vez de `es`), así que todo salía en inglés; y pedía un CSS
 por una ruta que no existía. **Antes de creerse que la app está rota, comprobar
 que el banco de pruebas mide lo que dice medir.**
+
+---
+
+# El COT NO sirve para filtrar las señales (2026-09-14). Séptima familia que falla
+
+Néstor lo pidió expresamente, y con la condición correcta: **«hazlo como una
+medición interna como prueba […] sin que por ahora me haga cambios en la app y
+si no sirve lo dejamos tal cual como está ahora como información»**.
+
+```
+app/scripts/lib/preregistro-cot.mjs    el listón, escrito ANTES
+app/scripts/lib/cot-historia.mjs       historial con disciplina de fecha
+app/scripts/medir-cot.mjs              la medición
+app/scripts/prueba-cot-historia.mjs    38 comprobaciones, sin internet
+.github/workflows/medir-cot.yml        solo a mano, 14 créditos
+```
+
+**Cero archivos de `src/` tocados.** Nada se encendió.
+
+## El resultado, con la vara neutra 1:1 y costes
+
+2.240 señales con COT publicado (62 descartadas por no haberlo todavía),
+mitades partidas en 2024-06-04.
+
+| filtro | ops | acierto | por 1R | 1ª mitad | 2ª mitad |
+|---|---:|---:|---:|---:|---:|
+| **SIN FILTRO (la app tal cual)** | 2.228 | 49 % | **−0,044** | −0,046 | −0,041 |
+| seguir a los fondos, \|sesgo\| ≥ 0 | 1.154 | 49 % | −0,032 | **+0,002** | −0,065 |
+| seguir, ≥ 2 | 1.015 | 49 % | −0,043 | −0,014 | −0,069 |
+| seguir, ≥ 5 | 870 | 48 % | −0,064 | −0,041 | −0,083 |
+| seguir, ≥ 10 | 653 | 49 % | −0,044 | −0,038 | −0,048 |
+| seguir, ≥ 15 | 476 | 48 % | −0,059 | +0,010 | −0,096 |
+| ir EN CONTRA, ≥ 0 | 1.074 | 48 % | −0,057 | −0,097 | −0,015 |
+| en contra, ≥ 2 | 972 | 48 % | −0,056 | −0,093 | −0,021 |
+| en contra, ≥ 5 | 823 | 47 % | −0,072 | −0,112 | −0,033 |
+| en contra, ≥ 10 | 593 | 47 % | −0,079 | −0,133 | −0,035 |
+| en contra, ≥ 15 | 409 | 46 % | −0,096 | −0,224 | −0,014 |
+
+**Las once filas pierden.** Ninguna llega a cero. La mejor pierde menos
+(−0,032 contra −0,044), y eso es todo lo que hay.
+
+## Por qué suspende: los dos criterios que fallan
+
+❌ **No mejora en las dos mitades.** La mejor da +0,002 en la primera y
+**−0,065 en la segunda**, cuando sin filtro la segunda daba −0,041. O sea que
+en la segunda mitad el filtro es PEOR que no tener filtro.
+
+❌ **La dirección cambia de una mitad a otra.** En la primera gana «seguir a
+los fondos»; en la segunda gana «ir en contra». **Es la firma exacta de una
+moneda al aire**, y es el criterio que se escribió a propósito para este caso,
+porque probar las dos lecturas y quedarse con la ganadora sería elegir a
+posteriori.
+
+Mírese en la tabla: «en contra ≥15» va **−0,224 en la primera mitad y −0,014 en
+la segunda**. Un salto de dos décimas entre mitades no es una regla.
+
+## ⚠️⚠️ EL NÚMERO QUE PARECÍA UN HALLAZGO, Y POR QUÉ NO CUENTA
+
+Con **la geometría real de la app** (que va como comprobación, no como decisión)
+dos filas salen POSITIVAS:
+
+| filtro (geometría real) | ops | acierto | por 1R | 1ª mitad | 2ª mitad |
+|---|---:|---:|---:|---:|---:|
+| sin filtro | 2.218 | 56 % | −0,037 | −0,045 | −0,029 |
+| **seguir, ≥ 10** | 648 | 60 % | **+0,019** | **+0,034** | **+0,008** |
+| **seguir, ≥ 15** | 473 | 60 % | **+0,029** | +0,112 | −0,016 |
+
+«Seguir ≥ 10» es positivo en el total **y en las dos mitades**. Parece el
+hallazgo del año.
+
+**No lo es, y esto es lo importante de toda la medición:** ese MISMO filtro, con
+las MISMAS operaciones y los MISMOS días, mide **−0,044 con la vara neutra, y
+negativo en las dos mitades** (−0,038 y −0,048).
+
+El mismo filtro es positivo en las dos mitades con una vara y negativo en las
+dos con la otra. Eso no puede venir de que el COT sepa hacia dónde va el precio
+— si lo supiera, acertaría con cualquier vara. **Viene de la geometría**: con
+objetivos variables, un filtro puede seleccionar operaciones con buena
+proporción objetivo/riesgo sin acertar ni una dirección de más.
+
+📌 **Para eso existe la vara neutra**, y por eso el listón decía desde antes que
+se decide con ella. Si se hubiera decidido con la geometría real se habría
+encendido un filtro que no sabe nada.
+
+## 📌 Un regalo de la medición: la fecha del cambio de nombre
+
+Al listar el historial salió esto:
+
+```
+AUD, CAD, CHF, EUR, JPY  → 401 informes, desde 2019-01-08
+GBP, NZD, USD            → 240 informes, desde 2022-02-08
+```
+
+**Son exactamente las tres divisas que tenían el nombre muerto** (`BRITISH POUND
+STERLING`, `NEW ZEALAND DOLLAR`, `U.S. DOLLAR INDEX`). Lo que dice el dato es
+que la CFTC las renombró **alrededor del 8 de febrero de 2022** y antes de esa
+fecha solo existen bajo el nombre viejo.
+
+⚠️ Es una **inferencia de los datos**, no un anuncio de la CFTC que se haya
+leído. Pero encaja perfecta y explica por qué esas tres empiezan 3 años después.
+
+Consecuencia práctica: para pares con GBP o NZD antes de 2022-02-08 no hay COT,
+y esas señales quedaron fuera de la medición (las 62 descartadas).
+
+## Lo que confirma el retraso, ya no como teoría
+
+**Mediana 8 días, máximo 11.** Ése es el dato con el que se habría filtrado cada
+señal. El informe del martes no se puede usar hasta el lunes siguiente, y la
+disciplina está en `DIAS_HASTA_PUBLICAR = 4` con cinco comprobaciones dedicadas.
+
+⚠️ **Sin esa disciplina el backtest habría mirado tres días de futuro TODAS las
+semanas durante cinco años**, y no habría fallado: habría devuelto un resultado
+creíble y demasiado bueno.
+
+## 📌 Un error mío, encontrado leyendo la primera corrida
+
+La columna «señales al mes» salía inflada un 45 %: dividía días de MERCADO entre
+30,44, que son los días de un mes de CALENDARIO. La app aparecía a 50,0 señales
+al mes cuando en este archivo está medida en 36,1 — y esa discrepancia es lo que
+lo destapó.
+
+No cambió el veredicto (el criterio era «al menos 10 al mes» y se cumplía con
+las dos cuentas), pero se arregló y se volvió a correr. Es **hermano de los
+otros dos errores de estos días**: la etiqueta «(hoy)» que envejeció sola y el
+«+13,302» con coma inglesa. **En los tres el número estaba bien calculado y
+describía algo distinto de lo que decía describir.**
+
+## La limitación que va dicha en el propio informe
+
+Aquí el filtro **solo QUITA** señales. En la app de verdad el hueco lo rellenaría
+la siguiente de la lista (se queda con los 5 mejores por lado), y está medido
+desde el 2026-08-25 que un filtro así **no quita señales: las cambia por otras**.
+
+Se midió la versión que solo quita por dos razones: es la única que no obliga a
+tocar `marketCalc.js` —lo que Néstor pidió que no se hiciera— y contesta primero
+la pregunta de fondo, que es si el COT sabe algo sobre cuáles de estas señales
+son malas. **Como la respuesta es que no, la versión con relleno sobra**: no se
+puede rellenar con información que no existe.
+
+## El veredicto y lo que cambia
+
+**NO PASA el listón.** El COT se queda **exactamente como está**: información en
+pantalla, con su fecha y sus advertencias. Nada se encendió y nada se apagó.
+
+⚠️ **Séptima familia de filtros que se mide y falla** (RSI, ADX, confluencia de
+marcos, barrido de liquidez, y ahora el COT). El patrón lleva meses siendo el
+mismo y conviene tenerlo escrito: **en esta app, los filtros no funcionan.** Lo
+único que ha medido positivo son reglas de ENTRADA distintas —la reversión y
+«comprar la caída»—, no filtros sobre la entrada que ya existe.
