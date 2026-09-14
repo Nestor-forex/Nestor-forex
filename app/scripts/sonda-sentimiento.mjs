@@ -129,7 +129,46 @@ const FUENTES = [
     nota: '⚠️ Se espera que pida cuenta. Se sondea para dejarlo comprobado.',
     url: 'https://www.oanda.com/forex-trading/analysis/open-position-ratios',
   },
+
+  // ── SEGUNDA RONDA (2026-09-14, después de leer la primera) ──────────────
+  //
+  // De las seis de arriba **solo FXBlue pasó**: robots.txt lo permite,
+  // responde 200 a un User-Agent honesto, y los números parecen estar dentro
+  // del HTML. Las demás quedaron descartadas con motivo (ver CLAUDE.md).
+  //
+  // Así que esta ronda pregunta lo ÚNICO que decide si hay lector o no:
+  //
+  //   · ¿hay un archivo de datos de verdad, o habría que raspar el HTML?
+  //   · ¿el dato trae FECHA?
+  //   · ¿qué dicen sus condiciones de uso?
+  //
+  // ⚠️ Raspar el HTML sería lo fácil y es la peor opción: se rompe el día que
+  // cambien el diseño, y no se rompe con un error — se rompe devolviendo
+  // números mal leídos. Si no hay archivo, la respuesta correcta puede ser
+  // «esta fuente no entra», no «apáñate con el HTML».
+  {
+    id: 'fxblue-condiciones',
+    nota: '⚠️ LO QUE MÁS PESA. No es técnico: es si nos dejan republicar SU dato.',
+    url: 'https://www.fxblue.com/terms',
+  },
+  {
+    id: 'fxblue-csv',
+    nota: 'CONJETURA: ¿hay un archivo de datos detrás del widget? Si da 404, solo dice que no es esa dirección.',
+    url: 'https://www.fxblue.com/market-data/tools/sentiment/data.csv',
+  },
+  {
+    id: 'fxblue-json',
+    nota: 'CONJETURA, la misma idea en JSON.',
+    url: 'https://www.fxblue.com/market-data/tools/sentiment/data.json',
+  },
 ]
+
+// Solo para la fuente que sobrevivió: enseñar el HTML ALREDEDOR de la palabra
+// clave. Es lo que distingue «el número está en la página» de «el número lo
+// trae después otra petición», y sin verlo no se puede decidir nada.
+const MIRAR_ALREDEDOR = {
+  'fxblue-sentimiento': ['net-short', 'Updated', 'updated', 'GMT', 'UTC'],
+}
 
 const recorta = (v, n = 220) => {
   const s = typeof v === 'string' ? v : JSON.stringify(v)
@@ -259,10 +298,33 @@ async function sondear(f) {
 
   // Si los números NO están, casi seguro los trae un JSON aparte que se pide
   // desde el navegador. Enseñar los candidatos ahorra la siguiente corrida.
-  const apis = [...new Set((texto.match(/["'](\/[^"']*(?:api|json|sentiment)[^"']*)["']/gi) || []).map((s) => s.slice(1, -1)))]
-  if (apis.length) {
-    console.log(`    direcciones que parecen de datos dentro del HTML (${apis.length}):`)
-    for (const a of apis.slice(0, 12)) console.log(`      ${a}`)
+  //
+  // ⚠️ La primera versión de esto sacaba basura: el patrón aceptaba cualquier
+  // cosa entre comillas que llevara «json» o «sentiment» dentro, y lo primero
+  // que cazó fue un `<title>`. Ahora exige que parezca una RUTA de verdad —
+  // sin espacios ni `<` — y se queda con las que acaban en un formato de datos
+  // o van por /api/.
+  const apis = [
+    ...new Set(
+      (texto.match(/["'](\/[^"'<>\s]{3,120})["']/g) || [])
+        .map((s) => s.slice(1, -1))
+        .filter((u) => /\.(?:json|csv|xml|txt)(?:$|\?)/i.test(u) || /\/api\//i.test(u)),
+    ),
+  ]
+  console.log(`    rutas que parecen de datos dentro del HTML: ${apis.length}`)
+  for (const a of apis.slice(0, 15)) console.log(`      ${a}`)
+
+  // ⚠️ Y para la fuente que sobrevivió, el HTML ALREDEDOR de la palabra clave.
+  // Contar cuántas veces aparece «net-short» no distingue «el número está
+  // aquí» de «aquí solo se nombra»; verlo en su sitio, sí.
+  for (const palabra of MIRAR_ALREDEDOR[f.id] ?? []) {
+    const i = texto.indexOf(palabra)
+    if (i < 0) {
+      console.log(`    "${palabra}": no aparece`)
+      continue
+    }
+    const trozo = texto.slice(Math.max(0, i - 180), i + 220).replace(/\s+/g, ' ')
+    console.log(`    "${palabra}" en su sitio: …${trozo}…`)
   }
 }
 
