@@ -137,7 +137,18 @@ const DIRECCIONES = {
   contra: (s, u) => (s.lado === 'COMPRA' ? s.sesgo <= -u : s.sesgo >= u),
 }
 
-const MESES = (fechas.length - CALENTAMIENTO) / 30.44
+// ⚠️ LOS MESES SE CUENTAN EN DÍAS DE CALENDARIO, NO EN DÍAS DE MERCADO.
+//
+// La primera versión hacía `(fechas.length - CALENTAMIENTO) / 30.44`, o sea
+// dividía días de MERCADO entre los días que tiene un mes de calendario. El
+// mercado abre unos 252 días al año y el calendario tiene 365, así que esa
+// cuenta INFLA el ritmo un 45 %: la app salía a 50 señales al mes cuando en
+// CLAUDE.md está medida en 36,1.
+//
+// No cambió el veredicto —el criterio de «al menos 10 al mes» se cumplía con
+// las dos cuentas— pero una cifra inflada en un informe que después se cita es
+// exactamente la clase de error que este proyecto lleva meses quitando.
+const MESES = (diasEntre(fechas[CALENTAMIENTO], fechas.at(-1)) ?? 1) / 30.44
 
 function tabla(nombre, geometria) {
   const { senales: todas, porClave } = correr(geometria)
