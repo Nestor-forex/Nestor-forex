@@ -3954,3 +3954,151 @@ marcos, barrido de liquidez, y ahora el COT). El patrón lleva meses siendo el
 mismo y conviene tenerlo escrito: **en esta app, los filtros no funcionan.** Lo
 único que ha medido positivo son reglas de ENTRADA distintas —la reversión y
 «comprar la caída»—, no filtros sobre la entrada que ya existe.
+
+---
+
+# El retraso de GitHub, cerrado por el lado que sí se podía cerrar (2026-09-14)
+
+Néstor: **«creo que esto ya lo hemos hablado y si no recuerdo mal te pedí que lo
+resolviéramos… creo que esos retrasos nos perjudican las app»**.
+
+Lo comprobé antes de contestar, y tenía razón a medias — pero la mitad que
+faltaba es la importante.
+
+## Son DOS problemas distintos que se llaman igual
+
+| | qué es | ¿resuelto? |
+|---|---|---|
+| **A. El reloj se salta corridas** | el cron no dispara; el vigía de Swing perdió el viernes 5 de septiembre ENTERO | ✅ **sí**, el 2026-09-07 (tres crones + `yaCorrioHoy`) |
+| **B. La API tarda en enseñar el resultado** | el trabajo termina en 65 s y el log sigue dando 404 | ❌ **no se había tocado** |
+
+**A sí perjudicaba a la app** —un día de historial que no vuelve— y está
+arreglado. **B nunca la ha perjudicado**: la app no lee logs de Actions, lee
+`barrido.json` de la rama `datos`. Lo único que B estropeaba era que yo pudiera
+mandarle el reporte al chat a su hora.
+
+📌 Decírselo así importa: si le hubiera dado la razón entera, se habría quedado
+creyendo que su app lleva meses sirviendo datos tarde, y no es verdad.
+
+## El arreglo de B: el reporte se PUBLICA, no se lee del log
+
+El mismo patrón que todo lo demás del proyecto. `reporte-diario.mjs` sigue
+imprimiendo entre marcadores **y además** escribe `estado/reporte.json` en la
+rama `datos` cuando se le pasa `VIGIA_DATOS`. Se lee por
+`raw.githubusercontent.com`, que **no pasa por la API de Actions**.
+
+En las DOS apps (`reporte-diario.mjs` es PRIMO: cada una arma su texto).
+
+⚠️ **`generadoEl` va DENTRO del archivo, y es la pieza que evita el desastre.**
+Un archivo que se sobrescribe cada día se lee igual de bien estando viejo, así
+que sin esa marca leer el de ayer y presentarlo como el de hoy sería
+indistinguible de que todo fue bien — **y eso ya pasó una vez**. Quien lo lea
+comprueba que `generadoEl` empieza por la fecha de hoy en UTC.
+
+⚠️ **El log NO se quita.** Si un día falla el guardado en la rama `datos`, el
+reporte sigue existiendo en algún sitio. Dos caminos a propósito.
+
+⚠️ **Y el `git diff --cached --quiet` aquí FALLA en vez de saltarse el commit**,
+al revés que en `cot.yml`. Allí lo normal es que el dato no cambie (es semanal);
+aquí `generadoEl` cambia siempre, así que «no cambió nada» solo puede significar
+que el guion no escribió.
+
+## De paso, dos cosas que llevaban tiempo mal
+
+- **Los workflows del reporte no tenían `timeout-minutes`** — el agujero que ya
+  estaba anotado el 2026-09-03 para los de Swing y nunca se cerró. Ahora 10.
+- **El cron de Swing decía «después de que el BCE publica el cierre del día»**,
+  falso desde el 2026-08-09. Y la cabecera del guion decía que el entorno tiene
+  bloqueado `api.frankfurter.dev`, que tampoco es la fuente. Es otra vez
+  **«al cambiar algo, mirar también quién lo NOMBRA»**.
+
+## ✅ Comprobado con las dos apps, y con el número al lado
+
+Se lanzaron los dos workflows desde la rama y se leyó el archivo por
+`raw.githubusercontent.com`:
+
+| | `generadoEl` | leído sin problema a las |
+|---|---|---|
+| Intradía | 16:19:01 UTC | 16:21 |
+| Swing | 16:20:43 UTC | **16:22:29 — 1 min 46 s después** |
+
+Contra los **40 minutos** que tardó el log esa misma mañana.
+
+---
+
+# Sentimiento minorista: la sonda, primero (2026-09-14)
+
+La **#5 y última de la fase de información**. Mismo camino que el calendario,
+las tasas y el COT: **sonda primero, lector después.**
+
+```
+app/scripts/lib/robots.mjs          ¿nos deja el robots.txt? (puro)
+app/scripts/sonda-sentimiento.mjs   pide, cuenta y enseña. No interpreta
+app/scripts/prueba-sentimiento.mjs  27 comprobaciones, sin internet
+.github/workflows/sonda-sentimiento.yml   solo a mano, sin secretos
+```
+
+## ⚠️ Esta sonda tiene una segunda mitad que las otras NO tenían: el permiso
+
+El calendario, las tasas y el COT venían de organismos públicos (BIS, CFTC) o
+de un feed hecho para que lo lea cualquiera. **Aquí no.** El sentimiento
+minorista es de EMPRESAS: es su dato, de sus clientes, y lo publican como
+reclamo comercial, no como bien público.
+
+Por eso cada candidata se sondea **dos veces**: si responde y con qué forma, y
+si su `robots.txt` deja pedirlo.
+
+⚠️ **`robots.txt` NO es lo mismo que las condiciones de uso.** Uno permisivo no
+autoriza nada; uno que lo prohíbe sí es un «no» explícito. Sirve para
+**DESCARTAR, nunca para aprobar**. Lo que aprueba es leerse las condiciones, y
+eso lo hace una persona.
+
+## Lo escrito ANTES de ver ningún número, a propósito
+
+1. **Es el libro de UN bróker, no del mercado.** Mismo problema que el tick
+   volume («Lo que NO se puede tener en Forex»), con un agravante que aquél no
+   tiene: **la clientela de cada casa es distinta**, así que dos brókers pueden
+   discrepar aunque los dos midieran bien.
+2. **«Los minoristas pierden, hagamos lo contrario» NO está medido aquí.** Es
+   la frase más repetida del negocio y suena convincente — que es justo la
+   señal de alarma, con cinco ocasiones ya documentadas en este archivo en las
+   que un mecanismo convincente resultó falso al medirlo.
+3. **Entra como INFORMACIÓN o no entra.** Como filtro, al banco de pruebas con
+   su listón escrito antes, igual que el COT.
+4. **Sin FECHA no sirve.** Un porcentaje sin decir de cuándo es se lee siempre
+   como de ahora mismo.
+
+## Por qué el lector de robots.txt vive aparte y tiene pruebas
+
+Bajar el archivo es lo fácil; **interpretarlo mal no se ve**: devuelve un
+veredicto perfectamente creíble, y ese veredicto decide si se le pide el dato a
+alguien que había dicho que no.
+
+Los cinco casos que un analizador ingenuo falla, todos con prueba propia:
+
+- **`Disallow:` VACÍO significa «no prohíbo nada».** Como cadena vacía es el
+  prefijo de TODO, así que un analizador ingenuo prohíbe el sitio entero — lo
+  contrario de lo que dice.
+- **Gana el prefijo MÁS LARGO, no el primero que coincida**, o un
+  `Allow: /api/publico/` dentro de un `Disallow: /api/` se leería al revés.
+- **Solo cuentan las reglas de `User-agent: *`**, y **varios `User-agent`
+  seguidos comparten bloque** — apagar el bloque al ver un agente ajeno se
+  saltaría el `Disallow` entero.
+- **La ruta incluye lo de después del `?`**: una candidata lleva el dato en
+  `index.php?path=sentiment_index`, o sea justo ahí.
+- **Ante cualquier duda dice «no se sabe», nunca «permitido».** Misma asimetría
+  que `yaCorrioHoy` y `esSombra`, y por la misma razón.
+
+**Comprobado que las pruebas MUERDEN**, con el daño verificado en su sitio
+antes de darlas por buenas: cambiar «prefijo más largo» por «el primero»
+tumba 1, y quitar el guardia del `Disallow` vacío tumba otra.
+
+## Lo siguiente
+
+Lanzar la sonda (**Actions → «Sonda del sentimiento minorista» → Run
+workflow**), leer el log, y **con la forma real delante** decidir si hay
+candidata y escribir el lector. Nunca al revés.
+
+⚠️ Varias direcciones de la sonda son **conjeturas** sobre cómo se llaman esos
+endpoints. Una que dé 404 solo dice que esa dirección no es, no que la fuente
+no sirva.

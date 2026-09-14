@@ -1,18 +1,59 @@
 name: Reporte diario del barrido
 
+# Genera el reporte del día y lo deja en DOS sitios: el log (entre marcadores)
+# y `estado/reporte.json` de la rama `datos`.
+#
+# ⚠️ EL ARCHIVO NO ES UN CAPRICHO. La API de GitHub Actions va con retraso —
+# medido: 13 minutos el 2026-09-03, y 40 minutos el 2026-09-14 sobre un trabajo
+# que había terminado en 65 segundos. El reporte salía a su hora; lo que
+# llegaba tarde era poder LEERLO. `raw.githubusercontent.com` no pasa por esa
+# API y sirve el archivo en cuanto el commit está en la rama.
+#
+# ⚠️ Esto NO afecta a la app y nunca la afectó: la app lee la rama `datos`, no
+# los logs. Ver la cabecera de `app/scripts/reporte-diario.mjs`.
+
 on:
   schedule:
-    - cron: '30 15 * * 1-5' # 10:30 a.m. hora de Colombia (UTC-5), lunes a viernes — después de que el BCE publica el cierre del día
+    # 10:30 a. m. hora de Colombia (UTC-5), de lunes a viernes.
+    #
+    # ⚠️ La hora se eligió en su día «después de que el BCE publica el cierre».
+    # Eso es FALSO desde el 2026-08-09: la fuente son velas diarias de Twelve
+    # Data, que cierran a las 22:00 UTC. Sigue siendo una hora razonable —da el
+    # reporte por la mañana en Colombia, con la vela de ayer cerrada— pero por
+    # otro motivo. (Mismo arreglo que se le hizo a `vigia.yml` el 2026-09-05.)
+    - cron: '30 15 * * 1-5'
   workflow_dispatch:
+
+# Escribe en la rama `datos`: por defecto el token de Actions es de solo
+# lectura.
+permissions:
+  contents: write
+
+concurrency:
+  group: reporte-diario
+  cancel-in-progress: false
 
 jobs:
   reporte:
     runs-on: ubuntu-latest
+    # Las velas van en dos tandas con una pausa de 65 s en medio (el plan
+    # gratuito da 8 créditos por minuto), así que lo normal son ~70 segundos.
+    # Sin esto GitHub deja correr un trabajo atascado hasta SEIS HORAS.
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - name: Traer los datos
+        uses: actions/checkout@v4
+        with:
+          ref: datos
+          path: datos
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
       - name: Generar reporte
         working-directory: app
         env:
@@ -20,4 +61,27 @@ jobs:
           # de .env.production y todo sigue igual. Ver el comentario de
           # `leerLlave` para el orden de los dos pasos.
           TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
+          VIGIA_DATOS: ${{ github.workspace }}/datos
         run: node scripts/reporte-diario.mjs
+
+      - name: Guardar
+        working-directory: datos
+        run: |
+          git config user.name 'Reporte Nestor Forex Swing'
+          git config user.email 'noreply@anthropic.com'
+          git add estado/reporte.json
+          # Aquí SIEMPRE hay algo que guardar: `generadoEl` cambia en cada
+          # corrida. Es a propósito — un archivo sin marca de cuándo se hizo no
+          # se puede distinguir del de ayer, que es justo el fallo que esto
+          # viene a cerrar. Son ~2 KB al día.
+          if git diff --cached --quiet; then
+            echo 'ERROR: el reporte no cambió, ni siquiera la marca de tiempo.'
+            exit 1
+          fi
+          git commit -m "Reporte $(date -u +'%Y-%m-%d')"
+          for i in 1 2 3; do
+            git pull --rebase origin datos && git push origin HEAD:datos && exit 0
+            sleep $((i * 5))
+          done
+          echo 'No se pudo guardar tras 3 intentos.'
+          exit 1
