@@ -425,6 +425,19 @@ export default {
     pie: (v) => `Fonte: BIS (Banca dei Regolamenti Internazionali). Ogni riga porta la data del SUO dato: un tasso di riferimento cambia solo il giorno in cui la banca centrale si riunisce. Il più vecchio è di ${v.dias} giorni fa.`,
   },
 
+  cot: {
+    titulo: 'Cosa hanno in posizione i grandi operatori',
+    aviso: '⚠️ Questo NON dice di comprare o vendere. Sono posizioni su futures del CME, una piccola parte del mercato Forex, e arrivano con giorni di ritardo: la CFTC pubblica il venerdì con i dati del martedì precedente. E un posizionamento estremo alcuni lo leggono come continuazione del trend e altri come un’inversione in arrivo. Quale abbia ragione qui non è misurato.',
+    intro: 'Quanto i fondi speculativi — quelli che la CFTC chiama leveraged funds — hanno comprato o venduto su ogni valuta, in percentuale su tutti i contratti aperti. Ogni valuta è contro il dollaro.',
+    comprados: 'Netto lungo',
+    vendidos: 'Netto corto',
+    igualados: 'In pareggio',
+    cambio: (v) => `${v.n} contratti questa settimana`,
+    sinCambio: 'Nessuna variazione questa settimana',
+    indice: 'Il dollaro contro un paniere, non contro una sola valuta',
+    pie: (v) => `Fonte: CFTC, rapporto del ${v.fecha} (${v.dias} giorni fa). Solo futures, senza opzioni. Tra 3 e 10 giorni di anzianità è normale: esce il venerdì con i dati del martedì. La barra serve solo a confrontare a colpo d’occhio; il numero è il dato.`,
+  },
+
   errores: {
     'auth/email-already-in-use': 'Questa e-mail ha già un account. Prova con "Accedi".',
     'auth/invalid-email': 'Questa e-mail non sembra valida.',

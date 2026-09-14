@@ -424,6 +424,19 @@ export default {
     pie: (v) => `Kaynak: BIS (Uluslararası Ödemeler Bankası). Her satır KENDİ verisinin tarihini taşır: politika faizi yalnızca merkez bankasının toplandığı gün değişir. En eskisi ${v.dias} gün önceye ait.`,
   },
 
+  cot: {
+    titulo: 'Büyük oyuncuların pozisyonları',
+    aviso: '⚠️ Bu, al ya da sat demez. Bunlar CME vadeli işlem pozisyonlarıdır, Forex piyasasının küçük bir bölümüdür ve günlerce gecikmeyle gelir: CFTC cuma günleri bir önceki salının verileriyle yayımlar. Ayrıca aşırı pozisyonlanmayı kimileri trendin devamı, kimileri yaklaşan bir dönüş olarak okur. Burada hangisinin tuttuğu ölçülmedi.',
+    intro: 'Spekülatif fonların — CFTC’nin leveraged funds dediği kesimin — her para biriminde ne kadar uzun ya da kısa pozisyon taşıdığı, tüm açık sözleşmelere oran olarak. Her para birimi dolara karşıdır.',
+    comprados: 'Net uzun',
+    vendidos: 'Net kısa',
+    igualados: 'Dengede',
+    cambio: (v) => `bu hafta ${v.n} sözleşme`,
+    sinCambio: 'Bu hafta değişiklik yok',
+    indice: 'Dolar tek bir para birimine değil, bir sepete karşı',
+    pie: (v) => `Kaynak: CFTC, ${v.fecha} tarihli rapor (${v.dias} gün önce). Yalnızca vadeli işlemler, opsiyonlar hariç. 3 ila 10 gün eskilik normaldir: cuma günü salının verileriyle yayımlanır. Çubuk yalnızca bir bakışta karşılaştırmak içindir; veri olan sayıdır.`,
+  },
+
   errores: {
     'auth/email-already-in-use': 'Bu e-postanın zaten bir hesabı var. «Giriş yap»ı dene.',
     'auth/invalid-email': 'Bu e-posta geçerli görünmüyor.',

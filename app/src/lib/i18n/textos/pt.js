@@ -429,6 +429,19 @@ export default {
     pie: (v) => `Fonte: BIS (Banco de Compensações Internacionais). Cada linha traz a data do SEU dado: uma taxa básica só muda no dia em que o banco central se reúne. O mais antigo é de ${v.dias} dias atrás.`,
   },
 
+  cot: {
+    titulo: 'O que os grandes operadores têm em posição',
+    aviso: '⚠️ Isto NÃO diz comprar nem vender. São posições em futuros da CME, uma parte pequena do mercado Forex, e chegam com dias de atraso: a CFTC publica às sextas com os dados da terça anterior. E um posicionamento extremo uns leem como continuação da tendência e outros como uma virada. Qual acerta aqui não está medido.',
+    intro: 'Quanto os fundos especulativos — o que a CFTC chama de leveraged funds — têm comprado ou vendido em cada moeda, como percentagem de todos os contratos abertos. Cada moeda vai contra o dólar.',
+    comprados: 'Líquido comprado',
+    vendidos: 'Líquido vendido',
+    igualados: 'Equilibrado',
+    cambio: (v) => `${v.n} contratos esta semana`,
+    sinCambio: 'Sem alteração esta semana',
+    indice: 'O dólar contra uma cesta, não contra uma única moeda',
+    pie: (v) => `Fonte: CFTC, relatório de ${v.fecha} (há ${v.dias} dias). Apenas futuros, sem opções. Entre 3 e 10 dias de antiguidade é o normal: é publicado às sextas com os dados de terça. A barra serve só para comparar de relance; o número é o dado.`,
+  },
+
   errores: {
     'auth/email-already-in-use': 'Esse e-mail já tem uma conta. Tente em "Entrar".',
     'auth/invalid-email': 'Esse e-mail não parece válido.',
