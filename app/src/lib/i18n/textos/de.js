@@ -196,7 +196,10 @@ export default {
     abierta: 'Offen',
     cerrar: 'Schließen',
     loteSufijo: 'Lot',
-    vacio: 'Du hast noch keine Trades eingetragen.',
+    vacioTitulo: 'Dein Journal ist leer',
+    vacioPorque: 'Aufzuschreiben, was du tust, macht aus dieser App etwas, das dir über DICH etwas sagt und nicht nur über den Markt.',
+    vacioImportar: 'Vom Broker importieren',
+    vacioSenales: 'Heutige Signale ansehen',
     promptCerrar: ({ par }) => `Endergebnis für ${par} (USD, mit - für Verlust):`,
   },
 
@@ -440,6 +443,19 @@ export default {
     sinCambio: 'Keine Änderung diese Woche',
     indice: 'Der Dollar gegen einen Korb, nicht gegen eine einzelne Währung',
     pie: (v) => `Quelle: CFTC, Bericht vom ${v.fecha} (vor ${v.dias} Tagen). Nur Futures, ohne Optionen. Zwischen 3 und 10 Tagen alt ist normal: er erscheint freitags mit den Daten vom Dienstag. Der Balken dient nur zum schnellen Vergleich; die Zahl ist der eigentliche Wert.`,
+  },
+
+  diag: {
+    titulo: ({ n }) => `Deine Zahlen nach Gruppen (${n})`,
+    aviso: 'Das zählt nur, was DU getan hast. Es ist kein Rat, sagt nicht, was zu handeln ist, und hat nichts mit dem zu tun, was die App anzeigt.',
+    ops: 'Ops',
+    tipo: 'Nach Paartyp',
+    cruces: 'Crosses (ohne Dollar)',
+    dolar: 'Dollar-Paare',
+    direccion: 'Nach Richtung',
+    pares: ({ n }) => `Nach Paar (ab ${n} Trades)`,
+    lote: ({ min, max, distintos }) => `Lot: von ${min} bis ${max}, ${distintos} verschiedene Größen.`,
+    pie: 'Das ± ist, wie stark sich dieser Prozentsatz allein durch Zufall bewegen kann. Bei wenigen Trades ist es riesig: bei 10 sind es ±31 Punkte, also sind 40 % und 70 % dieselbe Zahl.',
   },
 
   errores: {

@@ -192,7 +192,10 @@ export default {
     abierta: '보유 중',
     cerrar: '청산',
     loteSufijo: '랏',
-    vacio: '아직 기록한 거래가 없습니다.',
+    vacioTitulo: '매매일지가 비어 있습니다',
+    vacioPorque: '자신의 매매를 기록해야 이 앱이 시장뿐 아니라 «당신»에 대해 말해 주는 도구가 됩니다.',
+    vacioImportar: '브로커에서 가져오기',
+    vacioSenales: '오늘의 시그널 보기',
     promptCerrar: ({ par }) => `${par}의 최종 결과 (USD, 손실은 -를 사용):`,
   },
 
@@ -434,6 +437,19 @@ export default {
     sinCambio: '이번 주 변화 없음',
     indice: '달러는 단일 통화가 아니라 통화 바스켓 대비입니다',
     pie: (v) => `출처: CFTC, ${v.fecha} 보고서(${v.dias}일 전). 선물만, 옵션 제외. 3~10일 지난 자료가 정상입니다. 금요일에 화요일 자료가 나옵니다. 막대는 한눈에 비교하기 위한 것이고, 숫자가 실제 데이터입니다.`,
+  },
+
+  diag: {
+    titulo: ({ n }) => `그룹별 내 숫자 (${n})`,
+    aviso: '여기서 세는 것은 «당신»이 한 것뿐입니다. 조언이 아니며, 무엇을 매매하라고 말하지 않고, 앱이 표시하는 시그널과도 관계가 없습니다.',
+    ops: '건',
+    tipo: '통화쌍 유형별',
+    cruces: 'Crosses (달러 제외)',
+    dolar: '달러 통화쌍',
+    direccion: '방향별',
+    pares: ({ n }) => `통화쌍별 (${n}건 이상)`,
+    lote: ({ min, max, distintos }) => `Lot: ${min}부터 ${max}까지, ${distintos}가지 크기.`,
+    pie: '±는 그 비율이 우연만으로 움직일 수 있는 폭입니다. 건수가 적으면 매우 큽니다: 10건이면 ±31포인트, 즉 40 %와 70 %는 같은 숫자입니다.',
   },
 
   errores: {
