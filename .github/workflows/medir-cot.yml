@@ -1,0 +1,50 @@
+name: Medir si el COT sirve como filtro
+
+# Mide si las posiciones institucionales (COT) habrían servido para descartar
+# las señales malas de la app. Ver la cabecera de `app/scripts/medir-cot.mjs`.
+#
+# ⚠️ ES UNA MEDICIÓN, NO UN CAMBIO. No toca ni una línea de `app/src/` y no
+# enciende nada. El listón está escrito ANTES, en
+# `app/scripts/lib/preregistro-cot.mjs`.
+#
+# ⚠️⚠️ SÍ GASTA CRÉDITOS DE TWELVE DATA: 14, por las velas. Por eso lleva el
+# secreto y por eso NO está programado — se lanza a mano cuando hace falta.
+# (El historial del COT es gratis: es la API pública de la CFTC.)
+#
+# 📌 El `env` de abajo no es opcional. El 2026-09-03, al sacar la llave de los
+# archivos, apareció que `comparar-reglas.yml` se había quedado sin él y habría
+# fallado la próxima vez que alguien lo lanzara, sin explicación.
+
+on:
+  workflow_dispatch:
+    inputs:
+      velas:
+        description: 'Cuántas velas diarias descargar (1500 ≈ 6 años)'
+        required: false
+        default: '1500'
+
+permissions:
+  contents: read
+
+jobs:
+  medir:
+    runs-on: ubuntu-latest
+    # Las velas van en dos tandas con una pausa de 65 s en medio (el plan
+    # gratuito da 8 créditos por minuto), y después hay que recorrer ~1.400
+    # días generando el barrido de cada uno. Sin esto GitHub dejaría correr un
+    # trabajo atascado hasta seis horas.
+    timeout-minutes: 30
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Medir
+        working-directory: app
+        env:
+          TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
+          VELAS: ${{ inputs.velas }}
+        run: node scripts/medir-cot.mjs
