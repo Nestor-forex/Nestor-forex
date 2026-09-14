@@ -106,27 +106,55 @@ cuatro identificadores que yo recordaba respondieron 200 los cuatro.
 mismas 20 divisas, misma fecha; 89 columnas contra 87). Se usa el catalogado:
 un conjunto que nadie anuncia es un conjunto que nadie promete mantener.
 
+## ⚠️ `TFF_All` son DOS informes mezclados, y hay que fijar cuál
+
+La columna `futonly_or_combined` tiene exactamente dos valores: **`FutOnly`** y
+**`Combined`**. El primero cuenta solo futuros; el segundo suma las opciones
+convertidas a futuros equivalentes. **Cada contrato tiene las dos filas cada
+semana**, y los números NO coinciden:
+
+| EURO FX, 2026-09-08 | interés abierto | fondos apalancados largos |
+|---|---:|---:|
+| `FutOnly` | 942.464 | **94.808** |
+| `Combined` | 1.056.521 | **81.335** |
+
+Un 14 % de diferencia en el dato que más se mira. **Pedir sin fijar esa columna
+devuelve uno de los dos según le apetezca al servidor**, y no falla: devuelve un
+número plausible del informe que no era. Es la misma familia de fallo que el ATR
+de cierre a cierre del 2026-08-09.
+
+**→ El lector usará `FutOnly`**, que es la medida más literal: posiciones en
+futuros y nada más. Y lo fija en el `$where`, no confía en el orden.
+
 ## Los nombres EXACTOS de contrato en `TFF_All`
 
-⚠️ **De los 191 contratos, solo 20 son de divisa.** Estos son los de nuestras
-ocho — copiados del log, no de memoria:
+📌 **CORRECCIÓN: la primera versión de esta tabla tenía TRES de los ocho mal.**
+Se escribió leyendo la lista *filtrada* de contratos, que incluye los nombres
+del histórico. La lista buena es la del **último informe**: un contrato que no
+tiene fila ahí es un nombre muerto. Esto es lo que hay VIVO el 2026-09-08:
 
-| | contrato |
-|---|---|
-| EUR | `EURO FX - CHICAGO MERCANTILE EXCHANGE` |
-| JPY | `JAPANESE YEN - CHICAGO MERCANTILE EXCHANGE` |
-| GBP | `BRITISH POUND - CHICAGO MERCANTILE EXCHANGE` |
-| CHF | `SWISS FRANC - CHICAGO MERCANTILE EXCHANGE` |
-| CAD | `CANADIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE` |
-| AUD | `AUSTRALIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE` |
-| NZD | `NEW ZEALAND DOLLAR - CHICAGO MERCANTILE EXCHANGE` |
-| USD | `U.S. DOLLAR INDEX - ICE FUTURES U.S.` |
+| | contrato vivo | nombre muerto que engaña |
+|---|---|---|
+| EUR | `EURO FX - CHICAGO MERCANTILE EXCHANGE` | — |
+| JPY | `JAPANESE YEN - CHICAGO MERCANTILE EXCHANGE` | — |
+| GBP | `BRITISH POUND - CHICAGO MERCANTILE EXCHANGE` | ~~`BRITISH POUND STERLING`~~ |
+| CHF | `SWISS FRANC - CHICAGO MERCANTILE EXCHANGE` | — |
+| CAD | `CANADIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE` | — |
+| AUD | `AUSTRALIAN DOLLAR - CHICAGO MERCANTILE EXCHANGE` | — |
+| **NZD** | **`NZ DOLLAR - CHICAGO MERCANTILE EXCHANGE`** | ~~`NEW ZEALAND DOLLAR`~~ |
+| **USD** | **`USD INDEX - ICE FUTURES U.S.`** | ~~`U.S. DOLLAR INDEX`~~ |
 
-⚠️ **Hay más de un contrato por divisa y hay que elegir a mano.** Conviven
-`BRITISH POUND` y `BRITISH POUND STERLING`; `NEW ZEALAND DOLLAR` y
-`NZ DOLLAR`. Y hay **cruces** que NO son la divisa suelta:
-`EURO FX/JAPANESE YEN XRATE`, `EURO FX/BRITISH POUND - SMALL`. Coger el primero
-que coincida daría el cruce en vez del par.
+⚠️ **Y hay CRUCES que no son la divisa suelta**, vivos los dos:
+`EURO FX/JAPANESE YEN XRATE` y `EURO FX/BRITISH POUND XRATE`. Son contratos
+minúsculos (23.252 y 43.316 de interés abierto contra 942.464 del euro) y coger
+el primero que coincida daría el cruce en vez del par.
+
+📌 **La lección, otra vez la misma:** los tres errores salieron de leer una
+lista que un filtro mío había recortado. El filtro `PARECE_DIVISA` pedía
+«DOLLAR INDEX» y el contrato vivo se llama `USD INDEX`, así que **escondía justo
+lo que se buscaba**. Por eso la sonda ahora imprime la lista completa sin
+filtrar, y por eso la pregunta que decide no es «¿está en la lista?» sino
+«¿tiene fila en el último informe?».
 
 ⚠️ **En `Legacy_All` la cosa es peor:** 1.447 contratos, con bolsas muertas
 dentro (`NEW YORK COTTON EXCHANGE`, `PHILADELPHIA BOARD OF TRADE`,
@@ -151,6 +179,34 @@ nombres completos y nada de subcadenas sueltas.
 ⚠️ **4. Un conjunto muerto responde 200 igual que uno vivo.** Por eso cada
 ficha pide su dato más reciente con `$order DESC`. Los cinco vivos dieron todos
 `2026-09-08`.
+
+⚠️ **5. Y un CONTRATO muerto también.** `NEW ZEALAND DOLLAR` y
+`U.S. DOLLAR INDEX` siguen en la tabla de contratos y **no tienen fila en el
+último informe**. Preguntar por ellos no daría error: daría el último dato que
+tuvieron, de hace años, sin decir que es viejo.
+
+## Las columnas útiles de las 87
+
+Cinco familias de operador, cada una con `long`, `short` y `spread`, más su
+variación semanal (`change_in_*`), su porcentaje del interés abierto
+(`pct_of_oi_*`) y su número de operadores (`traders_*`):
+
+| familia | columnas | quiénes son |
+|---|---|---|
+| `dealer_positions_*` | `long_all`, `short_all`, `spread_all` | bancos e intermediarios: **cubren**, no apuestan |
+| `asset_mgr_positions_*` | `long`, `short`, `spread` | fondos de pensiones, gestoras: dinero lento |
+| **`lev_money_positions_*`** | `long`, `short`, `spread` | **hedge funds: el dinero especulativo** |
+| `other_rept_positions_*` | `long`, `short`, `spread` | el resto de los grandes |
+| `nonrept_positions_*` | `long_all`, `short_all` | los pequeños, que no declaran |
+
+Más `open_interest_all` (el total) y `report_date_as_yyyy_mm_dd` (la fecha del
+dato, que es la que va en pantalla).
+
+⚠️ **`lev_money` es el que la gente llama «los especuladores»**, y es el que
+más se mira. Pero sigue en pie lo escrito antes de ver nada: son hedge funds y
+**pierden como cualquiera**. Los `dealer` son su espejo casi exacto, así que
+enseñar solo uno de los dos y llamarlo «el mercado» es elegir la mitad que
+cuadra con lo que uno quería decir.
 
 ## Lo que confirmó la advertencia escrita ANTES de ver datos
 

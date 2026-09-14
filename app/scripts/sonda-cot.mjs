@@ -136,23 +136,33 @@ const DOMINIO = 'publicreporting.cftc.gov'
 // puente (2026-09-08), que se escribió de memoria y dejó dos pares muertos sin
 // que nada fallara.
 const PISTAS_DIVISA = {
-  EUR: ['EURO FX', 'EURO-FX', 'EUR '],
-  JPY: ['JAPANESE YEN', 'JPY '],
-  GBP: ['BRITISH POUND', 'POUND STERLING', 'GBP '],
-  CHF: ['SWISS FRANC', 'CHF '],
-  CAD: ['CANADIAN DOLLAR', 'CAD '],
-  AUD: ['AUSTRALIAN DOLLAR', 'AUD '],
-  NZD: ['NEW ZEALAND DOLLAR', 'NZ DOLLAR', 'NZD '],
-  USD: ['U.S. DOLLAR INDEX', 'US DOLLAR INDEX', 'USD INDEX', 'DOLLAR INDEX'],
+  EUR: ['EURO FX', 'EURO-FX'],
+  JPY: ['JAPANESE YEN'],
+  GBP: ['BRITISH POUND', 'POUND STERLING'],
+  CHF: ['SWISS FRANC'],
+  CAD: ['CANADIAN DOLLAR'],
+  AUD: ['AUSTRALIAN DOLLAR'],
+  NZD: ['NEW ZEALAND DOLLAR', 'NZ DOLLAR'],
+  USD: ['USD INDEX', 'U.S. DOLLAR INDEX', 'US DOLLAR INDEX', 'DOLLAR INDEX'],
 }
 
-// Para LISTAR los contratos que parecen de divisa. Ajustado después de la
-// primera corrida: el patrón ancho de entonces (que aceptaba «EURO» o «DOLLAR»
-// sueltos) sacaba acero europeo, crudo del mar del Norte y electricidad de
-// Ohio. Estos son nombres de divisa completos, así que no arrastran materias
-// primas.
+// ⚠️ LAS GRAFÍAS DE TRES LETRAS (`'EUR '`, `'CAD '`…) SE QUITARON, y el motivo
+// vale para el lector: en la segunda corrida `'EUR '` cazó
+// **`ALUM EUR UNPAID - COMMODITY EXCHANGE INC.`**, que es aluminio. Buscar
+// divisas por trozos cortos de texto mete materias primas sin avisar.
+
+// Para LISTAR los contratos que parecen de divisa. Ajustado DOS veces:
+//
+//   · tras la primera corrida, porque el patrón ancho de entonces (que
+//     aceptaba «EURO» o «DOLLAR» sueltos) sacaba acero europeo, crudo del mar
+//     del Norte y electricidad de Ohio;
+//   · ⚠️ y tras la tercera, porque se pasó de estrecho: pedía «DOLLAR INDEX» y
+//     el contrato del dólar que está VIVO se llama **`USD INDEX`**. O sea que
+//     la lista «filtrada» escondía justo el contrato del dólar. Un filtro que
+//     esconde lo que se busca es peor que ninguno, y por eso la etapa 3
+//     imprime la lista SIN filtrar.
 const PARECE_DIVISA =
-  /(EURO FX|EURO-FX|JAPANESE YEN|BRITISH POUND|POUND STERLING|SWISS FRANC|CANADIAN DOLLAR|AUSTRALIAN DOLLAR|NEW ZEALAND DOLLAR|NZ DOLLAR|DOLLAR INDEX|MEXICAN PESO|BRAZILIAN REAL|SOUTH AFRICAN RAND|RUSSIAN RUBLE|CHINESE RENMINBI|SWEDISH KRONA|NORWEGIAN KRONE)/i
+  /(EURO FX|EURO-FX|JAPANESE YEN|BRITISH POUND|POUND STERLING|SWISS FRANC|CANADIAN DOLLAR|AUSTRALIAN DOLLAR|NEW ZEALAND DOLLAR|NZ DOLLAR|USD INDEX|DOLLAR INDEX|MEXICAN PESO|BRAZILIAN REAL|SOUTH AFRICAN RAND|SO AFRICAN RAND|RUSSIAN RUBLE|CHINESE RENMINBI|SWEDISH KRONA|NORWEGIAN KRONE)/i
 
 // Identificadores que CREO recordar. Se prueban además de los del catálogo y
 // con esta etiqueta a propósito.
