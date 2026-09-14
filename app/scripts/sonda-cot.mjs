@@ -21,14 +21,14 @@
 //
 // ⚠️ NO GASTA CRÉDITOS DE TWELVE DATA. No toca esa API.
 //
-// ⚠️ Y NO ELIGE POR SÍ SOLA. Imprime el catálogo entero y una muestra de las
-// candidatas; la decisión se toma leyendo el log. Una sonda que decide sola
-// acabaría quedándose con la que respondió primero ese día.
+// ⚠️ Y NO ELIGE POR SÍ SOLA. Imprime una ficha de cada conjunto de datos; la
+// decisión se toma leyendo el log. Una sonda que decide sola acabaría quedándose
+// con la que respondió primero ese día.
 //
 // ─────────────────────────────────────────────────────────────────────────
 // ⚠️⚠️ LO MÁS IMPORTANTE DE ESTE ARCHIVO NO ES TÉCNICO
 // ─────────────────────────────────────────────────────────────────────────
-// Esto se escribe ANTES de ver un solo número, a propósito, igual que la
+// Esto se escribió ANTES de ver un solo número, a propósito, igual que la
 // advertencia del swap en `sonda-tasas.mjs`. Son cinco cosas que el COT NO es,
 // y cada una es una forma de exagerarlo que esta app no va a usar:
 //
@@ -44,6 +44,8 @@
 //    ya tiene tres días, y para el jueves siguiente tiene diez. Un dato de
 //    posicionamiento de hace diez días no dice dónde está el dinero hoy.
 //    → En pantalla hay que enseñar la FECHA DEL DATO, como con las tasas.
+//    → **CONFIRMADO en la primera corrida:** el dato más reciente del
+//      2026-09-14 (domingo) era del **2026-09-08**, que fue martes. Seis días.
 //
 // **3. «NON-COMMERCIAL» NO QUIERE DECIR «DINERO LISTO».** Son especuladores, y
 //    pierden como cualquiera. Los «commercial» son coberturistas y su posición
@@ -86,37 +88,84 @@
 //
 // Socrata funciona sin llave con un límite de peticiones por hora. Una consulta
 // a la semana entra de sobra, así que no hace falta ningún secreto nuevo.
+//
+// ─────────────────────────────────────────────────────────────────────────
+// 📌 LO QUE LA PRIMERA CORRIDA DESTAPÓ, Y POR QUÉ ESTA SONDA CAMBIÓ
+// ─────────────────────────────────────────────────────────────────────────
+// La primera versión (run 34797433188, 2026-09-14) respondió bien y aun así
+// **examinó a fondo el conjunto de datos equivocado**. Queda escrito porque los
+// dos fallos son de los que no avisan:
+//
+// **1. FILTRABA LAS CANDIDATAS POR EL NOMBRE, y la buena se llama `TFF_All`.**
+//    El filtro buscaba «commitment», «financial futures», «futures only»… y la
+//    CFTC nombra sus conjuntos principales con abreviaturas: `TFF_All`,
+//    `Legacy_All`, `CIT_All`. Así que **las dos que más falta hacían no se
+//    miraron**, y sí se miró `Disaggregated_All`, que es de materias primas y
+//    no tiene ni una divisa. La prueba pasaba enseñando trigo.
+//    → Ahora se hace una ficha de **TODOS** los conjuntos que aparezcan, sin
+//      filtrar por nombre. Son quince: caben.
+//
+// **2. EL VEREDICTO ESTABA MAL ROTULADO, y eso es un error de medición.**
+//    Al no encontrar «EURO FX» en un conjunto de materias primas, la sonda
+//    imprimía «el nombre de memoria está mal». **El nombre podía estar
+//    perfecto**: lo que fallaba era el conjunto de datos. Es exactamente la
+//    lección del 2026-09-04 («una etiqueta equivocada es un error de medición»)
+//    repetida. Ahora dice lo que de verdad midió: «no está en ESTE conjunto».
+//
+// **3. Y una trampa de la API que conviene tener escrita:**
+//    `publicreporting.cftc.gov/api/catalog/v1` **SIN `domains=`** devuelve el
+//    catálogo de TODO Socrata, no el de la CFTC — en la primera corrida salieron
+//    la policía de Dallas y los casos de covid en Colombia. Quien lo use para
+//    «descubrir» los conjuntos de la CFTC se lleva cien datos ajenos. Se sigue
+//    pidiendo, pero solo para dejar constancia de la trampa.
+//
+// **4. `$q=` (la búsqueda libre) NO sirve para encontrar una divisa.** `$q=EURO`
+//    devolvió «NORTH EURO HOT-ROLL COIL STEEL»: acero. Hay que filtrar por el
+//    nombre exacto del contrato, no por texto libre.
 
 const UA = 'NestorForex/1.0 (+https://github.com/Nestor-forex)'
 const DOMINIO = 'publicreporting.cftc.gov'
 
-// Las ocho divisas del barrido y cómo se llama su futuro, MÁS O MENOS.
+// Las ocho divisas del barrido y las formas en que PUEDE estar escrito su
+// futuro. Varias por divisa a propósito: la CFTC no escribe igual «NEW ZEALAND
+// DOLLAR» que «NZ DOLLAR», y desde aquí no se puede comprobar cuál usa.
 //
-// ⚠️ Estos nombres están escritos DE MEMORIA y por eso NO se usan para decidir
-// nada: la sonda pide la lista REAL de contratos al servidor y la imprime. Si
-// alguno está mal escrito, el log lo dirá. Es la lección del 2026-09-08, cuando
-// `SYMBOLS` del puente se escribió de memoria y dos pares salieron mal sin que
-// nada fallara.
+// ⚠️ Estas grafías están escritas DE MEMORIA y por eso NO se usan para decidir
+// nada: la sonda pide la lista REAL de contratos al servidor y la imprime
+// entera. Si todas están mal, la lista lo dirá. Es la lección de `SYMBOLS` del
+// puente (2026-09-08), que se escribió de memoria y dejó dos pares muertos sin
+// que nada fallara.
 const PISTAS_DIVISA = {
-  EUR: 'EURO FX',
-  JPY: 'JAPANESE YEN',
-  GBP: 'BRITISH POUND',
-  CHF: 'SWISS FRANC',
-  CAD: 'CANADIAN DOLLAR',
-  AUD: 'AUSTRALIAN DOLLAR',
-  NZD: 'NEW ZEALAND DOLLAR',
-  USD: 'U.S. DOLLAR INDEX',
+  EUR: ['EURO FX', 'EURO-FX', 'EUR '],
+  JPY: ['JAPANESE YEN', 'JPY '],
+  GBP: ['BRITISH POUND', 'POUND STERLING', 'GBP '],
+  CHF: ['SWISS FRANC', 'CHF '],
+  CAD: ['CANADIAN DOLLAR', 'CAD '],
+  AUD: ['AUSTRALIAN DOLLAR', 'AUD '],
+  NZD: ['NEW ZEALAND DOLLAR', 'NZ DOLLAR', 'NZD '],
+  USD: ['U.S. DOLLAR INDEX', 'US DOLLAR INDEX', 'USD INDEX', 'DOLLAR INDEX'],
 }
 
-// Identificadores de conjunto de datos que CREO recordar. Van al final y con
-// esta etiqueta a propósito: lo primero que hace la sonda es pedir el catálogo,
-// que es la única lista de verdad. Si alguno de estos no existe, mejor: queda
-// comprobado en el log en vez de acabar escrito en el lector.
+// Para LISTAR los contratos que parecen de divisa. Ajustado después de la
+// primera corrida: el patrón ancho de entonces (que aceptaba «EURO» o «DOLLAR»
+// sueltos) sacaba acero europeo, crudo del mar del Norte y electricidad de
+// Ohio. Estos son nombres de divisa completos, así que no arrastran materias
+// primas.
+const PARECE_DIVISA =
+  /(EURO FX|EURO-FX|JAPANESE YEN|BRITISH POUND|POUND STERLING|SWISS FRANC|CANADIAN DOLLAR|AUSTRALIAN DOLLAR|NEW ZEALAND DOLLAR|NZ DOLLAR|DOLLAR INDEX|MEXICAN PESO|BRAZILIAN REAL|SOUTH AFRICAN RAND|RUSSIAN RUBLE|CHINESE RENMINBI|SWEDISH KRONA|NORWEGIAN KRONE)/i
+
+// Identificadores que CREO recordar. Se prueban además de los del catálogo y
+// con esta etiqueta a propósito.
+//
+// 📌 En la primera corrida **los cuatro respondieron 200** aunque NINGUNO
+// aparece en el catálogo de la CFTC. O sea que existen y no están anunciados:
+// razón de más para mirar la fecha de su dato más reciente antes de fiarse de
+// alguno, que es justo lo que esta versión añade.
 const IDS_DE_MEMORIA = [
-  { id: '6dca-aqww', nota: '¿COT clásico, solo futuros? (de memoria)' },
-  { id: 'gpe5-46if', nota: '¿Traders in Financial Futures, solo futuros? (de memoria)' },
-  { id: 'kh3c-gbw2', nota: '¿Desagregado, solo futuros? (de memoria)' },
-  { id: 'jun7-fc8e', nota: '¿TFF combinado? (de memoria)' },
+  { id: '6dca-aqww', nota: 'de memoria — 133 columnas, no está en el catálogo' },
+  { id: 'gpe5-46if', nota: 'de memoria — 89 columnas (forma de TFF), no está en el catálogo' },
+  { id: 'kh3c-gbw2', nota: 'de memoria — 194 columnas, no está en el catálogo' },
+  { id: 'jun7-fc8e', nota: 'de memoria — 133 columnas, no está en el catálogo' },
 ]
 
 const recorta = (v, n = 220) => {
@@ -124,10 +173,12 @@ const recorta = (v, n = 220) => {
   return s.length > n ? s.slice(0, n) + '…' : s
 }
 
+const pausa = (ms) => new Promise((r) => setTimeout(r, ms))
+
 // Un solo sitio donde se pide algo, para que NINGÚN fallo de red tumbe la
 // sonda entera: si una dirección no responde, se anota y se sigue con la
 // siguiente. Media sonda es mucho mejor que ninguna.
-async function pedir(url, etiqueta) {
+async function pedir(url, etiqueta, { silencioso = false } = {}) {
   const t0 = Date.now()
   let res
   try {
@@ -142,19 +193,19 @@ async function pedir(url, etiqueta) {
 
   const ms = Date.now() - t0
   const texto = await res.text()
-  console.log(
-    `  estado ${res.status} · ${res.headers.get('content-type') || '(sin content-type)'} · ${ms} ms · ${texto.length} caracteres`,
-  )
+  if (!silencioso) {
+    console.log(`  estado ${res.status} · ${ms} ms · ${texto.length} caracteres`)
+  }
 
   if (!res.ok) {
-    console.log(`  ✗ RECHAZADA. Primeros caracteres: ${recorta(texto, 300)}`)
+    console.log(`  ✗ RECHAZADA (${res.status}): ${recorta(texto.replace(/\s+/g, ' '), 200)}`)
     return null
   }
 
   try {
     return JSON.parse(texto)
   } catch {
-    console.log(`  ⚠ RESPONDE PERO NO ES JSON. Primeros caracteres: ${recorta(texto, 300)}`)
+    console.log(`  ⚠ RESPONDE PERO NO ES JSON: ${recorta(texto, 200)}`)
     return null
   }
 }
@@ -163,54 +214,28 @@ async function pedir(url, etiqueta) {
 // 1. EL CATÁLOGO: qué publica de verdad la CFTC
 // ─────────────────────────────────────────────────────────────────────────
 // Esto es lo ÚNICO que no se puede adivinar desde una sesión sin red, y por
-// eso va primero. Se prueban tres caminos porque no se sabe cuál está vivo:
-// el catálogo central de Socrata, el del propio dominio, y el índice DCAT que
-// publican los sitios de datos abiertos del gobierno de EE. UU.
+// eso va primero.
 async function catalogo() {
-  const candidatos = [
-    {
-      id: 'catalogo-socrata-central',
-      url: `https://api.us.socrata.com/api/catalog/v1?domains=${DOMINIO}&search_context=${DOMINIO}&only=dataset&limit=100`,
-      saca: (d) => (d?.results || []).map((r) => ({ id: r?.resource?.id, nombre: r?.resource?.name })),
-    },
-    {
-      id: 'catalogo-del-dominio',
-      url: `https://${DOMINIO}/api/catalog/v1?only=dataset&limit=100`,
-      saca: (d) => (d?.results || []).map((r) => ({ id: r?.resource?.id, nombre: r?.resource?.name })),
-    },
-    {
-      id: 'indice-dcat',
-      url: `https://${DOMINIO}/data.json`,
-      saca: (d) =>
-        (d?.dataset || []).map((r) => ({
-          // En DCAT el identificador viene como URL completa; interesa el
-          // trozo final, que es el que Socrata usa en /resource/<id>.json
-          id: String(r?.identifier || '').split('/').pop(),
-          nombre: r?.title,
-        })),
-    },
-  ]
-
   const encontrados = new Map()
 
-  for (const c of candidatos) {
-    console.log('')
-    console.log('─'.repeat(72))
-    console.log(`CATÁLOGO: ${c.id}`)
-    console.log(`  ${c.url}`)
-
-    const datos = await pedir(c.url, c.id)
-    if (!datos) continue
-
-    let filas = []
-    try {
-      filas = c.saca(datos).filter((f) => f.id && f.nombre)
-    } catch (e) {
-      console.log(`  ⚠ Responde pero no se reconoce la forma — ${e.message}`)
-      console.log(`  Claves de primer nivel: ${Object.keys(datos).join(' · ')}`)
-      continue
-    }
-
+  // ── El índice DCAT del propio dominio ──────────────────────────────────
+  // En la primera corrida fue **el mejor de los tres**: quince conjuntos, con
+  // nombres legibles («TFF - Futures Only», «Legacy - Combined») en vez de
+  // abreviaturas. Va primero por eso.
+  console.log('')
+  console.log('─'.repeat(72))
+  console.log('CATÁLOGO: índice DCAT del dominio')
+  console.log(`  https://${DOMINIO}/data.json`)
+  const dcat = await pedir(`https://${DOMINIO}/data.json`, 'dcat')
+  if (dcat?.dataset) {
+    const filas = dcat.dataset
+      .map((r) => ({
+        // En DCAT el identificador viene como URL completa; interesa el trozo
+        // final, que es el que Socrata usa en /resource/<id>.json
+        id: String(r?.identifier || '').split('/').pop(),
+        nombre: r?.title,
+      }))
+      .filter((f) => f.id && f.nombre)
     console.log(`  ✓ ${filas.length} conjuntos de datos`)
     for (const f of filas) {
       console.log(`    ${f.id}  ${f.nombre}`)
@@ -218,148 +243,129 @@ async function catalogo() {
     }
   }
 
+  // ── El catálogo central de Socrata, ACOTADO al dominio ─────────────────
+  await pausa(250)
+  console.log('')
+  console.log('─'.repeat(72))
+  console.log('CATÁLOGO: central de Socrata, acotado a la CFTC')
+  const url = `https://api.us.socrata.com/api/catalog/v1?domains=${DOMINIO}&search_context=${DOMINIO}&only=dataset&limit=100`
+  console.log(`  ${url}`)
+  const central = await pedir(url, 'socrata-central')
+  if (central?.results) {
+    const filas = central.results
+      .map((r) => ({ id: r?.resource?.id, nombre: r?.resource?.name }))
+      .filter((f) => f.id && f.nombre)
+    console.log(`  ✓ ${filas.length} conjuntos de datos`)
+    for (const f of filas) {
+      console.log(`    ${f.id}  ${f.nombre}`)
+      if (!encontrados.has(f.id)) encontrados.set(f.id, f.nombre)
+    }
+  }
+
+  // ── La TRAMPA, documentada a propósito ─────────────────────────────────
+  // El mismo camino SIN `domains=` devuelve el catálogo de TODO Socrata. No se
+  // listan los resultados —son cien datos ajenos— pero sí se deja constancia
+  // de que responde 200 y de la cifra, que es lo que engaña.
+  await pausa(250)
+  console.log('')
+  console.log('─'.repeat(72))
+  console.log('⚠ TRAMPA: el mismo catálogo SIN acotar el dominio')
+  console.log(`  https://${DOMINIO}/api/catalog/v1?only=dataset&limit=100`)
+  const sinAcotar = await pedir(`https://${DOMINIO}/api/catalog/v1?only=dataset&limit=100`, 'trampa')
+  if (sinAcotar?.results) {
+    const ajenos = sinAcotar.results.filter((r) => r?.metadata?.domain && r.metadata.domain !== DOMINIO)
+    console.log(`  Devuelve ${sinAcotar.results.length} conjuntos, de los cuales ${ajenos.length} NO son de la CFTC.`)
+    console.log('  Ejemplos de lo que cuela:')
+    for (const r of sinAcotar.results.slice(0, 3)) {
+      console.log(`    ${r?.resource?.id}  ${r?.resource?.name}  (dominio: ${r?.metadata?.domain})`)
+    }
+    console.log('  → NO usar este camino para descubrir nada. Hace falta `domains=`.')
+  }
+
   return encontrados
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// 2. UNA MUESTRA de cada candidata: los NOMBRES de las columnas
+// 2. LA FICHA de un conjunto de datos
 // ─────────────────────────────────────────────────────────────────────────
-// Los nombres de las columnas son lo segundo que no se puede adivinar, y el
-// lector se escribe sobre ellos. Se imprimen TODOS aunque sean muchos: una
-// columna que no se ve es una columna que después se escribe de memoria.
-async function muestra(id, nombre) {
-  console.log('')
-  console.log('─'.repeat(72))
-  console.log(`MUESTRA: ${id}`)
-  console.log(`  ${nombre}`)
-
-  const url = `https://${DOMINIO}/resource/${id}.json?$limit=1`
-  console.log(`  ${url}`)
-
-  const datos = await pedir(url, id)
-  if (!Array.isArray(datos)) {
-    if (datos) console.log(`  ⚠ No devuelve una lista. Claves: ${Object.keys(datos).join(' · ')}`)
-    return null
-  }
-  if (!datos.length) {
-    console.log('  ⚠ RESPONDE VACÍO: existe pero no trae filas.')
-    return null
-  }
-
-  const fila = datos[0]
-  const columnas = Object.keys(fila)
-  console.log(`  ✓ ${columnas.length} columnas:`)
-  for (const c of columnas) console.log(`    ${c} = ${recorta(fila[c], 80)}`)
-
-  return { id, columnas, fila }
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// 3. ¿ESTÁN NUESTRAS DIVISAS AHÍ, Y CÓMO SE LLAMAN EXACTAMENTE?
-// ─────────────────────────────────────────────────────────────────────────
-// Aquí está el dato por el que existe esta sonda. Los nombres de contrato de
-// `PISTAS_DIVISA` están escritos de memoria; lo que hace falta es el nombre
-// EXACTO tal y como lo escribe la CFTC, porque el lector va a filtrar por él.
+// Cuatro preguntas, y las cuatro hacen falta para poder elegir:
 //
-// Se pide la lista de nombres distintos en vez de buscar uno a uno: así salen
-// también los que yo habría escrito mal.
-async function contratos(id, columnas) {
-  const col =
+//   a) ¿responde y con qué columnas?
+//   b) ¿de cuándo es su dato MÁS RECIENTE? — la que más falta hacía y no
+//      estaba en la primera versión. Un conjunto que dejó de actualizarse
+//      responde 200 igual que uno vivo.
+//   c) ¿qué contratos de divisa tiene?
+//   d) ¿cuáles de NUESTRAS ocho aparecen?
+async function ficha(id, nombre) {
+  console.log('')
+  console.log('═'.repeat(72))
+  console.log(`${id}  ${nombre}`)
+
+  // (a) Columnas
+  const muestra = await pedir(`https://${DOMINIO}/resource/${id}.json?$limit=1`, id)
+  if (!Array.isArray(muestra) || !muestra.length) {
+    if (Array.isArray(muestra)) console.log('  ⚠ Existe pero no trae filas.')
+    return
+  }
+
+  const columnas = Object.keys(muestra[0])
+  const colNombre =
     columnas.find((c) => /market.*exchange.*name/i.test(c)) ||
     columnas.find((c) => /market.*name/i.test(c)) ||
     columnas.find((c) => /contract.*name/i.test(c))
-
-  console.log('')
-  console.log('─'.repeat(72))
-  console.log(`CONTRATOS en ${id}`)
-
-  if (!col) {
-    console.log('  ⚠ No se encuentra una columna con el nombre del contrato.')
-    console.log(`  Columnas disponibles: ${columnas.join(' · ')}`)
-    return
-  }
-  console.log(`  columna del nombre del contrato: "${col}"`)
-
-  // Nombres distintos, ordenados. `$group` con `$select` es lo que Socrata
-  // entiende como «distinct».
-  const url =
-    `https://${DOMINIO}/resource/${id}.json` +
-    `?$select=${col}&$group=${col}&$order=${col}&$limit=2000`
-  console.log(`  ${url}`)
-
-  const datos = await pedir(url, `${id}:contratos`)
-  if (!Array.isArray(datos)) return
-
-  const nombres = datos.map((d) => String(d?.[col] ?? '')).filter(Boolean)
-  console.log(`  ✓ ${nombres.length} contratos distintos en total`)
-
-  // Solo se imprimen los que huelen a divisa: la lista entera son cientos
-  // (maíz, petróleo, bonos…) y llenaría el log tapando lo que importa.
-  console.log('  Los que parecen de divisa:')
-  const pinta = nombres.filter((n) =>
-    /(EURO|YEN|POUND|STERLING|FRANC|CANADIAN|AUSTRALIAN|ZEALAND|DOLLAR|PESO|KRONA|REAL|RENMINBI|YUAN|CURRENC|FX)/i.test(n),
-  )
-  for (const n of pinta) console.log(`    ${n}`)
-  if (!pinta.length) console.log('    (ninguno — mala señal para este conjunto de datos)')
-
-  // Y por separado: ¿cuadra cada pista con algo de la lista? Esto es lo que
-  // deja por escrito cuáles de mis nombres de memoria estaban mal.
-  console.log('  ¿Cuadra cada divisa del barrido?')
-  for (const [divisa, pista] of Object.entries(PISTAS_DIVISA)) {
-    const coincide = nombres.filter((n) => n.toUpperCase().includes(pista.toUpperCase()))
-    if (coincide.length) {
-      console.log(`    ${divisa}: ✓ ${coincide.length} → ${recorta(coincide.join(' | '), 220)}`)
-    } else {
-      console.log(`    ${divisa}: ✗ NADA contiene "${pista}" — el nombre de memoria está mal`)
-    }
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// 4. LA ÚLTIMA FILA DE UNA DIVISA, con la fecha
-// ─────────────────────────────────────────────────────────────────────────
-// La prueba de que se puede pedir exactamente lo que el lector va a pedir: la
-// fila más reciente de un contrato. Y la FECHA, que es el dato que hay que
-// enseñar en pantalla (ver la advertencia 2 de la cabecera).
-async function ultimaFila(id, columnas) {
-  const colNombre =
-    columnas.find((c) => /market.*exchange.*name/i.test(c)) || columnas.find((c) => /market.*name/i.test(c))
   const colFecha =
     columnas.find((c) => /report_date_as_yyyy_mm_dd/i.test(c)) ||
     columnas.find((c) => /as_of_date/i.test(c)) ||
     columnas.find((c) => /date/i.test(c))
 
-  console.log('')
-  console.log('─'.repeat(72))
-  console.log(`ÚLTIMA FILA de una divisa en ${id}`)
+  console.log(`  ✓ ${columnas.length} columnas · nombre del contrato: "${colNombre}" · fecha: "${colFecha}"`)
 
   if (!colNombre || !colFecha) {
-    console.log(`  ⚠ Falta la columna del nombre (${colNombre}) o de la fecha (${colFecha}).`)
-    return
-  }
-  console.log(`  columna de fecha: "${colFecha}"`)
-
-  // `$q` es la búsqueda libre de Socrata: sirve aunque el nombre exacto del
-  // contrato no sea el que yo creo. Se pide el euro porque es el contrato de
-  // divisa más grande del CME.
-  const url =
-    `https://${DOMINIO}/resource/${id}.json` +
-    `?$q=EURO&$order=${colFecha}%20DESC&$limit=1`
-  console.log(`  ${url}`)
-
-  const datos = await pedir(url, `${id}:ultima`)
-  if (!Array.isArray(datos) || !datos.length) {
-    console.log('  ⚠ Sin filas.')
+    console.log(`  ⚠ Sin columna de nombre o de fecha: no sirve. Columnas: ${recorta(columnas.join(' · '), 400)}`)
     return
   }
 
-  const fila = datos[0]
-  console.log(`  ✓ contrato: ${fila[colNombre]}`)
-  console.log(`  ✓ fecha del dato: ${fila[colFecha]}`)
-  console.log('  Columnas con «long», «short», «net» o «open_interest» (las que usaría el lector):')
-  for (const [k, v] of Object.entries(fila)) {
-    if (/long|short|net|open_interest|traders/i.test(k)) console.log(`    ${k} = ${recorta(v, 60)}`)
+  // (b) ¿Está vivo? El dato más reciente de TODO el conjunto.
+  await pausa(250)
+  const reciente = await pedir(
+    `https://${DOMINIO}/resource/${id}.json?$select=${colFecha}&$order=${colFecha}%20DESC&$limit=1`,
+    `${id}:reciente`,
+    { silencioso: true },
+  )
+  const fechaMax = Array.isArray(reciente) ? reciente[0]?.[colFecha] : null
+  console.log(`  DATO MÁS RECIENTE: ${fechaMax || '(no se pudo leer)'}`)
+
+  // (c) y (d) Los contratos
+  await pausa(250)
+  const lista = await pedir(
+    `https://${DOMINIO}/resource/${id}.json?$select=${colNombre}&$group=${colNombre}&$order=${colNombre}&$limit=3000`,
+    `${id}:contratos`,
+    { silencioso: true },
+  )
+  if (!Array.isArray(lista)) return
+
+  const nombres = lista.map((d) => String(d?.[colNombre] ?? '')).filter(Boolean)
+  const divisas = nombres.filter((n) => PARECE_DIVISA.test(n))
+  console.log(`  ${nombres.length} contratos distintos · ${divisas.length} parecen de divisa`)
+
+  if (divisas.length) {
+    for (const n of divisas.slice(0, 40)) console.log(`      ${n}`)
+    if (divisas.length > 40) console.log(`      … y ${divisas.length - 40} más`)
   }
+
+  // ⚠️ El rótulo dice lo que de verdad se midió: si una divisa no aparece, lo
+  // que está comprobado es que NO ESTÁ EN ESTE CONJUNTO — no que la grafía sea
+  // mala. En la primera corrida se rotuló al revés y la conclusión que inducía
+  // era la contraria.
+  const faltan = []
+  const hay = []
+  for (const [divisa, grafias] of Object.entries(PISTAS_DIVISA)) {
+    const coincide = nombres.filter((n) => grafias.some((g) => n.toUpperCase().includes(g.toUpperCase())))
+    if (coincide.length) hay.push(`${divisa} (${recorta(coincide[0], 60)})`)
+    else faltan.push(divisa)
+  }
+  console.log(`  DE NUESTRAS 8 — están: ${hay.length ? hay.join(' · ') : 'ninguna'}`)
+  console.log(`  DE NUESTRAS 8 — no están EN ESTE CONJUNTO: ${faltan.length ? faltan.join(' · ') : 'ninguna'}`)
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -381,49 +387,30 @@ console.log('encender señales con él NO sin pasar por el banco de pruebas.')
 
 const encontrados = await catalogo()
 
-// Las candidatas: lo que el catálogo diga que se parece a un COT, más las que
-// yo recordaba. Las de memoria van igual aunque el catálogo no las mencione —
-// precisamente para dejar comprobado si existen o no.
-const delCatalogo = [...encontrados.entries()].filter(([, nombre]) =>
-  /commitment|financial futures|traders in|futures only|disaggregated/i.test(nombre),
-)
+// ⚠️ SIN FILTRAR POR NOMBRE. La primera versión filtraba y se dejó fuera
+// `TFF_All`, que es justo la de futuros financieros, porque su nombre es una
+// abreviatura. Quince fichas caben en un log; una candidata que no se mira, no.
+const aProbar = [
+  ...[...encontrados.entries()].map(([id, nombre]) => ({ id, nombre })),
+  ...IDS_DE_MEMORIA.filter((m) => !encontrados.has(m.id)).map((m) => ({ id: m.id, nombre: m.nota })),
+]
 
 console.log('')
 console.log('─'.repeat(72))
-console.log(`CANDIDATAS del catálogo: ${delCatalogo.length}`)
-for (const [id, nombre] of delCatalogo) console.log(`  ${id}  ${nombre}`)
+console.log(`FICHAS a levantar: ${aProbar.length} (TODAS las encontradas, sin filtrar por nombre)`)
 
-const aProbar = [
-  ...delCatalogo.slice(0, 6).map(([id, nombre]) => ({ id, nombre })),
-  ...IDS_DE_MEMORIA.filter((m) => !delCatalogo.some(([id]) => id === m.id)).map((m) => ({
-    id: m.id,
-    nombre: `${m.nota} — NO estaba en el catálogo`,
-  })),
-]
-
-// La primera que traiga columnas Y contratos de divisa es la que se examina a
-// fondo. Se examina UNA a fondo y no todas para no llenar el log: las demás ya
-// quedaron con sus columnas impresas, que es lo que hace falta para comparar.
-let aFondo = null
 for (const c of aProbar) {
-  const m = await muestra(c.id, c.nombre)
-  if (m && !aFondo) aFondo = m
-}
-
-if (aFondo) {
-  await contratos(aFondo.id, aFondo.columnas)
-  await ultimaFila(aFondo.id, aFondo.columnas)
-} else {
-  console.log('')
-  console.log('⚠ Ninguna candidata devolvió filas. Con esto NO se puede escribir el lector.')
+  await ficha(c.id, c.nombre)
+  await pausa(250)
 }
 
 console.log('')
 console.log('─'.repeat(72))
 console.log('Leer de arriba abajo y elegir a mano el conjunto de datos que:')
 console.log('  1. responda;')
-console.log('  2. traiga las 7 divisas del barrido (del dólar solo habrá índice);')
-console.log('  3. traiga la FECHA del dato — sin ella no se puede enseñar en pantalla;')
+console.log('  2. tenga un DATO MÁS RECIENTE de esta semana o la pasada — uno')
+console.log('     que dejó de actualizarse responde 200 igual que uno vivo;')
+console.log('  3. traiga las 7 divisas del barrido (del dólar solo habrá índice);')
 console.log('  4. y separe posiciones largas y cortas por tipo de operador.')
 console.log('')
 console.log('Y escribir el lector con los nombres EXACTOS que salgan arriba, no')
