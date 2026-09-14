@@ -1,0 +1,37 @@
+name: Sonda del sentimiento minorista
+
+# Pregunta a las candidatas de sentimiento minorista si responden, con qué
+# forma, y si su robots.txt deja pedirlo. Ver la cabecera de
+# `app/scripts/sonda-sentimiento.mjs`.
+#
+# ⚠️ SOLO A MANO. No hay nada que mantener al día: es para mirar una vez y
+# decidir con la respuesta delante.
+#
+# ⚠️ NO GASTA CRÉDITOS DE TWELVE DATA y NO NECESITA NINGÚN SECRETO. Por eso
+# este workflow no lleva `env` con `TWELVEDATA_KEY`.
+#
+# ⚠️ Y NO ESCRIBE NADA en la rama `datos`: una sonda que guarda deja de ser una
+# sonda. Por eso los permisos son de solo lectura.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    # Seis fuentes con 30 s de espera máxima cada una, más sus robots.txt.
+    timeout-minutes: 10
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Sondear
+        working-directory: app
+        run: node scripts/sonda-sentimiento.mjs
