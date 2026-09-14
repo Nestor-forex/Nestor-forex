@@ -73,6 +73,7 @@
 // mismo.
 
 import { decidirConRobots } from './lib/robots.mjs'
+import { veredictoBusqueda } from './lib/sitemaps.mjs'
 
 // Los pares que interesan: los 14 de Swing. La sonda pregunta por unos pocos
 // representativos, no por todos — se trata de ver la FORMA, no de recolectar.
@@ -421,6 +422,7 @@ async function buscarEnSitemaps(b) {
   const vistos = new Set()
   const encontradas = []
   let leidos = 0
+  let fallidos = 0
   let paginas = 0
 
   while (cola.length && leidos < TOPE_SITEMAPS) {
@@ -431,6 +433,7 @@ async function buscarEnSitemaps(b) {
     const r = await bajarTexto(url)
     leidos++
     if (r.fallo) {
+      fallidos++
       console.log(`    ✗ ${url} — ${r.fallo}`)
       continue
     }
@@ -449,18 +452,15 @@ async function buscarEnSitemaps(b) {
     }
   }
 
-  console.log(`  archivos leídos: ${leidos}${cola.length ? ` (quedaban ${cola.length} sin leer: tope ${TOPE_SITEMAPS})` : ''}`)
+  console.log(`  archivos intentados: ${leidos} (${fallidos} fallaron)`)
   console.log(`  páginas listadas: ${paginas}`)
 
-  if (!encontradas.length) {
-    console.log('  ⚠️ NINGUNA página con esas palabras en su dirección.')
-    console.log('     Eso NO demuestra que no exista —puede estar dentro de la cuenta,')
-    console.log('     o llamarse de otra forma— pero sí que no la publican abiertamente.')
-    return
-  }
-
-  console.log(`  ✓ ${encontradas.length} páginas que podrían ser:`)
-  for (const u of [...new Set(encontradas)].slice(0, 25)) console.log(`      ${u}`)
+  // ⚠️ El veredicto NO se escribe aquí: lo calcula `veredictoBusqueda`, que
+  // tiene pruebas sin internet. La primera versión de esto decía «ninguna
+  // página» habiendo leído CERO — ver la cabecera de `lib/sitemaps.mjs`.
+  const v = veredictoBusqueda({ leidos, fallidos, paginas, encontradas, pendientes: cola.length })
+  for (const linea of v.texto.split('\n')) console.log(`  ${linea}`)
+  for (const u of v.hallazgos.slice(0, 25)) console.log(`      ${u}`)
 }
 
 console.log('---SONDA-INICIO---')
