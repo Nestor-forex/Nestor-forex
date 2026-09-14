@@ -4102,3 +4102,83 @@ candidata y escribir el lector. Nunca al revés.
 ⚠️ Varias direcciones de la sonda son **conjeturas** sobre cómo se llaman esos
 endpoints. Una que dé 404 solo dice que esa dirección no es, no que la fuente
 no sirva.
+
+## ✅ La sonda corrió. Primera ronda: cinco de seis caen
+
+| fuente | robots.txt | qué pasó |
+|---|---|---|
+| Myfxbook (API) | no se sabe (403) | **200 con `{"error":true,"message":"Required fields missing."}`** → pide sesión |
+| Myfxbook (página) | no se sabe (403) | **403** a un User-Agent honesto |
+| Dukascopy | no se sabe (404) | **403**, cuerpo vacío |
+| DailyFX / IG | Allow: / | 200, pero sirve el **explicativo de IG UK**: cero pares |
+| OANDA | no lo prohíbe | 200 de marketing: cero «sentiment», cero «short» |
+| **FX Blue** | **Allow: /** | **200 sin credencial** ← la única que pasó |
+
+📌 **Myfxbook contestó 200 con un error dentro.** Es exactamente la trampa que
+la sonda venía a cazar y que ya había mordido con `TFF_All`: un 200 no quiere
+decir que haya datos.
+
+📌 **Y que Myfxbook y Dukascopy den 403 a un User-Agent honesto TAMBIÉN es una
+respuesta**: no están publicando un dato, están sirviendo una página a
+personas. Disfrazarse de navegador habría entrado, y es justo lo que no se
+hace aquí.
+
+## ⚠️⚠️ Segunda ronda: FX Blue tampoco sirve, y de paso me desmiente a mí
+
+Escribí en el commit de la primera ronda que en FX Blue «los números
+aparentemente están dentro del HTML», por el recuento `net-short ×13`,
+44 porcentajes y `EUR/USD ×14`. **Era falso, y lo desmintió la propia mejora
+que le hice a la sonda esa misma tarde.**
+
+Al enseñar el HTML **alrededor** de la palabra en vez de contarla:
+
+```
+"net-short" en su sitio: …<meta name="description" content="Trader sentiment
+showing the number of real-money accounts on FX Blue which are currently
+net-long or net-short. …"
+```
+
+Está en **el texto de propaganda de la página**, no en un dato. Y el resto
+encaja: es una aplicación Next.js (`/_next/static/chunks/…`), «Updated» no
+aparece, el único `UTC` está dentro de la configuración de la interfaz junto a
+`"now":"$undefined"` —o sea, **los valores no vienen del servidor**—, y
+**`rutas que parecen de datos dentro del HTML: 0`**. Las dos conjeturas de
+archivo (`.csv`, `.json`) dieron 404, y `/terms` también.
+
+**Los números los pide el navegador después de cargar.** No hay archivo.
+
+📌 **Es la sexta vez en este archivo que presento un mecanismo convincente
+antes de comprobarlo**, y esta vez con un agravante y un atenuante. El
+agravante: se lo llegué a decir a Néstor por el chat. El atenuante: la
+comprobación que lo destapó la había escrito yo mismo **para esto**, con el
+motivo dentro («contar cuántas veces aparece "net-short" no distingue "el
+número está aquí" de "aquí solo se nombra"»). La lección no es nueva —
+**contar apariciones no es leer** — pero esta vez la herramienta ya estaba
+puesta y funcionó.
+
+## El veredicto de la #5
+
+**Ninguna de las seis pasa el listón**, que estaba escrito antes: responder sin
+credencial · permitido · con fecha · con varios pares.
+
+Lo que quedaría sería una de estas tres, y ninguna es buena:
+
+| salida | por qué NO |
+|---|---|
+| llamar a la API interna de la app de FX Blue | no es un feed publicado; es raspar con otro nombre, y se rompe **devolviendo números mal leídos**, no con un error |
+| abrir cuenta en Myfxbook y guardar la sesión | un secreto más que mantener, y su página ya nos cerró la puerta |
+| disfrazar la sonda de navegador | pasar por encima de un «no» explícito |
+
+**Recomendación: la #5 NO entra.** Y conviene ver que no es una derrota
+técnica: es el listón haciendo su trabajo. De las cinco de la fase de
+información, **cuatro entraron** (calendario, correlación, tasas, COT) y esta
+se queda fuera porque nadie publica el dato de forma que se pueda usar sin
+pedir permiso o sin raspar.
+
+⚠️ Y aunque se consiguiera, seguía en pie lo escrito antes de mirar: es el
+libro de UN bróker —de una clientela particular, además— y «los minoristas
+pierden, hagamos lo contrario» no está medido aquí. O sea que el premio por
+saltarse el listón sería pequeño.
+
+📌 La sonda y su prueba **se quedan en el repositorio**. Si algún día alguna de
+las cinco publica un feed de verdad, se lanza otra vez y se ve en un minuto.
