@@ -4182,3 +4182,87 @@ saltarse el listón sería pequeño.
 
 📌 La sonda y su prueba **se quedan en el repositorio**. Si algún día alguna de
 las cinco publica un feed de verdad, se lanza otra vez y se ve en un minuto.
+
+---
+
+# ¿Y el sentimiento de AvaTrade, el bróker de Néstor? (2026-09-14)
+
+Néstor: **«¿y con los sentimientos del bróker con el que yo opero no se puede?
+¿AvaTrade tiene eso? ¿lo podemos sacar de ahí?»**. La pregunta tiene dos
+mitades y se contestan por caminos distintos.
+
+## Mitad 1: por MT5 NO se puede, y está comprobado en el código
+
+El puente le pide a MT5 exactamente dos cosas: `symbol_info_tick` (bid/ask) y
+`copy_rates_from_pos` (velas). Y no es que no se le haya pedido más: **la API
+de MT5 no expone las posiciones de los DEMÁS clientes.** De posiciones solo da
+las de la cuenta abierta en ese terminal — una persona. **Una persona no es
+sentimiento.**
+
+📌 Para que MT5 diera «el 70 % está comprado», AvaTrade tendría que agregar a
+todos sus clientes y publicarlo, y eso no pasa por el programa: pasa por su web
+o su app. O sea que **el puente es nuestro canal autorizado al bróker y ese
+dato no viaja dentro**. No hay nada que «sacar de ahí».
+
+## Mitad 2: por su web tampoco. La puerta está cerrada a los programas
+
+**AvaTrade responde 403 con «Just a moment…»** — la pantalla de desafío de
+Cloudflare. No solo la portada: **sus cinco sitemaps también dieron 403**, uno
+detrás de otro.
+
+O sea que da igual si publican sentimiento o no: **no se puede leer nada de ese
+sitio con un programa** sin fingir ser un navegador, que es exactamente la línea
+que este proyecto decidió no cruzar (ver la primera ronda: el User-Agent es
+honesto a propósito).
+
+⚠️ Matiz honesto: un 403 de Cloudflare **no es lo mismo que una prohibición
+legal** — su `robots.txt` no prohíbe nada. Es protección antirrobots. Pero el
+resultado práctico es el mismo y la conclusión no cambia.
+
+## ⚠️⚠️ Y la sonda cazó un fallo MÍO, que es lo más importante de esta ronda
+
+Esta ronda se escribió con una mejora: **no adivinar direcciones**. En vez de
+inventarme URLs (las tres de FX Blue dieron 404 y no enseñaron nada), la sonda
+lee los `Sitemap:` que el propio `robots.txt` anuncia y busca ahí.
+
+Pero al no encontrar nada, imprimió esto:
+
+```
+  páginas listadas: 0
+  ⚠️ NINGUNA página con esas palabras en su dirección.
+     …pero sí que no la publican abiertamente.
+```
+
+**Habiendo leído CERO páginas.** El informe afirmaba «no la publican» cuando lo
+que había pasado es que **no se pudo mirar**. Las dos cosas se escriben igual y
+significan lo contrario:
+
+| | qué es |
+|---|---|
+| «miré 40.000 páginas y ninguna coincide» | un hallazgo |
+| «no pude abrir ni una» | **nada** |
+
+Es la misma familia que ya está en este archivo: **una etiqueta equivocada es
+un error de medición**, y **una comprobación que se adapta a lo que encuentra
+no comprueba nada**.
+
+**El arreglo no es «tener más cuidado»:** el veredicto se calculaba dentro del
+guion y ahora vive en `app/scripts/lib/sitemaps.mjs` (`veredictoBusqueda`),
+puro y con **14 comprobaciones sin internet** dedicadas a esto. La regla que no
+hay que ablandar: **sin páginas leídas NO hay veredicto**; ante la duda, «no se
+pudo mirar», nunca «no existe». Misma asimetría que `yaCorrioHoy` y
+`decidirConRobots`.
+
+**Comprobado que muerden**, con el daño verificado en su sitio: al quitar la
+condición que separa los dos casos, **fallan 5**.
+
+📌 Y lo que conviene ver: **la sonda que iba a contestar una pregunta acabó
+contestando dos**, y la segunda era sobre mí. La mejora de la ronda anterior
+(enseñar el contexto en vez de contar) destapó mi error con FX Blue; la de ésta
+destapó un error en la propia herramienta.
+
+## El veredicto, entonces
+
+**AvaTrade no cambia nada.** La #5 sigue fuera, ahora con un motivo más: ni
+siquiera el bróker con el que Néstor opera —donde tenemos acceso autorizado y
+funcionando— puede dar ese dato, ni por el programa ni por la web.

@@ -11,6 +11,7 @@
 // en que un analizador ingenuo se equivoca.
 
 import { decidirConRobots } from './lib/robots.mjs'
+import { veredictoBusqueda } from './lib/sitemaps.mjs'
 
 let hechas = 0
 let fallos = 0
@@ -128,6 +129,44 @@ console.log('10. Siempre dice POR QUÉ')
     const r = decidirConRobots(caso[0], caso[1])
     ok(typeof r.porque === 'string' && r.porque.length > 5, `el veredicto "${r.veredicto}" viene con motivo`)
   }
+}
+
+console.log('11. ⚠️⚠️ «No encontré» y «no pude mirar» NO son lo mismo')
+{
+  // Este bloque existe por un fallo REAL del 2026-09-14: la sonda dijo
+  // «ninguna página con esas palabras» sobre AvaTrade habiendo leído CERO
+  // páginas, porque sus cinco sitemaps dieron 403. El informe afirmaba «no la
+  // publican» cuando lo que pasó es que no se pudo mirar.
+  const nada = veredictoBusqueda({ leidos: 5, fallidos: 5, paginas: 0, encontradas: [] })
+  ok(nada.estado === 'no-se-pudo', `con 0 páginas el estado debe ser «no-se-pudo» y fue «${nada.estado}»`)
+  ok(/NO SE PUDO MIRAR/.test(nada.texto), 'y lo dice con esas palabras')
+  ok(!/[Nn]inguna/.test(nada.texto), '⚠️ y NO usa la palabra «ninguna», que se leería como un hallazgo')
+  ok(nada.texto.includes('5'), 'nombra cuántos archivos fallaron, para que se vea por qué')
+
+  // El caso legítimo: sí se miró, y de verdad no hay.
+  const vacio = veredictoBusqueda({ leidos: 3, fallidos: 0, paginas: 4000, encontradas: [] })
+  ok(vacio.estado === 'sin-coincidencias', 'con páginas leídas y cero coincidencias, «sin-coincidencias»')
+  ok(vacio.texto.includes('4000'), 'dice cuántas páginas miró — sin eso el «ninguna» no vale nada')
+  ok(!/NO SE PUDO/.test(vacio.texto), 'y no se confunde con el caso anterior')
+  ok(/NO demuestra que no exista/.test(vacio.texto), 'y sigue llevando su límite escrito')
+
+  // Un tope alcanzado también tiene que decirse: la búsqueda no fue completa.
+  const cortado = veredictoBusqueda({ leidos: 25, fallidos: 0, paginas: 900, encontradas: [], pendientes: 12 })
+  ok(/12 archivos sin leer/.test(cortado.texto), 'si quedaron archivos sin leer, lo dice')
+  ok(/NO fue completa/.test(cortado.texto), 'y avisa de que la búsqueda no fue completa')
+
+  // Y el caso bueno.
+  const hay = veredictoBusqueda({
+    leidos: 2,
+    paginas: 100,
+    encontradas: ['https://x.com/a/sentiment', 'https://x.com/b/sentiment', 'https://x.com/a/sentiment'],
+  })
+  ok(hay.estado === 'hay-candidatas', 'con coincidencias, «hay-candidatas»')
+  ok(hay.hallazgos.length === 2, `las repetidas se juntan: esperaba 2 y salieron ${hay.hallazgos.length}`)
+
+  // Robustez: sin argumentos no revienta, y cae del lado seguro.
+  ok(veredictoBusqueda().estado === 'no-se-pudo', 'sin argumentos cae en «no-se-pudo», no en «no existe»')
+  ok(veredictoBusqueda({ paginas: 5, encontradas: null }).estado === 'sin-coincidencias', 'encontradas null no revienta')
 }
 
 console.log('')
