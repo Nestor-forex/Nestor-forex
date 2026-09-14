@@ -20,6 +20,15 @@ name: Sonda del COT (posiciones institucionales)
 
 on:
   workflow_dispatch:
+    inputs:
+      conjunto:
+        description: 'Conjunto de datos del que enseñar TODAS las columnas'
+        required: false
+        default: 'udgc-27he'
+      contrato:
+        description: 'Contrato de referencia, con el nombre EXACTO de la CFTC'
+        required: false
+        default: 'EURO FX - CHICAGO MERCANTILE EXCHANGE'
 
 permissions:
   contents: read
@@ -42,4 +51,7 @@ jobs:
       # No hace falta `npm ci`: la sonda solo usa `fetch`, que ya viene en Node.
       - name: Sondear
         working-directory: app
+        env:
+          COT_CONJUNTO: ${{ inputs.conjunto }}
+          COT_CONTRATO: ${{ inputs.contrato }}
         run: node scripts/sonda-cot.mjs

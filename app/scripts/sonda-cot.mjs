@@ -369,6 +369,71 @@ async function ficha(id, nombre) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// 3. EL DETALLE del conjunto elegido
+// ─────────────────────────────────────────────────────────────────────────
+// 📌 ESTA ETAPA FALTABA en la segunda versión, y la falta era grave: la ficha
+// imprimía «87 columnas» **sin decir cómo se llaman**. Con eso no se puede
+// escribir el lector sin adivinar los nombres, que es justo lo que esta sonda
+// existe para evitar. Se vio al ir a escribir el lector y no tener los datos.
+//
+// Imprime dos cosas, y las dos hacen falta:
+//
+//   · **TODAS las columnas de una fila real**, con su valor. El lector se
+//     escribe sobre estos nombres y no sobre lo que uno recuerde.
+//   · **TODOS los contratos del conjunto**, sin filtrar por «parece divisa».
+//     El filtro de la ficha se dejó **fuera a propósito** aquí: en la segunda
+//     corrida `PARECE_DIVISA` NO cazó «USD INDEX - ICE FUTURES U.S.» (solo
+//     reconoce «DOLLAR INDEX»), así que la lista filtrada escondía un
+//     contrato del dólar. Un filtro que esconde lo que se está buscando es
+//     peor que ninguno.
+async function detalle(id, contrato) {
+  console.log('')
+  console.log('█'.repeat(72))
+  console.log(`DETALLE del conjunto elegido: ${id}`)
+  console.log(`Contrato de referencia: ${contrato}`)
+  console.log('█'.repeat(72))
+
+  const colNombre = 'market_and_exchange_names'
+  const colFecha = 'report_date_as_yyyy_mm_dd'
+
+  // ── La fila más reciente de ESE contrato, entera ────────────────────────
+  // Se filtra con `$where` y el nombre EXACTO, no con `$q`: en la primera
+  // corrida `$q=EURO` devolvió «NORTH EURO HOT-ROLL COIL STEEL».
+  const donde = encodeURIComponent(`${colNombre}='${contrato.replace(/'/g, "''")}'`)
+  const url =
+    `https://${DOMINIO}/resource/${id}.json?$where=${donde}` +
+    `&$order=${colFecha}%20DESC&$limit=1`
+  console.log('')
+  console.log(`  ${url}`)
+
+  const filas = await pedir(url, `${id}:detalle`)
+  if (Array.isArray(filas) && filas.length) {
+    const fila = filas[0]
+    const columnas = Object.keys(fila)
+    console.log(`  ✓ ${columnas.length} columnas, con el valor de la fila más reciente:`)
+    for (const c of columnas) console.log(`    ${c} = ${recorta(fila[c], 90)}`)
+  } else if (Array.isArray(filas)) {
+    console.log('  ⚠ SIN FILAS: el nombre del contrato no coincide exactamente.')
+    console.log('    Copiarlo tal cual de la lista de abajo.')
+  }
+
+  // ── TODOS los contratos, sin filtrar ───────────────────────────────────
+  await pausa(250)
+  console.log('')
+  console.log(`  LISTA COMPLETA de contratos de ${id} (sin filtrar):`)
+  const lista = await pedir(
+    `https://${DOMINIO}/resource/${id}.json?$select=${colNombre}&$group=${colNombre}&$order=${colNombre}&$limit=3000`,
+    `${id}:todos`,
+    { silencioso: true },
+  )
+  if (Array.isArray(lista)) {
+    const nombres = lista.map((d) => String(d?.[colNombre] ?? '')).filter(Boolean)
+    console.log(`  (${nombres.length} en total)`)
+    for (const n of nombres) console.log(`    ${n}`)
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 
 console.log('---SONDA-INICIO---')
 console.log(`Fecha (UTC): ${new Date().toISOString()}`)
@@ -403,6 +468,16 @@ for (const c of aProbar) {
   await ficha(c.id, c.nombre)
   await pausa(250)
 }
+
+// ⚠️ El conjunto y el contrato de referencia se pueden cambiar al lanzar el
+// workflow, pero los valores por defecto **no son una suposición**: salieron
+// de la segunda corrida (2026-09-14), donde `TFF_All` fue el único conjunto
+// catalogado, vivo y con las ocho divisas del barrido. Están aquí escritos
+// para que la sonda se pueda repetir sin acordarse de nada.
+await detalle(
+  process.env.COT_CONJUNTO || 'udgc-27he',
+  process.env.COT_CONTRATO || 'EURO FX - CHICAGO MERCANTILE EXCHANGE',
+)
 
 console.log('')
 console.log('─'.repeat(72))
