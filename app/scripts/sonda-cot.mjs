@@ -136,23 +136,33 @@ const DOMINIO = 'publicreporting.cftc.gov'
 // puente (2026-09-08), que se escribió de memoria y dejó dos pares muertos sin
 // que nada fallara.
 const PISTAS_DIVISA = {
-  EUR: ['EURO FX', 'EURO-FX', 'EUR '],
-  JPY: ['JAPANESE YEN', 'JPY '],
-  GBP: ['BRITISH POUND', 'POUND STERLING', 'GBP '],
-  CHF: ['SWISS FRANC', 'CHF '],
-  CAD: ['CANADIAN DOLLAR', 'CAD '],
-  AUD: ['AUSTRALIAN DOLLAR', 'AUD '],
-  NZD: ['NEW ZEALAND DOLLAR', 'NZ DOLLAR', 'NZD '],
-  USD: ['U.S. DOLLAR INDEX', 'US DOLLAR INDEX', 'USD INDEX', 'DOLLAR INDEX'],
+  EUR: ['EURO FX', 'EURO-FX'],
+  JPY: ['JAPANESE YEN'],
+  GBP: ['BRITISH POUND', 'POUND STERLING'],
+  CHF: ['SWISS FRANC'],
+  CAD: ['CANADIAN DOLLAR'],
+  AUD: ['AUSTRALIAN DOLLAR'],
+  NZD: ['NEW ZEALAND DOLLAR', 'NZ DOLLAR'],
+  USD: ['USD INDEX', 'U.S. DOLLAR INDEX', 'US DOLLAR INDEX', 'DOLLAR INDEX'],
 }
 
-// Para LISTAR los contratos que parecen de divisa. Ajustado después de la
-// primera corrida: el patrón ancho de entonces (que aceptaba «EURO» o «DOLLAR»
-// sueltos) sacaba acero europeo, crudo del mar del Norte y electricidad de
-// Ohio. Estos son nombres de divisa completos, así que no arrastran materias
-// primas.
+// ⚠️ LAS GRAFÍAS DE TRES LETRAS (`'EUR '`, `'CAD '`…) SE QUITARON, y el motivo
+// vale para el lector: en la segunda corrida `'EUR '` cazó
+// **`ALUM EUR UNPAID - COMMODITY EXCHANGE INC.`**, que es aluminio. Buscar
+// divisas por trozos cortos de texto mete materias primas sin avisar.
+
+// Para LISTAR los contratos que parecen de divisa. Ajustado DOS veces:
+//
+//   · tras la primera corrida, porque el patrón ancho de entonces (que
+//     aceptaba «EURO» o «DOLLAR» sueltos) sacaba acero europeo, crudo del mar
+//     del Norte y electricidad de Ohio;
+//   · ⚠️ y tras la tercera, porque se pasó de estrecho: pedía «DOLLAR INDEX» y
+//     el contrato del dólar que está VIVO se llama **`USD INDEX`**. O sea que
+//     la lista «filtrada» escondía justo el contrato del dólar. Un filtro que
+//     esconde lo que se busca es peor que ninguno, y por eso la etapa 3
+//     imprime la lista SIN filtrar.
 const PARECE_DIVISA =
-  /(EURO FX|EURO-FX|JAPANESE YEN|BRITISH POUND|POUND STERLING|SWISS FRANC|CANADIAN DOLLAR|AUSTRALIAN DOLLAR|NEW ZEALAND DOLLAR|NZ DOLLAR|DOLLAR INDEX|MEXICAN PESO|BRAZILIAN REAL|SOUTH AFRICAN RAND|RUSSIAN RUBLE|CHINESE RENMINBI|SWEDISH KRONA|NORWEGIAN KRONE)/i
+  /(EURO FX|EURO-FX|JAPANESE YEN|BRITISH POUND|POUND STERLING|SWISS FRANC|CANADIAN DOLLAR|AUSTRALIAN DOLLAR|NEW ZEALAND DOLLAR|NZ DOLLAR|USD INDEX|DOLLAR INDEX|MEXICAN PESO|BRAZILIAN REAL|SOUTH AFRICAN RAND|SO AFRICAN RAND|RUSSIAN RUBLE|CHINESE RENMINBI|SWEDISH KRONA|NORWEGIAN KRONE)/i
 
 // Identificadores que CREO recordar. Se prueban además de los del catálogo y
 // con esta etiqueta a propósito.
@@ -369,6 +379,171 @@ async function ficha(id, nombre) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// 3. EL DETALLE del conjunto elegido
+// ─────────────────────────────────────────────────────────────────────────
+// 📌 ESTA ETAPA FALTABA en la segunda versión, y la falta era grave: la ficha
+// imprimía «87 columnas» **sin decir cómo se llaman**. Con eso no se puede
+// escribir el lector sin adivinar los nombres, que es justo lo que esta sonda
+// existe para evitar. Se vio al ir a escribir el lector y no tener los datos.
+//
+// Imprime dos cosas, y las dos hacen falta:
+//
+//   · **TODAS las columnas de una fila real**, con su valor. El lector se
+//     escribe sobre estos nombres y no sobre lo que uno recuerde.
+//   · **TODOS los contratos del conjunto**, sin filtrar por «parece divisa».
+//     El filtro de la ficha se dejó **fuera a propósito** aquí: en la segunda
+//     corrida `PARECE_DIVISA` NO cazó «USD INDEX - ICE FUTURES U.S.» (solo
+//     reconoce «DOLLAR INDEX»), así que la lista filtrada escondía un
+//     contrato del dólar. Un filtro que esconde lo que se está buscando es
+//     peor que ninguno.
+async function detalle(id, contrato) {
+  console.log('')
+  console.log('█'.repeat(72))
+  console.log(`DETALLE del conjunto elegido: ${id}`)
+  console.log(`Contrato de referencia: ${contrato}`)
+  console.log('█'.repeat(72))
+
+  const colNombre = 'market_and_exchange_names'
+  const colFecha = 'report_date_as_yyyy_mm_dd'
+
+  // ── La fila más reciente de ESE contrato, entera ────────────────────────
+  // Se filtra con `$where` y el nombre EXACTO, no con `$q`: en la primera
+  // corrida `$q=EURO` devolvió «NORTH EURO HOT-ROLL COIL STEEL».
+  const donde = encodeURIComponent(`${colNombre}='${contrato.replace(/'/g, "''")}'`)
+  const url =
+    `https://${DOMINIO}/resource/${id}.json?$where=${donde}` +
+    `&$order=${colFecha}%20DESC&$limit=1`
+  console.log('')
+  console.log(`  ${url}`)
+
+  const filas = await pedir(url, `${id}:detalle`)
+  if (Array.isArray(filas) && filas.length) {
+    const fila = filas[0]
+    const columnas = Object.keys(fila)
+    console.log(`  ✓ ${columnas.length} columnas, con el valor de la fila más reciente:`)
+    for (const c of columnas) console.log(`    ${c} = ${recorta(fila[c], 90)}`)
+  } else if (Array.isArray(filas)) {
+    console.log('  ⚠ SIN FILAS: el nombre del contrato no coincide exactamente.')
+    console.log('    Copiarlo tal cual de la lista de abajo.')
+  }
+
+  // ── TODOS los contratos, sin filtrar ───────────────────────────────────
+  await pausa(250)
+  console.log('')
+  console.log(`  LISTA COMPLETA de contratos de ${id} (sin filtrar):`)
+  const lista = await pedir(
+    `https://${DOMINIO}/resource/${id}.json?$select=${colNombre}&$group=${colNombre}&$order=${colNombre}&$limit=3000`,
+    `${id}:todos`,
+    { silencioso: true },
+  )
+  if (Array.isArray(lista)) {
+    const nombres = lista.map((d) => String(d?.[colNombre] ?? '')).filter(Boolean)
+    console.log(`  (${nombres.length} en total)`)
+    for (const n of nombres) console.log(`    ${n}`)
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 4. ¿QUÉ FILA HAY QUE PEDIR, EXACTAMENTE?
+// ─────────────────────────────────────────────────────────────────────────
+// 📌 ESTA ETAPA NACE DE UNA TRAMPA QUE SOLO SE VIO AL MIRAR UNA FILA ENTERA:
+// la última columna decía **`futonly_or_combined = Combined`**.
+//
+// O sea que `TFF_All` **no es un informe: son dos**, mezclados en la misma
+// tabla. «Futures Only» cuenta solo futuros; «Combined» suma las opciones
+// convertidas a futuros equivalentes. Dan números DISTINTOS para el mismo
+// contrato y el mismo día.
+//
+// ⚠️ Pedir sin fijar esa columna devuelve **uno de los dos, según le apetezca
+// al servidor**. No falla: devuelve un número plausible del informe que no era.
+// Es la misma familia de fallo que el ATR de cierre a cierre — un dato correcto
+// de una cosa que no es la que se cree estar midiendo.
+//
+// Y hay una segunda pregunta que tampoco se puede resolver de memoria: en la
+// lista de contratos conviven **nombres duplicados** (`USD INDEX` y
+// `U.S. DOLLAR INDEX`; `SO AFRICAN RAND` y `SOUTH AFRICAN RAND`; `BRITISH
+// POUND` y `BRITISH POUND STERLING`; `NEW ZEALAND DOLLAR` y `NZ DOLLAR`).
+// Unos son el contrato vivo y otros el nombre viejo del mismo, que sigue en la
+// tabla por el histórico. **El que importa es el que tiene fila en la ÚLTIMA
+// fecha.**
+//
+// Las dos se contestan con una sola pregunta: traer TODAS las filas del último
+// día e imprimir, de las de divisa, su nombre, su tipo de informe y su interés
+// abierto.
+async function queFilaPedir(id) {
+  console.log('')
+  console.log('█'.repeat(72))
+  console.log(`QUÉ FILA PEDIR en ${id}: tipo de informe y nombre vivo`)
+  console.log('█'.repeat(72))
+
+  const colNombre = 'market_and_exchange_names'
+  const colFecha = 'report_date_as_yyyy_mm_dd'
+
+  // (a) ¿Cuántos tipos de informe hay, y cómo se escriben EXACTAMENTE?
+  console.log('')
+  console.log('  Valores distintos de `futonly_or_combined`:')
+  const tipos = await pedir(
+    `https://${DOMINIO}/resource/${id}.json?$select=futonly_or_combined&$group=futonly_or_combined`,
+    `${id}:tipos`,
+    { silencioso: true },
+  )
+  if (Array.isArray(tipos)) {
+    for (const t of tipos) console.log(`    "${t?.futonly_or_combined}"`)
+    if (tipos.length > 1) {
+      console.log('    ⚠ MÁS DE UNO: el lector TIENE que fijar esta columna.')
+    }
+  }
+
+  // (b) La última fecha
+  await pausa(250)
+  const reciente = await pedir(
+    `https://${DOMINIO}/resource/${id}.json?$select=${colFecha}&$order=${colFecha}%20DESC&$limit=1`,
+    `${id}:fecha`,
+    { silencioso: true },
+  )
+  const fecha = Array.isArray(reciente) ? reciente[0]?.[colFecha] : null
+  if (!fecha) {
+    console.log('  ⚠ No se pudo leer la última fecha.')
+    return
+  }
+  console.log('')
+  console.log(`  ÚLTIMA FECHA DEL INFORME: ${fecha}`)
+
+  // (c) Todas las filas de ese día. Solo se imprimen las de divisa, pero se
+  //     piden todas: así el conteo dice cuántas filas hay por contrato, que es
+  //     lo que delata la duplicación por tipo de informe.
+  await pausa(250)
+  const donde = encodeURIComponent(`${colFecha}='${fecha}'`)
+  const filas = await pedir(
+    `https://${DOMINIO}/resource/${id}.json?$where=${donde}` +
+      `&$select=${colNombre},futonly_or_combined,open_interest_all,lev_money_positions_long,lev_money_positions_short` +
+      `&$order=${colNombre}&$limit=2000`,
+    `${id}:ultimodia`,
+    { silencioso: true },
+  )
+  if (!Array.isArray(filas)) return
+
+  console.log(`  ${filas.length} filas en total ese día`)
+  console.log('')
+  console.log('  LAS DE DIVISA (nombre · informe · interés abierto · fondos largo/corto):')
+  const deDivisa = filas.filter((f) => PARECE_DIVISA.test(String(f?.[colNombre] ?? '')) || /USD INDEX/i.test(String(f?.[colNombre] ?? '')))
+  for (const f of deDivisa) {
+    console.log(
+      `    ${String(f[colNombre]).padEnd(58)} | ${String(f.futonly_or_combined).padEnd(13)}` +
+        ` | OI ${String(f.open_interest_all).padStart(9)}` +
+        ` | ${f.lev_money_positions_long ?? '—'}/${f.lev_money_positions_short ?? '—'}`,
+    )
+  }
+  if (!deDivisa.length) console.log('    (ninguna — mala señal)')
+
+  // ⚠️ Y lo que de verdad decide: un nombre que NO aparece aquí es un nombre
+  // MUERTO, por mucho que salga en la lista de contratos históricos.
+  console.log('')
+  console.log('  ⚠ Un nombre que NO salga en esta lista es un nombre MUERTO:')
+  console.log('    está en el histórico pero no tiene fila en el último informe.')
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 
 console.log('---SONDA-INICIO---')
 console.log(`Fecha (UTC): ${new Date().toISOString()}`)
@@ -403,6 +578,16 @@ for (const c of aProbar) {
   await ficha(c.id, c.nombre)
   await pausa(250)
 }
+
+// ⚠️ El conjunto y el contrato de referencia se pueden cambiar al lanzar el
+// workflow, pero los valores por defecto **no son una suposición**: salieron
+// de la segunda corrida (2026-09-14), donde `TFF_All` fue el único conjunto
+// catalogado, vivo y con las ocho divisas del barrido. Están aquí escritos
+// para que la sonda se pueda repetir sin acordarse de nada.
+const conjunto = process.env.COT_CONJUNTO || 'udgc-27he'
+await detalle(conjunto, process.env.COT_CONTRATO || 'EURO FX - CHICAGO MERCANTILE EXCHANGE')
+await pausa(250)
+await queFilaPedir(conjunto)
 
 console.log('')
 console.log('─'.repeat(72))
