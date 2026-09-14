@@ -434,6 +434,106 @@ async function detalle(id, contrato) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// 4. ¿QUÉ FILA HAY QUE PEDIR, EXACTAMENTE?
+// ─────────────────────────────────────────────────────────────────────────
+// 📌 ESTA ETAPA NACE DE UNA TRAMPA QUE SOLO SE VIO AL MIRAR UNA FILA ENTERA:
+// la última columna decía **`futonly_or_combined = Combined`**.
+//
+// O sea que `TFF_All` **no es un informe: son dos**, mezclados en la misma
+// tabla. «Futures Only» cuenta solo futuros; «Combined» suma las opciones
+// convertidas a futuros equivalentes. Dan números DISTINTOS para el mismo
+// contrato y el mismo día.
+//
+// ⚠️ Pedir sin fijar esa columna devuelve **uno de los dos, según le apetezca
+// al servidor**. No falla: devuelve un número plausible del informe que no era.
+// Es la misma familia de fallo que el ATR de cierre a cierre — un dato correcto
+// de una cosa que no es la que se cree estar midiendo.
+//
+// Y hay una segunda pregunta que tampoco se puede resolver de memoria: en la
+// lista de contratos conviven **nombres duplicados** (`USD INDEX` y
+// `U.S. DOLLAR INDEX`; `SO AFRICAN RAND` y `SOUTH AFRICAN RAND`; `BRITISH
+// POUND` y `BRITISH POUND STERLING`; `NEW ZEALAND DOLLAR` y `NZ DOLLAR`).
+// Unos son el contrato vivo y otros el nombre viejo del mismo, que sigue en la
+// tabla por el histórico. **El que importa es el que tiene fila en la ÚLTIMA
+// fecha.**
+//
+// Las dos se contestan con una sola pregunta: traer TODAS las filas del último
+// día e imprimir, de las de divisa, su nombre, su tipo de informe y su interés
+// abierto.
+async function queFilaPedir(id) {
+  console.log('')
+  console.log('█'.repeat(72))
+  console.log(`QUÉ FILA PEDIR en ${id}: tipo de informe y nombre vivo`)
+  console.log('█'.repeat(72))
+
+  const colNombre = 'market_and_exchange_names'
+  const colFecha = 'report_date_as_yyyy_mm_dd'
+
+  // (a) ¿Cuántos tipos de informe hay, y cómo se escriben EXACTAMENTE?
+  console.log('')
+  console.log('  Valores distintos de `futonly_or_combined`:')
+  const tipos = await pedir(
+    `https://${DOMINIO}/resource/${id}.json?$select=futonly_or_combined&$group=futonly_or_combined`,
+    `${id}:tipos`,
+    { silencioso: true },
+  )
+  if (Array.isArray(tipos)) {
+    for (const t of tipos) console.log(`    "${t?.futonly_or_combined}"`)
+    if (tipos.length > 1) {
+      console.log('    ⚠ MÁS DE UNO: el lector TIENE que fijar esta columna.')
+    }
+  }
+
+  // (b) La última fecha
+  await pausa(250)
+  const reciente = await pedir(
+    `https://${DOMINIO}/resource/${id}.json?$select=${colFecha}&$order=${colFecha}%20DESC&$limit=1`,
+    `${id}:fecha`,
+    { silencioso: true },
+  )
+  const fecha = Array.isArray(reciente) ? reciente[0]?.[colFecha] : null
+  if (!fecha) {
+    console.log('  ⚠ No se pudo leer la última fecha.')
+    return
+  }
+  console.log('')
+  console.log(`  ÚLTIMA FECHA DEL INFORME: ${fecha}`)
+
+  // (c) Todas las filas de ese día. Solo se imprimen las de divisa, pero se
+  //     piden todas: así el conteo dice cuántas filas hay por contrato, que es
+  //     lo que delata la duplicación por tipo de informe.
+  await pausa(250)
+  const donde = encodeURIComponent(`${colFecha}='${fecha}'`)
+  const filas = await pedir(
+    `https://${DOMINIO}/resource/${id}.json?$where=${donde}` +
+      `&$select=${colNombre},futonly_or_combined,open_interest_all,lev_money_positions_long,lev_money_positions_short` +
+      `&$order=${colNombre}&$limit=2000`,
+    `${id}:ultimodia`,
+    { silencioso: true },
+  )
+  if (!Array.isArray(filas)) return
+
+  console.log(`  ${filas.length} filas en total ese día`)
+  console.log('')
+  console.log('  LAS DE DIVISA (nombre · informe · interés abierto · fondos largo/corto):')
+  const deDivisa = filas.filter((f) => PARECE_DIVISA.test(String(f?.[colNombre] ?? '')) || /USD INDEX/i.test(String(f?.[colNombre] ?? '')))
+  for (const f of deDivisa) {
+    console.log(
+      `    ${String(f[colNombre]).padEnd(58)} | ${String(f.futonly_or_combined).padEnd(13)}` +
+        ` | OI ${String(f.open_interest_all).padStart(9)}` +
+        ` | ${f.lev_money_positions_long ?? '—'}/${f.lev_money_positions_short ?? '—'}`,
+    )
+  }
+  if (!deDivisa.length) console.log('    (ninguna — mala señal)')
+
+  // ⚠️ Y lo que de verdad decide: un nombre que NO aparece aquí es un nombre
+  // MUERTO, por mucho que salga en la lista de contratos históricos.
+  console.log('')
+  console.log('  ⚠ Un nombre que NO salga en esta lista es un nombre MUERTO:')
+  console.log('    está en el histórico pero no tiene fila en el último informe.')
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 
 console.log('---SONDA-INICIO---')
 console.log(`Fecha (UTC): ${new Date().toISOString()}`)
@@ -474,10 +574,10 @@ for (const c of aProbar) {
 // de la segunda corrida (2026-09-14), donde `TFF_All` fue el único conjunto
 // catalogado, vivo y con las ocho divisas del barrido. Están aquí escritos
 // para que la sonda se pueda repetir sin acordarse de nada.
-await detalle(
-  process.env.COT_CONJUNTO || 'udgc-27he',
-  process.env.COT_CONTRATO || 'EURO FX - CHICAGO MERCANTILE EXCHANGE',
-)
+const conjunto = process.env.COT_CONJUNTO || 'udgc-27he'
+await detalle(conjunto, process.env.COT_CONTRATO || 'EURO FX - CHICAGO MERCANTILE EXCHANGE')
+await pausa(250)
+await queFilaPedir(conjunto)
 
 console.log('')
 console.log('─'.repeat(72))
