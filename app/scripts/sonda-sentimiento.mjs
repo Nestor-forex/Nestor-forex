@@ -161,6 +161,45 @@ const FUENTES = [
     nota: 'CONJETURA, la misma idea en JSON.',
     url: 'https://www.fxblue.com/market-data/tools/sentiment/data.json',
   },
+
+  // ── TERCERA RONDA (2026-09-14): el bróker de Néstor ─────────────────────
+  //
+  // Néstor preguntó: «¿y con el bróker con el que yo opero no se puede?
+  // ¿AvaTrade tiene eso?».
+  //
+  // La pregunta tiene DOS mitades y solo una se sondea aquí:
+  //
+  //   · **Por MT5 no se puede, y está comprobado en el código.** El puente
+  //     usa `symbol_info_tick` (bid/ask) y `copy_rates_from_pos` (velas). La
+  //     API de MT5 no expone las posiciones de LOS DEMÁS clientes: lo único
+  //     que da de posiciones es la cuenta del propio terminal, o sea UNA
+  //     persona. Una persona no es sentimiento.
+  //   · **Por la web hay que mirarlo**, y eso es lo de abajo.
+  //
+  // ⚠️ Y esta vez NO se adivinan direcciones. En la segunda ronda las tres
+  // conjeturas de FX Blue dieron 404 y no enseñaron nada. Aquí se le PREGUNTA
+  // AL SITIO: se leen sus sitemaps (que el propio robots.txt anuncia) y se
+  // buscan las direcciones que hablen de sentimiento. Si existe una página
+  // así, sale su dirección exacta; si no sale ninguna, eso también es una
+  // respuesta y vale más que cinco 404 míos.
+  {
+    id: 'avatrade-portada',
+    nota: 'La portada, solo para ver si nombra el sentimiento y para leer su robots.txt.',
+    url: 'https://www.avatrade.com/',
+  },
+]
+
+// ⚠️ A quién se le pregunta POR SUS PROPIAS DIRECCIONES en vez de adivinarlas.
+// Ver el comentario de la tercera ronda. Se leen los `Sitemap:` del robots.txt
+// y se buscan rutas que hablen de esto.
+const BUSCAR_EN_SITEMAPS = [
+  {
+    id: 'avatrade',
+    origen: 'https://www.avatrade.com',
+    // Sin acentos ni mayúsculas: se compara en minúsculas. «positioning» y
+    // «traders» entran porque no todo el mundo lo llama «sentiment».
+    palabras: ['sentiment', 'sentimiento', 'positioning', 'client-position', 'traders-position'],
+  },
 ]
 
 // Solo para la fuente que sobrevivió: enseñar el HTML ALREDEDOR de la palabra
@@ -168,6 +207,7 @@ const FUENTES = [
 // trae después otra petición», y sin verlo no se puede decidir nada.
 const MIRAR_ALREDEDOR = {
   'fxblue-sentimiento': ['net-short', 'Updated', 'updated', 'GMT', 'UTC'],
+  'avatrade-portada': ['sentiment', 'Sentiment'],
 }
 
 const recorta = (v, n = 220) => {
@@ -328,6 +368,101 @@ async function sondear(f) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Preguntarle al sitio por sus propias direcciones
+// ─────────────────────────────────────────────────────────────────────────
+//
+// Un sitio grande anuncia sus páginas en uno o varios sitemaps, y el
+// robots.txt dice dónde están. Leerlos es la diferencia entre «adivino cinco
+// direcciones y me llevo cinco 404» y «me dice él qué páginas tiene».
+//
+// ⚠️ Un sitemap puede ser un ÍNDICE de sitemaps, no una lista de páginas. Sin
+// seguir ese segundo salto la búsqueda saldría vacía y se leería como «no
+// tiene esa página», que es lo contrario de lo que pasa. Se sigue un nivel, y
+// con tope: estos archivos son enormes y aquí no hace falta recorrerlos todos
+// para contestar la pregunta.
+const TOPE_SITEMAPS = 25
+
+async function bajarTexto(url, ms = 25000) {
+  try {
+    const r = await fetch(url, { headers: CABECERAS, signal: AbortSignal.timeout(ms) })
+    if (!r.ok) return { fallo: `HTTP ${r.status}` }
+    return { texto: await r.text() }
+  } catch (e) {
+    return { fallo: `${e.name}` }
+  }
+}
+
+const urlsDe = (xml) => [...new Set((xml.match(/<loc>\s*([^<\s]+)\s*<\/loc>/g) || []).map((m) => m.replace(/<\/?loc>/g, '').trim()))]
+
+async function buscarEnSitemaps(b) {
+  console.log('')
+  console.log('─'.repeat(72))
+  console.log(`SITEMAPS DE: ${b.id} (${b.origen})`)
+  console.log(`  buscando rutas que contengan: ${b.palabras.join(', ')}`)
+
+  const robots = await bajarTexto(`${b.origen}/robots.txt`)
+  if (robots.fallo) {
+    console.log(`  ✗ no se pudo leer robots.txt — ${robots.fallo}`)
+    return
+  }
+
+  const declarados = (robots.texto.match(/^\s*sitemap\s*:\s*(\S+)/gim) || []).map((l) =>
+    l.replace(/^\s*sitemap\s*:\s*/i, '').trim(),
+  )
+  console.log(`  sitemaps declarados en robots.txt: ${declarados.length}`)
+  for (const s of declarados) console.log(`    ${s}`)
+
+  // Si no declara ninguno, se prueba el sitio de siempre. Que ESO falle
+  // también es información.
+  const cola = declarados.length ? [...declarados] : [`${b.origen}/sitemap.xml`]
+  if (!declarados.length) console.log(`  (ninguno declarado; se prueba ${cola[0]})`)
+
+  const vistos = new Set()
+  const encontradas = []
+  let leidos = 0
+  let paginas = 0
+
+  while (cola.length && leidos < TOPE_SITEMAPS) {
+    const url = cola.shift()
+    if (vistos.has(url)) continue
+    vistos.add(url)
+
+    const r = await bajarTexto(url)
+    leidos++
+    if (r.fallo) {
+      console.log(`    ✗ ${url} — ${r.fallo}`)
+      continue
+    }
+
+    const urls = urlsDe(r.texto)
+    // Un índice de sitemaps trae `<loc>` que apuntan a más `.xml`. Se siguen;
+    // lo demás son páginas y se miran.
+    const hijos = urls.filter((u) => /\.xml(\.gz)?(\?|$)/i.test(u))
+    const pags = urls.filter((u) => !/\.xml(\.gz)?(\?|$)/i.test(u))
+    paginas += pags.length
+    cola.push(...hijos)
+
+    for (const u of pags) {
+      const bajo = u.toLowerCase()
+      if (b.palabras.some((p) => bajo.includes(p))) encontradas.push(u)
+    }
+  }
+
+  console.log(`  archivos leídos: ${leidos}${cola.length ? ` (quedaban ${cola.length} sin leer: tope ${TOPE_SITEMAPS})` : ''}`)
+  console.log(`  páginas listadas: ${paginas}`)
+
+  if (!encontradas.length) {
+    console.log('  ⚠️ NINGUNA página con esas palabras en su dirección.')
+    console.log('     Eso NO demuestra que no exista —puede estar dentro de la cuenta,')
+    console.log('     o llamarse de otra forma— pero sí que no la publican abiertamente.')
+    return
+  }
+
+  console.log(`  ✓ ${encontradas.length} páginas que podrían ser:`)
+  for (const u of [...new Set(encontradas)].slice(0, 25)) console.log(`      ${u}`)
+}
+
 console.log('---SONDA-INICIO---')
 console.log(`Fecha (UTC): ${new Date().toISOString()}`)
 console.log('Esta sonda solo PIDE y ENSEÑA. No interpreta, no elige y no guarda nada.')
@@ -338,6 +473,7 @@ console.log('   nunca para aprobar. Lo que aprueba es leerse las condiciones, y 
 console.log('   una persona.')
 
 for (const f of FUENTES) await sondear(f)
+for (const b of BUSCAR_EN_SITEMAPS) await buscarEnSitemaps(b)
 
 console.log('')
 console.log('─'.repeat(72))
