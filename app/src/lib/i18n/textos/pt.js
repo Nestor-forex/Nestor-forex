@@ -196,7 +196,10 @@ export default {
     abierta: 'Aberta',
     cerrar: 'Fechar',
     loteSufijo: 'lote',
-    vacio: 'Você ainda não registrou operações.',
+    vacioTitulo: 'O teu diário está vazio',
+    vacioPorque: 'Anotar o que fazes é o que transforma esta app em algo que te diz coisas sobre TI, e não só sobre o mercado.',
+    vacioImportar: 'Importar do broker',
+    vacioSenales: 'Ver os sinais de hoje',
     promptCerrar: ({ par }) => `Resultado final de ${par} (USD, use - para perda):`,
   },
 
@@ -440,6 +443,19 @@ export default {
     sinCambio: 'Sem alteração esta semana',
     indice: 'O dólar contra uma cesta, não contra uma única moeda',
     pie: (v) => `Fonte: CFTC, relatório de ${v.fecha} (há ${v.dias} dias). Apenas futuros, sem opções. Entre 3 e 10 dias de antiguidade é o normal: é publicado às sextas com os dados de terça. A barra serve só para comparar de relance; o número é o dado.`,
+  },
+
+  diag: {
+    titulo: ({ n }) => `Os teus números por grupos (${n})`,
+    aviso: 'Isto conta o que TU fizeste, nada mais. Não é um conselho, não diz o que operar e não tem nada a ver com o que a app assinala.',
+    ops: 'ops',
+    tipo: 'Por tipo de par',
+    cruces: 'Crosses (sem dólar)',
+    dolar: 'Pares com dólar',
+    direccion: 'Por direção',
+    pares: ({ n }) => `Por par (a partir de ${n} operações)`,
+    lote: ({ min, max, distintos }) => `Lot: de ${min} a ${max}, ${distintos} tamanhos diferentes.`,
+    pie: 'O ± é quanto essa percentagem pode mover-se só por acaso. Com poucas operações é enorme: com 10 são ±31 pontos, ou seja, 40 % e 70 % são o mesmo número.',
   },
 
   errores: {

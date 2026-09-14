@@ -4266,3 +4266,157 @@ destapó un error en la propia herramienta.
 **AvaTrade no cambia nada.** La #5 sigue fuera, ahora con un motivo más: ni
 siquiera el bróker con el que Néstor opera —donde tenemos acceso autorizado y
 funcionando— puede dar ese dato, ni por el programa ni por la web.
+
+---
+
+# Las tres del documento de arquitectura (2026-09-14). En las dos apps
+
+Néstor trajo una directiva de arquitectura («Risk-First FX Telemetry»), pidió
+opinión honesta y aprobó las tres cosas que recomendé. **La mitad del documento
+ya existía** —el filtro de R/B en 1:1.5, la jerga invariante en los 13 idiomas,
+el importador del bróker, las reglas de sombra que nacen calladas— y eso es en
+sí mismo el hallazgo: alguien de fuera llegó a las mismas decisiones a las que
+este proyecto llegó midiendo. Va a la landing.
+
+📌 Lo que se RECHAZÓ y por qué, para que no vuelva sin argumento nuevo:
+
+- **El «kill-switch» automático** («si el backtest baja del umbral, pausa los
+  avisos»). No existe esa medición en vivo: el banco de pruebas se lanza a mano
+  y mide cinco años. Y con ~36 señales/mes y ventaja cercana a cero, cualquier
+  ventana móvil cruzaría el umbral constantemente — un interruptor que se
+  enciende y se apaga solo es peor que cualquiera de los dos estados. No es
+  imposible: es un problema de preregistro, como el COT, y son semanas.
+- **«Nuestro Experimento #N sugiere que hagas X».** Los experimentos llevan 12 y
+  3 operaciones reales. Sería presentar una regla sin probar como consejo.
+
+## 1. El diario ya no se queda ENCERRADO al retirar a alguien
+
+⚠️ **Esto no lo propuso el documento: salió al comprobarlo.** `retirar` hacía
+`deleteDoc(users/{uid})`. **Firestore no borra las subcolecciones** al borrar un
+documento, así que `users/{uid}/trades/*` sobrevivía — pero la regla exige que la
+ficha exista y diga `'aprobado'` para leerlo. O sea que el diario **no se
+borraba: se quedaba encerrado para siempre**, y readmitir a la persona tampoco
+se lo devolvía. Nadie decidió eso; salió así.
+
+Ahora `retirar` deja `estado: 'retirado'`. La persona ve **exactamente lo
+mismo** (la app ya mandaba cualquier estado que no fuera aprobado ni pendiente a
+la pantalla de entrada con su aviso), su diario sigue ahí, y readmitirla se lo
+devuelve entero.
+
+✅ **Las reglas de Firestore NO hubo que tocarlas** —el admin ya podía escribir
+cualquier `estado`—, así que Néstor no tiene que entrar a la consola de Firebase.
+
+## 2. El estado vacío del Diario
+
+Antes: **una línea gris al FINAL de la pantalla**, debajo de todo. Quien abría
+el Diario por primera vez veía un muro de campos sin saber para qué sirve, y el
+aviso llegaba donde ya no orienta.
+
+Ahora una tarjeta **arriba del formulario** con las dos puertas que ya existían
+y están probadas: importar el informe del bróker, o ir a las señales (donde
+«Anotar en el Diario» precarga par, dirección y nota). **No se inventó un camino
+nuevo.**
+
+## 3. Tus propios números por grupos
+
+```
+app/src/lib/diagnostico.js        las cuentas puras         GEMELO
+app/src/components/Diagnostico.jsx  la tarjeta plegable     GEMELO
+app/scripts/prueba-diario.mjs     58 comprobaciones         GEMELO
+```
+
+Tres cortes que el Diario ya distingue: **cruce o par con dólar**, **compra o
+venta**, y **por par**. Cada uno con sus operaciones, su acierto y su neto.
+
+### ⚠️⚠️ CADA PORCENTAJE VA CON SU MARGEN PEGADO, Y ES LA PIEZA CENTRAL
+
+`margen(n) = 98/√n` — la mitad del intervalo de confianza del 95 % en el peor
+caso (p = 0,5), en puntos porcentuales:
+
+| n | margen |
+|---:|---:|
+| 10 | **±31** (un 40 % y un 70 % son el mismo número) |
+| 25 | ±20 |
+| 100 | ±10 |
+| 400 | ±5 |
+
+Sin eso, «38 % en cruces» sobre veinte operaciones se lee como un diagnóstico
+sobre uno mismo. El precedente es de este proyecto: **el 89 % de Néstor sobre 9
+operaciones**, donde está medido que con una moneda al 55 % sacar 8 o 9 de 9
+pasa una de cada 26 veces. En la pantalla real se ve «USD/JPY 33 % ±33»: el
+margen es tan grande como el número, y eso lo dice todo de un vistazo.
+
+### Las decisiones que no hay que ablandar
+
+⚠️ **NO DA CONSEJOS.** No hay veredicto, ni lado, ni «te sugerimos». Hay una
+comprobación que falla si aparecen las palabras `sugiere`, `consejo`,
+`recomend`, `experimento`… — la misma idea que en `cot.js`: añadir un veredicto
+obliga a venir a borrarla a mano.
+
+⚠️ **El acierto NO se pinta de color; el neto SÍ.** Está medido en esta app que
+se puede acertar el 55 % y perder dinero, así que pintar el acierto de verde
+afirmaría algo que el número no dice. El dinero sí significa algo en plata —
+misma decisión que en `SetupDetalle`.
+
+⚠️ **Por par se ordena por CANTIDAD, nunca por acierto.** Ordenar por acierto
+pone arriba al par con dos operaciones ganadas y un 100 %, que es justo el que
+menos dice. Y por debajo de 8 operaciones un par no sale.
+
+⚠️ **Los grupos vacíos siguen saliendo con n = 0.** Esconderlos dejaría en
+pantalla solo los que parecen significar algo, que es cómo se fabrica un
+espejismo.
+
+⚠️ **El lote es CONTEXTO, no un consejo.** Se enseña el menor, el mayor y
+cuántos tamaños distintos. A propósito NO se dice «usa lote fijo»: que sea peor
+**no está medido aquí**, y es de las cosas que suenan tan razonables que se dan
+por ciertas.
+
+⚠️ **Cruce y «con dólar» se definen por lo que SON**, no por descarte. Ya mordió
+tres veces en este proyecto (`esSombra`, `ventasPausadas`, `esDeLaApp`): un
+`par` con basura dentro caería en el grupo del dólar en silencio.
+
+## ⚠️ Lo que solo se vio en el navegador, y llevaba ahí desde siempre
+
+**En árabe, TODO el Diario salía con los números al revés.** No lo causó este
+cambio: los 128 elementos `mono` de la pantalla —las tres estadísticas de
+arriba, los códigos de par, los lotes, las fechas y los resultados— heredaban
+`rtl`, y **el Diario nunca se había mirado en árabe**. Es la quinta vez que este
+error aparece en este repo (el gráfico, el clima, la correlación, el calendario).
+
+Arreglado con la regla de siempre: **se fija la dirección solo de lo que NO es
+idioma**. Los números y los códigos de par en `ltr` fijo; la línea que mezcla
+número con palabra traducida (`0.05 lote · 2026-09-01`) usa `<bdi>` para aislar
+solo el número, que es el arreglo del calendario — ponerle `ltr` al renglón
+entero partía «24.5K» en dos.
+
+📌 **Y de paso, la dirección de cada operación se mostraba SIN traducir** en la
+lista (`Compra` en los 13 idiomas) mientras el formulario justo encima sí la
+traducía. Corregido; el valor guardado en Firestore sigue siendo `'Compra'`/
+`'Venta'`, que es lo que manda la nota del 2026-07-30.
+
+## Cómo se verificó
+
+Lint, build y **todas** las pruebas sin internet en los dos repos. `gemelos`
+pasa de 50 a **53** archivos idénticos.
+
+**Comprobado que las pruebas MUERDEN**, con el daño verificado en su sitio:
+devolver el `deleteDoc` tumba 3 · ordenar los pares por acierto en vez de por
+cantidad tumba 2.
+
+Y en **Chromium a 390 px**, componente aislado (el Diario está detrás de
+Firebase), en español y árabe, con el estado lleno y el vacío:
+
+| qué se comprobó | resultado |
+|---|---|
+| español, 61 operaciones | los tres cortes con sus márgenes; «USD/JPY 33 % ±33» |
+| **árabe** | **212 hojas de datos, 0 en `rtl`** — comprobado con el CSS calculado |
+| estado vacío | la tarjeta con las dos puertas, y la de diagnóstico **no se pinta** |
+| desplazamiento lateral | ninguno en los tres |
+| errores de consola | ninguno |
+
+📌 La primera comprobación de dirección que escribí era **demasiado burda**:
+exigía que TODO elemento `mono` fuera `ltr`, y eso contradice la regla del
+propio proyecto — los contenedores que llevan texto traducido deben seguir en
+`rtl`. Reescrita para mirar solo las **hojas** que contienen un número o un
+código de par. Una comprobación que exige lo que no debe exigir es tan inútil
+como una que no exige nada.

@@ -192,7 +192,10 @@ export default {
     abierta: 'Açık',
     cerrar: 'Kapat',
     loteSufijo: 'lot',
-    vacio: 'Henüz hiç işlem kaydetmedin.',
+    vacioTitulo: 'Günlüğün boş',
+    vacioPorque: 'Yaptıklarını not etmek, bu uygulamayı sadece piyasa hakkında değil SENİN hakkında konuşan bir şeye dönüştürür.',
+    vacioImportar: 'Broker’dan içe aktar',
+    vacioSenales: 'Bugünün sinyallerini gör',
     promptCerrar: ({ par }) => `${par} için nihai sonuç (USD, zarar için - kullan):`,
   },
 
@@ -435,6 +438,19 @@ export default {
     sinCambio: 'Bu hafta değişiklik yok',
     indice: 'Dolar tek bir para birimine değil, bir sepete karşı',
     pie: (v) => `Kaynak: CFTC, ${v.fecha} tarihli rapor (${v.dias} gün önce). Yalnızca vadeli işlemler, opsiyonlar hariç. 3 ila 10 gün eskilik normaldir: cuma günü salının verileriyle yayımlanır. Çubuk yalnızca bir bakışta karşılaştırmak içindir; veri olan sayıdır.`,
+  },
+
+  diag: {
+    titulo: ({ n }) => `Gruplara göre rakamların (${n})`,
+    aviso: 'Burada yalnızca SENİN yaptıkların sayılıyor. Bu bir tavsiye değil, neyi işlem edeceğini söylemez ve uygulamanın işaret ettikleriyle ilgisi yoktur.',
+    ops: 'işlem',
+    tipo: 'Parite tipine göre',
+    cruces: 'Crosses (dolarsız)',
+    dolar: 'Dolarlı pariteler',
+    direccion: 'Yöne göre',
+    pares: ({ n }) => `Pariteye göre (${n} işlemden itibaren)`,
+    lote: ({ min, max, distintos }) => `Lot: ${min} ile ${max} arası, ${distintos} farklı büyüklük.`,
+    pie: '± o yüzdenin yalnızca şansla ne kadar oynayabileceğidir. Az işlemde çok büyüktür: 10 işlemde ±31 puan, yani % 40 ile % 70 aynı sayıdır.',
   },
 
   errores: {
