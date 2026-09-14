@@ -4420,3 +4420,212 @@ propio proyecto — los contenedores que llevan texto traducido deben seguir en
 `rtl`. Reescrita para mirar solo las **hojas** que contienen un número o un
 código de par. Una comprobación que exige lo que no debe exigir es tan inútil
 como una que no exige nada.
+
+---
+
+# El margen de error, explicado para suscriptores (2026-09-14)
+
+Néstor leyó la tarjeta nueva y preguntó qué era el «±». Se lo conté por el chat
+con una moneda, lo entendió a la primera, y **pidió las dos cosas: que la
+comparación fuera A LA PANTALLA, y que la explicación se guardara como las
+otras cinco** —el volumen, TradingView, la correlación, el swap y la
+actividad— para que los suscriptores la lean en la página web **antes de
+suscribirse**.
+
+Va con aquéllas porque funciona por el mismo motivo: **es una forma de exagerar
+que la app decide no usar, contada con el mecanismo delante.** Y ésta es, de
+las seis, la que más directamente desactiva el truco favorito del sector.
+
+## El texto
+
+> **Qué es ese ± que va pegado a cada porcentaje.**
+>
+> Es **cuánto puede moverse ese número solo por casualidad**. No es un margen
+> de error de la app: es el de la muestra. Con pocas operaciones es enorme, y
+> con muchas es pequeño.
+>
+> **Piénsalo con una moneda.** Si la tiras 10 veces y salen 7 caras, no está
+> trucada — eso pasa todo el rato. Si la tiras 400 veces y salen 280, ahí sí
+> pasa algo. **Es el mismo 70 % las dos veces**, y significan cosas
+> completamente distintas.
+>
+> Tus operaciones son igual. Por eso cada porcentaje de la app va con su ±
+> al lado:
+>
+> | operaciones | margen | qué quiere decir |
+> |---:|---:|---|
+> | 10 | ±31 | un 40 % y un 70 % **son el mismo número** |
+> | 25 | ±20 | sigue sin decirte casi nada |
+> | 100 | ±10 | ya empieza a significar algo |
+> | 400 | ±5 | ahora sí |
+>
+> **Y por qué te lo contamos en vez de callarnos.** Porque el número sin el ±
+> al lado es el truco más viejo de este negocio: enseñar «87 % de acierto» sin
+> decir que son quince operaciones. No es mentira — es que no significa nada, y
+> se lee como si significara todo.
+>
+> Nos pasó **aquí dentro**. El dueño de la app abrió su Historial y vio **89 %
+> de acierto**. Sonaba a que algo funcionaba de maravilla. Eran **9
+> operaciones**: con una moneda cargada al 55 % sacar 8 o 9 aciertos de 9 pasa
+> **una de cada 26 veces**. O sea que ese 89 % era perfectamente compatible con
+> no tener ninguna ventaja.
+>
+> Esa es la razón de que el ± exista en la pantalla. No para que desconfíes de
+> tus números: **para que sepas cuándo ya se pueden creer.**
+
+## Las dos decisiones que lo sostienen, por si alguien las mueve
+
+⚠️ **El margen es el del PEOR caso a propósito** (`98/√n`, que es p = 0,5). Un
+margen que se afina a favor propio serviría para presumir, no para decidir
+sobre dinero. Es la misma elección que hace el resolver al contar como PERDIDA
+el día que toca stop y objetivo.
+
+⚠️ **En pantalla va primero el ± y DESPUÉS la moneda**, no al revés. El ±
+explica qué es el número; la moneda lo hace entender. Puesta delante, la moneda
+se lee como una curiosidad suelta y nadie la conecta con el símbolo que tiene
+al lado de cada cifra. Hay una comprobación en `prueba-diario.mjs` (bloque 9)
+que falla si alguien invierte el orden, y otra que exige la clave en los 13
+idiomas — una mitad traducida y la otra en español sería peor que nada.
+
+📌 **Y la regla general que este día vuelve a confirmar**, ya escrita el
+2026-09-09: cuando Néstor pregunta «¿esto qué me quiere decir?», la respuesta
+correcta casi nunca es explicárselo en el chat. **Es meter la explicación EN LA
+PANTALLA**, porque el suscriptor que se lo pregunte mañana no me tiene a mí al
+lado. Van tres veces: el calendario, la actividad y ahora el margen.
+
+---
+
+# La importación del bróker leía CUALQUIER COSA (2026-09-14). El peor fallo del proyecto
+
+Néstor subió su informe real de MT5, vio «129 operaciones nuevas · +1754.43» y
+preguntó, sin sospechar nada, **«¿para qué me sirve esa información?»**. Al ir a
+contestarle salió esto. Es el fallo más grave que ha tenido el proyecto, y el
+motivo es el que este repo lleva meses escribiendo: **no dio error ni una vez.
+Dio 129 filas con números perfectamente creíbles y todos falsos.**
+
+📌 **Y yo le había dicho «pulsa Añadir las 129 tranquilo, lo que entra es
+correcto».** Se lo dije **sin haber visto el archivo**, razonando desde el
+código. Es la séptima vez documentada aquí que presento un mecanismo
+convincente antes de comprobarlo, y la primera en la que mi error iba a
+escribirle datos falsos en su Diario. Se salvó porque no lo pulsó.
+
+## Los tres fallos, que son independientes
+
+### 1. ⚠️⚠️ La celda ESCONDIDA que corría todas las columnas
+
+MT5 mete dentro de cada fila de posiciones una celda que el navegador no
+enseña, con su identificador interno:
+
+```html
+<td>buy</td>
+<td class="hidden" colspan="8">FIX:0:ATG-ImEIk-052516096</td>
+<td class="">0.03</td>          ← el volumen de verdad
+```
+
+La cabecera **no tiene esa columna**. Contarla corre todo lo que viene detrás:
+
+| lo que creía leer | lo que leía |
+|---|---|
+| volumen | ese texto → `aNumero` da null → **lote 0 en las 129** |
+| resultado en dólares | **el precio de CIERRE** |
+| fecha de cierre | un precio → no se entiende → **la de hoy** |
+
+La prueba que lo cierra, con sus propias filas: USD/JPY «+158.93» es el cierre
+158.933 · GBP/USD «+1.34» es 1.34435 · USD/CAD «+1.38» es 1.38400 · USD/CHF
+«+0.79» es 0.78767. **El «+1754.43» era una suma de precios de cierre.**
+
+### 2. ⚠️⚠️ Un informe de MT5 trae CUATRO tablas, no una
+
+Posiciones, Órdenes, Transacciones y Órdenes activas, **cada una con sus
+columnas**. El lector se aprendía las de la primera y las usaba para las
+cuatro. Resultado: la misma operación entraba tres veces bajo tres formas, y
+hasta una orden **pendiente** (`sell limit`, estado `placed`) que nunca se
+ejecutó. **36 posiciones cerradas reales → 129 filas a punto de guardarse.**
+
+Ahora se localizan todas las cabeceras y se importa de UNA sola tabla, elegida
+por su FORMA y no por su título (los títulos están traducidos y cambian entre
+MT4 y MT5): **+2 si tiene columna de resultado** (así caen Órdenes y Órdenes
+activas) y **+1 si tiene DOS columnas de hora** (así cae Transacciones, donde
+cada fila es media operación —la entrada o la salida— y su mitad de entrada
+trae resultado 0). Un CSV de una sola tabla no se entera de nada.
+
+⚠️ Y **se avisa** de las filas que quedan fuera (`otrasTablas`, en los 13
+idiomas). Saltarse tres tablas en silencio es justo el import callado que la
+cabecera de `importarOperaciones.js` dice que es peor que uno que falla.
+
+### 3. «Fecha/Hora» no coincidía con NINGÚN sinónimo
+
+Así se llama esa columna en el MT5 en español. `'fecha/hora'` no es `'fecha'`
+ni empieza por `'fecha '`, así que **no había columna de fecha en absoluto** y
+`fechaDe('')` caía al valor por defecto. Con los otros dos fallos arreglados las
+129 seguían saliendo todas con la fecha de hoy.
+
+Arreglado con los sinónimos y quitando los espacios alrededor de la barra al
+comparar («S / L» y «Fecha/Hora» se escriben sin criterio fijo).
+
+## El resultado, con el archivo real
+
+| | antes | ahora |
+|---|---:|---:|
+| operaciones | 129 | **32** (36 posiciones − 4 pares que Swing no sigue) |
+| lote | 0 en todas | 0.01 a 0.04 |
+| fechas distintas | **1** (hoy) | **20**, del 25 may al 14 sep |
+| «resultado total» | **+1754.43** | **−47.14** |
+
+📌 **Y sus números reales dicen justo lo que la app predica:** acertó el **78 %**
+(25 de 32) **y perdió dinero**. Una sola operación, EUR/USD, se llevó −74.65
+—de los cuales **−23.09 son swap**, que es el coste que este proyecto barre a
+ciegas en cinco niveles—. Es el mejor ejemplo real que tiene el proyecto de que
+el acierto sin el tamaño al lado no dice nada.
+
+## Lo que se comprobó, y una prueba que NO mordía
+
+Cuatro bloques nuevos en `prueba-importar.mjs`, con un informe de MT5 que
+reproduce la **forma** del real (las cuatro tablas, la celda oculta, la orden
+pendiente) pero **no sus datos**: son las operaciones de una persona y los dos
+repositorios son públicos.
+
+**Comprobado que muerden**, con el daño verificado en su sitio antes de darlo
+por bueno: volver a contar las celdas ocultas tumba 7 · quitar «fecha/hora» de
+los sinónimos tumba 3.
+
+📌 **Pero la de elegir tabla tumbaba CERO.** En MT5 las posiciones van primero,
+así que «quedarse con la primera» acierta por casualidad y la comprobación
+pasaba sin comprobar nada — el agujero de siempre. Se añadió un montaje con las
+órdenes DELANTE y solo la segunda tabla con resultado: ahí sí, quitar la
+elección tumba 4.
+
+📌 **Y de paso me equivoqué en la aritmética del aviso** (dije 4 filas fuera
+cuando eran 5) y la prueba me lo cantó. Es lo que tiene que pasar.
+
+## El botón de borrar YA existía, y yo dije que no
+
+Le dije a Néstor que no había forma de borrar una operación del Diario. **Era
+falso**: la ✕ está ahí desde siempre. Mi búsqueda fue `grep borrar` y el prop se
+llama `onBorrar`, con B mayúscula. **Buscar sin distinguir mayúsculas cuesta lo
+mismo**, y afirmar que algo no existe sin haberlo encontrado es el mismo error
+que el veredicto «no la publican» de la sonda de sentimiento: *no lo encontré* y
+*no existe* no son lo mismo.
+
+Lo que sí faltaba, y se hizo: **la ✕ borraba al primer toque, sin deshacer.** Un
+dedo en el sitio equivocado de un teléfono y esa operación desaparecía para
+siempre. Ahora pide un segundo toque («¿Borrar?» en rojo, en los 13 idiomas).
+
+⚠️ A propósito **no se usa `confirm()`** del navegador: en la PWA instalada sale
+un cuadro del sistema en inglés, fuera de los 13 idiomas de la app.
+
+## Cómo se verificó
+
+Lint, build y **todas** las pruebas sin internet en los dos repos. Los 53
+gemelos siguen idénticos (`importarOperaciones.js`, `DiarioTab.jsx` y
+`prueba-importar.mjs` lo son, así que el cambio va emparejado y en la misma
+rama).
+
+Y en **Chromium a 390 px**, en español y en árabe: un toque en la ✕ enseña
+«¿Borrar?» y **no borra**; el segundo sí. Cero errores de consola, cero
+desplazamiento lateral.
+
+📌 **La comprobación de dirección volvió a salirme demasiado burda**, por
+tercera vez: marcaba en rojo la flechita de plegar «▸», que es `.mono` pero no
+es un dato. Acotada a las hojas que llevan un número o un código de par — 5 de
+5 en `ltr` en los dos idiomas.
