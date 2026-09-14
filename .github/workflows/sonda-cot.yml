@@ -1,0 +1,45 @@
+name: Sonda del COT (posiciones institucionales)
+
+# Averigua qué publica de verdad la CFTC, cómo se llaman sus conjuntos de datos,
+# qué columnas traen y con qué nombre EXACTO aparece cada divisa del barrido.
+# Ver la cabecera de app/scripts/sonda-cot.mjs.
+#
+# EXISTE POR EL MISMO MOTIVO QUE LAS DEL CALENDARIO Y LAS TASAS: la red de las
+# sesiones donde se programa esta app bloquea los dos hosts que hacen falta
+# (comprobado el 2026-09-14 corriendo la sonda: `publicreporting.cftc.gov` y
+# `api.us.socrata.com` dan 403 «Host not in allowlist»). Desde ahí no se puede
+# ver ni si responden. Escribir el lector a ciegas y descubrirlo con la app
+# publicada es al revés de como se trabaja aquí: primero se mira, después se
+# escribe.
+#
+# ⚠️ NO gasta créditos de Twelve Data ni necesita ningún secreto: son datos
+# públicos de un organismo oficial (la CFTC) y Socrata responde sin llave. Por
+# eso este workflow no lleva `env`.
+#
+# Solo a mano. No tiene sentido programarlo: se lanza cuando hay que decidir.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    # Son una docena de peticiones con 30 s de tope cada una. Si tarda más de 10
+    # minutos es que algo se colgó, y sin esto GitHub lo dejaría correr seis
+    # horas.
+    timeout-minutes: 10
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # No hace falta `npm ci`: la sonda solo usa `fetch`, que ya viene en Node.
+      - name: Sondear
+        working-directory: app
+        run: node scripts/sonda-cot.mjs
