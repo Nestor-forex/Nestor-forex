@@ -217,6 +217,7 @@ export default {
       nadaAprovechable: 'Leram-se linhas, mas nenhuma era uma operação aproveitável.',
     },
     titulo: "Importar operações da corretora",
+    desc: 'Carregue o relatório de MT4 ou MT5 e as suas operações entram sozinhas, já com o resultado líquido.',
     explicacion: "Exporta o teu histórico do MT4 («Guardar como relatório detalhado») ou do MT5 («Relatório») e carrega-o aqui. Um CSV também serve. Nada é guardado até confirmares.",
     elegir: "Escolher ficheiro…",
     errorLeer: "Não foi possível ler o ficheiro.",
@@ -232,8 +233,9 @@ export default {
   },
 
   medicion: {
-    titulo: "E a longo prazo? O que medimos ao longo de 5 anos",
-    avance: ({ acierto, valor }) => `Acerta ${acierto}% das vezes e mesmo assim perde ${valor} por cada dólar arriscado. Toque para ver como se mediu.`,
+    titulo: 'Teste sobre 5 anos de mercado real',
+    desc: 'O que esta app teria dado se existisse desde 2021.',
+    avance: ({ acierto, valor }) => `Acerta ${acierto}% das vezes e mesmo assim perde ${valor} por cada dólar arriscado.`,
     intro: ({ dias, desde, hasta }) => `Recalculámos o rastreio dia a dia ao longo de ${dias} dias de mercado real (${desde} a ${hasta}), como se a app tivesse funcionado todo esse tempo, descontando o spread de cada par e o swap de cada noite.`,
     laApp: "A app tal como está, com os seus níveis",
     varaNeutra: "A mesma app, com vara neutra (stop e alvo à mesma distância)",
@@ -301,7 +303,8 @@ export default {
   },
 
   calendario: {
-    titulo: (v) => `Notícias que podem mover o preço (${v.n})`,
+    titulo: ({ n }) => `Calendário económico (${n})`,
+    desc: 'Notícias que podem mover o preço',
     aviso: (v) => `${v.div}: dado importante em ${v.h} h`,
     intro: 'Dados económicos que podem mover o preço de repente. Não mudam nenhum sinal da app: estão aqui para você saber a que horas não convém entrar às cegas.',
     alto: 'Move muito',
@@ -325,14 +328,16 @@ export default {
     pie: 'Só se mostram os dados de impacto alto e médio das 8 moedas da varredura; os de impacto baixo ficam de fora porque encobririam os que importam. As horas são as do seu telemóvel. Fonte: ForexFactory.',
   },
   correl: {
-    titulo: (v) => `Pares que se movem quase igual (${v.n})`,
+    titulo: ({ n }) => `Correlação entre pares (${n})`,
+    desc: 'Pares que se movem quase igual',
     intro: 'Antes de abrir duas operações ao mesmo tempo, veja se estes pares andam juntos. Se andam, você não está dividindo o risco: está fazendo a mesma aposta com o dobro do tamanho.',
     juntos: 'Movem-se juntos',
     opuestos: 'Movem-se ao contrário',
     pie: 'Medido sobre as variações de preço das últimas 60 sessões. De 0 a 1: quanto mais perto de 1, mais parecidos. O sinal de menos significa que vão em direções opostas, e isso é o mesmo risco.',
   },
   glosario: {
-    titulo: 'O que significam estes termos?',
+    titulo: 'Glossário',
+    desc: 'O que significam estes termos?',
     terminos: [
       ['Força relativa', 'Quão forte ou fraca está uma moeda comparada com as outras 7, fazendo a média da variação recente de preço. Mais alto = mais forte.'],
       ['Viés', 'Para onde um par pende agora: se vale mais procurar compras ou vendas, conforme qual moeda está mais forte.'],
@@ -413,6 +418,11 @@ export default {
     pie: 'O número já conta a direção de cada sinal: positivo somam-se, negativo subtraem-se. Medido com as variações diárias das últimas 60 sessões.',
   },
 
+  plegable: {
+    ver: 'Ver',
+    cerrar: 'Fechar',
+  },
+
   historial: {
     esReversion: 'REVERSÃO',
     esCaida: "COMPRAR A QUEDA",
@@ -441,7 +451,8 @@ export default {
   },
 
   tasas: {
-    titulo: 'O que custa mantê-la aberta',
+    titulo: 'Taxas de juro e swap',
+    desc: 'O que custa mantê-la aberta',
     aviso:
       '⚠️ Isto NÃO é o swap que a sua corretora vai cobrar. É a diferença entre as taxas dos bancos centrais, que é de onde o swap SAI. A sua corretora acrescenta uma margem que ninguém publica e que é desigual: numa direção você paga e na outra às vezes recebe, mas quase nunca o mesmo. Serve para saber o sentido e o tamanho aproximado, não a cifra.',
     intro:
@@ -456,7 +467,8 @@ export default {
   },
 
   cot: {
-    titulo: 'O que os grandes operadores têm em posição',
+    titulo: 'Commitments of Traders',
+    desc: 'O que os grandes operadores têm em posição',
     aviso: '⚠️ Isto NÃO diz comprar nem vender. São posições em futuros da CME, uma parte pequena do mercado Forex, e chegam com dias de atraso: a CFTC publica às sextas com os dados da terça anterior. E um posicionamento extremo uns leem como continuação da tendência e outros como uma virada. Qual acerta aqui não está medido.',
     intro: 'Quanto os fundos especulativos — o que a CFTC chama de leveraged funds — têm comprado ou vendido em cada moeda, como percentagem de todos os contratos abertos. Cada moeda vai contra o dólar.',
     comprados: 'Líquido comprado',
@@ -470,6 +482,7 @@ export default {
 
   diag: {
     titulo: ({ n }) => `Os teus números por grupos (${n})`,
+    desc: 'As suas operações separadas por tipo de par, por direção e por par.',
     aviso: 'Isto conta o que TU fizeste, nada mais. Não é um conselho, não diz o que operar e não tem nada a ver com o que a app assinala.',
     ops: 'ops',
     tipo: 'Por tipo de par',

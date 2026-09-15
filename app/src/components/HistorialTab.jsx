@@ -1,5 +1,5 @@
-import { useState } from 'react'
 import { useIdioma } from '../lib/i18n'
+import TarjetaPlegable from './TarjetaPlegable'
 import { useHistorial } from '../lib/useHistorial'
 import { MEDICION } from '../lib/medicion'
 import { fmtFecha } from '../lib/format'
@@ -134,72 +134,44 @@ export default function HistorialTab() {
 // el que se engaña la gente en este sector: con el objetivo más cerca que el
 // stop se acierta mucho y se pierde igual.
 function MedicionLarga({ t, locale }) {
-  const [abierto, setAbierto] = useState(false)
   const { app, neutra, reversion } = MEDICION
 
   const signo = (x) => (x >= 0 ? '+' : '') + x.toFixed(2)
   const color = (x) => (x >= 0 ? 'var(--green)' : 'var(--red)')
 
   return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <button
-        onClick={() => setAbierto((v) => !v)}
-        aria-expanded={abierto}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 8,
-          background: 'none',
-          border: 'none',
-          padding: 0,
-          minHeight: 32,
-          cursor: 'pointer',
-          color: 'var(--text)',
-          fontSize: 13.5,
-          fontWeight: 600,
-          textAlign: 'start',
-        }}
-      >
-        <span>{t('medicion.titulo')}</span>
-        <span className="mono" style={{ color: 'var(--text-muted)', fontSize: 12 }}>
-          {abierto ? '▲' : '▼'}
-        </span>
-      </button>
-
-      {/* ⚠️ EL ADELANTO, VISIBLE CON LA TARJETA CERRADA. Este es el mejor
-          argumento que tiene la app —enseñar el propio número siendo malo— y
-          estaba escondido detrás de un título que parecía un encabezado más.
-          Un operador externo que revisó la app con lupa el 2026-09-15 ni
-          siquiera supo que se podía abrir.
-
-          Los dos números SALEN de `MEDICION`, no escritos a mano: `queSignifica`
-          llevaba «55 %» a mano y llevaba desde el 2026-09-05 diciendo un número
-          que no era el de ninguna de las dos filas. El código que usa el valor
-          se actualiza solo; el texto que lo describe, no — salvo que lo lea. */}
-      {/* ⚠️ EL NÚMERO VA SIN SIGNO Y LA FRASE SOLO SALE SI SE PIERDE, y las dos
-          cosas son el mismo arreglo. La frase dice «pierde», así que pasarle el
-          valor con su signo daba «pierde −0.03» — un doble negativo que se lee
-          como lo contrario de lo que pasa. Eso no lo ve un build: salió al
-          mirarlo en el navegador.
-
-          Y si algún día la app midiera POSITIVO, esta frase diría algo falso,
-          así que entonces no se pinta. Equivocarse hacia «no se enseña un
-          adelanto» cuesta un adelanto; hacia «se afirma que pierde cuando gana»
-          cuesta la credibilidad, que es lo único que este proyecto vende. Los
-          dos errores no valen lo mismo, así que la condición no es simétrica —
-          misma forma que `esSombra` y `yaCorrioHoy`. */}
-      {!abierto && app.porRiesgo < 0 && (
-        <p style={{ ...TEXTO, margin: 0 }}>
-          {t('medicion.avance', {
-            acierto: app.acierto,
-            valor: Math.abs(app.porRiesgo).toFixed(2),
-          })}
-        </p>
-      )}
-
-      {abierto && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    // ⚠️ SIGLA «BACKTEST» Y NOMBRE COMPLETO, y no es cosmética. El título
+    // anterior era «¿Y a largo plazo? Lo que medimos sobre 5 años»: una
+    // pregunta, no el nombre de nada. Quien opera conoce la palabra
+    // BACKTEST —probar una regla sobre el pasado— y esa palabra le dice de
+    // una vez qué es esto; la pregunta no se lo decía.
+    //
+    // Néstor lo pidió así el 2026-09-15 para TODAS las herramientas: «que
+    // lleven los nombres tal cual como se conocen en el trading, con
+    // abreviatura y nombre completo, pero también con lo que las describen».
+    <TarjetaPlegable
+      sigla="BACKTEST"
+      titulo={t('medicion.titulo')}
+      desc={t('medicion.desc')}
+      // El adelanto: el número, visible sin abrir. Ver `TarjetaPlegable`.
+      //
+      // ⚠️ VA SIN SIGNO Y SOLO SI SE PIERDE. La frase dice «pierde», así que
+      // pasarle el valor con su signo daba «pierde −0.03» — un doble negativo
+      // que se lee como lo contrario. Y si algún día midiera POSITIVO la frase
+      // sería falsa, así que entonces no se pinta: equivocarse hacia «falta un
+      // adelanto» cuesta un adelanto; hacia «se afirma que pierde cuando gana»
+      // cuesta la credibilidad, que es lo único que este proyecto vende. Misma
+      // asimetría que `esSombra` y `yaCorrioHoy`.
+      avance={
+        app.porRiesgo < 0
+          ? t('medicion.avance', {
+              acierto: app.acierto,
+              valor: Math.abs(app.porRiesgo).toFixed(2),
+            })
+          : null
+      }
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <p style={{ ...TEXTO, margin: 0 }}>
             {t('medicion.intro', {
               dias: MEDICION.dias,
@@ -245,9 +217,8 @@ function MedicionLarga({ t, locale }) {
           <p style={{ ...TEXTO, margin: 0, color: 'var(--text-muted)', fontSize: 11.5 }}>
             {t('medicion.fechado', { fecha: fmtFecha(MEDICION.fecha, locale) })}
           </p>
-        </div>
-      )}
-    </div>
+      </div>
+    </TarjetaPlegable>
   )
 }
 

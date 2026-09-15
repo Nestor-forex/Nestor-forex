@@ -256,6 +256,7 @@ export default {
       nadaAprovechable: 'Se leyeron filas, pero ninguna resultó ser una operación aprovechable.',
     },
     titulo: "Importar operaciones del bróker",
+    desc: 'Sube el informe de MT4 o MT5 y tus operaciones entran solas, ya con el resultado neto.',
     explicacion: "Exporta tu historial desde MT4 («Guardar como informe detallado») o MT5 («Informe») y súbelo aquí. También sirve un CSV. Nada se guarda hasta que lo confirmes.",
     elegir: "Elegir archivo…",
     errorLeer: "No se pudo leer el archivo.",
@@ -271,8 +272,9 @@ export default {
   },
 
   medicion: {
-    titulo: "¿Y a largo plazo? Lo que medimos sobre 5 años",
-    avance: ({ acierto, valor }) => `Acierta el ${acierto}% de las veces y aun así pierde ${valor} por cada dólar arriesgado. Toca para ver cómo se midió.`,
+    titulo: 'Prueba sobre 5 años de mercado real',
+    desc: 'Qué habría dado esta app si hubiera existido desde 2021.',
+    avance: ({ acierto, valor }) => `Acierta el ${acierto}% de las veces y aun así pierde ${valor} por cada dólar arriesgado.`,
     intro: ({ dias, desde, hasta }) => `Recalculamos el barrido día a día sobre ${dias} días de mercado real (${desde} a ${hasta}), como si la app hubiera estado funcionando todo ese tiempo, y descontamos el spread de cada par y el swap de cada noche.`,
     laApp: "La app tal cual, con sus niveles",
     varaNeutra: "La misma app, con vara neutra (stop y objetivo a igual distancia)",
@@ -340,7 +342,8 @@ export default {
   },
 
   calendario: {
-    titulo: (v) => `Noticias que pueden mover el precio (${v.n})`,
+    titulo: ({ n }) => `Calendario económico (${n})`,
+    desc: 'Noticias que pueden mover el precio',
     aviso: (v) => `${v.div}: dato importante en ${v.h} h`,
     intro: 'Datos económicos que pueden mover el precio de golpe. No cambian ninguna señal de la app: están aquí para que sepas a qué hora conviene no estar entrando a ciegas.',
     alto: 'Mueve mucho',
@@ -364,14 +367,16 @@ export default {
     pie: 'Solo se muestran los datos de impacto alto y medio de las 8 divisas del barrido; los de impacto bajo se omiten porque taparían los que sí importan. Las horas son las de tu teléfono. Fuente: ForexFactory.',
   },
   correl: {
-    titulo: (v) => `Pares que se mueven casi igual (${v.n})`,
+    titulo: ({ n }) => `Correlación entre pares (${n})`,
+    desc: 'Pares que se mueven casi igual',
     intro: 'Antes de abrir dos operaciones a la vez, mira si estos pares van del brazo. Si van juntos, no estás repartiendo el riesgo: estás haciendo la misma apuesta con el doble de tamaño.',
     juntos: 'Se mueven juntos',
     opuestos: 'Se mueven al revés',
     pie: 'Medido sobre los cambios de precio de las últimas 60 sesiones. De 0 a 1: mientras más cerca de 1, más se parecen. El signo menos quiere decir que van en direcciones contrarias, y eso es el mismo riesgo.',
   },
   glosario: {
-    titulo: '¿Qué significan estos términos?',
+    titulo: 'Glosario',
+    desc: '¿Qué significan estos términos?',
     terminos: [
       ['Fuerza relativa', 'Qué tan fuerte o débil está una divisa comparada con las otras 7, promediando su cambio de precio reciente. Más alto = más fuerte.'],
       ['Sesgo', 'La inclinación de un par ahora mismo: si conviene más buscar compras o ventas, según qué divisa está más fuerte.'],
@@ -440,6 +445,11 @@ export default {
     pie: 'El número ya cuenta la dirección de cada señal: positivo se suman, negativo se restan. Medido con los cambios diarios de las últimas 60 sesiones.',
   },
 
+  plegable: {
+    ver: 'Ver',
+    cerrar: 'Cerrar',
+  },
+
   historial: {
     esReversion: 'REVERSIÓN',
     esCaida: "COMPRAR LA CAÍDA",
@@ -488,7 +498,8 @@ export default {
   },
 
   tasas: {
-    titulo: 'Lo que cuesta mantenerla abierta',
+    titulo: 'Tasas de interés y swap',
+    desc: 'Lo que cuesta mantenerla abierta',
     aviso:
       '⚠️ Esto NO es el swap que te va a cobrar tu bróker. Es la diferencia entre las tasas de los bancos centrales, que es de donde el swap SALE. Tu bróker le suma un margen que no publica nadie y que además es desigual: en una dirección pagas y en la otra a veces cobras, pero casi nunca lo mismo. Sirve para saber el sentido y el tamaño aproximado, no la cifra.',
     intro:
@@ -503,7 +514,8 @@ export default {
   },
 
   cot: {
-    titulo: 'Lo que tienen comprado los grandes',
+    titulo: 'Commitments of Traders',
+    desc: 'Lo que tienen comprado los grandes',
     aviso: '⚠️ Esto NO dice comprar ni vender. Son posiciones en futuros del CME, una parte pequeña del mercado Forex, y llegan con días de retraso: la CFTC publica los viernes con los datos del martes anterior. Y un posicionamiento extremo unos lo leen como que la tendencia sigue y otros como que se va a dar la vuelta. No está medido cuál acierta.',
     intro: 'Cuánto tienen comprado o vendido los fondos especulativos —lo que la CFTC llama leveraged funds— en cada divisa, como porcentaje de todos los contratos abiertos. Cada divisa va contra el dólar.',
     comprados: 'Netos comprados',
@@ -517,6 +529,7 @@ export default {
 
   diag: {
     titulo: ({ n }) => `Tus números por grupos (${n})`,
+    desc: 'Tus operaciones separadas por tipo de par, por dirección y por par.',
     aviso: 'Esto cuenta lo que TÚ hiciste, nada más. No es un consejo, no dice qué operar y no tiene nada que ver con lo que la app señala.',
     ops: 'ops',
     tipo: 'Por tipo de par',
