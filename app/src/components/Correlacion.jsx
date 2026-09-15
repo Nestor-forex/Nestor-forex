@@ -1,5 +1,5 @@
-import { useState } from 'react'
 import { useT } from '../lib/i18n'
+import TarjetaPlegable from './TarjetaPlegable'
 
 // PARES QUE SE MUEVEN JUNTOS.
 //
@@ -22,7 +22,6 @@ import { useT } from '../lib/i18n'
 // mira al abrir el tablero.
 export default function Correlacion({ correlaciones = [] }) {
   const t = useT()
-  const [abierto, setAbierto] = useState(false)
 
   // Sin datos no se pinta NADA — ni un título ni un «no hay nada». Un barrido
   // viejo, de antes de que esto existiera, no trae `correl`, y una tarjeta
@@ -31,32 +30,7 @@ export default function Correlacion({ correlaciones = [] }) {
   if (!correlaciones.length) return null
 
   return (
-    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-      <button
-        onClick={() => setAbierto((v) => !v)}
-        style={{
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 10,
-          padding: '12px 14px',
-          background: 'none',
-          border: 'none',
-          color: 'var(--text)',
-          cursor: 'pointer',
-          fontSize: 13.5,
-          fontWeight: 600,
-          minHeight: 44,
-          textAlign: 'left',
-        }}
-      >
-        <span>{t('correl.titulo', { n: correlaciones.length })}</span>
-        <span style={{ color: 'var(--text-muted)' }}>{abierto ? '▲' : '▼'}</span>
-      </button>
-
-      {abierto && (
-        <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <TarjetaPlegable titulo={t('correl.titulo', { n: correlaciones.length })} desc={t('correl.desc')}>
           <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
             {t('correl.intro')}
           </p>
@@ -104,8 +78,6 @@ export default function Correlacion({ correlaciones = [] }) {
           <p style={{ margin: 0, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>
             {t('correl.pie')}
           </p>
-        </div>
-      )}
-    </div>
+    </TarjetaPlegable>
   )
 }

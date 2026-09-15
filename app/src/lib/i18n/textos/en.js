@@ -217,6 +217,7 @@ export default {
       nadaAprovechable: 'Rows were read, but none turned out to be a usable trade.',
     },
     titulo: "Import trades from your broker",
+    desc: 'Upload your MT4 or MT5 report and your trades come in on their own, net result included.',
     explicacion: "Export your history from MT4 (\"Save as Detailed Report\") or MT5 (\"Report\") and upload it here. A CSV works too. Nothing is saved until you confirm.",
     elegir: "Choose file…",
     errorLeer: "The file could not be read.",
@@ -232,8 +233,9 @@ export default {
   },
 
   medicion: {
-    titulo: "And over the long run? What we measured across 5 years",
-    avance: ({ acierto, valor }) => `It is right ${acierto}% of the time and still loses ${valor} per dollar risked. Tap to see how it was measured.`,
+    titulo: 'Backtest over 5 years of real market',
+    desc: 'What this app would have returned if it had existed since 2021.',
+    avance: ({ acierto, valor }) => `It is right ${acierto}% of the time and still loses ${valor} per dollar risked.`,
     intro: ({ dias, desde, hasta }) => `We replayed the scan day by day across ${dias} days of real market (${desde} to ${hasta}), as if the app had been running that whole time, with each pair's spread and each night's swap deducted.`,
     laApp: "The app as it is, with its own levels",
     varaNeutra: "The same app, neutral yardstick (stop and target equally far)",
@@ -301,7 +303,8 @@ export default {
   },
 
   calendario: {
-    titulo: (v) => `News that can move price (${v.n})`,
+    titulo: ({ n }) => `Economic calendar (${n})`,
+    desc: 'News that can move price',
     aviso: (v) => `${v.div}: major release in ${v.h} h`,
     intro: 'Economic releases that can move price sharply. They do not change any of the app signals: they are here so you know when not to be entering blind.',
     alto: 'Moves a lot',
@@ -325,14 +328,16 @@ export default {
     pie: 'Only high and medium impact releases for the 8 currencies of the scan are shown; low impact ones are left out because they would bury the ones that matter. Times are your phone’s. Source: ForexFactory.',
   },
   correl: {
-    titulo: (v) => `Pairs that move almost alike (${v.n})`,
+    titulo: ({ n }) => `Correlation between pairs (${n})`,
+    desc: 'Pairs that move almost alike',
     intro: 'Before opening two trades at once, check whether these pairs move together. If they do, you are not spreading risk: you are making the same bet at double the size.',
     juntos: 'They move together',
     opuestos: 'They move opposite',
     pie: 'Measured on the price changes of the last 60 sessions. From 0 to 1: the closer to 1, the more alike. A minus sign means they move in opposite directions, and that is the same risk.',
   },
   glosario: {
-    titulo: 'What do these terms mean?',
+    titulo: 'Glossary',
+    desc: 'What do these terms mean?',
     terminos: [
       ['Relative strength', 'How strong or weak a currency is compared with the other 7, averaging its recent price change. Higher = stronger.'],
       ['Bias', 'Which way a pair leans right now: whether it is better to look for buys or sells, based on which currency is stronger.'],
@@ -413,6 +418,11 @@ export default {
     pie: "The number already accounts for each signal's direction: positive means they add up, negative means they subtract. Measured on daily changes over the last 60 sessions.",
   },
 
+  plegable: {
+    ver: 'View',
+    cerrar: 'Close',
+  },
+
   historial: {
     esReversion: 'REVERSION',
     esCaida: "BUY THE DIP",
@@ -441,7 +451,8 @@ export default {
   },
 
   tasas: {
-    titulo: 'What it costs to keep it open',
+    titulo: 'Interest rates and swap',
+    desc: 'What it costs to keep it open',
     aviso:
       '⚠️ This is NOT the swap your broker will charge you. It is the gap between central bank rates, which is where the swap COMES FROM. Your broker adds a margin nobody publishes, and it is uneven: in one direction you pay and in the other you sometimes get paid, but almost never the same. It gives you the direction and rough size, not the figure.',
     intro:
@@ -456,7 +467,8 @@ export default {
   },
 
   cot: {
-    titulo: 'What the big players are holding',
+    titulo: 'Commitments of Traders',
+    desc: 'What the big players are holding',
     aviso: '⚠️ This does NOT say buy or sell. These are positions in CME futures, a small slice of the Forex market, and they arrive days late: the CFTC publishes on Fridays with the previous Tuesday’s data. And extreme positioning is read by some as the trend continuing and by others as a turn coming. Which one is right here has not been measured.',
     intro: 'How much the speculative funds — what the CFTC calls leveraged funds — are holding long or short in each currency, as a percentage of all open contracts. Each currency is against the dollar.',
     comprados: 'Net long',
@@ -470,6 +482,7 @@ export default {
 
   diag: {
     titulo: ({ n }) => `Your numbers by group (${n})`,
+    desc: 'Your trades split by pair type, by direction and by pair.',
     aviso: 'This counts what YOU did, nothing else. It is not advice, it does not say what to trade, and it has nothing to do with what the app flags.',
     ops: 'ops',
     tipo: 'By pair type',

@@ -1,5 +1,5 @@
-import { useState } from 'react'
 import { useIdioma } from '../lib/i18n'
+import TarjetaPlegable from './TarjetaPlegable'
 import { diasDelDato, divisasOrdenadas, esIndice } from '../lib/cot'
 import { useCot } from '../lib/useCot'
 
@@ -77,7 +77,6 @@ const enteroConSigno = (n) => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n)
 
 export default function Cot() {
   const { t, locale } = useIdioma()
-  const [abierto, setAbierto] = useState(false)
   const datos = useCot()
 
   // Sin datos no se pinta NADA — ni título ni «no hay nada». Mismo criterio que
@@ -97,32 +96,7 @@ export default function Cot() {
     : ''
 
   return (
-    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-      <button
-        onClick={() => setAbierto((v) => !v)}
-        style={{
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 10,
-          padding: '12px 14px',
-          background: 'none',
-          border: 'none',
-          color: 'var(--text)',
-          cursor: 'pointer',
-          fontSize: 13.5,
-          fontWeight: 600,
-          minHeight: 44,
-          textAlign: 'left',
-        }}
-      >
-        <span>{t('cot.titulo')}</span>
-        <span style={{ color: 'var(--text-muted)' }}>{abierto ? '▲' : '▼'}</span>
-      </button>
-
-      {abierto && (
-        <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <TarjetaPlegable sigla={'COT'} titulo={t('cot.titulo')} desc={t('cot.desc')}>
           {/* ⚠️ EL AVISO VA PRIMERO. Ver la cabecera del archivo: no es
               maquetación, es la única forma de que se lea. */}
           <div
@@ -156,9 +130,7 @@ export default function Cot() {
               idioma; en las columnas de datos (el % y los contratos) van en
               cifras latinas, `mono` y `ltr` fijo, como los precios. */}
           <p style={PIE}>{t('cot.pie', { fecha, dias: (dias ?? 0).toLocaleString(locale) })}</p>
-        </div>
-      )}
-    </div>
+    </TarjetaPlegable>
   )
 }
 

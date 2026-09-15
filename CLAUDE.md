@@ -5374,3 +5374,144 @@ captura del navegador, que es la enésima vez que esa costumbre paga.
 Es una **pestaña entera del menú de abajo**, llamada «Riesgo». El revisor no la
 vio porque **nunca tuvo la app**: trabajó con capturas. No había nada que
 arreglar ahí, y decirlo importa tanto como arreglar lo que sí estaba mal.
+
+---
+
+# Que los botones parezcan botones, y que cada herramienta diga su nombre (2026-09-15)
+
+Cambio **emparejado**, misma rama en los dos repositorios.
+`src/components/TarjetaPlegable.jsx` es **GEMELO nuevo (56)**.
+
+Néstor lo pidió con estas palabras: **«quiero que todas las pestañas o botones
+que tenemos en las app se distingan y te llamen o atraigan a oprimirlos, que se
+vean a simple vista que hay que tocarlos»**, y **«que todas estas herramientas
+lleven los nombres tal cual como se conocen en el trading, con abreviatura y
+nombre completo, pero también con lo que las describen»**.
+
+## ⚠️ «¿DÓNDE ESTÁ EL CALENDARIO?» — la pregunta que destapó lo de fondo
+
+La hizo a mitad del trabajo y **no era una pregunta de nombres**: el calendario
+estaba en el **tablero completo**, detrás de «Ver tablero completo →», mientras
+el spread, las tasas y el COT vivían en la pestaña Barrido. Las herramientas de
+información estaban repartidas en dos pantallas sin que nada lo dijera.
+
+**El dueño de la app no lo encontraba. Nadie más iba a encontrarlo.**
+
+Y es justo el que peor aguanta estar escondido: **es el único que caduca en
+horas**. Comprobado ese día contra el archivo real de producción —13 eventos en
+las próximas 48 h, con la Fed entre ellos—. Un aviso de la Fed que hay que ir a
+buscar dos pantallas más adentro no es un aviso.
+
+**Movido a la pestaña Barrido en las DOS apps**, arriba de las otras tres:
+aquéllas dicen lo que cuesta la operación y no cambian de aquí a mañana; ésta
+dice a qué hora conviene no estar dentro. En Intradía pesa todavía más — una
+operación empieza y termina dentro de esas horas.
+
+📌 **La lección: «no lo encuentro» casi nunca es un problema de nombre.**
+Se estaba puliendo el rótulo de una tarjeta que estaba en otra pantalla.
+
+## El problema medido, antes de tocar nada
+
+**Ocho tarjetas plegables, ocho cabeceras copiadas**, todas terminadas en una
+flechita de 12 px en `--text-muted`. Un triángulo del color del texto apagado,
+en la esquina, **no dice «tócame»: dice «adorno»**. Un operador externo que
+revisó la app con lupa ni supo que la de mediciones se podía abrir.
+
+⚠️ **EL ARREGLO NO ES «HACER LA FLECHA MÁS GRANDE». Es que haya una PALABRA:**
+«Ver» / «Cerrar» dentro de una pastilla con borde y fondo. Un glifo hay que
+interpretarlo; una palabra dentro de un recuadro es un botón en cualquier idioma
+y a cualquier edad. La flecha se queda al lado porque confirma la dirección,
+pero ya no carga sola con el mensaje.
+
+## Los tres renglones, y por qué son tres
+
+```
+COT · Commitments of Traders          ← sigla + nombre de trading
+Lo que tienen comprado los grandes    ← qué es, en una línea
+                          [ Ver ▾ ]   ← que se puede abrir
+```
+
+⚠️ **LA DESCRIPCIÓN SE VE CON LA TARJETA CERRADA, y eso es lo que de verdad
+cambia.** Antes, para saber qué era el COT había que abrirlo — y quien no
+supiera qué son esas tres letras no tenía ningún motivo para tocarlas. Ahora el
+motivo está fuera.
+
+📌 **La transformación fue elegante y por eso no se perdió calidad:** el título
+de hoy («Lo que tienen comprado los grandes») **describe bien y no es el nombre
+de nada**, así que BAJÓ a ser la descripción —ya traducido a los 13— y arriba
+entró el nombre real. Solo hubo que traducir los nombres nuevos.
+
+| | sigla | nombre | qué era antes (hoy es la descripción) |
+|---|---|---|---|
+| COT | **COT** | Commitments of Traders | Lo que tienen comprado los grandes |
+| correlación | — | Correlación entre pares (n) | Pares que se mueven casi igual |
+| calendario | — | Calendario económico (n) | Noticias que pueden mover el precio |
+| tasas | — | Tasas de interés y swap | Lo que cuesta mantenerla abierta |
+| glosario | — | Glosario | ¿Qué significan estos términos? |
+| mediciones | **BACKTEST** | Prueba sobre 5 años de mercado real | ¿Y a largo plazo? Lo que medimos sobre 5 años |
+
+⚠️ **«Commitments of Traders» NO se traduce en ninguno de los 13**, igual que
+RSI o ATR: es el nombre propio del informe oficial de la CFTC y así se llama en
+todas partes. Traducirlo rompería el enlace con cualquier otra fuente que Néstor
+mire. La sigla va en `mono` y con `dir="ltr"` fijo — es jerga invariante y en
+árabe se dibujaría al revés.
+
+📌 **«BACKTEST» era el que peor estaba.** Su título era una PREGUNTA («¿Y a
+largo plazo?»), no el nombre de nada. Quien opera conoce esa palabra y le dice
+de una vez qué es; la pregunta no se lo decía.
+
+## Lo del botón de 5 años, que Néstor dijo que seguía confuso
+
+Tenía razón: eran **dos textos sueltos** (título y adelanto) sin nada que dijera
+que aquello se abría. Ahora son cuatro cosas ordenadas —sigla, nombre,
+descripción, adelanto— con la pastilla al lado. Y se quitó la coletilla **«Toca
+para ver cómo se midió»** de los 13 idiomas: **eso ya lo dice la pastilla**, en
+su idioma y dentro de un recuadro. Repetirlo era ruido justo donde se pedía
+claridad.
+
+## ⚠️⚠️ EL GUION DIO «✓» MIENTRAS BORRABA CONTENIDO
+
+Las ocho cabeceras se sustituyeron con un guion que exigía encontrar sus anclas
+exactamente una vez. En el **Calendario** dijo `✓` y **se llevó por delante dos
+cosas**: el número de eventos del título y el **aviso de noticia urgente que se
+veía sin abrir**.
+
+**Comprobó que sus anclas coincidían, no que no se perdiera nada** — y las siete
+cabeceras iguales hicieron creer que la octava también lo era. Lo cazó el
+linter, avisando de que la variable `horas` se había quedado sin usar.
+
+📌 **La regla que sale de aquí: un guion de reemplazo masivo tiene que decir qué
+CONTENIDO había dentro de lo que borra, no solo si encontró el sitio.** En los
+dos archivos siguientes (`Diagnostico`, `ImportarBroker`) el guion imprimió los
+`<span>` de contenido que encontraba **antes de escribir**, y por eso se supo
+que ahí no se perdía nada.
+
+El aviso urgente volvió, y mejor: ahora vive en la ranura `avance` de la tarjeta
+compartida, que existe precisamente para lo que hay que ver **sin abrir**.
+
+## Y el pie del Historial, portado a Intradía
+
+Quedaba pendiente desde el 2026-09-15 por la mañana. Allí el resolver tiene
+**exactamente el mismo agujero** (`pips: ganada ? pipBeneficio : −pipRiesgo`,
+sin spread ni swap), pero el texto es PROPIO y dice una cosa más:
+
+⚠️ **En Intradía eso pesa MÁS, y con la causa medida:** el stop típico es de ~30
+pips contra los ~120 de Swing, así que los mismos 2 pips de spread son el **7 %
+del riesgo en vez del 1,8 %**. `HistorialTab.jsx` es PRIMO justo por esto.
+
+## Cómo se verificó
+
+Lint, build y **todas** las pruebas sin internet en los dos repos. Los gemelos
+pasan de 55 a **56**.
+
+Y en **Chromium a 390 px**, componente aislado, con el `calendario.json` y el
+historial **reales de producción**, en español y en árabe:
+
+| qué se comprobó | resultado |
+|---|---|
+| las cuatro cabeceras | sigla + nombre + descripción + pastilla «Ver ▾» |
+| el aviso urgente del calendario | **«GBP: dato importante en 7 h»**, visible sin abrir |
+| **árabe** | todo reflejado, pastilla a la izquierda, y `BACKTEST` en `ltr` — comprobado con el CSS calculado |
+| hojas de datos en `rtl` | **0** en los dos idiomas |
+| desplazamiento lateral | ninguno |
+| errores de consola | ninguno |
