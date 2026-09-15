@@ -4876,3 +4876,87 @@ segmentación. Está bien y no hay nada que objetar al ensayo. Lo que va escrito
    lo mata el primer día.
 3. **No meterle plata a la campaña antes de resolver los cobros.** Hoy cada
    suscriptor habría que aprobarlo y retirarlo a mano.
+
+## Wompi contra Mercado Pago, y la pregunta de los costos fijos (2026-09-15)
+
+Néstor preguntó tres cosas: la comparación, si conviene tener **las dos** para
+diversificar, y —la que más le importaba— **si tener las cuentas le genera
+gastos mensuales o solo comisiones por uso**.
+
+### La respuesta a lo de los costos: NINGUNA cobra mensualidad
+
+| | ¿mensualidad? | ¿cuándo cobran? | ¿cuesta retirar? |
+|---|---|---|---|
+| **Wompi** (Bancolombia) | **no**, en el plan por uso | **solo si el pago sale bien** — si rebota, no hay cobro | se desembolsa a la cuenta |
+| **Mercado Pago** | **no** | solo cuando te pagan | **gratis**, con tope de operaciones gratis al mes |
+
+📌 **Se cobra sobre la venta, no por tener la cuenta ni por retirar.** No hay
+renta fija que se coma los primeros meses, que era justo el riesgo de abrir
+varias cuentas «por si acaso».
+
+### Las cuentas sobre $15 (≈60.000 COP a ~4.000/USD)
+
+| | comisión | te queda | equivale a |
+|---|---|---:|---:|
+| **Wompi** | 2,65 % + $700 + IVA | **~$14,32** | **4,5 %** |
+| **Mercado Pago** (al instante) | ~3,29 % + $800 + IVA | ~$14,17 | 5,5 % |
+| Mercado Pago (a 14 días) | ~2,79 % + $800 + IVA | ~$14,26 | 4,9 % |
+| *Hotmart, para comparar* | *9,9 % + $0,10* | *~$13,41* | *10,6 %* |
+
+📌 **Cobrar en Colombia con una pasarela colombiana cuesta menos de la mitad**
+que cualquier plataforma internacional. Confirma por segunda vía que descartar
+Hotmart estuvo bien.
+
+### ⚠️ La diferencia que decide, y NO es el precio (son 15 centavos)
+
+- **Mercado Pago tiene suscripciones NATIVAS** (`preapproval`): cobra solo cada
+  mes, reintenta si la tarjeta falla, cancela y avisa por webhook. **El robot
+  solo escucha.**
+- **Wompi NO.** Tiene **tokenización**: guarda la tarjeta, pero **el calendario
+  de cobros, los reintentos y los fallos serían código NUESTRO**.
+
+⚠️ **Eso es justo la clase de código que falla en silencio** —un mes no cobra y
+nadie se entera, o cobra dos veces— con dinero de otra gente de por medio. La
+regla del proyecto es no construir lo que alguien ya hace bien. **Para el carril
+automático: Mercado Pago**, aunque cueste 15 centavos más.
+
+### ⚠️ Lo que exige que la persona ACTÚE no se puede cobrar solo
+
+PSE, Efecty, Baloto y el efectivo piden que alguien entre a su banco o vaya a un
+punto. Una «suscripción» con esos métodos es un **recordatorio mensual**, no un
+cobro automático. Solo la tarjeta guardada y el saldo en la app se cobran solos.
+
+📌 Es la misma forma del hallazgo de Hotmart (su mes gratis **solo funciona con
+tarjeta**). Conclusión práctica: **PSE y Efecty sirven para VENDER, no para
+COBRAR solo.** Hay que tenerlos, sabiendo que esos suscriptores caen en el
+carril semiautomático.
+
+### ¿Tener las dos? Sí, pero NO al empezar
+
+1. Cada pasarela es integración, cuenta y contabilidad aparte: el doble de
+   trabajo antes de saber si alguien paga.
+2. Más métodos en la caja de pago **no siempre venden más**: una lista larga
+   confunde y la gente abandona.
+3. 📌 **Y lo que lo vuelve fácil: como el candado es UN campo, añadir una
+   segunda pasarela después es añadirle un LECTOR al robot, no rehacer nada.**
+   O sea que **no hay castigo por empezar con una** — y sí lo habría por
+   construir dos y que sobre una.
+
+Además ya se arranca con **dos carriles**, no con uno: Mercado Pago (automático)
+y Binance/Pago Móvil (manual, Venezuela). Wompi entra en una segunda vuelta, con
+un dato real en la mano: si se ve que hay colombianos abandonando el pago.
+
+### Las tres preguntas para Mercado Pago (las hace Néstor)
+
+1. **«Persona natural en Colombia: ¿puedo cobrar suscripciones recurrentes a
+   clientes de México, Argentina, Chile y Perú?»** ← la que decide el carril.
+2. «¿Qué medios se pueden cobrar AUTOMÁTICAMENTE en una suscripción? ¿PSE y
+   Efecty también, o solo tarjeta guardada?»
+3. «¿Cuántos retiros gratis al mes tengo a mi cuenta bancaria?»
+
+### ⚠️ El estado al cerrar el día
+
+Néstor: **«mañana lo hacemos… espera a que yo en la mañana te confirme para
+arrancar con el robot»**. **NO empezar el `venceEl` ni el robot sin esa
+confirmación.** Sigue en pie la convención del repo: avisar y esperar antes de
+cada tarea grande.
