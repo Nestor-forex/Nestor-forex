@@ -4629,3 +4629,89 @@ desplazamiento lateral.
 tercera vez: marcaba en rojo la flechita de plegar «▸», que es `.mono` pero no
 es un dato. Acotada a las hojas que llevan un número o un código de par — 5 de
 5 en `ltr` en los dos idiomas.
+
+---
+
+# Historial contra Diario, explicado para suscriptores (2026-09-15)
+
+Néstor preguntó **«¿el historial de señales es diferente al diario de
+operaciones? dime por qué, porque eso también va para los suscriptores»**. Es
+la séptima de esta serie y hace falta de verdad: son dos porcentajes en la
+misma app que **nunca van a coincidir**, y sin explicarlo el suscriptor va a
+pensar que uno de los dos está mal.
+
+## El texto
+
+> **Son dos cosas distintas, y las dos tienen que estar.**
+>
+> **El Historial de señales es el boletín de notas de la APP.** Cada día el
+> vigía anota lo que la app señaló, y en los días siguientes mira los precios
+> reales y decide él solo si tocó antes el objetivo o el stop. **Es idéntico
+> para todos los suscriptores** porque no es de nadie: es el registro de lo que
+> la app dijo. Nadie lo puede tocar, ni tú ni nosotros. Se escribe solo, hacia
+> adelante, y por eso vale.
+>
+> **El Diario de operaciones es lo que hiciste TÚ.** Vive en tu cuenta, es
+> privado, y ahí va lo que operaste de verdad con tu dinero, hayas seguido a la
+> app o no.
+>
+> | | Historial de señales | Diario de operaciones |
+> |---|---|---|
+> | ¿de quién es? | **de la app** — igual para todos | **tuyo** — privado |
+> | ¿qué anota? | lo que la app señaló | lo que tú hiciste |
+> | ¿quién dice ganada o perdida? | la app sola, con los precios | **tu bróker** |
+> | ¿en qué se mide? | **pips** | **dólares** |
+> | ¿descuenta spread y swap? | **no** | **sí** (resultado neto) |
+>
+> **Por eso no coinciden, y está bien que no coincidan.** Uno contesta «¿acertó
+> la app?» y el otro «¿gané yo dinero?». Son preguntas distintas, y la segunda
+> depende de cuánto arriesgaste, cuándo entraste y qué te cobró tu bróker.
+
+## ⚠️ Y la parte que hace que esto sirva de argumento y no de excusa
+
+El Historial **cojea por los dos lados**, y ahora lo dice en pantalla:
+
+- **Optimista en los costes.** Los pips salen del objetivo y el stop que puso
+  la app, sin restar spread ni swap. En una cuenta real es peor. El ejemplo
+  vivo lo dio el propio informe de Néstor: **una sola operación con −23 dólares
+  SOLO de swap**.
+- **Pesimista en el orden.** Si un mismo día se toca el stop y el objetivo,
+  cuenta como PERDIDA — la vela diaria no dice cuál pasó primero, y se elige el
+  peor caso a propósito.
+
+📌 **Decir las dos es lo que lo vuelve creíble.** Decir solo la segunda sería
+presumir de rigor; decir solo la primera sería una disculpa. Un suscriptor no
+puede comprobar si nuestro RSI está bien calculado, pero sí puede comprobar que
+le contamos por dónde cojea el número **antes** de que lo use.
+
+## Lo que se cambió por esta pregunta
+
+`historial.pie` en los 13 idiomas, debajo de la lista de señales de Swing.
+
+⚠️ **Va DESPUÉS de los números, no antes** — al revés que en la actividad, las
+tasas y el COT. La diferencia no es capricho: allí el aviso previene de **leer
+mal el dato**, y lo caro es leerlo antes que el número. Aquí es **letra pequeña
+de cómo está calculado**, y puesta delante de una tabla que todavía no se ha
+visto no orienta a nadie.
+
+⚠️ **`HistorialTab.jsx` es PRIMO, no gemelo**, así que esto es **solo Swing**.
+**Intradía tiene exactamente el mismo agujero** (su resolver tampoco resta
+costes) y hay que portarlo con su texto propio, porque allí además los cruces
+se derivan. Queda pendiente y dicho.
+
+## 📌 Y de paso, el error de dirección en árabe por SEXTA vez
+
+Al mirarlo en Chromium salió que **los 39 números del Historial se pintaban al
+revés en árabe**: el acierto, las operaciones, los pips netos, los códigos de
+par y el resultado de cada fila. No lo causó este cambio — **esta pantalla
+nunca se había mirado en árabe**, igual que el Diario la semana pasada.
+
+Arreglado con la regla de siempre: `dir="ltr"` **solo en lo que NO es idioma**
+(el número suelto, `EUR/USD COMPRA`), y **sin tocar** ni la etiqueta traducida
+(«REVERSIÓN»), ni la fecha que arma `toLocaleString`, ni la frase de medición
+que lleva números dentro.
+
+📌 **Y la comprobación del navegador me volvió a salir demasiado burda**, por
+cuarta vez: marcaba como error la frase traducida `medicion.pieLinea` solo por
+llevar dígitos. Acotada a **datos puros** —un número suelto o un código de par—
+y comprobado que MUERDE: al quitar un solo `dir="ltr"` saltan 9 elementos.

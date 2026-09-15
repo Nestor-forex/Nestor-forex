@@ -401,6 +401,7 @@ export default {
       'Aynı hesap, ama düşeni alan kural için. Bilerek ayrı tutuluyor: bunlar iki farklı deney ve birleştirmek iki soruyu da yanıtlamaz.',
     titulo: 'Sinyal geçmişi',
     intro: 'Gözcünün bulduğu her sinyal ve sonrasında olanlar.',
+    pie: 'Pip’ler uygulamanın koyduğu hedef ve stoptan çıkar: spread ve swap DAHİL DEĞİLDİR, dolayısıyla gerçek bir hesapta sonuç bir miktar daha kötüdür. Aynı gün hem stop hem hedef görülürse kayıp sayılır, çünkü günlük mum hangisinin önce olduğunu söylemez. Sinyalin çıktığı gün sayılmaz: giriş o günün kapanışındadır.',
     cargando: 'Geçmiş yükleniyor…',
     error: 'Geçmiş yüklenemedi. Bağlantını kontrol et.',
     vacio: 'Henüz sinyal yok.',

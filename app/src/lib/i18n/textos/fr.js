@@ -406,6 +406,7 @@ export default {
       "Les mêmes comptes, mais pour la règle qui achète ce qui a chuté. Séparés volontairement : ce sont deux expériences différentes, et les mélanger ne répond à aucune des deux questions.",
     titulo: 'Historique des signaux',
     intro: 'Chaque signal trouvé par la vigie, et ce qui a suivi.',
+    pie: 'Les pips viennent de l’objectif et du stop posés par l’app : ils n’incluent PAS le spread ni le swap, donc sur un compte réel le résultat est un peu moins bon. Si le stop et l’objectif sont touchés le même jour, cela compte comme une perte, car la bougie journalière ne dit pas lequel est arrivé en premier. Le jour où le signal apparaît ne compte pas : l’entrée se fait à sa clôture.',
     cargando: 'Chargement de l’historique…',
     error: 'Impossible de charger l’historique. Vérifie ta connexion.',
     vacio: 'Aucun signal pour l’instant.',

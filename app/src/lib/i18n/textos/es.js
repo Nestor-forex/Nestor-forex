@@ -433,6 +433,7 @@ export default {
       'Las mismas cuentas, pero de la regla que compra lo que se cayó. Van aparte a propósito: son dos experimentos distintos y juntarlos no responde ninguna de las dos preguntas.',
     titulo: 'Historial de señales',
     intro: 'Cada señal que encontró el vigía y qué pasó después.',
+    pie: 'Los pips salen del objetivo y el stop que puso la app: NO incluyen el spread ni el swap, así que en una cuenta real el resultado es algo peor. Si un mismo día se toca el stop y el objetivo cuenta como perdida, porque la vela diaria no dice cuál pasó primero. El día en que aparece la señal no cuenta: la entrada es a su cierre.',
     cargando: 'Cargando el historial…',
     error: 'No se pudo cargar el historial. Revisa la conexión.',
     vacio: 'Todavía no hay ninguna señal.',

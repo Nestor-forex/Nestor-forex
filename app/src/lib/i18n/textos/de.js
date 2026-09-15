@@ -406,6 +406,7 @@ export default {
       'Dieselbe Rechnung, aber für die Regel, die das Gefallene kauft. Bewusst getrennt: das sind zwei verschiedene Experimente, und zusammengelegt beantworten sie keine der beiden Fragen.',
     titulo: 'Signalverlauf',
     intro: 'Jedes Signal des Wächters und was danach passierte.',
+    pie: 'Die Pips stammen aus dem Ziel und dem Stop, die die App gesetzt hat: Spread und Swap sind NICHT enthalten, im echten Konto fällt das Ergebnis also etwas schlechter aus. Werden Stop und Ziel am selben Tag berührt, zählt es als Verlust, denn die Tageskerze sagt nicht, was zuerst kam. Der Tag, an dem das Signal erscheint, zählt nicht: der Einstieg ist zu seinem Schluss.',
     cargando: 'Verlauf wird geladen…',
     error: 'Verlauf konnte nicht geladen werden. Prüfe die Verbindung.',
     vacio: 'Noch keine Signale.',

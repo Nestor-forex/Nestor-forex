@@ -406,6 +406,7 @@ export default {
       'The same tally, but for the rule that buys what fell. Kept separate on purpose: these are two different experiments, and merging them answers neither question.',
     titulo: 'Signal history',
     intro: 'Every signal the watcher found, and what happened next.',
+    pie: 'The pips come from the target and stop the app set: they do NOT include spread or swap, so in a real account the result is somewhat worse. If stop and target are both hit on the same day it counts as a loss, because the daily candle does not say which came first. The day the signal appears does not count: entry is at its close.',
     cargando: 'Loading history…',
     error: 'Could not load the history. Check your connection.',
     vacio: 'No signals yet.',
