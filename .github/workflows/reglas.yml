@@ -1,0 +1,60 @@
+name: Publicar las reglas de Firestore
+
+# Sube `firestore.rules` a Firebase y lo pone en vigor, sin que nadie tenga que
+# entrar a la consola ni copiar nada a mano.
+#
+# ⚠️ POR QUÉ EXISTE. El 2026-09-15 le pedí a Néstor que copiara 115 líneas del
+# repositorio y las pegara en la consola de Firebase. No pudo: el portapapeles
+# no le funcionaba entre las dos ventanas. **Pedirle a una persona que copie un
+# archivo a mano es un fallo de diseño, no un paso del procedimiento.**
+#
+# Y arregla algo peor que la molestia: mientras se copiara a mano, lo publicado
+# y lo que está en el repositorio podían separarse sin que nadie lo notara. Con
+# esto, el repositorio es la única fuente.
+#
+# SOLO A MANO, nunca automático: cambiar las reglas de seguridad de la base de
+# datos de todos los suscriptores tiene que ser siempre una decisión de alguien,
+# no algo que ocurra solo al fusionar un cambio.
+
+on:
+  workflow_dispatch:
+    inputs:
+      aplicar:
+        description: '¿Publicar de verdad? Sin marcar, solo comprueba que el archivo es válido.'
+        type: boolean
+        default: false
+
+# No escribe en el repositorio: lo que cambia está en Firebase.
+permissions:
+  contents: read
+
+concurrency:
+  group: reglas
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Publicar
+        working-directory: app
+        env:
+          # La misma cuenta de servicio que usan el vigía y el robot de
+          # vencimientos. Ojo: para TOCAR LAS REGLAS hace falta un permiso
+          # distinto al de leer datos (rol «Firebase Rules Admin»); si no lo
+          # tiene, el guion lo dice con esas palabras y explica dónde darlo.
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ "${{ inputs.aplicar }}" = "true" ]; then
+            node scripts/publicar-reglas.mjs --aplicar
+          else
+            node scripts/publicar-reglas.mjs
+          fi
