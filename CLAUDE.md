@@ -4960,3 +4960,417 @@ Néstor: **«mañana lo hacemos… espera a que yo en la mañana te confirme par
 arrancar con el robot»**. **NO empezar el `venceEl` ni el robot sin esa
 confirmación.** Sigue en pie la convención del repo: avisar y esperar antes de
 cada tarea grande.
+
+---
+
+# El robot de vencimientos: la puerta se cierra sola (2026-09-15)
+
+Néstor dio el visto bueno por la mañana («dale, arranca con el robot») y se hizo
+entero: el campo, la pantalla, el robot y las dos vueltas de comprobación con
+datos reales. **Ya corre solo, todos los días.**
+
+```
+app/src/lib/vencimientos.js        las cuentas de fechas (puras)     GEMELO
+app/scripts/lib/vencimientos.mjs   decidir a quién se le cierra      solo Swing
+app/scripts/cerrar-vencidos.mjs    el robot                          solo Swing
+app/scripts/prueba-vencimientos.mjs  74 comprobaciones, sin internet
+.github/workflows/vencimientos.yml   diario 05:40 UTC + botón a mano
+```
+
+## El punto de partida, que cambia cómo se lee todo esto
+
+**El candado YA EXISTÍA.** `useAuthUser.js` deja entrar solo si
+`estado === 'aprobado'`. Automatizar los cobros **no era construir el candado:
+era cambiar quién gira la llave.** Hasta hoy la giraba Néstor a mano, y eso
+significa que **olvidarse deja la puerta abierta gratis**. Con una fecha por
+miembro, olvidarse ya no le abre la puerta a nadie.
+
+⚠️ **Y sirve igual para los dos carriles de cobro**, que es lo que lo hace
+valer: en el automático la fecha la pondrá el robot leyendo la plataforma; en el
+manual (Venezuela, que **no se puede automatizar** — ver la investigación del
+2026-09-15) la pone Néstor cuando le pagan. **Quien cierra la puerta es el mismo
+robot en los dos casos.**
+
+⚠️ **LAS DOS APPS COMPARTEN LA COLECCIÓN `users`** (mismo proyecto de Firebase,
+comprobado). Una sola fecha gobierna el acceso a Swing **y** a Intradía. Por eso
+el robot vive **solo en Swing**: dos robots sobre la misma lista serían dos
+programas peleándose por la misma puerta.
+
+## Las decisiones que no hay que ablandar
+
+⚠️ **SOLO CIERRA, NUNCA ABRE.** Abrir sigue siendo de Néstor en la pestaña
+Miembros. Los dos errores no cuestan lo mismo: cerrar de más se arregla con un
+toque y la persona escribe para quejarse; **abrir de más regala el producto y no
+se entera nadie**. Es la misma asimetría de `yaCorrioHoy` y `esSombra`.
+
+⚠️ **EL ADMINISTRADOR ESTÁ PROTEGIDO POR CORREO, y va lo PRIMERO** en el orden
+de guardas de `decidir()`. Un robot que pueda dejar a Néstor fuera de su propia
+app es un robot mal escrito. Comprobado con su correo real en producción.
+
+⚠️ **SIN FECHA NO SE CIERRA.** Al empezar nadie tiene `venceEl`, así que el
+robot no puede hacer una limpieza masiva sin querer el primer día. Es también lo
+que permite dejarlo encendido mientras se deciden las plataformas de pago.
+
+⚠️ **UNA FECHA ILEGIBLE NO CIERRA: AVISA** (empuja a `avisos` y el workflow
+acaba en rojo). Un `venceEl` con basura dentro no puede leerse como «venció».
+
+⚠️ **`DIAS_GRACIA = 1`.** Si vence hoy, no se cierra hoy. Un pago que entra a
+las once de la noche o un huso horario no pueden costarle el acceso a nadie.
+
+⚠️ **Sin `--aplicar` NO ESCRIBE**, igual que el publicador de reglas. Y al
+revés que el botón, **la corrida automática siempre aplica**: el cron no depende
+de que nadie se acuerde de marcar nada.
+
+⚠️ **`retirar` deja `estado: 'retirado'`, NO borra la ficha.** Ya estaba
+arreglado el 2026-09-14 (borrarla dejaba el diario de la persona **encerrado
+para siempre**, porque la regla exige que la ficha exista y diga `aprobado`), y
+el robot se apoya en eso: readmitir a alguien le devuelve su diario entero.
+
+## ⚠️⚠️ DOS AGUJEROS QUE APARECIERON AL CONSTRUIRLO, Y NINGUNO ERA DEL ROBOT
+
+**1. Cualquier miembro aprobado podía escribir CUALQUIER campo en su propia
+ficha.** La regla decía «puedes actualizar tu documento si no cambias `estado`
+ni `email`». Mientras ahí solo hubiera un `nombre`, era inofensivo. **En cuanto
+la ficha lleva `venceEl`, cualquiera podía regalarse un año de suscripción
+desde la consola del navegador.**
+
+Arreglado con lista blanca: `diff(resource.data).affectedKeys().hasOnly(['nombre'])`.
+Se comprobó **primero** que ninguna de las dos apps escribe otra cosa desde el
+cliente, y solo entonces se cerró.
+
+📌 **La lección: una regla escrita por DESCARTE («todo menos esto») envejece
+mal.** Es el mismo fallo que `esSombra`, `ventasPausadas` y `esDeLaApp` — cuatro
+veces ya. Lo que se añade después cae dentro en silencio.
+
+**2. `Aprobar` solo se pintaba para `pendiente`.** O sea que **a un retirado no
+se le podía volver a admitir desde la app**. Inofensivo mientras retirar fuera
+raro y manual; con un robot cerrando puertas todos los días, sería un cliente
+que paga y no hay forma de dejarle entrar. Ahora sale `Aprobar`/`Reactivar`
+para cualquier estado que no sea aprobado.
+
+## Cómo se pone una fecha (es lo que Néstor preguntó)
+
+Pestaña **Miembros**, junto a cada persona: un campo de fecha y un botón
+**«+30 días»**. El botón suma un ciclo **desde el vencimiento actual si todavía
+no ha pasado** (así renovar antes de tiempo no regala días) y **desde hoy si ya
+venció**. Borrar la fecha la quita (`deleteField`), y entonces el robot deja a
+esa persona en paz.
+
+El color es información, no adorno: neutro normal, **ámbar a 3 días o menos**,
+**rojo si ya venció**.
+
+## Comprobado en producción, las dos mitades
+
+**Las reglas** se publicaron con el botón nuevo (ver la sección siguiente) y se
+comprobó **por fuera** —relanzando el ensayo— que la versión en vigor era la
+nueva, en vez de creerle al guion que las publicó.
+
+**El robot** se lanzó en modo «solo mirar» contra el Firestore real:
+
+```
+   Fichas leídas: 4
+   Se quedan dentro: 4 (sinFecha: 3 · admin: 1)
+✓ Hoy no hay a quién cerrarle la puerta.
+```
+
+📌 Eso demuestra las dos cosas que ninguna prueba sin internet puede demostrar:
+que habla con el Firebase de verdad, y que **la protección del administrador
+funciona con el correo real de Néstor**.
+
+---
+
+# Publicar las reglas de Firestore con un botón (2026-09-15)
+
+```
+app/scripts/lib/reglas.mjs        las piezas puras
+app/scripts/publicar-reglas.mjs   el publicador
+app/scripts/prueba-reglas.mjs     22 comprobaciones, sin internet
+.github/workflows/reglas.yml      SOLO a mano, con casilla de «publicar»
+```
+
+## ⚠️ Por qué existe, y es una lección de diseño, no una comodidad
+
+Le pedí a Néstor que copiara 115 líneas del repositorio y las pegara en la
+consola de Firebase. **No pudo** —el portapapeles no le funcionaba entre las dos
+ventanas— y estuvo media hora peleando. Su mensaje fue: *«imposible con todas
+tus indicaciones no puedo copiar ni pegar»*.
+
+📌 **Pedirle a una persona que copie un archivo a mano es un fallo de diseño, no
+un paso del procedimiento.** Si el archivo vive en el repositorio, publicarlo es
+trabajo de una máquina.
+
+Y arregla algo peor que la molestia: mientras se copiara a mano, **lo PUBLICADO
+y lo que está en el repositorio podían separarse sin que nadie se enterara** —
+el mismo fallo silencioso de siempre. Ahora el repositorio es la única fuente.
+
+## Lo que lo hace seguro
+
+La API son **dos pasos y el orden importa**: primero se SUBE el archivo y Google
+lo valida (no cambia nada), y solo después se pone en vigor. Así **el ensayo no
+es de mentira**: un error de sintaxis sale antes de publicar.
+
+`revisar()` **no valida sintaxis** —para eso está Google— sino que no se suba un
+archivo **truncado**: llaves descuadradas, vacío, o **sin una sola `allow`**,
+que dejaría la base de datos cerrada entera. Es el error que una máquina sí
+puede cometer y un humano no notaría.
+
+⚠️ El permiso para tocar reglas **no es el mismo** que para leer datos. Se pide
+el de Firebase y **no `cloud-platform` entero**: pedir más permiso del necesario
+es permiso regalado. La cuenta de servicio ya lo tenía — no hubo que tocar IAM.
+
+## ⚠️ Y salió otro hallazgo: Intradía tenía su propia copia, ya desactualizada
+
+Su `firestore.rules` decía en la cabecera *«esta es una copia idéntica»* **y ya
+no lo era**: le faltaba el arreglo de seguridad. Quien leyera ese repositorio
+creería que rigen unas reglas que no rigen.
+
+Hay **un solo** proyecto de Firebase y **unas solas** reglas en vigor. Ahora
+`../firestore.rules` es **GEMELO (55)** — los caminos de `gemelos.mjs` se
+resuelven desde `app/`, así que `'../'` alcanza la raíz del repositorio.
+
+---
+
+# La opinión de un tercero sobre Swing (2026-09-15)
+
+Néstor mandó capturas de la app a otra IA pidiéndole una valoración de trader,
+y trajo la respuesta. **Va guardada porque la mitad sirve para la landing y la
+otra mitad señala un hueco real.** Pero primero, lo que hay que corregir.
+
+## ⚠️ Lo que la opinión dice MAL, comprobado contra los datos de producción
+
+| dice | es |
+|---|---|
+| «"comprar la caída" acierta un **6 %**» | **0 %** — 0 de 5, y con 5 operaciones el 6 % **no es un valor posible**. Los −272 pips sí son exactos |
+| «**76 %** de acierto en **17 operaciones**» | **78 % sobre 18** — leyó mal dos dígitos de una captura |
+| «sin módulo de **tamaño de posición**» | **existe desde la fase 1** y es una pestaña entera: «Riesgo» |
+| «ojalá el botón de 5 años tenga esa profundidad» | **ya la tiene**: es la sección de mediciones, con el backtest de 1.436 días |
+
+## ⚠️⚠️ Y AQUÍ ME EQUIVOQUÉ YO, CORRIGIENDO. La versión anterior de esta tabla
+
+decía que lo real era «**74 % sobre 23 cerradas**, de las cuales 17 ganadas» y
+que el revisor «confundió las ganadas con el total». **Las dos cosas eran
+falsas**, y la captura de Néstor lo destapó en un minuto: la pantalla dice
+**78 % · 18 · +462**.
+
+**El fallo estaba en mi conteo, no en la app.** Conté por `tipo` e ignoré el
+campo `sombra`, así que metí en el cubo de la app las **5 ventas pausadas** —
+que son señales de la app que **no se proponen**, y por eso `resumir()` las
+excluye a propósito desde el 2026-09-05. Los números reales, con la lógica de
+`historialCalc.js`:
+
+| | ops | ganadas | acierto | pips |
+|---|---:|---:|---:|---:|
+| la app | 18 | 14 | **78 %** | +462 |
+| reversión | 18 | 7 | 39 % | −337 |
+| comprar la caída | 5 | 0 | **0 %** | −272 |
+| ventas pausadas | 5 | 3 | 60 % | +15 |
+
+📌 **La lección tiene dos capas y la segunda es peor.** La primera es la de
+siempre: afirmé antes de comprobar. La segunda es que **lo hice mientras
+corregía a otro**, que es justo cuando uno se siente con más razón — y encima
+lo escribí en la memoria del proyecto, donde una corrección falsa sobrevive a
+todo. **Corregir a alguien exige la misma comprobación que afirmar, o más.**
+
+📌 **Y el 6 % se cae solo con aritmética, sin datos:** con 5 operaciones los
+únicos aciertos posibles son 0, 20, 40, 60, 80 y 100. Eso bastaba para
+descartarlo **antes** de abrir ningún archivo, y no lo hice.
+
+## Lo que sí dice, y era el verdadero problema de rótulo
+
+Que el revisor y yo leyéramos mal la misma captura no era casualidad: **el
+primer bloque no decía de quién era.** Los otros dos llevaban título
+(«Historial de la regla contraria», «Historial de comprar la caída») y el
+primero no, así que su número se leía como el total de todo — cuando cuenta
+**solo lo que la app propuso**, sin las dos reglas de sombra ni las ventas
+pausadas. Y el subtítulo, en los 13 idiomas, decía «**cada** señal que encontró
+el vigía», que para ese bloque es sencillamente falso.
+
+Arreglado el 2026-09-15: título propio («Las señales de la app») y subtítulo
+que ya no promete lo que el número no cuenta.
+
+## Lo que dice BIEN, y coincide con lo que este archivo ya dice
+
+- **«17 trades no prueban nada»** — exacto, y es justo para lo que existe el
+  `±` de `margen()`. Con 23 cerradas el margen es **±20 puntos**: ese 74 % es
+  compatible con un 54 %. **Un lector externo llegó solo a la conclusión que la
+  app ya imprime en pantalla**, y eso es la mejor validación que ha tenido esa
+  decisión de diseño.
+- **«velas diarias, no sirve para minuto a minuto»** — correcto, y es el diseño.
+  No sabía que existe la app hermana. **Para la landing: las dos apps hay que
+  presentarlas juntas**, o cada una parece incompleta por separado.
+- **«el puente estaba apagado»** — real. Matiz importante que él no podía saber:
+  el puente **solo alimenta la tarjeta de spread y actividad**, no el barrido.
+  El barrido no depende del PC de Néstor.
+
+## ⚠️ EL HUECO REAL QUE SEÑALA, Y ES BARATO DE TAPAR
+
+> «sin un chequeo de **correlación entre señales simultáneas** como el que armé
+> yo a mano hoy»
+
+**Tiene razón y es lo mejor de toda la opinión.** Hoy la correlación está en el
+tablero como **tarjeta plegada aparte**, y el aviso del Diario solo mira si dos
+operaciones **comparten una divisa**. Ninguno de los dos dice lo que hace falta:
+**«estas dos señales de HOY son la misma apuesta»**.
+
+Y el dato **ya está calculado y publicado** en `barrido.json` (`correl`, 2,1 KB)
+desde el 2026-09-08. No hace falta ningún dato nuevo, ni un crédito.
+
+📌 Él mismo detectó así el conflicto **GBP/JPY y USD/JPY**, que en este archivo
+está medido en **+0,95**. La app tenía el número y no se lo puso delante.
+
+⚠️ **Sería INFORMACIÓN, no un filtro**: avisar de que dos señales del día van
+juntas, **sin apagar ninguna**. Apagar señales por correlación cambiaría las
+señales y tendría que pasar por el banco de pruebas, como todo lo demás.
+
+## Lo que dice del precio, que es un dato de fuera y vale
+
+| estado | pagaría |
+|---|---|
+| hoy (muestra chica, puente que se cae, sin cruce de correlación) | **$10-20/mes** |
+| con feed resuelto + 5 años de historial real + cruce de riesgo | **$30-40/mes** |
+
+📌 **Los $15 que Néstor había elegido caen justo en medio del primer rango.** Es
+la primera confirmación externa de ese número, y encaja con que lo que se vende
+hoy es **información**, no señales.
+
+## Lo que NO hay que hacer con esta opinión
+
+⚠️ **No perseguir «el feed en vivo» para Swing.** Es una app de velas diarias a
+propósito; el tiempo real es el trabajo de Intradía. Su tercera crítica **ya
+tiene respuesta y se llama la app hermana**.
+
+📌 Y el origen del malentendido está en la propia petición: Néstor le pidió
+señales **de 15 minutos** sacadas de capturas de **Swing**. Esa mezcla es justo
+la que el propio reviewer acabó detectando con el caso del yen. **Al enseñar las
+apps hay que decir siempre cuál es cuál** — la misma regla del 2026-07-30.
+
+---
+
+# El cruce de riesgo entre las señales del MISMO día (2026-09-15)
+
+`app/src/components/RiesgoSenales.jsx` · `riesgoEntreSenales` en
+`correlacion.js` · bloques 8-10 de `prueba-correlacion.mjs`.
+
+**Solo Swing.** Todos los archivos que toca son PRIMOS y la correlación no
+existe en Intradía, así que no hay cambio emparejado: una rama, un PR.
+
+Es el único hueco real que señaló la opinión externa del 2026-09-15, y el dato
+**ya estaba calculado y publicado** en `barrido.json` desde el 2026-09-08. La
+app lo tenía y no se lo ponía delante a nadie.
+
+## ⚠️ LA DIRECCIÓN ES LA MITAD DEL ASUNTO, y es lo que lo hace distinto
+
+La tarjeta de correlación que ya existía **no podía contestar esta pregunta**,
+y no por estar plegada: porque **no sabe hacia dónde señala la app**. Con la
+misma correlación, el lado le da la vuelta al resultado:
+
+| correlación | los dos lados | qué pasa de verdad |
+|---|---|---|
+| +0,9 | los dos COMPRA | una apuesta del **DOBLE** de tamaño |
+| +0,9 | uno de cada | **se ANULAN**: dos spreads para nada |
+| −0,9 | los dos COMPRA | se ANULAN |
+| −0,9 | uno de cada | una apuesta del DOBLE |
+
+O sea que «EUR/USD y USD/CHF van a −0,88» es verdad y **no dice nada útil** sin
+el lado delante. `efectivo = lados iguales ? r : −r` y ya responde.
+
+Con las correlaciones REALES del barrido de producción y cuatro señales
+plausibles salen justo los dos casos:
+
+```
+GBP/JPY COMPRA · USD/JPY COMPRA → +0,92  MISMA APUESTA (dobla)
+EUR/USD COMPRA · USD/CHF COMPRA → −0,88  SE ANULAN
+```
+
+El primero es **exactamente el conflicto que el revisor externo detectó a
+mano** y por el que pidió esto.
+
+## Las decisiones que no hay que ablandar
+
+⚠️ **ES INFORMACIÓN, NO UN FILTRO.** No apaga ninguna señal, no las reordena y
+no las puntúa. Apagar señales por correlación cambiaría lo que la app propone y
+tendría que pasar por el banco de pruebas con su listón escrito antes, como el
+COT. Octava familia que tendría que medirse; ésta ni se intenta.
+
+⚠️ **SOLO CRUZA LAS SEÑALES DE LA APP** (`setups`), nunca las de la sombra.
+Las de sombra no se proponen, así que decir «estas dos van juntas» de dos
+operaciones que nadie va a abrir sería ruido con pinta de aviso.
+
+⚠️ **SIN NADA QUE DECIR NO SE PINTA NADA.** Lo normal es que no haya conflicto
+—el día que se construyó, las 2 señales reales no se parecían y la tarjeta no
+salía—, así que una tarjeta permanente diciendo «hoy todo bien» se volvería
+decorado y dejaría de leerse justo el día que sí tenga algo. **Que aparezca es
+la señal.**
+
+⚠️ **`null` se salta, no se trata como 0.** Un par sin dato en la matriz es «no
+se pudo calcular», no «no se parecen». Tiene comprobación propia.
+
+⚠️ **VA ANTES DE LA LISTA DE SEÑALES, no después.** Sirve para decidir cuáles
+abrir; leído al final llega cuando la decisión ya está tomada. Mismo criterio
+que la actividad y las tasas.
+
+⚠️ **El número no se pinta de verde ni de rojo.** Doblar el riesgo y pagar dos
+spreads para nada son los dos malos de maneras distintas; el color afirmaría
+que uno es bueno. Misma decisión que en `Correlacion.jsx`.
+
+## Comprobado que las pruebas MUERDEN
+
+Quitar la vuelta del signo (`efectivo = r` en vez de `lados iguales ? r : −r`)
+tumba **5 comprobaciones**, con el daño verificado en el archivo antes de darlo
+por bueno.
+
+📌 **Y de paso, un tropiezo mío que conviene tener escrito:** la primera vez
+conté los fallos con `grep -c "FALLA"` y salió 1, cuando el marcador de este
+guion es `MAL` y los fallos eran 5. **Casi doy por floja una prueba que muerde
+fuerte, por buscar la palabra equivocada.** Es hermano del `grep borrar` que el
+2026-09-14 me hizo decir que el botón de borrar no existía.
+
+---
+
+# Dos textos que llevaban meses diciendo un número que no era (2026-09-15)
+
+Los dos salieron tirando del hilo de la captura de Néstor, no buscándolos.
+
+## 1. `medicion.queSignifica` decía «la app acierta el 55 %»
+
+Escrito a mano, en los 13 idiomas. Los valores reales de `medicion.js` son
+**56** (la app) y **48** (la vara neutra): **ninguno de los dos es 55** — el 55
+es el de la reversión, otra fila. Se quedó viejo el **2026-09-05**, al aflojar
+`TENDENCIA_MIN`, y nadie lo notó porque nada falla.
+
+Es **exactamente** el caso de las etiquetas «(hoy)» del banco de pruebas, del
+2026-09-05, y el arreglo es el mismo: **pasa a ser función y LEE el valor**
+(`({ acierto }) => …`). Cambiar la medición mueve la frase sola.
+
+📌 La regla ya estaba escrita en este archivo —«al cambiar un umbral, mirar
+también quién lo NOMBRA»— y aun así el mismo día que se cambió el umbral se
+dejó atrás este texto. **La lección sola no basta; lo que funciona es que el
+texto lea el número.**
+
+## 2. El adelanto de las mediciones, que estaba escondido
+
+«¿Y a largo plazo? Lo que medimos sobre 5 años» era un botón plegado con una
+flechita `▸` de 12 px en gris. Un operador externo que revisó la app con lupa
+**ni supo que se podía abrir** — pidió que «ojalá tuviera profundidad» cuando
+ya la tenía.
+
+Ahora, con la tarjeta cerrada, se lee el número: «Acierta el 56 % de las veces
+y aun así pierde 0.03 por cada dólar arriesgado». **Es el mejor argumento que
+tiene la app** —enseñar el propio número siendo malo— y estaba detrás de un
+título que parecía un encabezado más.
+
+⚠️ **El valor va SIN SIGNO y la frase solo sale si se pierde.** Con el signo
+daba «pierde −0.03», un doble negativo que se lee como lo contrario. Y si algún
+día midiera positivo, la frase sería falsa, así que entonces **no se pinta**:
+equivocarse hacia «falta un adelanto» cuesta un adelanto; hacia «se afirma que
+pierde cuando gana» cuesta la credibilidad, que es lo único que este proyecto
+vende. Misma asimetría que `esSombra` y `yaCorrioHoy`.
+
+📌 **Lo del doble negativo NO lo ve un build ni un lint.** Salió mirando la
+captura del navegador, que es la enésima vez que esa costumbre paga.
+
+## Y la Calculadora no estaba escondida
+
+Es una **pestaña entera del menú de abajo**, llamada «Riesgo». El revisor no la
+vio porque **nunca tuvo la app**: trabajó con capturas. No había nada que
+arreglar ahí, y decirlo importa tanto como arreglar lo que sí estaba mal.

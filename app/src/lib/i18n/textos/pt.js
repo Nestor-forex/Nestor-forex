@@ -233,12 +233,13 @@ export default {
 
   medicion: {
     titulo: "E a longo prazo? O que medimos ao longo de 5 anos",
+    avance: ({ acierto, valor }) => `Acerta ${acierto}% das vezes e mesmo assim perde ${valor} por cada dólar arriscado. Toque para ver como se mediu.`,
     intro: ({ dias, desde, hasta }) => `Recalculámos o rastreio dia a dia ao longo de ${dias} dias de mercado real (${desde} a ${hasta}), como se a app tivesse funcionado todo esse tempo, descontando o spread de cada par e o swap de cada noite.`,
     laApp: "A app tal como está, com os seus níveis",
     varaNeutra: "A mesma app, com vara neutra (stop e alvo à mesma distância)",
     reversion: "A regra de reversão (ainda desligada, a correr na sombra)",
     pieLinea: ({ ops, acierto }) => `${ops} operações · ${acierto}% ganhas`,
-    queSignifica: "O número grande é o que se ganha ou perde por cada dólar arriscado. Repara nas duas primeiras linhas: a app acerta 55% e mesmo assim perde. Isso acontece porque o alvo está mais perto do que o stop, por isso ganha-se pouco muitas vezes e perde-se muito poucas vezes. É por isso que a taxa de acerto, sozinha, não diz nada.",
+    queSignifica: ({ acierto }) => `O número grande é o que se ganha ou perde por cada dólar arriscado. Repara nas duas primeiras linhas: a app acerta ${acierto}% e mesmo assim perde. Isso acontece porque o alvo está mais perto do que o stop, por isso ganha-se pouco muitas vezes e perde-se muito poucas vezes. É por isso que a taxa de acerto, sozinha, não diz nada.`,
     porQueLoContamos: "Mostramos-te isto porque o dinheiro é teu. Outras apps gabam-se de ter um motor para medir isto e nunca publicam o resultado; se fosse bom, seria a primeira coisa na página deles. Usa o rastreio para ler o mercado mais depressa e decidir tu, não como uma ordem de compra.",
     fechado: ({ fecha }) => `Medido a ${fecha}. Um mercado diferente pode mudar estes números.`,
   },
@@ -404,6 +405,14 @@ export default {
     soloEsteAparato: 'Os avisos são por aparelho: se você usa o app no celular e no computador, ative em cada um.',
   },
 
+  riesgoSenales: {
+    titulo: ({ n }) => `Sinais de hoje que não são independentes (${n})`,
+    intro: 'Estes pares movem-se quase igual, por isso abrir os dois não reparte o risco: consoante a direção de cada um, duplica-o ou anula-o. Nenhum sinal é desligado — a decisão é sua.',
+    dobla: 'Mesma aposta, do dobro do tamanho',
+    anula: 'Anulam-se: paga dois spreads para nada',
+    pie: 'O número já conta a direção de cada sinal: positivo somam-se, negativo subtraem-se. Medido com as variações diárias das últimas 60 sessões.',
+  },
+
   historial: {
     esReversion: 'REVERSÃO',
     esCaida: "COMPRAR A QUEDA",
@@ -414,7 +423,8 @@ export default {
     reversionIntro:
       'As mesmas contas, mas da regra que compra o que caiu. Ficam à parte de propósito: são dois experimentos diferentes e juntá-los não responde a nenhuma das duas perguntas.',
     titulo: 'Histórico de sinais',
-    intro: 'Cada sinal que o vigia encontrou e o que aconteceu depois.',
+    intro: 'O que a app propôs e o que aconteceu depois. As experiências estão mais abaixo, cada uma com a sua própria conta.',
+    appTitulo: 'Os sinais da app',
     pie: 'Os pips saem do objetivo e do stop que a app colocou: NÃO incluem o spread nem o swap, por isso numa conta real o resultado é algo pior. Se no mesmo dia se tocar o stop e o objetivo conta como perdida, porque a vela diária não diz qual aconteceu primeiro. O dia em que o sinal aparece não conta: a entrada é ao seu fecho.',
     cargando: 'Carregando o histórico…',
     error: 'Não foi possível carregar o histórico. Verifique a conexão.',

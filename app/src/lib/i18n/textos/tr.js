@@ -229,12 +229,13 @@ export default {
 
   medicion: {
     titulo: "Peki uzun vadede? 5 yıl boyunca ölçtüklerimiz",
+    avance: ({ acierto, valor }) => `Zamanın %${acierto}’inde doğru çıkıyor ve yine de riske atılan her dolar için ${valor} kaybediyor. Nasıl ölçüldüğünü görmek için dokun.`,
     intro: ({ dias, desde, hasta }) => `Taramayı ${dias} günlük gerçek piyasa üzerinde (${desde} - ${hasta}) gün gün yeniden hesapladık; sanki uygulama o süre boyunca çalışıyormuş gibi, her paritenin Spread'i ve her gecenin Swap'ı düşülerek.`,
     laApp: "Uygulama olduğu gibi, kendi seviyeleriyle",
     varaNeutra: "Aynı uygulama, nötr ölçüyle (Stop ve hedef eşit uzaklıkta)",
     reversion: "Dönüş kuralı (hâlâ kapalı, arka planda çalışıyor)",
     pieLinea: ({ ops, acierto }) => `${ops} işlem · %${acierto} kazançlı`,
-    queSignifica: "Büyük sayı, riske ettiğin her dolar başına kazanç ya da kayıptır. İlk iki satıra bak: uygulama %55 isabet ediyor ve yine de kaybediyor. Çünkü hedef Stop’tan daha yakın: sık sık az kazanıyor, seyrek olarak çok kaybediyorsun. İşte bu yüzden isabet oranı tek başına hiçbir şey söylemez.",
+    queSignifica: ({ acierto }) => `Büyük sayı, riske ettiğin her dolar başına kazanç ya da kayıptır. İlk iki satıra bak: uygulama %${acierto} isabet ediyor ve yine de kaybediyor. Çünkü hedef Stop’tan daha yakın: sık sık az kazanıyor, seyrek olarak çok kaybediyorsun. İşte bu yüzden isabet oranı tek başına hiçbir şey söylemez.`,
     porQueLoContamos: "Bunu gösteriyoruz çünkü para senin. Başka uygulamalar bunu ölçen bir motorları olduğuyla övünür ama sonucu asla yayımlamaz; iyi olsaydı sayfalarının en üstünde olurdu. Taramayı piyasayı daha hızlı okumak ve kendin karar vermek için kullan, alım emri gibi değil.",
     fechado: ({ fecha }) => `${fecha} tarihinde ölçüldü. Farklı bir piyasa bu sayıları değiştirebilir.`,
   },
@@ -399,6 +400,14 @@ export default {
     soloEsteAparato: 'Bildirimler cihaz başına ayarlanır: uygulamayı hem telefonda hem bilgisayarda kullanıyorsan, her birinde aç.',
   },
 
+  riesgoSenales: {
+    titulo: ({ n }) => `Bugünün birbirinden bağımsız olmayan sinyalleri (${n})`,
+    intro: 'Bu pariteler neredeyse aynı hareket eder, dolayısıyla ikisini birden açmak riski dağıtmaz: her birinin yönüne göre riski ikiye katlar ya da sıfırlar. Hiçbir sinyal kapatılmaz — karar sizin.',
+    dobla: 'Aynı bahis, iki katı büyüklükte',
+    anula: 'Birbirini götürür: boşuna iki Spread ödersiniz',
+    pie: 'Sayı her sinyalin yönünü zaten hesaba katar: artı ise toplanırlar, eksi ise birbirini götürürler. Son 60 seansın günlük değişimleriyle ölçülür.',
+  },
+
   historial: {
     esReversion: 'TERS',
     esCaida: "DÜŞÜŞÜ SATIN AL",
@@ -409,7 +418,8 @@ export default {
     reversionIntro:
       'Aynı hesap, ama düşeni alan kural için. Bilerek ayrı tutuluyor: bunlar iki farklı deney ve birleştirmek iki soruyu da yanıtlamaz.',
     titulo: 'Sinyal geçmişi',
-    intro: 'Gözcünün bulduğu her sinyal ve sonrasında olanlar.',
+    intro: 'Uygulamanın önerdiği ve sonrasında olanlar. Deneyler daha aşağıda, her biri kendi hesabıyla.',
+    appTitulo: 'Uygulamanın sinyalleri',
     pie: 'Pip’ler uygulamanın koyduğu hedef ve stoptan çıkar: spread ve swap DAHİL DEĞİLDİR, dolayısıyla gerçek bir hesapta sonuç bir miktar daha kötüdür. Aynı gün hem stop hem hedef görülürse kayıp sayılır, çünkü günlük mum hangisinin önce olduğunu söylemez. Sinyalin çıktığı gün sayılmaz: giriş o günün kapanışındadır.',
     cargando: 'Geçmiş yükleniyor…',
     error: 'Geçmiş yüklenemedi. Bağlantını kontrol et.',

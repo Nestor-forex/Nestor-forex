@@ -233,12 +233,13 @@ export default {
 
   medicion: {
     titulo: "Et sur la durée ? Ce que nous avons mesuré sur 5 ans",
+    avance: ({ acierto, valor }) => `Elle a raison ${acierto}% du temps et perd quand même ${valor} par dollar risqué. Touchez pour voir comment c’est mesuré.`,
     intro: ({ dias, desde, hasta }) => `Nous avons rejoué le balayage jour par jour sur ${dias} jours de marché réel (${desde} à ${hasta}), comme si l’app avait tourné tout ce temps, spread de chaque paire et swap de chaque nuit déduits.`,
     laApp: "L’app telle quelle, avec ses niveaux",
     varaNeutra: "La même app, étalon neutre (stop et objectif à égale distance)",
     reversion: "La règle de retournement (encore éteinte, tourne dans l’ombre)",
     pieLinea: ({ ops, acierto }) => `${ops} opérations · ${acierto}% gagnées`,
-    queSignifica: "Le grand chiffre est ce qui se gagne ou se perd par dollar risqué. Regarde les deux premières lignes : l’app vise juste 55% du temps et perd quand même. C’est parce que l’objectif est plus proche que le stop : on gagne souvent peu et on perd rarement beaucoup. D’où le fait qu’un taux de réussite seul ne dit rien.",
+    queSignifica: ({ acierto }) => `Le grand chiffre est ce qui se gagne ou se perd par dollar risqué. Regarde les deux premières lignes : l’app vise juste ${acierto}% du temps et perd quand même. C’est parce que l’objectif est plus proche que le stop : on gagne souvent peu et on perd rarement beaucoup. D’où le fait qu’un taux de réussite seul ne dit rien.`,
     porQueLoContamos: "On te le montre parce que c’est ton argent. D’autres apps se vantent d’avoir un moteur pour mesurer ça et ne publient jamais le résultat ; s’il était bon, il serait en haut de leur page. Sers-toi du balayage pour lire le marché plus vite et décider toi-même, pas comme un ordre d’achat.",
     fechado: ({ fecha }) => `Mesuré le ${fecha}. Un marché différent peut changer ces chiffres.`,
   },
@@ -404,6 +405,14 @@ export default {
     soloEsteAparato: 'Les alertes se règlent par appareil : si tu utilises l’app sur le téléphone et l’ordinateur, active-les sur chacun.',
   },
 
+  riesgoSenales: {
+    titulo: ({ n }) => `Signaux du jour qui ne sont pas indépendants (${n})`,
+    intro: "Ces paires bougent presque pareil, ouvrir les deux ne répartit donc pas le risque : selon la direction de chacune, il double ou s'annule. Aucun signal n'est coupé — la décision vous revient.",
+    dobla: 'Même pari, deux fois plus gros',
+    anula: "Elles s'annulent : deux spreads payés pour rien",
+    pie: "Le nombre tient déjà compte de la direction de chaque signal : positif, ils s'additionnent ; négatif, ils se soustraient. Mesuré sur les variations quotidiennes des 60 dernières séances.",
+  },
+
   historial: {
     esReversion: 'INVERSION',
     esCaida: "ACHETER LA BAISSE",
@@ -414,7 +423,8 @@ export default {
     reversionIntro:
       "Les mêmes comptes, mais pour la règle qui achète ce qui a chuté. Séparés volontairement : ce sont deux expériences différentes, et les mélanger ne répond à aucune des deux questions.",
     titulo: 'Historique des signaux',
-    intro: 'Chaque signal trouvé par la vigie, et ce qui a suivi.',
+    intro: "Ce que l'app a proposé et ce qui a suivi. Les expériences sont plus bas, chacune avec son propre compte.",
+    appTitulo: "Les signaux de l'app",
     pie: 'Les pips viennent de l’objectif et du stop posés par l’app : ils n’incluent PAS le spread ni le swap, donc sur un compte réel le résultat est un peu moins bon. Si le stop et l’objectif sont touchés le même jour, cela compte comme une perte, car la bougie journalière ne dit pas lequel est arrivé en premier. Le jour où le signal apparaît ne compte pas : l’entrée se fait à sa clôture.',
     cargando: 'Chargement de l’historique…',
     error: 'Impossible de charger l’historique. Vérifie ta connexion.',

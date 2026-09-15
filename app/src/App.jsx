@@ -239,6 +239,7 @@ export default function App() {
             setups={mercado.setups}
             setupsReversion={mercado.setupsReversion}
             correlaciones={mercado.correlaciones}
+            riesgoSenales={mercado.riesgoSenales}
             corte={mercado.corte}
           />
         )}

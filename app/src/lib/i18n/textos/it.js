@@ -229,12 +229,13 @@ export default {
 
   medicion: {
     titulo: "E sul lungo periodo? Cosa abbiamo misurato su 5 anni",
+    avance: ({ acierto, valor }) => `Indovina il ${acierto}% delle volte e perde comunque ${valor} per ogni dollaro rischiato. Tocca per vedere come è stato misurato.`,
     intro: ({ dias, desde, hasta }) => `Abbiamo ricalcolato la scansione giorno per giorno su ${dias} giorni di mercato reale (${desde} - ${hasta}), come se l’app avesse funzionato per tutto quel tempo, scontando lo spread di ogni coppia e lo swap di ogni notte.`,
     laApp: "L’app così com’è, con i suoi livelli",
     varaNeutra: "La stessa app, metro neutro (stop e obiettivo alla stessa distanza)",
     reversion: "La regola di inversione (ancora spenta, gira nell’ombra)",
     pieLinea: ({ ops, acierto }) => `${ops} operazioni · ${acierto}% vinte`,
-    queSignifica: "Il numero grande è quanto si guadagna o si perde per ogni dollaro rischiato. Guarda le prime due righe: l’app indovina il 55% delle volte e perde lo stesso. Succede perché l’obiettivo è più vicino dello stop: si vince poco spesso e si perde molto raramente. Ecco perché la percentuale di successo, da sola, non dice niente.",
+    queSignifica: ({ acierto }) => `Il numero grande è quanto si guadagna o si perde per ogni dollaro rischiato. Guarda le prime due righe: l’app indovina il ${acierto}% delle volte e perde lo stesso. Succede perché l’obiettivo è più vicino dello stop: si vince poco spesso e si perde molto raramente. Ecco perché la percentuale di successo, da sola, non dice niente.`,
     porQueLoContamos: "Te lo mostriamo perché sono i tuoi soldi. Altre app si vantano di avere un motore per misurarlo e non pubblicano mai il risultato; se fosse buono, sarebbe la prima cosa sulla loro pagina. Usa la scansione per leggere il mercato più in fretta e decidere tu, non come un ordine di acquisto.",
     fechado: ({ fecha }) => `Misurato il ${fecha}. Un mercato diverso può cambiare questi numeri.`,
   },
@@ -400,6 +401,14 @@ export default {
     soloEsteAparato: 'Gli avvisi si impostano per dispositivo: se usi l’app sul telefono e sul computer, attivali su entrambi.',
   },
 
+  riesgoSenales: {
+    titulo: ({ n }) => `Segnali di oggi che non sono indipendenti (${n})`,
+    intro: 'Queste coppie si muovono quasi uguale, quindi aprirle entrambe non ripartisce il rischio: a seconda della direzione di ciascuna, lo raddoppia o lo annulla. Nessun segnale viene spento — la decisione è tua.',
+    dobla: 'Stessa scommessa, del doppio',
+    anula: 'Si annullano: paghi due spread per niente',
+    pie: 'Il numero tiene già conto della direzione di ogni segnale: positivo si sommano, negativo si sottraggono. Misurato sulle variazioni giornaliere delle ultime 60 sedute.',
+  },
+
   historial: {
     esReversion: 'INVERSIONE',
     esCaida: "COMPRARE IL RIBASSO",
@@ -410,7 +419,8 @@ export default {
     reversionIntro:
       'Gli stessi conti, ma della regola che compra ciò che è sceso. Vanno a parte di proposito: sono due esperimenti diversi e unirli non risponde a nessuna delle due domande.',
     titulo: 'Storico dei segnali',
-    intro: 'Ogni segnale trovato dalla vedetta e cosa è successo dopo.',
+    intro: "Ciò che l'app ha proposto e cosa è successo dopo. Gli esperimenti sono più in basso, ognuno con il proprio conto.",
+    appTitulo: "I segnali dell'app",
     pie: 'I pip derivano dall’obiettivo e dallo stop impostati dall’app: NON includono spread né swap, quindi su un conto reale il risultato è un po’ peggiore. Se nello stesso giorno vengono toccati stop e obiettivo conta come persa, perché la candela giornaliera non dice quale sia arrivato prima. Il giorno in cui appare il segnale non conta: l’ingresso è alla sua chiusura.',
     cargando: 'Caricamento dello storico…',
     error: 'Impossibile caricare lo storico. Controlla la connessione.',

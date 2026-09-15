@@ -22,6 +22,7 @@ import {
   matrizCorrelacion,
   paresQueVanJuntos,
   pearson,
+  riesgoEntreSenales,
 } from '../src/lib/correlacion.js'
 
 let fallos = 0
@@ -149,6 +150,119 @@ console.log('\n7. Los dos números que se pueden discutir están con nombre y va
   comprobar(`la ventana son ${VENTANA_CORREL} sesiones`, VENTANA_CORREL === 60)
   comprobar(`el umbral de «van juntos» es ${CORREL_ALTA}`, CORREL_ALTA === 0.7)
   comprobar('la clave se arma igual desde fuera', claveCorrel('B/B', 'A/A') === 'A/A|B/B')
+}
+
+console.log('\n8. ⚠️ Las señales de HOY: la dirección decide, no la correlación')
+{
+  // El caso de manual del Forex: EUR/USD y USD/CHF van casi perfectamente al
+  // revés. Con ese −0,9 solo, no se puede decir nada útil — hace falta el lado.
+  const m = { [claveCorrel('EUR/USD', 'USD/CHF')]: -0.9, [claveCorrel('EUR/USD', 'GBP/USD')]: 0.85 }
+
+  const dosCompras = riesgoEntreSenales(m, [
+    { name: 'EUR/USD', lado: 'COMPRA' },
+    { name: 'GBP/USD', lado: 'COMPRA' },
+  ])
+  comprobar('+0,85 y los dos COMPRA → una sola apuesta del doble', dosCompras[0].mismaApuesta === true)
+  comprobar('y el efectivo conserva el signo positivo', dosCompras[0].efectivo === 0.85)
+
+  const compraYVenta = riesgoEntreSenales(m, [
+    { name: 'EUR/USD', lado: 'COMPRA' },
+    { name: 'GBP/USD', lado: 'VENTA' },
+  ])
+  // ⚠️ ÉSTA ES LA COMPROBACIÓN QUE JUSTIFICA QUE ESTA FUNCIÓN EXISTA. Con la
+  // MISMA correlación de +0,85, cambiar un lado le da la vuelta al resultado:
+  // de «doblas el riesgo» a «pagas dos spreads para nada». Una tarjeta que
+  // solo mirara la correlación diría lo mismo en los dos casos, y en uno de
+  // los dos estaría diciendo justo lo contrario de lo que pasa.
+  comprobar('la MISMA +0,85 con lados distintos → se anulan', compraYVenta[0].mismaApuesta === false)
+  comprobar('y el efectivo sale con el signo cambiado', compraYVenta[0].efectivo === -0.85)
+
+  const inversoJuntos = riesgoEntreSenales(m, [
+    { name: 'EUR/USD', lado: 'COMPRA' },
+    { name: 'USD/CHF', lado: 'COMPRA' },
+  ])
+  comprobar('−0,9 comprando los dos → se anulan', inversoJuntos[0].mismaApuesta === false)
+
+  const inversoCruzado = riesgoEntreSenales(m, [
+    { name: 'EUR/USD', lado: 'COMPRA' },
+    { name: 'USD/CHF', lado: 'VENTA' },
+  ])
+  comprobar('−0,9 con lados distintos → es la MISMA apuesta doblada', inversoCruzado[0].mismaApuesta === true)
+  comprobar('y ahí el efectivo sale positivo', inversoCruzado[0].efectivo === 0.9)
+}
+
+console.log('\n9. Lo que NO tiene que salir')
+{
+  const m = { [claveCorrel('EUR/USD', 'GBP/USD')]: 0.85, [claveCorrel('EUR/USD', 'USD/JPY')]: 0.1 }
+
+  const flojo = riesgoEntreSenales(m, [
+    { name: 'EUR/USD', lado: 'COMPRA' },
+    { name: 'USD/JPY', lado: 'COMPRA' },
+  ])
+  comprobar('dos pares que no se parecen NO salen', flojo.length === 0)
+
+  // Sin nada que decir, lista vacía — y la tarjeta desaparece sola. Es lo
+  // normal casi todos los días: si dijera «hoy todo bien» se volvería parte
+  // del decorado y dejaría de leerse el día que sí tenga algo.
+  comprobar('sin señales, lista vacía', riesgoEntreSenales(m, []).length === 0)
+  comprobar('una sola señal no puede hacer pareja', riesgoEntreSenales(m, [{ name: 'EUR/USD', lado: 'COMPRA' }]).length === 0)
+  comprobar('sin matriz no revienta', riesgoEntreSenales(null, [
+    { name: 'EUR/USD', lado: 'COMPRA' },
+    { name: 'GBP/USD', lado: 'COMPRA' },
+  ]).length === 0)
+
+  // ⚠️ Un par que no está en la matriz vale `null` en `correlDe`, y `null` es
+  // «no se pudo calcular», NO «no se parecen». Se salta. Tratarlo como 0 diría
+  // que no hay riesgo compartido, que es una afirmación que nadie ha medido.
+  const sinDato = riesgoEntreSenales(m, [
+    { name: 'AUD/CAD', lado: 'COMPRA' },
+    { name: 'NZD/CHF', lado: 'COMPRA' },
+  ])
+  comprobar('una pareja sin dato se salta, no se inventa un 0', sinDato.length === 0)
+
+  // Basura dentro no puede colarse como pareja.
+  const basura = riesgoEntreSenales(m, [
+    { name: 'EUR/USD', lado: 'COMPRA' },
+    { name: 'GBP/USD' },
+    null,
+    { lado: 'VENTA' },
+  ])
+  comprobar('las señales sin par o sin lado se descartan', basura.length === 0)
+}
+
+console.log('\n10. El orden y el mismo par consigo mismo')
+{
+  const m = {
+    [claveCorrel('EUR/USD', 'GBP/USD')]: 0.75,
+    [claveCorrel('EUR/USD', 'AUD/USD')]: 0.95,
+    [claveCorrel('GBP/USD', 'AUD/USD')]: 0.8,
+  }
+  const filas = riesgoEntreSenales(m, [
+    { name: 'EUR/USD', lado: 'COMPRA' },
+    { name: 'GBP/USD', lado: 'COMPRA' },
+    { name: 'AUD/USD', lado: 'COMPRA' },
+  ])
+  comprobar('tres señales dan las tres parejas', filas.length === 3)
+  comprobar('la más fuerte va primero', Math.abs(filas[0].efectivo) === 0.95)
+  comprobar('y la más floja al final', Math.abs(filas[2].efectivo) === 0.75)
+
+  // Con lados mezclados el orden sigue siendo por TAMAÑO del efecto, no por
+  // si suman o restan: las dos cosas son riesgo y ninguna es «mejor».
+  const mixto = riesgoEntreSenales(m, [
+    { name: 'EUR/USD', lado: 'COMPRA' },
+    { name: 'AUD/USD', lado: 'VENTA' },
+    { name: 'GBP/USD', lado: 'COMPRA' },
+  ])
+  comprobar('el orden no cambia al mezclar lados', Math.abs(mixto[0].efectivo) === 0.95)
+  comprobar('aunque esa primera ahora sea de las que se anulan', mixto[0].mismaApuesta === false)
+
+  comprobar(
+    'el mismo par dos veces no hace pareja consigo mismo',
+    riesgoEntreSenales(m, [
+      { name: 'EUR/USD', lado: 'COMPRA' },
+      { name: 'EUR/USD', lado: 'VENTA' },
+    ]).length === 0
+  )
 }
 
 console.log('')

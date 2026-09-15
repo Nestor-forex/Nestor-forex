@@ -11,6 +11,7 @@ import Sparkline from './Sparkline'
 import Glosario from './Glosario'
 import ClimaMercado from './ClimaMercado'
 import Correlacion from './Correlacion'
+import RiesgoSenales from './RiesgoSenales'
 import Calendario from './Calendario'
 import { useCalendario } from '../lib/useCalendario'
 
@@ -117,7 +118,7 @@ function RazonList({ items, emptyText }) {
   )
 }
 
-export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], correlaciones = [], corte }) {
+export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], correlaciones = [], riesgoSenales = [], corte }) {
   const { t, locale } = useIdioma()
   // El calendario se pide aqui y no en `useMarketData` porque va en su propio
   // archivo y con su propio horario: el barrido lo publica el vigia una vez al
@@ -290,6 +291,12 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
 
         <section>
           <h2 className="section-title">{t('tablero.setups')}</h2>
+          {/* ⚠️ VA ANTES DE LA LISTA, NO DESPUÉS, Y NO ES ESTÉTICA. El aviso
+              sirve para decidir CUÁLES de estas señales abrir; leído después
+              de haberlas visto todas llega cuando la decisión ya está tomada.
+              Es el mismo criterio que en la actividad y en las tasas: lo
+              primero que se lee es lo que se recuerda. */}
+          <RiesgoSenales riesgo={riesgoSenales} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {setups.map((s) => (
               <SetupCard key={s.name + s.lado} s={s} t={t} onVerSetup={onVerSetup} />

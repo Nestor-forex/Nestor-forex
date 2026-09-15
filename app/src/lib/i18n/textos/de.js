@@ -233,12 +233,13 @@ export default {
 
   medicion: {
     titulo: "Und langfristig? Was wir über 5 Jahre gemessen haben",
+    avance: ({ acierto, valor }) => `Trifft in ${acierto}% der Fälle und verliert trotzdem ${valor} pro riskiertem Dollar. Tippen, um zu sehen, wie gemessen wurde.`,
     intro: ({ dias, desde, hasta }) => `Wir haben den Scan Tag für Tag über ${dias} Tage echten Markt nachgerechnet (${desde} bis ${hasta}), als hätte die App die ganze Zeit gelaufen — inklusive Spread je Paar und Swap je Nacht.`,
     laApp: "Die App wie sie ist, mit ihren Levels",
     varaNeutra: "Dieselbe App, neutraler Maßstab (Stop und Ziel gleich weit)",
     reversion: "Die Umkehr-Regel (noch aus, läuft im Hintergrund)",
     pieLinea: ({ ops, acierto }) => `${ops} Trades · ${acierto}% gewonnen`,
-    queSignifica: "Die große Zahl ist Gewinn oder Verlust je riskiertem Dollar. Schau auf die ersten zwei Zeilen: Die App trifft zu 55% und verliert trotzdem. Das liegt daran, dass das Ziel näher liegt als der Stop — man gewinnt oft wenig und verliert selten viel. Deshalb sagt eine Trefferquote allein gar nichts.",
+    queSignifica: ({ acierto }) => `Die große Zahl ist Gewinn oder Verlust je riskiertem Dollar. Schau auf die ersten zwei Zeilen: Die App trifft zu ${acierto}% und verliert trotzdem. Das liegt daran, dass das Ziel näher liegt als der Stop — man gewinnt oft wenig und verliert selten viel. Deshalb sagt eine Trefferquote allein gar nichts.`,
     porQueLoContamos: "Wir zeigen es dir, weil es dein Geld ist. Andere Apps prahlen mit einem Motor, der das misst, und veröffentlichen das Ergebnis nie; wäre es gut, stünde es ganz oben auf ihrer Seite. Nimm den Scan, um den Markt schneller zu lesen und selbst zu entscheiden — nicht als Kaufbefehl.",
     fechado: ({ fecha }) => `Gemessen am ${fecha}. Ein anderer Markt kann diese Zahlen ändern.`,
   },
@@ -404,6 +405,14 @@ export default {
     soloEsteAparato: 'Benachrichtigungen gelten pro Gerät: Wenn du die App auf Handy und Computer nutzt, aktiviere sie auf beiden.',
   },
 
+  riesgoSenales: {
+    titulo: ({ n }) => `Heutige Signale, die nicht unabhängig sind (${n})`,
+    intro: 'Diese Paare bewegen sich fast gleich, beide zu öffnen verteilt das Risiko also nicht: je nach Richtung verdoppelt es sich oder hebt sich auf. Es wird kein Signal abgeschaltet — die Entscheidung liegt bei Ihnen.',
+    dobla: 'Dieselbe Wette, doppelt so groß',
+    anula: 'Sie heben sich auf: zwei Spreads für nichts',
+    pie: 'Die Zahl berücksichtigt bereits die Richtung jedes Signals: positiv heißt, sie addieren sich, negativ, sie heben sich auf. Gemessen an den Tagesveränderungen der letzten 60 Sitzungen.',
+  },
+
   historial: {
     esReversion: 'UMKEHR',
     esCaida: "DEN EINBRUCH KAUFEN",
@@ -414,7 +423,8 @@ export default {
     reversionIntro:
       'Dieselbe Rechnung, aber für die Regel, die das Gefallene kauft. Bewusst getrennt: das sind zwei verschiedene Experimente, und zusammengelegt beantworten sie keine der beiden Fragen.',
     titulo: 'Signalverlauf',
-    intro: 'Jedes Signal des Wächters und was danach passierte.',
+    intro: 'Was die App vorgeschlagen hat und was danach passierte. Die Experimente stehen weiter unten, jedes mit eigener Rechnung.',
+    appTitulo: 'Die Signale der App',
     pie: 'Die Pips stammen aus dem Ziel und dem Stop, die die App gesetzt hat: Spread und Swap sind NICHT enthalten, im echten Konto fällt das Ergebnis also etwas schlechter aus. Werden Stop und Ziel am selben Tag berührt, zählt es als Verlust, denn die Tageskerze sagt nicht, was zuerst kam. Der Tag, an dem das Signal erscheint, zählt nicht: der Einstieg ist zu seinem Schluss.',
     cargando: 'Verlauf wird geladen…',
     error: 'Verlauf konnte nicht geladen werden. Prüfe die Verbindung.',
