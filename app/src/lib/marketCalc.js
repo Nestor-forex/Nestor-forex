@@ -1,4 +1,4 @@
-import { matrizCorrelacion, paresQueVanJuntos } from './correlacion.js'
+import { matrizCorrelacion, paresQueVanJuntos, riesgoEntreSenales } from './correlacion.js'
 import { crearT } from './i18n/crearT.js'
 import { IDIOMA_BASE } from './i18n/idiomas.js'
 import { VENTAS_PAUSADAS } from './reglas.js'
@@ -796,6 +796,16 @@ export function derivarVista(
   // que no se ve una tarjeta informativa hasta que el vigía vuelva a correr.
   const correlaciones = paresQueVanJuntos(data.correl)
 
+  // ⚠️ Y esto es OTRA COSA, aunque salga de la misma matriz: de las señales
+  // que la app propone HOY, cuáles son la misma apuesta contando la
+  // dirección. La tarjeta de arriba enseña el mapa del mercado; ésta enseña
+  // lo que hay que mirar antes de abrir dos de las de hoy. Ver la cabecera de
+  // `riesgoEntreSenales` para por qué el lado le da la vuelta al signo.
+  //
+  // Solo con `setups` —las de la app—: las de la sombra no se proponen, así
+  // que cruzarlas hablaría de operaciones que nadie va a abrir.
+  const riesgoSenales = riesgoEntreSenales(data.correl, setups)
+
   return {
     monedas,
     pares,
@@ -807,6 +817,7 @@ export function derivarVista(
     setupsReversion,
     setupsCaida,
     correlaciones,
+    riesgoSenales,
     corte,
   }
 }

@@ -5140,16 +5140,53 @@ otra mitad señala un hueco real.** Pero primero, lo que hay que corregir.
 
 | dice | es |
 |---|---|
-| «"comprar la caída" acierta un **6 %**» | **0 %** — 0 de 5. Los −272 pips sí son exactos |
-| «**76 %** de acierto en **17 operaciones**» | **74 % sobre 23 cerradas**, de las cuales 17 ganadas. Confundió las ganadas con el total |
-| «sin módulo de **tamaño de posición**» | **existe desde la fase 1**: la pestaña Calculadora |
+| «"comprar la caída" acierta un **6 %**» | **0 %** — 0 de 5, y con 5 operaciones el 6 % **no es un valor posible**. Los −272 pips sí son exactos |
+| «**76 %** de acierto en **17 operaciones**» | **78 % sobre 18** — leyó mal dos dígitos de una captura |
+| «sin módulo de **tamaño de posición**» | **existe desde la fase 1** y es una pestaña entera: «Riesgo» |
 | «ojalá el botón de 5 años tenga esa profundidad» | **ya la tiene**: es la sección de mediciones, con el backtest de 1.436 días |
 
-📌 **Que se equivocara en cuatro cosas leyendo capturas no invalida el resto**
-—no tenía la app delante— pero sí dice algo útil para la landing: **si un
-lector atento confunde «17 ganadas» con «17 operaciones», el rótulo no está
-claro.** Es la lección de siempre: una etiqueta equivocada es un error de
-medición, y aquí la etiqueta es nuestra.
+## ⚠️⚠️ Y AQUÍ ME EQUIVOQUÉ YO, CORRIGIENDO. La versión anterior de esta tabla
+
+decía que lo real era «**74 % sobre 23 cerradas**, de las cuales 17 ganadas» y
+que el revisor «confundió las ganadas con el total». **Las dos cosas eran
+falsas**, y la captura de Néstor lo destapó en un minuto: la pantalla dice
+**78 % · 18 · +462**.
+
+**El fallo estaba en mi conteo, no en la app.** Conté por `tipo` e ignoré el
+campo `sombra`, así que metí en el cubo de la app las **5 ventas pausadas** —
+que son señales de la app que **no se proponen**, y por eso `resumir()` las
+excluye a propósito desde el 2026-09-05. Los números reales, con la lógica de
+`historialCalc.js`:
+
+| | ops | ganadas | acierto | pips |
+|---|---:|---:|---:|---:|
+| la app | 18 | 14 | **78 %** | +462 |
+| reversión | 18 | 7 | 39 % | −337 |
+| comprar la caída | 5 | 0 | **0 %** | −272 |
+| ventas pausadas | 5 | 3 | 60 % | +15 |
+
+📌 **La lección tiene dos capas y la segunda es peor.** La primera es la de
+siempre: afirmé antes de comprobar. La segunda es que **lo hice mientras
+corregía a otro**, que es justo cuando uno se siente con más razón — y encima
+lo escribí en la memoria del proyecto, donde una corrección falsa sobrevive a
+todo. **Corregir a alguien exige la misma comprobación que afirmar, o más.**
+
+📌 **Y el 6 % se cae solo con aritmética, sin datos:** con 5 operaciones los
+únicos aciertos posibles son 0, 20, 40, 60, 80 y 100. Eso bastaba para
+descartarlo **antes** de abrir ningún archivo, y no lo hice.
+
+## Lo que sí dice, y era el verdadero problema de rótulo
+
+Que el revisor y yo leyéramos mal la misma captura no era casualidad: **el
+primer bloque no decía de quién era.** Los otros dos llevaban título
+(«Historial de la regla contraria», «Historial de comprar la caída») y el
+primero no, así que su número se leía como el total de todo — cuando cuenta
+**solo lo que la app propuso**, sin las dos reglas de sombra ni las ventas
+pausadas. Y el subtítulo, en los 13 idiomas, decía «**cada** señal que encontró
+el vigía», que para ese bloque es sencillamente falso.
+
+Arreglado el 2026-09-15: título propio («Las señales de la app») y subtítulo
+que ya no promete lo que el número no cuenta.
 
 ## Lo que dice BIEN, y coincide con lo que este archivo ya dice
 
@@ -5206,3 +5243,134 @@ tiene respuesta y se llama la app hermana**.
 señales **de 15 minutos** sacadas de capturas de **Swing**. Esa mezcla es justo
 la que el propio reviewer acabó detectando con el caso del yen. **Al enseñar las
 apps hay que decir siempre cuál es cuál** — la misma regla del 2026-07-30.
+
+---
+
+# El cruce de riesgo entre las señales del MISMO día (2026-09-15)
+
+`app/src/components/RiesgoSenales.jsx` · `riesgoEntreSenales` en
+`correlacion.js` · bloques 8-10 de `prueba-correlacion.mjs`.
+
+**Solo Swing.** Todos los archivos que toca son PRIMOS y la correlación no
+existe en Intradía, así que no hay cambio emparejado: una rama, un PR.
+
+Es el único hueco real que señaló la opinión externa del 2026-09-15, y el dato
+**ya estaba calculado y publicado** en `barrido.json` desde el 2026-09-08. La
+app lo tenía y no se lo ponía delante a nadie.
+
+## ⚠️ LA DIRECCIÓN ES LA MITAD DEL ASUNTO, y es lo que lo hace distinto
+
+La tarjeta de correlación que ya existía **no podía contestar esta pregunta**,
+y no por estar plegada: porque **no sabe hacia dónde señala la app**. Con la
+misma correlación, el lado le da la vuelta al resultado:
+
+| correlación | los dos lados | qué pasa de verdad |
+|---|---|---|
+| +0,9 | los dos COMPRA | una apuesta del **DOBLE** de tamaño |
+| +0,9 | uno de cada | **se ANULAN**: dos spreads para nada |
+| −0,9 | los dos COMPRA | se ANULAN |
+| −0,9 | uno de cada | una apuesta del DOBLE |
+
+O sea que «EUR/USD y USD/CHF van a −0,88» es verdad y **no dice nada útil** sin
+el lado delante. `efectivo = lados iguales ? r : −r` y ya responde.
+
+Con las correlaciones REALES del barrido de producción y cuatro señales
+plausibles salen justo los dos casos:
+
+```
+GBP/JPY COMPRA · USD/JPY COMPRA → +0,92  MISMA APUESTA (dobla)
+EUR/USD COMPRA · USD/CHF COMPRA → −0,88  SE ANULAN
+```
+
+El primero es **exactamente el conflicto que el revisor externo detectó a
+mano** y por el que pidió esto.
+
+## Las decisiones que no hay que ablandar
+
+⚠️ **ES INFORMACIÓN, NO UN FILTRO.** No apaga ninguna señal, no las reordena y
+no las puntúa. Apagar señales por correlación cambiaría lo que la app propone y
+tendría que pasar por el banco de pruebas con su listón escrito antes, como el
+COT. Octava familia que tendría que medirse; ésta ni se intenta.
+
+⚠️ **SOLO CRUZA LAS SEÑALES DE LA APP** (`setups`), nunca las de la sombra.
+Las de sombra no se proponen, así que decir «estas dos van juntas» de dos
+operaciones que nadie va a abrir sería ruido con pinta de aviso.
+
+⚠️ **SIN NADA QUE DECIR NO SE PINTA NADA.** Lo normal es que no haya conflicto
+—el día que se construyó, las 2 señales reales no se parecían y la tarjeta no
+salía—, así que una tarjeta permanente diciendo «hoy todo bien» se volvería
+decorado y dejaría de leerse justo el día que sí tenga algo. **Que aparezca es
+la señal.**
+
+⚠️ **`null` se salta, no se trata como 0.** Un par sin dato en la matriz es «no
+se pudo calcular», no «no se parecen». Tiene comprobación propia.
+
+⚠️ **VA ANTES DE LA LISTA DE SEÑALES, no después.** Sirve para decidir cuáles
+abrir; leído al final llega cuando la decisión ya está tomada. Mismo criterio
+que la actividad y las tasas.
+
+⚠️ **El número no se pinta de verde ni de rojo.** Doblar el riesgo y pagar dos
+spreads para nada son los dos malos de maneras distintas; el color afirmaría
+que uno es bueno. Misma decisión que en `Correlacion.jsx`.
+
+## Comprobado que las pruebas MUERDEN
+
+Quitar la vuelta del signo (`efectivo = r` en vez de `lados iguales ? r : −r`)
+tumba **5 comprobaciones**, con el daño verificado en el archivo antes de darlo
+por bueno.
+
+📌 **Y de paso, un tropiezo mío que conviene tener escrito:** la primera vez
+conté los fallos con `grep -c "FALLA"` y salió 1, cuando el marcador de este
+guion es `MAL` y los fallos eran 5. **Casi doy por floja una prueba que muerde
+fuerte, por buscar la palabra equivocada.** Es hermano del `grep borrar` que el
+2026-09-14 me hizo decir que el botón de borrar no existía.
+
+---
+
+# Dos textos que llevaban meses diciendo un número que no era (2026-09-15)
+
+Los dos salieron tirando del hilo de la captura de Néstor, no buscándolos.
+
+## 1. `medicion.queSignifica` decía «la app acierta el 55 %»
+
+Escrito a mano, en los 13 idiomas. Los valores reales de `medicion.js` son
+**56** (la app) y **48** (la vara neutra): **ninguno de los dos es 55** — el 55
+es el de la reversión, otra fila. Se quedó viejo el **2026-09-05**, al aflojar
+`TENDENCIA_MIN`, y nadie lo notó porque nada falla.
+
+Es **exactamente** el caso de las etiquetas «(hoy)» del banco de pruebas, del
+2026-09-05, y el arreglo es el mismo: **pasa a ser función y LEE el valor**
+(`({ acierto }) => …`). Cambiar la medición mueve la frase sola.
+
+📌 La regla ya estaba escrita en este archivo —«al cambiar un umbral, mirar
+también quién lo NOMBRA»— y aun así el mismo día que se cambió el umbral se
+dejó atrás este texto. **La lección sola no basta; lo que funciona es que el
+texto lea el número.**
+
+## 2. El adelanto de las mediciones, que estaba escondido
+
+«¿Y a largo plazo? Lo que medimos sobre 5 años» era un botón plegado con una
+flechita `▸` de 12 px en gris. Un operador externo que revisó la app con lupa
+**ni supo que se podía abrir** — pidió que «ojalá tuviera profundidad» cuando
+ya la tenía.
+
+Ahora, con la tarjeta cerrada, se lee el número: «Acierta el 56 % de las veces
+y aun así pierde 0.03 por cada dólar arriesgado». **Es el mejor argumento que
+tiene la app** —enseñar el propio número siendo malo— y estaba detrás de un
+título que parecía un encabezado más.
+
+⚠️ **El valor va SIN SIGNO y la frase solo sale si se pierde.** Con el signo
+daba «pierde −0.03», un doble negativo que se lee como lo contrario. Y si algún
+día midiera positivo, la frase sería falsa, así que entonces **no se pinta**:
+equivocarse hacia «falta un adelanto» cuesta un adelanto; hacia «se afirma que
+pierde cuando gana» cuesta la credibilidad, que es lo único que este proyecto
+vende. Misma asimetría que `esSombra` y `yaCorrioHoy`.
+
+📌 **Lo del doble negativo NO lo ve un build ni un lint.** Salió mirando la
+captura del navegador, que es la enésima vez que esa costumbre paga.
+
+## Y la Calculadora no estaba escondida
+
+Es una **pestaña entera del menú de abajo**, llamada «Riesgo». El revisor no la
+vio porque **nunca tuvo la app**: trabajó con capturas. No había nada que
+arreglar ahí, y decirlo importa tanto como arreglar lo que sí estaba mal.

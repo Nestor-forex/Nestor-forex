@@ -233,12 +233,13 @@ export default {
 
   medicion: {
     titulo: "And over the long run? What we measured across 5 years",
+    avance: ({ acierto, valor }) => `It is right ${acierto}% of the time and still loses ${valor} per dollar risked. Tap to see how it was measured.`,
     intro: ({ dias, desde, hasta }) => `We replayed the scan day by day across ${dias} days of real market (${desde} to ${hasta}), as if the app had been running that whole time, with each pair's spread and each night's swap deducted.`,
     laApp: "The app as it is, with its own levels",
     varaNeutra: "The same app, neutral yardstick (stop and target equally far)",
     reversion: "The reversal rule (still off, running in the shadows)",
     pieLinea: ({ ops, acierto }) => `${ops} trades · ${acierto}% won`,
-    queSignifica: "The big number is what is won or lost per dollar risked. Look at the first two rows: the app wins 55% of the time and still loses money. That happens because the target sits closer than the stop, so you win small often and lose big rarely. Which is why a win rate on its own tells you nothing.",
+    queSignifica: ({ acierto }) => `The big number is what is won or lost per dollar risked. Look at the first two rows: the app wins ${acierto}% of the time and still loses money. That happens because the target sits closer than the stop, so you win small often and lose big rarely. Which is why a win rate on its own tells you nothing.`,
     porQueLoContamos: "We show you this because it is your money. Other apps boast about having an engine to measure it and never publish the result; if it were good, it would be the first thing on their page. Use the scan to read the market faster and decide yourself, not as an order to buy.",
     fechado: ({ fecha }) => `Measured on ${fecha}. A different market can change these numbers.`,
   },
@@ -404,6 +405,14 @@ export default {
     soloEsteAparato: 'Alerts are set per device: if you use the app on your phone and your computer, turn them on in each one.',
   },
 
+  riesgoSenales: {
+    titulo: ({ n }) => `Today's signals that are not independent (${n})`,
+    intro: 'These pairs move almost identically, so opening both does not spread your risk: depending on each direction, it doubles it or cancels it out. No signal is turned off — the decision is yours.',
+    dobla: 'Same bet, twice the size',
+    anula: 'They cancel out: you pay two spreads for nothing',
+    pie: "The number already accounts for each signal's direction: positive means they add up, negative means they subtract. Measured on daily changes over the last 60 sessions.",
+  },
+
   historial: {
     esReversion: 'REVERSION',
     esCaida: "BUY THE DIP",
@@ -414,7 +423,8 @@ export default {
     reversionIntro:
       'The same tally, but for the rule that buys what fell. Kept separate on purpose: these are two different experiments, and merging them answers neither question.',
     titulo: 'Signal history',
-    intro: 'Every signal the watcher found, and what happened next.',
+    intro: 'What the app proposed and what happened next. The experiments are further down, each with its own count.',
+    appTitulo: "The app's signals",
     pie: 'The pips come from the target and stop the app set: they do NOT include spread or swap, so in a real account the result is somewhat worse. If stop and target are both hit on the same day it counts as a loss, because the daily candle does not say which came first. The day the signal appears does not count: entry is at its close.',
     cargando: 'Loading history…',
     error: 'Could not load the history. Check your connection.',

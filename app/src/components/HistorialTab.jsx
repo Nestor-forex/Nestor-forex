@@ -48,6 +48,14 @@ export default function HistorialTab() {
               pregunta. Un promedio de las dos reglas no responde ninguna: la
               app acierta más y pierde, la reversión acierta menos y gana; el
               punto medio no describe a ninguna de las dos. */}
+          {/* ⚠️ ESTE BLOQUE NECESITA SU PROPIO TÍTULO, y el motivo está medido.
+              Los otros dos experimentos sí lo llevaban, así que el primero se
+              leía como «el total de todo» cuando en realidad cuenta SOLO las
+              señales que la app propuso: deja fuera las dos reglas de sombra y
+              las ventas pausadas. El 2026-09-15, un operador externo leyendo
+              esta pantalla confundió el número con otra cosa — y confundirlo
+              es gratis mientras el bloque no diga de quién es. */}
+          <div style={{ fontSize: 12.5, fontWeight: 600 }}>{t('historial.appTitulo')}</div>
           <Resumen resumen={resumen} t={t} />
 
           {resumen.reversion.total > 0 && (
@@ -155,9 +163,40 @@ function MedicionLarga({ t, locale }) {
       >
         <span>{t('medicion.titulo')}</span>
         <span className="mono" style={{ color: 'var(--text-muted)', fontSize: 12 }}>
-          {abierto ? '▾' : '▸'}
+          {abierto ? '▲' : '▼'}
         </span>
       </button>
+
+      {/* ⚠️ EL ADELANTO, VISIBLE CON LA TARJETA CERRADA. Este es el mejor
+          argumento que tiene la app —enseñar el propio número siendo malo— y
+          estaba escondido detrás de un título que parecía un encabezado más.
+          Un operador externo que revisó la app con lupa el 2026-09-15 ni
+          siquiera supo que se podía abrir.
+
+          Los dos números SALEN de `MEDICION`, no escritos a mano: `queSignifica`
+          llevaba «55 %» a mano y llevaba desde el 2026-09-05 diciendo un número
+          que no era el de ninguna de las dos filas. El código que usa el valor
+          se actualiza solo; el texto que lo describe, no — salvo que lo lea. */}
+      {/* ⚠️ EL NÚMERO VA SIN SIGNO Y LA FRASE SOLO SALE SI SE PIERDE, y las dos
+          cosas son el mismo arreglo. La frase dice «pierde», así que pasarle el
+          valor con su signo daba «pierde −0.03» — un doble negativo que se lee
+          como lo contrario de lo que pasa. Eso no lo ve un build: salió al
+          mirarlo en el navegador.
+
+          Y si algún día la app midiera POSITIVO, esta frase diría algo falso,
+          así que entonces no se pinta. Equivocarse hacia «no se enseña un
+          adelanto» cuesta un adelanto; hacia «se afirma que pierde cuando gana»
+          cuesta la credibilidad, que es lo único que este proyecto vende. Los
+          dos errores no valen lo mismo, así que la condición no es simétrica —
+          misma forma que `esSombra` y `yaCorrioHoy`. */}
+      {!abierto && app.porRiesgo < 0 && (
+        <p style={{ ...TEXTO, margin: 0 }}>
+          {t('medicion.avance', {
+            acierto: app.acierto,
+            valor: Math.abs(app.porRiesgo).toFixed(2),
+          })}
+        </p>
+      )}
 
       {abierto && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -196,7 +235,12 @@ function MedicionLarga({ t, locale }) {
             />
           </div>
 
-          <p style={{ ...TEXTO, margin: 0 }}>{t('medicion.queSignifica')}</p>
+          {/* Lee el acierto de MEDICION en vez de llevarlo escrito. Ver el
+              comentario del adelanto, arriba: así lo hacen `hoySi` y las
+              etiquetas «(hoy)» del banco de pruebas, por la misma razón. */}
+          <p style={{ ...TEXTO, margin: 0 }}>
+            {t('medicion.queSignifica', { acierto: app.acierto })}
+          </p>
           <p style={{ ...TEXTO, margin: 0 }}>{t('medicion.porQueLoContamos')}</p>
           <p style={{ ...TEXTO, margin: 0, color: 'var(--text-muted)', fontSize: 11.5 }}>
             {t('medicion.fechado', { fecha: fmtFecha(MEDICION.fecha, locale) })}

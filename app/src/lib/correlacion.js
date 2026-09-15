@@ -152,3 +152,76 @@ export function paresQueVanJuntos(matriz, { minimo = CORREL_ALTA, soloEstos = nu
   }
   return filas.sort((x, y) => Math.abs(y.r) - Math.abs(x.r))
 }
+
+/**
+ * ⚠️ LAS SEÑALES DE HOY: ¿cuáles son la MISMA APUESTA?
+ *
+ * Esto NO es `paresQueVanJuntos` con otra lista. La diferencia es la
+ * DIRECCIÓN, y es la que decide si el riesgo se dobla o se anula:
+ *
+ *   | correlación | los dos lados | qué pasa de verdad                      |
+ *   |-------------|---------------|-----------------------------------------|
+ *   | +0,9        | los dos COMPRA| una apuesta del DOBLE de tamaño         |
+ *   | +0,9        | uno de cada   | se ANULAN: dos spreads y nada más       |
+ *   | −0,9        | los dos COMPRA| se ANULAN                               |
+ *   | −0,9        | uno de cada   | una apuesta del DOBLE de tamaño         |
+ *
+ * O sea que la correlación sola NO basta para decir nada: «EUR/USD y USD/CHF
+ * van a −0,83» es verdad y no dice si hoy conviene abrir los dos. Con el lado
+ * delante sí se puede: se le da la vuelta al signo cuando los lados difieren y
+ * lo que queda (`efectivo`) ya responde la pregunta directamente.
+ *
+ * La tarjeta de correlación del tablero enseña la primera cosa —el mapa del
+ * mercado, que no cambia con lo que la app señale hoy— y esto enseña la
+ * segunda. No se sustituyen.
+ *
+ * ⚠️ ES INFORMACIÓN, NO UN FILTRO. No apaga ni una señal, ni las reordena, ni
+ * las puntúa. Apagar señales por correlación CAMBIARÍA las señales y tendría
+ * que pasar por el banco de pruebas con su listón escrito antes, como el COT.
+ * Aquí solo se pone delante un número que la app ya tenía calculado.
+ *
+ * ⚠️ Y SE LLAMA SOLO CON LAS SEÑALES DE UNA MISMA REGLA. Cruzar las de la app
+ * con las de la sombra diría «estas dos van juntas» de dos operaciones que
+ * nadie va a abrir a la vez, porque las de la sombra no se proponen.
+ *
+ * @param senales  [{ name, lado }] — `lado` es 'COMPRA' / 'VENTA' tal cual se
+ *                 guarda, sin traducir (ver la nota de i18n del 2026-07-30).
+ */
+export function riesgoEntreSenales(matriz, senales, { minimo = CORREL_ALTA } = {}) {
+  const lista = (senales || []).filter((s) => s && s.name && s.lado)
+  const filas = []
+
+  for (let i = 0; i < lista.length; i++) {
+    for (let j = i + 1; j < lista.length; j++) {
+      const A = lista[i]
+      const B = lista[j]
+      // El mismo par en los dos lados no es un caso real de la app (cada par
+      // recibe una sola clasificación), pero si algún día lo fuera, «EUR/USD
+      // contra EUR/USD» no es una pareja: es un error de quien llama.
+      if (A.name === B.name) continue
+
+      const r = correlDe(matriz, A.name, B.name)
+      // `null` es «no se pudo calcular», no «no se parecen». Saltar es lo
+      // único honesto: inventar un 0 diría que no hay riesgo compartido.
+      if (r == null) continue
+
+      const efectivo = A.lado === B.lado ? r : -r
+      if (Math.abs(efectivo) < minimo) continue
+
+      filas.push({
+        a: A.name,
+        ladoA: A.lado,
+        b: B.name,
+        ladoB: B.lado,
+        r,
+        efectivo,
+        // El único campo que la pantalla necesita para decidir qué decir.
+        mismaApuesta: efectivo > 0,
+      })
+    }
+  }
+
+  // Por tamaño del efecto, no por el de la correlación cruda: lo que importa
+  // es cuánto se dobla (o se anula) el riesgo de verdad.
+  return filas.sort((x, y) => Math.abs(y.efectivo) - Math.abs(x.efectivo))
+}
