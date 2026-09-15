@@ -4715,3 +4715,164 @@ que lleva números dentro.
 cuarta vez: marcaba como error la frase traducida `medicion.pieLinea` solo por
 llevar dígitos. Acotada a **datos puros** —un número suelto o un código de par—
 y comprobado que MUERDE: al quitar un solo `dir="ltr"` saltan 9 elementos.
+
+---
+
+# Cobros y suscripciones: la investigación del 2026-09-15
+
+Néstor pidió **automatizar los cobros, las suscripciones y la suspensión por
+falta de pago**. Esto recoge lo averiguado ese día para no volver a buscarlo.
+**Todavía no se ha construido nada ni se ha elegido plataforma.**
+
+## El punto de partida, comprobado en el código
+
+La app **ya tiene el candado puesto**: `useAuthUser.js` deja entrar solo si
+`users/{uid}.estado === 'aprobado'`. Cualquier otro valor manda a la pantalla
+de entrada. Automatizar **no es construir el candado, es cambiar quién gira la
+llave** — hoy lo hace Néstor a mano en la pestaña Miembros.
+
+Y la llave para escribir en Firestore desde un workflow **ya existe**:
+`FIREBASE_SERVICE_ACCOUNT`, la que usa el vigía para los avisos al celular.
+`scripts/lib/firestore-rest.mjs` sabe `listar` y `borrar`; **le falta un
+`actualizar` (PATCH)**, que es lo único nuevo por ese lado.
+
+## El diseño acordado: una FECHA DE VENCIMIENTO, y el robot cierra solo
+
+Un `venceEl` por miembro y un workflow diario que cierra la puerta al que se le
+pasó. Sirve **igual para los dos carriles**, que es lo que lo hace valer:
+
+| | carril automático | carril manual (Venezuela) |
+|---|---|---|
+| quién pone la fecha | el robot, leyendo la plataforma | Néstor, cuando le pagan |
+| quién cierra la puerta | **el robot** | **el robot igual** |
+
+📌 Lo que arregla: hoy lo manual es manual de principio a fin y **olvidarse deja
+la puerta abierta gratis**. Con la fecha, olvidarse no le abre la puerta a
+nadie. Es la misma asimetría de `yaCorrioHoy` y `esSombra`: equivocarse hacia el
+lado barato.
+
+⚠️ Y encaja con la arquitectura de siempre — **nada recibe visitas, todo
+consulta y publica**. El robot le PREGUNTA a la plataforma quién está al día;
+no hace falta servidor, ni Render, ni Cloud Functions, ni plan de pago de
+Firebase.
+
+## Lo que Néstor decidió
+
+- Clientes: **todo el mundo → acotado a Latinoamérica**, y dentro de ella
+  **Colombia y Venezuela primero**.
+- **Persona natural**, sin empresa, por ahora.
+- Precio de partida: **$15/mes con 1 mes gratis** (sin confirmar).
+
+## Lo que tiene a mano (dicho por él)
+
+| | |
+|---|---|
+| Venezuela | cuentas bancarias · **Binance** · abriría **Pago Móvil** |
+| Colombia | **Bancolombia** · **Davivienda** · **Daviplata** · miraría afiliarse a **Efecty** |
+
+📌 Bancolombia abre una puerta que no se ha mirado todavía: **Wompi es de
+Bancolombia** y acepta PSE, Nequi y transferencia. Para el carril colombiano
+hay que compararla con Mercado Pago antes de decidir.
+
+## ⚠️ VENEZUELA NO SE PUEDE AUTOMATIZAR. Y no es opinable
+
+Lo dice **la propia página de ayuda de Hotmart**: los métodos de pago desde
+Venezuela están restringidos por **las sanciones de la OFAC** (Estados Unidos).
+No es un capricho de esa empresa: le aplica a casi toda plataforma con vínculo
+estadounidense.
+
+| | Venezuela |
+|---|---|
+| Stripe | no |
+| Hotmart | restringido (OFAC) |
+| PayPal | a medias — **no se retira a un banco venezolano** |
+| Mercado Pago | presencia muy limitada |
+
+Lo que sí funciona allá: **Pago Móvil** (bolívares, entre cuentas venezolanas),
+**Binance/USDT** y **Zelle** (exige banco en EE. UU. **de los dos lados**).
+
+⚠️ **Ninguno de los tres cobra solo cada mes.** No existe el cobro recurrente en
+Pago Móvil ni en cripto. **Venezuela será manual siempre**, y quien diga lo
+contrario está vendiendo algo. Por eso el `venceEl` no es un adorno: es lo que
+hace que ese carril cueste un minuto al mes en vez de vigilancia constante.
+
+⚠️ Las sanciones atan a **las plataformas estadounidenses**, no a un colombiano
+que le vende información a un venezolano — por eso las cripto y el Pago Móvil
+funcionan allá: no pasan por esas tuberías. **Esto NO es consejo legal**; si
+crece, lo mira un contador.
+
+## Hotmart: investigada a fondo y DESCARTADA
+
+Parecía la ganadora por los métodos de pago locales (PSE, Efecty, Baloto, OXXO,
+PIX, PagoEfectivo, Pago Fácil, Sencillito), prueba gratis de hasta 30 días,
+webhooks de suscripción y ~9,9 % + $0,10, que sobre $15 son **35 centavos más**
+que un 5 % + $0,50. Se cayó por tres cosas:
+
+1. **Venezuela restringida por OFAC** — lo que Néstor puso como requisito.
+2. **Cláusula de exclusividad:** mientras el producto esté publicado ahí, **no
+   se puede vender en otra parte** (sí se puede tener página de venta propia, y
+   **no se ceden los derechos de autor** para siempre). A Néstor no le cuadró, y
+   con razón.
+3. ⚠️ **Está hecha para CURSOS, no para software.** Su comisión paga reproductor
+   de video y área de miembros que esta app **no usa**. Es la categoría
+   equivocada.
+
+📌 **La distinción que sale de aquí y que hay que tener clara**, porque las dos
+clases de empresa se parecen por fuera:
+
+| | **revendedor / marketplace** | **procesador de pagos** |
+|---|---|---|
+| quiénes | Hotmart, Gumroad, Polar, Lemon Squeezy | Mercado Pago, Wompi, ePayco, PayU |
+| qué hace | **te compra el producto y lo revende** | solo mueve la plata |
+| condiciones | exclusividad, aprobación, revisión | casi ninguna |
+| impuestos | los lleva él | **los llevas tú** |
+
+**Si molesta que un tercero ponga reglas, la salida es un procesador.** El
+precio de esa libertad son los impuestos propios.
+
+⚠️ Y el motivo por el que el 2026-09-15 yo empujaba hacia un revendedor era
+**el IVA europeo** (vender servicios digitales a consumidores de la UE obliga a
+registrarse desde el primer euro, y una persona natural en Colombia no puede).
+**Al acotar a Latinoamérica ese motivo desaparece.** Si algún día se vuelve a
+abrir a Europa, vuelve a aparecer — no olvidarlo.
+
+## Lo que queda pendiente para mañana
+
+1. ❓ **LA pregunta que decide el carril automático**, y hay que hacérsela a
+   ellos: *«cuenta de persona natural en Colombia, ¿puedo cobrar suscripciones
+   recurrentes a clientes de México, Argentina, Chile y Perú?»*. Las cuentas de
+   Mercado Pago son **por país** y eso no se pudo resolver desde aquí.
+2. Comparar **Wompi (Bancolombia)** contra Mercado Pago para Colombia.
+3. Cerrar Venezuela: Binance y/o Pago Móvil, confirmación manual.
+4. **Construir el `venceEl` y el robot** — es lo único que **no depende de
+   ninguna respuesta ajena** y se puede empezar ya.
+5. **Precio por región.** $15 en Venezuela o Argentina deja fuera a mucha gente
+   que sí entraría. No decidido.
+
+⚠️ **Nada de esto se ha construido.** El único cambio real en el repositorio a
+fecha de hoy es este texto.
+
+## Lo que NO hay que rehacer
+
+Varias páginas oficiales están **bloqueadas por la red de estas sesiones**
+(`stripe.com`, `docs.lemonsqueezy.com`, `polar.sh`, `hotmart.com`). Lo de arriba
+sale de sus centros de ayuda accesibles y de fuentes de terceros. **Las
+comisiones exactas y las listas de países se confirman al registrarse**, no de
+memoria — y Hotmart anunció un cambio de tarifas para el **21 de septiembre de
+2026**.
+
+## La IA de promoción, y las tres advertencias que van con ella
+
+Néstor está **ensayando** una IA que hace la página de venta, los videos y la
+segmentación. Está bien y no hay nada que objetar al ensayo. Lo que va escrito:
+
+1. **Meta y Google restringen los anuncios financieros.** Acumular rechazos
+   puede costar la cuenta publicitaria. Presentarla como herramienta de
+   información y educación, sin una sola cifra de ganancia, pasa el filtro — y
+   es lo que la app es.
+2. ⚠️ **Esas IA exageran por defecto**: fajos de billetes y «gana $500 al día»
+   salen solos. **Cada frase se lee antes de publicarla.** El argumento entero
+   del proyecto es enseñar los propios números siendo malos; un video de carros
+   lo mata el primer día.
+3. **No meterle plata a la campaña antes de resolver los cobros.** Hoy cada
+   suscriptor habría que aprobarlo y retirarlo a mano.
