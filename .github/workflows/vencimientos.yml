@@ -1,0 +1,76 @@
+name: Cerrar suscripciones vencidas
+
+# Cada día mira la lista de miembros y le cierra la puerta a quien se le pasó
+# la fecha de vencimiento (`venceEl` en su ficha de Firestore).
+#
+# ⚠️ POR QUÉ EXISTE. El candado de la app ya existía: `useAuthUser.js` deja
+# entrar solo si `estado === 'aprobado'`. Lo que faltaba era quién gira la
+# llave — hasta hoy la giraba Néstor a mano, y eso significa que olvidarse
+# deja la puerta abierta gratis. Con una fecha por miembro, olvidarse ya no le
+# abre la puerta a nadie: el cierre lo hace la máquina.
+#
+# ⚠️ ESTE ROBOT SOLO CIERRA, NUNCA ABRE. Abrir sigue siendo de Néstor en la
+# pestaña Miembros. Cerrar de más se arregla con un toque; abrir de más regala
+# el producto y no se entera nadie.
+#
+# ⚠️ LAS DOS APPS COMPARTEN LA COLECCIÓN `users` (mismo proyecto de Firebase),
+# así que esto gobierna el acceso a Swing Y a Intradía. Por eso vive solo
+# aquí: dos robots sobre la misma lista serían dos programas peleándose por la
+# misma puerta.
+#
+# No gasta créditos de Twelve Data: solo habla con Firestore.
+
+on:
+  schedule:
+    # 05:40 UTC = 00:40 en Colombia. A esa hora ya cambió el día en UTC para
+    # todo el continente, así que nadie se queda fuera «el día que pagó» por
+    # el huso horario — y encima hay un día entero de margen en el propio
+    # robot (`DIAS_GRACIA`), que es la defensa de verdad.
+    #
+    # Todos los días, fines de semana incluidos: una suscripción vence el día
+    # que le toca, no el siguiente lunes.
+    - cron: '40 5 * * *'
+  workflow_dispatch:
+    inputs:
+      aplicar:
+        description: '¿Escribir de verdad? Sin marcar, solo mira y cuenta.'
+        type: boolean
+        default: false
+
+# No escribe en el repositorio: lo que toca está en Firestore.
+permissions:
+  contents: read
+
+concurrency:
+  group: vencimientos
+  cancel-in-progress: false
+
+jobs:
+  cerrar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Cerrar a los vencidos
+        working-directory: app
+        env:
+          # La misma cuenta de servicio que usa el vigía para los avisos al
+          # celular. Se salta las reglas de Firestore a propósito: es la única
+          # forma de leer la lista completa de miembros.
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        # ⚠️ La corrida AUTOMÁTICA siempre aplica; la de a mano solo si se
+        # marca la casilla. Así el botón sirve para mirar sin miedo —que es
+        # para lo que se usa el 90 % de las veces— y el cron hace su trabajo
+        # sin depender de que nadie se acuerde de nada.
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.aplicar }}" = "true" ]; then
+            node scripts/cerrar-vencidos.mjs --aplicar
+          else
+            node scripts/cerrar-vencidos.mjs
+          fi

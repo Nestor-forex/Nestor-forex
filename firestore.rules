@@ -44,10 +44,28 @@ service cloud.firestore {
         && request.resource.data.estado == 'pendiente'
         && request.resource.data.email == request.auth.token.email;
 
+      // ⚠️ UN USUARIO NORMAL SOLO PUEDE CAMBIAR SU NOMBRE. NADA MÁS.
+      //
+      // Antes la regla decía «puede cambiar lo que quiera mientras no toque
+      // `estado` ni `email`». Mientras la ficha solo guardaba el nombre eso
+      // era inofensivo. Dejó de serlo el día que apareció `venceEl`: con la
+      // regla vieja, cualquier miembro aprobado podía escribir su propia
+      // fecha de vencimiento en el año 2099 —sin pasar por la app, hablando
+      // con Firestore directamente— y no volver a pagar nunca. Y la
+      // configuración de Firebase es pública, porque los dos repositorios lo
+      // son.
+      //
+      // Se escribe con una LISTA DE LO PERMITIDO y no de lo prohibido, a
+      // propósito: así el campo que se invente mañana nace protegido. Es la
+      // misma forma de escribir que `esSombra` (una regla nueva nace apagada)
+      // y por la misma razón — olvidarse de proteger algo cuesta caro,
+      // olvidarse de permitir algo solo cuesta un aviso.
+      //
+      // Hoy ninguna de las dos apps escribe en su propia ficha: se comprobó
+      // buscando en `src/` de las dos antes de apretar la regla.
       allow update: if esAdmin()
         || (esPropio(uid)
-            && request.resource.data.estado == resource.data.estado
-            && request.resource.data.email == resource.data.email);
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nombre']));
 
       allow delete: if esAdmin();
 
