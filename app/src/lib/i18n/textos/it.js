@@ -402,6 +402,7 @@ export default {
       'Gli stessi conti, ma della regola che compra ciò che è sceso. Vanno a parte di proposito: sono due esperimenti diversi e unirli non risponde a nessuna delle due domande.',
     titulo: 'Storico dei segnali',
     intro: 'Ogni segnale trovato dalla vedetta e cosa è successo dopo.',
+    pie: 'I pip derivano dall’obiettivo e dallo stop impostati dall’app: NON includono spread né swap, quindi su un conto reale il risultato è un po’ peggiore. Se nello stesso giorno vengono toccati stop e obiettivo conta come persa, perché la candela giornaliera non dice quale sia arrivato prima. Il giorno in cui appare il segnale non conta: l’ingresso è alla sua chiusura.',
     cargando: 'Caricamento dello storico…',
     error: 'Impossibile caricare lo storico. Controlla la connessione.',
     vacio: 'Ancora nessun segnale.',

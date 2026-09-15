@@ -87,6 +87,26 @@ export default function HistorialTab() {
               <Fila key={`${f.id}@${f.vistoEl}`} f={f} t={t} locale={locale} />
             ))}
           </div>
+
+          {/* ⚠️⚠️ ESTE PIE NO ES UN ADORNO LEGAL: dice por dónde cojea el
+              número que se acaba de leer, y cojea por los DOS lados.
+
+              · OPTIMISTA en los costes. Los pips salen del objetivo y el stop
+                que puso la app (`resolver.mjs`: «pips: ganada ? pipBeneficio :
+                −pipRiesgo»), sin restar spread ni swap. En una cuenta real eso
+                pesa: en el informe de Néstor del 2026-09-14 hay una sola
+                operación con −23 dólares SOLO de swap.
+              · PESIMISTA en el orden. Si un mismo día se toca el stop y el
+                objetivo se cuenta como PERDIDA, porque la vela diaria no
+                guarda cuál pasó primero.
+
+              Enseñar el porcentaje sin decir estas dos cosas sería justo lo
+              que esta app dice no hacer. Va DESPUÉS de los números y no antes
+              —al revés que en la actividad o en las tasas— porque aquí no es
+              una advertencia sobre cómo leer el dato: es la letra pequeña de
+              cómo está calculado, y delante de la tabla estorbaría sin que
+              nadie supiera todavía de qué habla. */}
+          <p style={{ ...TEXTO, margin: 0 }}>{t('historial.pie')}</p>
         </>
       )}
       {!filasTodas.length && <MedicionLarga t={t} locale={locale} />}
@@ -205,7 +225,7 @@ function Linea({ t, nombre, ops, acierto, valor, color }) {
           {t('medicion.pieLinea', { ops, acierto })}
         </div>
       </div>
-      <div className="mono" style={{ fontSize: 15, fontWeight: 700, color, whiteSpace: 'nowrap' }}>
+      <div className="mono" dir="ltr" style={{ fontSize: 15, fontWeight: 700, color, whiteSpace: 'nowrap' }}>
         {valor}
       </div>
     </div>
@@ -262,7 +282,7 @@ function Resumen({ resumen, t }) {
 function Dato({ valor, etiqueta, color }) {
   return (
     <div style={{ flex: 1 }}>
-      <div className="mono" style={{ fontSize: 20, fontWeight: 700, color: color || 'var(--text)' }}>
+      <div className="mono" dir="ltr" style={{ fontSize: 20, fontWeight: 700, color: color || 'var(--text)' }}>
         {valor}
       </div>
       <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{etiqueta}</div>
@@ -283,7 +303,9 @@ function Fila({ f, t, locale }) {
     <div className="card" style={{ padding: '10px 12px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-          <span className="mono" style={{ fontSize: 13.5, fontWeight: 700 }}>
+          {/* ⚠️ `ltr` fijo: el código de par y BUY/SELL son jerga invariante,
+              no idioma. Sin esto, en árabe «EUR/USD BUY» se lee al revés. */}
+          <span className="mono" dir="ltr" style={{ fontSize: 13.5, fontWeight: 700 }}>
             {f.par} {t('lado.' + f.lado)}
           </span>
           {/* Solo las reversiones se marcan. Las normales se quedan como
@@ -295,7 +317,7 @@ function Fila({ f, t, locale }) {
         <div style={{ fontSize: 12, fontWeight: 700, color: COLOR[estado] }}>
           {t('historial.' + estado)}
           {typeof f.pips === 'number' && (
-            <span className="mono" style={{ marginInlineStart: 6 }}>
+            <span className="mono" dir="ltr" style={{ marginInlineStart: 6 }}>
               {f.pips >= 0 ? '+' : ''}
               {f.pips}
             </span>

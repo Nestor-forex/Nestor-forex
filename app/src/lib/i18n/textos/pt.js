@@ -406,6 +406,7 @@ export default {
       'As mesmas contas, mas da regra que compra o que caiu. Ficam à parte de propósito: são dois experimentos diferentes e juntá-los não responde a nenhuma das duas perguntas.',
     titulo: 'Histórico de sinais',
     intro: 'Cada sinal que o vigia encontrou e o que aconteceu depois.',
+    pie: 'Os pips saem do objetivo e do stop que a app colocou: NÃO incluem o spread nem o swap, por isso numa conta real o resultado é algo pior. Se no mesmo dia se tocar o stop e o objetivo conta como perdida, porque a vela diária não diz qual aconteceu primeiro. O dia em que o sinal aparece não conta: a entrada é ao seu fecho.',
     cargando: 'Carregando o histórico…',
     error: 'Não foi possível carregar o histórico. Verifique a conexão.',
     vacio: 'Ainda não há nenhum sinal.',
