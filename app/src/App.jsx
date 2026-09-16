@@ -10,6 +10,7 @@ import AvisosCard from './components/AvisosCard'
 import CotizacionesVivo from './components/CotizacionesVivo'
 import Tasas from './components/Tasas'
 import Cot from './components/Cot'
+import Calendario from './components/Calendario'
 import HistorialTab from './components/HistorialTab'
 import TableroCompleto from './components/TableroCompleto'
 import SetupDetalle from './components/SetupDetalle'
@@ -22,6 +23,7 @@ import { useAuthUser } from './lib/useAuthUser'
 import { useMembers } from './lib/useMembers'
 import { useTrades } from './lib/useTrades'
 import { useMarketData } from './lib/useMarketData'
+import { useCalendario } from './lib/useCalendario'
 
 const NOMBRE_APP = 'NESTOR FOREX SWING'
 
@@ -46,6 +48,11 @@ export default function App() {
   const t = useT()
   const { authUser, cargandoAuth, perfilEstado, esAdmin, registrar, ingresar, salir } = useAuthUser()
   const mercado = useMarketData()
+  // El calendario va en su propio archivo y con su propio horario: el barrido
+  // lo publica el vigía una vez al día de lunes a viernes, y el calendario
+  // cada cuatro horas TODOS los días, porque el feed cubre la semana en curso
+  // y cambia de semana el domingo.
+  const calendario = useCalendario()
   const miembros = useMembers(esAdmin)
   const diario = useTrades(authUser?.uid)
 
@@ -176,6 +183,27 @@ export default function App() {
                       aparecen las señales: el aviso es para no tener que
                       volver a esta pantalla a mirar. */}
                   <AvisosCard uid={authUser.uid} />
+                  {/* ⚠️ EL CALENDARIO SE MUDÓ AQUÍ DESDE EL TABLERO COMPLETO
+                      (2026-09-15), y el motivo lo dio Néstor con tres palabras:
+                      **«¿dónde está el calendario?»**.
+
+                      Estaba en el tablero completo, o sea detrás de «Ver tablero
+                      completo →», mientras las otras tres herramientas de
+                      información —spread, tasas y COT— vivían en esta pestaña.
+                      El dueño de la app no lo encontraba; nadie más iba a
+                      encontrarlo.
+
+                      Y es justo el que peor aguanta estar escondido: es el
+                      ÚNICO que caduca en horas. Comprobado ese día contra el
+                      archivo real de producción — había 13 eventos en las
+                      próximas 48 h, con la Fed entre ellos. Un aviso de la Fed
+                      que hay que ir a buscar dos pantallas más adentro no es un
+                      aviso.
+
+                      Va ARRIBA de las otras tres a propósito: aquéllas dicen lo
+                      que cuesta la operación —no cambian de aquí a mañana— y
+                      ésta dice a qué hora conviene no estar dentro. */}
+                  <Calendario cal={calendario} />
                   {/* Debajo de los avisos y no arriba del barrido: el barrido
                       es lo que se viene a mirar, y esto es una herramienta de
                       apoyo para el momento de entrar. */}

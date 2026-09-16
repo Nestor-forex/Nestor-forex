@@ -213,6 +213,7 @@ export default {
       nadaAprovechable: 'Satırlar okundu ama hiçbiri kullanılabilir bir işlem değildi.',
     },
     titulo: "Aracı kurumdan işlemleri içe aktar",
+    desc: 'MT4 veya MT5 raporunuzu yükleyin, işlemleriniz net sonucuyla birlikte kendiliğinden girsin.',
     explicacion: "Geçmişini MT4 (\"Ayrıntılı rapor olarak kaydet\") veya MT5 (\"Rapor\") üzerinden dışa aktar ve buraya yükle. CSV de olur. Sen onaylayana kadar hiçbir şey kaydedilmez.",
     elegir: "Dosya seç…",
     errorLeer: "Dosya okunamadı.",
@@ -228,8 +229,9 @@ export default {
   },
 
   medicion: {
-    titulo: "Peki uzun vadede? 5 yıl boyunca ölçtüklerimiz",
-    avance: ({ acierto, valor }) => `Zamanın %${acierto}’inde doğru çıkıyor ve yine de riske atılan her dolar için ${valor} kaybediyor. Nasıl ölçüldüğünü görmek için dokun.`,
+    titulo: '5 yıllık gerçek piyasa üzerinde backtest',
+    desc: 'Bu uygulama 2021’den beri var olsaydı ne verirdi.',
+    avance: ({ acierto, valor }) => `Zamanın %${acierto}’inde doğru çıkıyor ve yine de riske atılan her dolar için ${valor} kaybediyor.`,
     intro: ({ dias, desde, hasta }) => `Taramayı ${dias} günlük gerçek piyasa üzerinde (${desde} - ${hasta}) gün gün yeniden hesapladık; sanki uygulama o süre boyunca çalışıyormuş gibi, her paritenin Spread'i ve her gecenin Swap'ı düşülerek.`,
     laApp: "Uygulama olduğu gibi, kendi seviyeleriyle",
     varaNeutra: "Aynı uygulama, nötr ölçüyle (Stop ve hedef eşit uzaklıkta)",
@@ -296,7 +298,8 @@ export default {
   },
 
   calendario: {
-    titulo: (v) => `Fiyatı hareketlendirebilecek haberler (${v.n})`,
+    titulo: ({ n }) => `Ekonomik takvim (${n})`,
+    desc: 'Fiyatı hareketlendirebilecek haberler',
     aviso: (v) => `${v.div}: ${v.h} saat sonra önemli veri`,
     intro: 'Fiyatı bir anda hareketlendirebilecek ekonomik veriler. Uygulamadaki hiçbir sinyali değiştirmezler: hangi saatte körlemesine girilmemesi gerektiğini bilmeniz için buradalar.',
     alto: 'Çok oynatır',
@@ -320,14 +323,16 @@ export default {
     pie: 'Yalnızca taramadaki 8 para biriminin yüksek ve orta etkili verileri gösterilir; düşük etkili olanlar gerçekten önemli olanları gölgeleyecekleri için dışarıda bırakılır. Saatler telefonunuzun saatidir. Kaynak: ForexFactory.',
   },
   correl: {
-    titulo: (v) => `Neredeyse aynı hareket eden pariteler (${v.n})`,
+    titulo: ({ n }) => `Pariteler arası korelasyon (${n})`,
+    desc: 'Neredeyse aynı hareket eden pariteler',
     intro: 'Aynı anda iki işlem açmadan önce, bu paritelerin birlikte hareket edip etmediğine bakın. Ediyorlarsa riski dağıtmıyorsunuz: aynı bahsi iki katı büyüklükte oynuyorsunuz.',
     juntos: 'Birlikte hareket ediyorlar',
     opuestos: 'Ters hareket ediyorlar',
     pie: 'Son 60 seansın fiyat değişimleri üzerinden ölçüldü. 0 ile 1 arası: 1\'e ne kadar yakınsa o kadar benzer. Eksi işareti ters yönleri gösterir ve bu aynı risktir.',
   },
   glosario: {
-    titulo: 'Bu terimler ne demek?',
+    titulo: 'Sözlük',
+    desc: 'Bu terimler ne demek?',
     terminos: [
       ['Göreli güç', 'Bir para biriminin diğer 7 tanesine kıyasla ne kadar güçlü ya da zayıf olduğu; son fiyat değişiminin ortalaması alınır. Yüksek = güçlü.'],
       ['Eğilim', 'Bir paritenin şu an hangi tarafa meylettiği: hangi para birimi daha güçlüyse ona göre alım mı satım mı aramak daha mantıklı.'],
@@ -408,6 +413,11 @@ export default {
     pie: 'Sayı her sinyalin yönünü zaten hesaba katar: artı ise toplanırlar, eksi ise birbirini götürürler. Son 60 seansın günlük değişimleriyle ölçülür.',
   },
 
+  plegable: {
+    ver: 'Gör',
+    cerrar: 'Kapat',
+  },
+
   historial: {
     esReversion: 'TERS',
     esCaida: "DÜŞÜŞÜ SATIN AL",
@@ -436,7 +446,8 @@ export default {
   },
 
   tasas: {
-    titulo: 'Açık tutmanın maliyeti',
+    titulo: 'Faiz oranları ve Swap',
+    desc: 'Açık tutmanın maliyeti',
     aviso:
       '⚠️ Bu, aracı kurumunun senden keseceği swap DEĞİLDİR. Merkez bankalarının faizleri arasındaki farktır; swap buradan doğar. Aracı kurum kimsenin yayımlamadığı bir marj ekler ve bu marj simetrik değildir: bir yönde ödersin, diğer yönde bazen alırsın, ama neredeyse hiçbir zaman aynı miktarda. Bu sana yönü ve kabaca büyüklüğü söyler, rakamı değil.',
     intro:
@@ -451,7 +462,8 @@ export default {
   },
 
   cot: {
-    titulo: 'Büyük oyuncuların pozisyonları',
+    titulo: 'Commitments of Traders',
+    desc: 'Büyük oyuncuların pozisyonları',
     aviso: '⚠️ Bu, al ya da sat demez. Bunlar CME vadeli işlem pozisyonlarıdır, Forex piyasasının küçük bir bölümüdür ve günlerce gecikmeyle gelir: CFTC cuma günleri bir önceki salının verileriyle yayımlar. Ayrıca aşırı pozisyonlanmayı kimileri trendin devamı, kimileri yaklaşan bir dönüş olarak okur. Burada hangisinin tuttuğu ölçülmedi.',
     intro: 'Spekülatif fonların — CFTC’nin leveraged funds dediği kesimin — her para biriminde ne kadar uzun ya da kısa pozisyon taşıdığı, tüm açık sözleşmelere oran olarak. Her para birimi dolara karşıdır.',
     comprados: 'Net uzun',
@@ -465,6 +477,7 @@ export default {
 
   diag: {
     titulo: ({ n }) => `Gruplara göre rakamların (${n})`,
+    desc: 'İşlemleriniz parite tipine, yöne ve pariteye göre ayrılmış.',
     aviso: 'Burada yalnızca SENİN yaptıkların sayılıyor. Bu bir tavsiye değil, neyi işlem edeceğini söylemez ve uygulamanın işaret ettikleriyle ilgisi yoktur.',
     ops: 'işlem',
     tipo: 'Parite tipine göre',
