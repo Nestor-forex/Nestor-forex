@@ -5740,3 +5740,103 @@ antes, y no depende de código:
 
 📌 O sea que no es «añadirle una línea al robot»: es que exista la fuente de
 verdad. Mientras no la haya, abrir a mano es lo correcto, no una limitación.
+
+---
+
+# Los tres números de Intradía, cada uno por su lado (2026-09-16)
+
+Néstor: **«quiero que se vean todos —la app (tendencia), la app (rango),
+retroceso (en pruebas)— con operaciones, acertadas y pips, en Intradía en el
+historial como en Swing»**.
+
+## ⚠️ No era solo comodidad: el promedio escondía DOS comportamientos opuestos
+
+Los números reales de producción, que es lo que lo justifica:
+
+| | ops | acertadas | pips |
+|---|---:|---:|---:|
+| Modo tendencia | 27 | 6 (22 %) | **−629** |
+| Modo rango | 24 | 10 (42 %) | **+43** |
+| *la app, junta* | *51* | *16 (31 %)* | *−586* |
+| **SOMBRA · retroceso** | **9** | **5 (56 %)** | **+74** |
+
+**Un 31 % que no describe a ninguno de los dos.** Es exactamente la misma razón
+por la que la sombra nunca se suma a la app, y por la que en Swing los tres
+bloques van separados: **un promedio entre cosas distintas no es un resumen, es
+un número que no significa nada.**
+
+## Las decisiones de forma, que dicen cuál suma y cuál no
+
+⚠️ **Tendencia y rango van en filas COMPACTAS y pegadas al total**, porque son
+sus dos mitades (6+10 = 16 de 51 ✓, −629+43 = −586 ✓). **El retroceso va
+separado con su raya y su etiqueta ámbar**, porque NO suma. La forma tiene que
+decirlo sin que haya que leer nada.
+
+⚠️ **El acierto no se pinta de color y los pips sí.** Está medido en esta misma
+app que se puede acertar más y perder dinero — el modo rango acierta el doble
+que tendencia y aun así casi no gana. Pintar el porcentaje de verde afirmaría
+algo que el número no dice.
+
+⚠️ **Un grupo con cero operaciones se sigue enseñando.** Esconderlo dejaría en
+pantalla solo lo que parece significar algo, que es cómo se fabrica un
+espejismo. Misma decisión que en `Diagnostico`.
+
+## ⚠️ CADA CUBO SE DEFINE POR LO QUE ES, y hay un cajón para lo que no encaje
+
+`deTipo('tendencia')` y `deTipo('rango')`, nunca «todo lo que no sea…». Ese
+fallo ya mordió **cuatro veces** aquí (`esSombra`, `ventasPausadas`,
+`esDeLaApp`, la regla de Firestore): lo que se añada mañana cae dentro en
+silencio.
+
+📌 **Y se añadió un cubo `otros`**, que es la pieza que faltaba en las cuatro
+veces anteriores: un `tipo` nuevo sumaría en el total y **no saldría en ningún
+desglose**, o sea que desaparecería de la vista sin que nada fallara. Ahora
+aparece con su propia fila, aunque salga rara. También recoge el historial
+viejo sin `tipo`.
+
+Nueve comprobaciones nuevas en `prueba-resolver.mjs`, incluida la que de verdad
+importa: **un `tipo` que nadie ha inventado todavía no puede colarse en
+tendencia ni en rango, ni desaparecer.** Comprobado que MUERDE, con el daño
+verificado en su sitio: definir tendencia por descarte tumba **4**.
+
+## ⚠️ Y el error de dirección en árabe, por SÉPTIMA vez
+
+Al mirarlo en Chromium salieron **108 de 114 datos del Historial de Intradía
+pintados al revés en árabe**: el acierto, las operaciones, los pips netos, los
+códigos de par y el resultado de cada fila.
+
+**No lo causó este cambio.** Swing se arregló el 2026-09-15 y
+`HistorialTab.jsx` es **PRIMO**, así que Intradía nunca lo recibió — la misma
+pantalla, el mismo fallo, en el otro repositorio y un día después.
+
+📌 **La lección que este caso añade a las seis anteriores:** cuando se arregla
+algo visual en un archivo PRIMO, **hay que mirar si el gemelo espiritual del
+otro repositorio tiene el mismo agujero**. `gemelos.mjs` vigila los idénticos;
+los primos no los vigila nadie, y ahí es donde se acumulan estas cosas.
+
+Arreglado con la regla de siempre: `dir="ltr"` **solo en lo que NO es idioma**,
+sin tocar la fecha que arma `toLocaleString` ni las etiquetas traducidas.
+
+## 📌 Lo que solo se vio mirando la captura
+
+La primera versión de cada fila ponía **«27 ops» al lado de «6/27»** — el mismo
+número dos veces en el mismo renglón, en una pantalla de 390 px donde el ancho
+es lo que falta. Ni el build ni las siete comprobaciones del navegador lo ven:
+salió mirando la imagen, que es la enésima vez que esa costumbre paga.
+
+## Cómo se verificó
+
+Lint, build y las 19 pruebas sin internet. Los 56 gemelos siguen idénticos.
+
+Y en **Chromium a 390 px con el historial REAL de producción** (60 señales
+bajadas con `curl` y enchufadas por un alias de Vite que sustituye
+`useHistorial` — la pantalla está detrás de Firebase), en español y árabe:
+
+| qué se comprobó | resultado |
+|---|---|
+| los tres a la vista | 6/27 · 22 % · −629 · 10/24 · 42 % · +43 · 56 % · 9 · +74 |
+| que los números cuadren | −629 + 43 = −586, y 6+10 = 16 de 51 = 31 % |
+| el retroceso | separado, con su etiqueta ámbar |
+| **árabe** | **112 hojas de datos, 0 en `rtl`** — con el CSS calculado |
+| desplazamiento lateral | ninguno |
+| errores de la app | ninguno |
