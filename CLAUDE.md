@@ -5515,3 +5515,120 @@ historial **reales de producción**, en español y en árabe:
 | hojas de datos en `rtl` | **0** en los dos idiomas |
 | desplazamiento lateral | ninguno |
 | errores de consola | ninguno |
+
+---
+
+# Cada herramienta dice ahora PARA QUÉ SIRVE (2026-09-16)
+
+Néstor volvió sobre lo mismo y con razón, porque de tres cosas que había
+pedido el día anterior solo se le habían entregado dos:
+
+> «en intradía no veo nada todavía y también noto que los botones tienen el
+> mismo triángulo invertido gris… quiero que todos esos botones tengan sus
+> nombres reales acompañados de sus siglas si las tienen, y agregado a eso lo
+> que es o lo que significa, y **adentro para qué sirve o para qué lo utilizan
+> los traders**, en una explicación abreviada pero con un mensaje claro,
+> preciso y conciso.»
+
+## ⚠️ Lo primero: no veía nada porque NO SE HABÍA FUSIONADO NADA
+
+Las dos observaciones tenían **una sola causa**, y no era caché ni service
+worker. Los PR #84 (Swing) y #60 (Intradía) se quedaron en borrador el día
+anterior —la API de GitHub cortó por límite de peticiones en el último paso— y
+nadie los fusionó. **Las dos apps publicadas seguían siendo las de antes**, con
+la flechita gris de 12 px y sin el calendario en la pestaña Barrido.
+
+Comprobado antes de contestar, no deducido: `grep` de los triángulos sueltos en
+los dos repos da **cero** —las ocho tarjetas ya usan `TarjetaPlegable`— y el
+`git log` de `main` no tenía los commits. Fusionados los dos y sigue lo demás.
+
+📌 **Y la lección no es «acordarse de fusionar»:** un trabajo verificado en
+navegador, con todas las pruebas en verde, **vale exactamente cero hasta que
+está en `main`**. Néstor no ve ramas: ve la app publicada.
+
+## Lo que faltaba de verdad: la cuarta cosa
+
+De las cuatro que pidió, se habían hecho tres —sigla, nombre real y descripción
+de qué es— y **faltaba la que más le importaba**: para qué se usa. La
+diferencia no es matiz:
+
+| | ejemplo |
+|---|---|
+| QUÉ ES (ya estaba, fuera) | «Lo que tienen comprado los grandes» |
+| **PARA QUÉ SIRVE** (nuevo, dentro) | «para saber si una apuesta ya está muy llena: cuando casi todos los grandes están del mismo lado, queda poca gente por entrar y mucha por salir» |
+
+Con lo primero la herramienta se entiende y no se sabe qué hacer con ella.
+
+`TarjetaPlegable` gana la ranura `paraQue`, que se pinta **lo primero al
+abrir**, con su rótulo y una raya al costado. Ocho tarjetas en Swing
+(calendario, tasas, COT, correlación, glosario, BACKTEST, tus números,
+importar) y cinco en Intradía, en los **13 idiomas** de cada app.
+
+## ⚠️ Las decisiones que no hay que ablandar
+
+⚠️ **NINGUNA LLEVA DIRECCIÓN.** Al redactar un «para qué sirve» la frase se
+quiere terminar sola en consejo («…así sabes cuándo comprar»), y eso convierte
+en FILTRO lo que es información — la línea que este proyecto no cruza sin pasar
+por el banco de pruebas. Por eso varias acaban diciendo lo que NO dicen: el
+calendario «no dice hacia dónde se va a mover, solo cuándo va a haber
+sacudida»; el COT «no dice qué par operar ni cuándo».
+
+⚠️ **VA ANTES DEL AVISO ROJO, y eso NO rompe la regla** de «el aviso va antes
+de ningún número»: esto no es un número. El orden queda **para qué sirve →
+aviso → datos**, y está comprobado en el navegador (`esPrimero`).
+
+⚠️ **LA PASTILLA PASÓ AL VERDE DE LA APP.** La primera versión la pintaba en
+`--text-secondary` sobre `--bg-input`: **gris sobre gris**, o sea del color de
+lo que no se toca — exactamente de lo que Néstor se quejaba, aunque ya llevara
+la palabra dentro. El verde es el acento de la marca y aquí **no afirma nada
+sobre ningún dato**: es un control, no un valor. Es el matiz de la regla
+«antes de pintar algo de color, preguntarse qué afirma ese color» — **un botón
+solo afirma que es un botón**.
+
+## La comprobación que lo vigila, y muerde
+
+`prueba-idiomas.mjs`, bloque nuevo (GEMELO, en las dos apps). **No lee una
+lista escrita a mano**: abre todos los `.jsx`, se queda con los que usan
+`TarjetaPlegable` y exige que cada uno pase un `paraQue` **y que la clave que
+nombra exista en `es.js`**.
+
+Vigila los dos fallos silenciosos de esta pantalla:
+- **la tarjeta novena que nadie explique** — no falla nada, solo sale sin el
+  bloque y nadie se entera;
+- **un `t('x.paraQue')` que no exista** — un `t()` sin clave **no da error:
+  sale en blanco**.
+
+Más una guarda para que no se adapte a lo que encuentre: si algún día se
+renombra el componente, el bucle no entraría nunca y quedaría en verde sin
+haber mirado ni una tarjeta.
+
+**Comprobado que muerde, con el daño verificado en su sitio antes de darlo por
+bueno** (lección del 2026-09-03): quitarle el `paraQue` al COT falla 1;
+apuntarlo a una clave inventada falla 1.
+
+## Cómo se verificó
+
+Lint, build y **todas** las pruebas sin internet en los dos repos (24 y 19).
+Los 56 gemelos siguen idénticos.
+
+Y en **Chromium a 390 px**, banco aislado (las tarjetas están detrás de
+Firebase), en español y en árabe, con tres tarjetas distintas a la vez:
+
+| qué se comprobó | resultado |
+|---|---|
+| las tres pastillas | palabra + flecha, en `oklch(0.78 0.13 155)` — el verde, no gris |
+| el bloque nuevo | rótulo traducido y 152-253 caracteres de texto en los dos idiomas |
+| su posición | **el primero** dentro de la tarjeta, antes del aviso |
+| el aviso urgente del calendario | «USD: dato importante en 6 h» sin abrir, y su versión árabe |
+| **árabe** | pastilla a la izquierda, la raya del bloque volteada, **12 hojas de datos y 0 en `rtl`** |
+| desplazamiento lateral | ninguno |
+| errores de la app | ninguno |
+
+📌 **Y dos tropiezos MÍOS del banco de pruebas, no de la app** — que es la
+cuarta vez que pasa y por eso se escribe: los datos de mentira tenían la forma
+equivocada (`Calendario` recibe el calendario, no el envoltorio del hook; el
+campo del Diario es `pl`, no `resultado`), así que dos de las tres tarjetas no
+se pintaban y parecía un fallo. Y una comprobación mía exigía «en 7 h» cuando
+el texto dice 6, porque `horasHasta` redondea hacia abajo. **Antes de creerse
+que la app está rota, comprobar que el banco de pruebas mide lo que dice
+medir.**

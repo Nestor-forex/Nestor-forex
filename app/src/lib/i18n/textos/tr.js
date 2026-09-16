@@ -202,6 +202,7 @@ export default {
   },
 
   importar: {
+    paraQue: 'Aracı kurumunuzun zaten kaydettiğini elle kopyalamaktan kurtarır. NET sonuç girer, swap ve komisyon düşülmüş olarak — kazanıp kaybettiğinizi gerçekten söyleyen tek şey odur.',
     aviso: {
       vacio: 'Dosya boş.',
       sinTabla: 'Dosyada tablo bulunamadı.',
@@ -229,6 +230,7 @@ export default {
   },
 
   medicion: {
+    paraQue: 'Backtest, kuralları geçmiş piyasada yeniden çalıştırıp ne getireceklerini görmektir. Yatırımcılar bir stratejinin avantajı olup olmadığını, parayı riske atmadan ÖNCE bilmek için kullanır. İşte bizimki, sonucu ne olursa olsun.',
     titulo: '5 yıllık gerçek piyasa üzerinde backtest',
     desc: 'Bu uygulama 2021’den beri var olsaydı ne verirdi.',
     avance: ({ acierto, valor }) => `Zamanın %${acierto}’inde doğru çıkıyor ve yine de riske atılan her dolar için ${valor} kaybediyor.`,
@@ -298,6 +300,7 @@ export default {
   },
 
   calendario: {
+    paraQue: 'Yatırımcılar giriş SAATİNİ seçmek için bakar: önemli bir veri açıklanmadan dakikalar önce fiyat sıçrar ve spread açılır, yani yanılmanın en pahalı olduğu andır. Fiyatın nereye gideceğini söylemez, sadece ne zaman sarsıntı olacağını.',
     titulo: ({ n }) => `Ekonomik takvim (${n})`,
     desc: 'Fiyatı hareketlendirebilecek haberler',
     aviso: (v) => `${v.div}: ${v.h} saat sonra önemli veri`,
@@ -323,6 +326,7 @@ export default {
     pie: 'Yalnızca taramadaki 8 para biriminin yüksek ve orta etkili verileri gösterilir; düşük etkili olanlar gerçekten önemli olanları gölgeleyecekleri için dışarıda bırakılır. Saatler telefonunuzun saatidir. Kaynak: ForexFactory.',
   },
   correl: {
+    paraQue: 'Yatırımcılar aynı anda iki işlem açmadan önce, farkında olmadan aynı bahsi tekrarlamamak için bakar. Aynı yönde hareket eden iki parite riski dağıtmaz: ikiye katlar.',
     titulo: ({ n }) => `Pariteler arası korelasyon (${n})`,
     desc: 'Neredeyse aynı hareket eden pariteler',
     intro: 'Aynı anda iki işlem açmadan önce, bu paritelerin birlikte hareket edip etmediğine bakın. Ediyorlarsa riski dağıtmıyorsunuz: aynı bahsi iki katı büyüklükte oynuyorsunuz.',
@@ -331,6 +335,7 @@ export default {
     pie: 'Son 60 seansın fiyat değişimleri üzerinden ölçüldü. 0 ile 1 arası: 1\'e ne kadar yakınsa o kadar benzer. Eksi işareti ters yönleri gösterir ve bu aynı risktir.',
   },
   glosario: {
+    paraQue: 'Tablolarda tanımadığınız bir kelime varsa buradan bakın. Bunlar herhangi bir işlem platformunda karşınıza çıkacak terimler, bu uygulamanın uydurmaları değil: öğrenmek burada da dışarıda da işinize yarar.',
     titulo: 'Sözlük',
     desc: 'Bu terimler ne demek?',
     terminos: [
@@ -414,6 +419,7 @@ export default {
   },
 
   plegable: {
+    paraQue: 'Ne işe yarar',
     ver: 'Gör',
     cerrar: 'Kapat',
   },
@@ -446,6 +452,7 @@ export default {
   },
 
   tasas: {
+    paraQue: 'Bir işlem gecelemek üzereyse yatırımcılar buna bakar: hangi paritelerde faizin her gece lehinize, hangilerinde aleyhinize çalıştığını gösterir. Aracı kurumunuzun keseceği kesin tutar değildir.',
     titulo: 'Faiz oranları ve Swap',
     desc: 'Açık tutmanın maliyeti',
     aviso:
@@ -462,6 +469,7 @@ export default {
   },
 
   cot: {
+    paraQue: 'Yatırımcılar bir bahsin çoktan kalabalıklaşıp kalabalıklaşmadığını anlamak için bakar: büyükler neredeyse tamamen aynı taraftaysa, girecek az, çıkacak çok kişi kalır. Haftalık ve gecikmeli bir arka plan bilgisidir. Hangi pariteyi ne zaman işlem yapacağınızı söylemez.',
     titulo: 'Commitments of Traders',
     desc: 'Büyük oyuncuların pozisyonları',
     aviso: '⚠️ Bu, al ya da sat demez. Bunlar CME vadeli işlem pozisyonlarıdır, Forex piyasasının küçük bir bölümüdür ve günlerce gecikmeyle gelir: CFTC cuma günleri bir önceki salının verileriyle yayımlar. Ayrıca aşırı pozisyonlanmayı kimileri trendin devamı, kimileri yaklaşan bir dönüş olarak okur. Burada hangisinin tuttuğu ölçülmedi.',
@@ -476,6 +484,7 @@ export default {
   },
 
   diag: {
+    paraQue: 'Yatırımcılar kendi rakamlarını, fark etmeden nerede kaybettiklerini bulmak için gözden geçirir: bir parite türü, bir yön ya da belirli bir parite. Az işlemle hiçbir şey ifade etmez, bu yüzden her yüzdenin yanında hata payı yazar.',
     titulo: ({ n }) => `Gruplara göre rakamların (${n})`,
     desc: 'İşlemleriniz parite tipine, yöne ve pariteye göre ayrılmış.',
     aviso: 'Burada yalnızca SENİN yaptıkların sayılıyor. Bu bir tavsiye değil, neyi işlem edeceğini söylemez ve uygulamanın işaret ettikleriyle ilgisi yoktur.',

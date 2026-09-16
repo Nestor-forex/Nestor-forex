@@ -206,6 +206,7 @@ export default {
   },
 
   importar: {
+    paraQue: 'Cela évite de recopier à la main ce que ton broker a déjà noté. C\'est le résultat NET qui entre, swap et commission déjà déduits, la seule chose qui dit vraiment si tu as gagné ou perdu.',
     aviso: {
       vacio: 'Le fichier est vide.',
       sinTabla: 'Aucun tableau trouvé dans le fichier.',
@@ -233,6 +234,7 @@ export default {
   },
 
   medicion: {
+    paraQue: 'Un backtest, c\'est repasser les règles sur le marché du passé pour voir ce qu\'elles auraient donné. Les traders s\'en servent pour savoir si une stratégie a un avantage AVANT d\'y risquer de l\'argent. Voici le nôtre, quel qu\'en soit le résultat.',
     titulo: 'Backtest sur 5 ans de marché réel',
     desc: 'Ce que cette app aurait donné si elle avait existé depuis 2021.',
     avance: ({ acierto, valor }) => `Elle a raison ${acierto}% du temps et perd quand même ${valor} par dollar risqué.`,
@@ -303,6 +305,7 @@ export default {
   },
 
   calendario: {
+    paraQue: 'Les traders le consultent pour choisir l\'HEURE d\'entrer : quelques minutes avant une publication importante, le prix saute et le spread s\'élargit, c\'est donc là que se tromper coûte le plus cher. Il ne dit pas dans quel sens le prix ira, seulement quand ça va secouer.',
     titulo: ({ n }) => `Calendrier économique (${n})`,
     desc: 'Nouvelles qui peuvent bouger le prix',
     aviso: (v) => `${v.div} : donnée importante dans ${v.h} h`,
@@ -328,6 +331,7 @@ export default {
     pie: 'Seules les données à fort et moyen impact des 8 devises du balayage sont affichées ; celles à faible impact sont écartées car elles masqueraient celles qui comptent. Les heures sont celles de votre téléphone. Source : ForexFactory.',
   },
   correl: {
+    paraQue: 'Les traders la regardent avant d\'ouvrir deux positions à la fois, pour ne pas répéter le même pari sans s\'en apercevoir. Deux paires qui bougent pareil ne répartissent pas le risque : elles le doublent.',
     titulo: ({ n }) => `Corrélation entre paires (${n})`,
     desc: 'Paires qui bougent presque pareil',
     intro: 'Avant d\'ouvrir deux positions à la fois, regardez si ces paires vont ensemble. Si oui, vous ne répartissez pas le risque : vous faites le même pari en double.',
@@ -336,6 +340,7 @@ export default {
     pie: 'Mesuré sur les variations de prix des 60 dernières séances. De 0 à 1 : plus c\'est proche de 1, plus elles se ressemblent. Le signe moins indique des sens opposés, et c\'est le même risque.',
   },
   glosario: {
+    paraQue: 'S\'il y a un mot des tableaux que tu ne reconnais pas, cherche-le ici. Ce sont les termes que tu retrouveras sur n\'importe quelle plateforme de trading, pas des inventions de cette app : les apprendre te sert ici et ailleurs.',
     titulo: 'Glossaire',
     desc: 'Que veulent dire ces termes ?',
     terminos: [
@@ -419,6 +424,7 @@ export default {
   },
 
   plegable: {
+    paraQue: 'À quoi ça sert',
     ver: 'Voir',
     cerrar: 'Fermer',
   },
@@ -451,6 +457,7 @@ export default {
   },
 
   tasas: {
+    paraQue: 'Les traders les regardent quand une position va rester ouverte d\'un jour à l\'autre : elles indiquent dans quelles paires l\'intérêt joue en ta faveur nuit après nuit et dans lesquelles il joue contre toi. Ce n\'est pas le montant exact que ton broker te facturera.',
     titulo: "Taux d'intérêt et swap",
     desc: 'Ce que coûte de la garder ouverte',
     aviso:
@@ -467,6 +474,7 @@ export default {
   },
 
   cot: {
+    paraQue: 'Les traders le regardent pour savoir si un pari est déjà encombré : quand presque tous les gros sont du même côté, il reste peu de monde pour entrer et beaucoup pour sortir. C\'est un contexte de fond, hebdomadaire et en retard. Il ne dit ni quelle paire ni quand.',
     titulo: 'Commitments of Traders',
     desc: 'Ce que détiennent les grands opérateurs',
     aviso: '⚠️ Ceci ne dit PAS d’acheter ou de vendre. Ce sont des positions sur les futures du CME, une petite partie du marché Forex, et elles arrivent avec plusieurs jours de retard : la CFTC publie le vendredi les données du mardi précédent. Et un positionnement extrême, les uns le lisent comme la poursuite de la tendance et les autres comme un retournement. Ce qui est juste ici n’a pas été mesuré.',
@@ -481,6 +489,7 @@ export default {
   },
 
   diag: {
+    paraQue: 'Les traders relisent leurs propres chiffres pour trouver où ils perdent sans s\'en rendre compte : un type de paire, un sens, ou une paire précise. Avec peu d\'opérations cela ne veut rien dire, et c\'est pourquoi chaque pourcentage porte sa marge à côté.',
     titulo: ({ n }) => `Tes chiffres par groupe (${n})`,
     desc: 'Vos opérations séparées par type de paire, par direction et par paire.',
     aviso: 'Ceci compte ce que TU as fait, rien de plus. Ce n’est pas un conseil, cela ne dit pas quoi trader, et cela n’a rien à voir avec ce que l’app signale.',
