@@ -5632,3 +5632,111 @@ se pintaban y parecía un fallo. Y una comprobación mía exigía «en 7 h» cua
 el texto dice 6, porque `horasHasta` redondea hacia abajo. **Antes de creerse
 que la app está rota, comprobar que el banco de pruebas mide lo que dice
 medir.**
+
+---
+
+# El recuadro «VER», y el experimento de Intradía que nadie veía (2026-09-16)
+
+Néstor pidió cuatro cosas. Dos eran trabajo, una era una corrección mía y la
+cuarta se queda anotada para más adelante.
+
+## 1. El botón: tercera versión, y las dos anteriores fallaron por lo mismo
+
+> «en vez de tener el triángulo invertido le colocas un recuadro allí mismo con
+> la palabra VER dentro, pero el recuadro quiero que tenga color; ese color lo
+> escoges tú bajo tu propio criterio»
+
+| versión | qué era | por qué falló |
+|---|---|---|
+| 1ª | una flechita ▸ de 12 px en `--text-muted` | un triángulo del color del texto apagado dice «adorno», no «tócame» |
+| 2ª | la palabra dentro de una pastilla, **en gris sobre gris** | seguía siendo del color de lo que NO se toca — él lo dijo igual: «los botones tienen el mismo triángulo invertido gris» |
+| **3ª** | **recuadro RELLENO de color con la palabra dentro, sin flecha** | — |
+
+⚠️ **SIN FLECHA, porque él lo pidió así** («en vez de»). La palabra sola basta
+y no hay ningún glifo que interpretar. Al abrir cambia a «CERRAR».
+
+⚠️ **CERRADO VA RELLENO, ABIERTO VA HUECO.** No es estético: cerrado tiene que
+llamar; abierto ya cumplió. Ocho recuadros rellenos a la vez serían ocho cosas
+gritando y no se leería ninguna. Tiene comprobación propia en el navegador.
+
+### ⚠️⚠️ EL COLOR NO ES VERDE, Y ES LO MENOS OBVIO DE TODO ESTO
+
+Lo natural era usar el verde de la marca. **Sería un error en una app de
+trading:** el verde y el rojo YA significan dinero y así se usan en el
+Historial, el Diario y el detalle de la señal. Un botón verde sólido al lado de
+esos números se leería como «esto es lo bueno» — exactamente la regla de la
+casa: **antes de pintar algo de color, preguntarse qué afirma ese color.** Un
+botón solo debe afirmar que es un botón.
+
+Se usa **el acento de marca de cada app**, que no significa nada en plata:
+**cian en Swing, DORADO en Intradía** (`--cta`, `--cta-tinta`).
+
+📌 **Y de paso estuve a punto de borrar la identidad de Intradía.** Copié el
+`index.css` de Swing encima del suyo dando por hecho que era gemelo. **No lo
+es**, y su propio archivo lo decía: *«Dorado de la marca del intradía… Es el
+acento que distingue esta app de la de swing, que usa cian.»* Se restauró antes
+de commitear. La regla de siempre con otra cara: **`gemelos.mjs` dice qué se
+puede copiar; lo que no está en la lista se mira antes de tocarlo.**
+
+## 2. «En Intradía no tengo los experimentos» — tenía razón a medias
+
+Y la mitad que faltaba es la que importa. Comprobado contra el historial REAL
+de producción antes de contestarle, no deducido:
+
+| | ops | ganadas | pips |
+|---|---:|---:|---:|
+| app · tendencia | 27 | 6 | −629 |
+| app · rango | 24 | 10 | +43 |
+| **SOMBRA · retroceso** | **9** | **5** | **+74** |
+
+- **La reversión y «comprar la caída» NO están en Intradía a propósito**: están
+  medidas EN ESA APP y pierden («comprar la caída», −0,08 plano en los tres
+  tamaños). Portarlas sería traer una regla que ya se sabe que no funciona con
+  velas de una hora. No es un olvido.
+- **Pero Intradía SÍ tiene su propio experimento** —el **retroceso**— y
+  `resumir()` devuelve su cubo desde siempre… **sin que nadie lo pintara.**
+  Nueve operaciones reales acumuladas durante semanas y ni una visible.
+
+📌 **Es el mismo descuido que en Swing el 2026-09-07** (`filasTodas` no incluía
+`caida`). Van dos veces: **un experimento nuevo no termina cuando el vigía lo
+anota, termina cuando se puede VER.**
+
+Ahora Intradía tiene su bloque, con etiqueta ámbar `RETROCESO`, su raya de
+separación y su texto propio en los 13 idiomas. Más el título «Las señales de
+la app» sobre el primer bloque — el mismo arreglo que Swing, por la misma razón:
+sin él, ese porcentaje se lee como el total de todo.
+
+⚠️ **Los números NUNCA se suman.** Y **las filas de sombra siguen fuera de la
+lista** a propósito: `unir()` las filtra con un motivo escrito («se leerían como
+recomendaciones»), y esa decisión no se tocó. Se enseñan los NÚMEROS, no las
+señales.
+
+## 3. El COT no está en Intradía, y no debe estarlo
+
+Preguntó por él. **Es deliberado y ya estaba escrito:** el COT es semanal y
+llega con entre 3 y 10 días de retraso. Para operaciones de horas a días todavía
+dice algo; para una que abre y cierra el mismo día, no dice nada.
+
+## 4. ⚠️ PENDIENTE, NO CONSTRUIDO: que el robot también ABRA
+
+> «cuando por ejemplo tenga muchos suscriptores yo quisiera que también cierre y
+> abra, y que no toque lo que solo yo coloque a mano sin fechas»
+
+**Lo segundo YA se cumple hoy**: `decidir()` deja en paz a quien no tiene
+`venceEl` — es una de las guardas escritas del robot, con pruebas.
+
+**Lo primero NO está hecho y no se empieza sin confirmación.** Lo que hace falta
+antes, y no depende de código:
+
+1. **Una plataforma de pago elegida y respondiendo.** Hoy el robot no tiene a
+   quién preguntarle «¿este pagó?». Sigue pendiente la pregunta a Mercado Pago
+   (persona natural en Colombia cobrando a México, Argentina, Chile y Perú).
+2. ⚠️ **Y la asimetría no se ablanda sin más.** Hoy el robot SOLO CIERRA porque
+   los dos errores no cuestan lo mismo: cerrar de más se arregla con un toque y
+   la persona escribe para quejarse; **abrir de más regala el producto y no se
+   entera nadie.** Para que abra solo, lo que tiene que abrir no puede ser un
+   criterio nuestro: **tiene que ser un pago confirmado por la plataforma**, y
+   entonces «abrir» es solo copiar la fecha que ella da.
+
+📌 O sea que no es «añadirle una línea al robot»: es que exista la fuente de
+verdad. Mientras no la haya, abrir a mano es lo correcto, no una limitación.

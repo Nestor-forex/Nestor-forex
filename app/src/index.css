@@ -17,6 +17,19 @@
   --amber: oklch(0.75 0.13 85);
   --gray-mid: oklch(0.6 0.04 255);
 
+  /* ⚠️ EL COLOR DE LOS BOTONES DE «VER», Y POR QUÉ ES CIAN Y NO VERDE.
+     Néstor pidió (2026-09-16) que el recuadro llevara color y dejó la
+     elección: «ese color lo escoges tú bajo tu propio criterio».
+     En una app de trading el VERDE y el ROJO ya significan dinero — ganas o
+     pierdes — y están usados así en el Historial, el Diario y el detalle de
+     la señal. Un botón verde sólido al lado de esos números se leería como
+     «esto es lo bueno», que es justo la regla de la casa: antes de pintar
+     algo de color, preguntarse qué afirma ese color. El cian está en la
+     paleta de la portada (cian/blanco/verde), no significa nada en plata, y
+     no se confunde con ningún dato de la pantalla. */
+  --cta: oklch(0.76 0.13 210);
+  --cta-tinta: oklch(0.16 0.03 240);
+
   --radius-control: 8px;
   --radius-card: 10px;
   --tap-min: 44px;
