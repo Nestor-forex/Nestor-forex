@@ -1,14 +1,18 @@
 {
-  "actualizadoEl": "2026-09-15T19:14:21.808Z",
-  "cierre": "2026-09-15",
+  "actualizadoEl": "2026-09-16T19:06:19.735Z",
+  "cierre": "2026-09-16",
   "senales": [
     "USD/CHF|COMPRA|tendencia",
     "EUR/NZD|COMPRA|tendencia",
+    "USD/CAD|COMPRA|tendencia",
     "NZD/USD|VENTA|tendencia",
-    "GBP/JPY|VENTA|tendencia",
     "NZD/CAD|VENTA|tendencia",
+    "GBP/JPY|VENTA|tendencia",
     "NZD/USD|COMPRA|reversion",
-    "GBP/JPY|COMPRA|reversion",
-    "NZD/CAD|COMPRA|reversion"
+    "NZD/CAD|COMPRA|reversion",
+    "USD/CHF|VENTA|reversion",
+    "NZD/USD|COMPRA|caida",
+    "NZD/CAD|COMPRA|caida",
+    "USD/CHF|VENTA|caida"
   ]
 }
