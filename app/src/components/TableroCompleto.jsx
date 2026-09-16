@@ -3,8 +3,9 @@ import { limitaciones } from '../lib/fakeData'
 import { sesgoColor, tendColor, rsiColor, fmtDif } from '../lib/display'
 import { fmtFechaHoy, fmtFecha, claveSesionActiva } from '../lib/format'
 import { useIdioma } from '../lib/i18n'
-import { MEDICION, REAL } from '../lib/medicion'
+import { MEDICION } from '../lib/medicion'
 import { VENTAS_PAUSADAS } from '../lib/reglas'
+import { useResumenReal } from '../lib/useHistorial'
 import { generarReporteMd, descargarMd } from '../lib/reporte'
 import BarraFuerza from './BarraFuerza'
 import Sparkline from './Sparkline'
@@ -49,7 +50,7 @@ function SetupCard({ s, t, onVerSetup }) {
           pantalla lo hacía parecer una contradicción. */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 8 }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-          <span className="mono" style={{ fontWeight: 600, fontSize: 16 }}>
+          <span className="mono" dir="ltr" style={{ fontWeight: 600, fontSize: 16 }}>
             {s.name}
           </span>
           {s.tipo === 'reversion' && (
@@ -74,17 +75,17 @@ function SetupCard({ s, t, onVerSetup }) {
       </div>
       <div className="mono" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 12px', fontSize: 12.5 }}>
         <span style={{ color: 'var(--text-muted)' }}>{t('setup.soporte')}</span>
-        <span>{s.sup}</span>
+        <span dir="ltr">{s.sup}</span>
         <span style={{ color: 'var(--text-muted)' }}>{t('setup.resistencia')}</span>
-        <span>{s.res}</span>
+        <span dir="ltr">{s.res}</span>
         <span style={{ color: 'var(--text-muted)' }}>{t('setup.entrada')}</span>
-        <span>{s.entrada}</span>
+        <span dir="ltr">{s.entrada}</span>
         <span style={{ color: 'var(--text-muted)' }}>{t('setup.stopLoss')}</span>
-        <span>{s.sl}</span>
+        <span dir="ltr">{s.sl}</span>
         <span style={{ color: 'var(--text-muted)' }}>{t('setup.takeProfit')}</span>
-        <span>{s.tp}</span>
+        <span dir="ltr">{s.tp}</span>
         <span style={{ color: 'var(--text-muted)' }}>{t('setup.rb')}</span>
-        <span style={{ color: s.rrOk ? 'var(--green)' : 'var(--amber)' }}>{s.rr}</span>
+        <span dir="ltr" style={{ color: s.rrOk ? 'var(--green)' : 'var(--amber)' }}>{s.rr}</span>
       </div>
       <p style={{ margin: '12px 0 0', fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
         {t('setup.invalida')} {s.inval}
@@ -106,7 +107,7 @@ function RazonList({ items, emptyText }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {items.map((it) => (
         <div key={it.name} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span className="mono" style={{ fontWeight: 600 }}>
+          <span className="mono" dir="ltr" style={{ fontWeight: 600 }}>
             {it.name}
           </span>
           <span style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.45 }}>{it.razon}</span>
@@ -118,6 +119,10 @@ function RazonList({ items, emptyText }) {
 
 export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], correlaciones = [], riesgoSenales = [], corte }) {
   const { t, locale } = useIdioma()
+  // Cómo le va de verdad a la regla de reversión, contado en vivo. Ver el
+  // porqué en `useResumenReal`: este número estuvo escrito a mano y se quedó
+  // viejo enseñando una pérdida como ganancia.
+  const real = useResumenReal()
   const fecha = useMemo(() => fmtFechaHoy(locale), [locale])
   const sesion = t(claveSesionActiva())
 
@@ -203,7 +208,7 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
             {pares.map((p) => (
               <div key={p.name} className="card" style={{ padding: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <span className="mono" style={{ fontWeight: 600, fontSize: 14 }}>
+                  <span className="mono" dir="ltr" style={{ fontWeight: 600, fontSize: 14 }}>
                     {p.name}
                   </span>
                   {/* El clima va junto al sesgo y no en una fila propia: son
@@ -219,10 +224,10 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                   <Sparkline values={p.serie20} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span className="mono" style={{ fontSize: 16, fontWeight: 700 }}>
+                    <span className="mono" dir="ltr" style={{ fontSize: 16, fontWeight: 700 }}>
                       {p.precio.toFixed(p.dec)}
                     </span>
-                    <span className="mono" style={{ fontSize: 12, fontWeight: 600, color: p.cambio20 >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                    <span className="mono" dir="ltr" style={{ fontSize: 12, fontWeight: 600, color: p.cambio20 >= 0 ? 'var(--green)' : 'var(--red)' }}>
                       {p.cambio20 >= 0 ? '+' : ''}
                       {p.cambio20.toFixed(2)}% · {t('tablero.sufijoVelas')}
                     </span>
@@ -230,11 +235,11 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
                 </div>
                 <div className="mono" style={{ marginTop: 10, fontSize: 11.5, color: 'var(--text-secondary)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <span>
-                    {t('tablero.dif')} <span>{fmtDif(p.dif)}</span>
+                    {t('tablero.dif')} <bdi dir="ltr">{fmtDif(p.dif)}</bdi>
                   </span>
                   <span style={{ color: tendColor(p.tend) }}>{t(`tend.${p.tend}`)}</span>
-                  <span style={{ color: rsiColor(p.rsi) }}>RSI {p.rsi}</span>
-                  <span>{t('tablero.atrPorHora', { v: p.atr.toFixed(2) })}</span>
+                  <span dir="ltr" style={{ color: rsiColor(p.rsi) }}>RSI {p.rsi}</span>
+                  <span dir="ltr">{t('tablero.atrPorHora', { v: p.atr.toFixed(2) })}</span>
                 </div>
               </div>
             ))}
@@ -328,20 +333,39 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
               }}
             >
               <span style={{ color: 'var(--text-muted)' }}>{t('reversion.enBanco')}</span>
-              <span>
+              <span dir="ltr">
                 {MEDICION.reversion.operaciones} ops · {MEDICION.reversion.acierto}% ·{' '}
                 <strong style={{ color: 'var(--green)' }}>
                   +{MEDICION.reversion.porRiesgo.toFixed(3)}
                 </strong>
               </span>
-              <span style={{ color: 'var(--text-muted)' }}>{t('reversion.enReal')}</span>
-              <span>
-                {REAL.reversion.resueltas} ops · {REAL.reversion.ganadas}–{REAL.reversion.perdidas} ·{' '}
-                <strong style={{ color: REAL.reversion.pips >= 0 ? 'var(--green)' : 'var(--red)' }}>
-                  {REAL.reversion.pips >= 0 ? '+' : ''}
-                  {REAL.reversion.pips} pips
-                </strong>
-              </span>
+              {/* ⚠️ Si no se pudo contar, esta fila NO SE PINTA — ni la
+                  etiqueta. Antes había aquí un número escrito a mano que hacía
+                  de respaldo, y ese respaldo es justo lo que se quedó viejo
+                  enseñando una pérdida como ganancia. Una fila que falta se
+                  nota y se pregunta; un número que favorece al experimento se
+                  cree. */}
+              {!real.error && (
+                <>
+                  <span style={{ color: 'var(--text-muted)' }}>{t('reversion.enReal')}</span>
+                  <span dir="ltr">
+                    {real.cargando || !real.resumen ? (
+                      '…'
+                    ) : (
+                      <>
+                        {real.resumen.reversion.total} ops · {real.resumen.reversion.ganadas}–
+                        {real.resumen.reversion.perdidas} ·{' '}
+                        <strong
+                          style={{ color: real.resumen.reversion.pips >= 0 ? 'var(--green)' : 'var(--red)' }}
+                        >
+                          {real.resumen.reversion.pips >= 0 ? '+' : ''}
+                          {real.resumen.reversion.pips} pips
+                        </strong>
+                      </>
+                    )}
+                  </span>
+                </>
+              )}
             </div>
 
             <p style={{ margin: '10px 0 14px', fontSize: 12.5, color: 'var(--amber)', lineHeight: 1.5 }}>
