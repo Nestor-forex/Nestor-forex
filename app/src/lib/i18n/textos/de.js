@@ -206,6 +206,7 @@ export default {
   },
 
   importar: {
+    paraQue: 'Damit musst du nicht von Hand abschreiben, was dein Broker längst notiert hat. Es kommt das NETTO-Ergebnis an, Swap und Kommission bereits abgezogen — das Einzige, was wirklich sagt, ob du gewonnen oder verloren hast.',
     aviso: {
       vacio: 'Die Datei ist leer.',
       sinTabla: 'In der Datei wurde keine Tabelle gefunden.',
@@ -233,6 +234,7 @@ export default {
   },
 
   medicion: {
+    paraQue: 'Ein Backtest bedeutet, die Regeln über vergangene Marktdaten laufen zu lassen, um zu sehen, was sie gebracht hätten. Trader nutzen ihn, um zu wissen, ob eine Strategie einen Vorteil hat, BEVOR sie Geld riskieren. Hier ist unserer, wie er auch ausfällt.',
     titulo: 'Backtest über 5 Jahre echten Markt',
     desc: 'Was diese App gebracht hätte, wenn es sie seit 2021 gegeben hätte.',
     avance: ({ acierto, valor }) => `Trifft in ${acierto}% der Fälle und verliert trotzdem ${valor} pro riskiertem Dollar.`,
@@ -303,6 +305,7 @@ export default {
   },
 
   calendario: {
+    paraQue: 'Trader schauen darauf, um die UHRZEIT für den Einstieg zu wählen: Minuten vor einer wichtigen Veröffentlichung springt der Kurs und der Spread weitet sich, dann kostet ein Fehler am meisten. Es sagt nicht, wohin der Kurs geht, nur wann es ruckelt.',
     titulo: ({ n }) => `Wirtschaftskalender (${n})`,
     desc: 'Nachrichten, die den Kurs bewegen können',
     aviso: (v) => `${v.div}: wichtiger Termin in ${v.h} Std.`,
@@ -328,6 +331,7 @@ export default {
     pie: 'Gezeigt werden nur Termine mit hoher und mittlerer Wirkung für die 8 Währungen des Scans; geringe Wirkung bleibt außen vor, weil sie die wichtigen überdecken würde. Die Zeiten sind die Ihres Telefons. Quelle: ForexFactory.',
   },
   correl: {
+    paraQue: 'Trader schauen darauf, bevor sie zwei Positionen gleichzeitig öffnen, um nicht unbemerkt dieselbe Wette zu wiederholen. Zwei Paare, die sich gleich bewegen, verteilen das Risiko nicht: Sie verdoppeln es.',
     titulo: ({ n }) => `Korrelation zwischen Paaren (${n})`,
     desc: 'Paare, die sich fast gleich bewegen',
     intro: 'Bevor Sie zwei Positionen gleichzeitig eröffnen, prüfen Sie, ob diese Paare zusammen laufen. Wenn ja, verteilen Sie das Risiko nicht: Sie setzen dieselbe Wette in doppelter Größe.',
@@ -336,6 +340,7 @@ export default {
     pie: 'Gemessen an den Kursänderungen der letzten 60 Sitzungen. Von 0 bis 1: je näher an 1, desto ähnlicher. Ein Minuszeichen bedeutet Gegenrichtung, und das ist dasselbe Risiko.',
   },
   glosario: {
+    paraQue: 'Wenn du ein Wort aus den Tabellen nicht kennst, schlag es hier nach. Das sind die Begriffe, die dir auf jeder Trading-Plattform begegnen, keine Erfindungen dieser App: Sie zu lernen hilft dir auch außerhalb.',
     titulo: 'Glossar',
     desc: 'Was bedeuten diese Begriffe?',
     terminos: [
@@ -419,6 +424,7 @@ export default {
   },
 
   plegable: {
+    paraQue: 'Wofür es gut ist',
     ver: 'Ansehen',
     cerrar: 'Schließen',
   },
@@ -451,6 +457,7 @@ export default {
   },
 
   tasas: {
+    paraQue: 'Trader schauen darauf, wenn eine Position über Nacht offen bleibt: Sie zeigen, in welchen Paaren der Zins Nacht für Nacht für dich arbeitet und in welchen gegen dich. Es ist nicht der genaue Betrag, den dein Broker berechnet.',
     titulo: 'Zinssätze und Swap',
     desc: 'Was es kostet, sie offen zu halten',
     aviso:
@@ -467,6 +474,7 @@ export default {
   },
 
   cot: {
+    paraQue: 'Trader schauen darauf, um zu sehen, ob eine Wette schon überfüllt ist: Wenn fast alle Großen auf derselben Seite stehen, bleiben wenige zum Einsteigen und viele zum Aussteigen. Das ist Hintergrund, wöchentlich und verzögert. Es sagt nicht, welches Paar oder wann.',
     titulo: 'Commitments of Traders',
     desc: 'Was die großen Marktteilnehmer halten',
     aviso: '⚠️ Das sagt NICHT kaufen oder verkaufen. Es sind Positionen in CME-Futures, ein kleiner Teil des Forex-Marktes, und sie kommen mit Tagen Verspätung: die CFTC veröffentlicht freitags die Daten vom Dienstag davor. Und eine extreme Positionierung lesen die einen als Fortsetzung des Trends und die anderen als bevorstehende Wende. Was hier zutrifft, ist nicht gemessen.',
@@ -481,6 +489,7 @@ export default {
   },
 
   diag: {
+    paraQue: 'Trader gehen ihre eigenen Zahlen durch, um zu finden, wo sie unbemerkt verlieren: eine Art von Paar, eine Richtung oder ein bestimmtes Paar. Bei wenigen Trades bedeutet es nichts, deshalb steht neben jeder Prozentzahl ihre Fehlerspanne.',
     titulo: ({ n }) => `Deine Zahlen nach Gruppen (${n})`,
     desc: 'Ihre Trades getrennt nach Paartyp, nach Richtung und nach Paar.',
     aviso: 'Das zählt nur, was DU getan hast. Es ist kein Rat, sagt nicht, was zu handeln ist, und hat nichts mit dem zu tun, was die App anzeigt.',

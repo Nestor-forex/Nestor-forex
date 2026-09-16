@@ -30,7 +30,7 @@ export default function Correlacion({ correlaciones = [] }) {
   if (!correlaciones.length) return null
 
   return (
-    <TarjetaPlegable titulo={t('correl.titulo', { n: correlaciones.length })} desc={t('correl.desc')}>
+    <TarjetaPlegable titulo={t('correl.titulo', { n: correlaciones.length })} desc={t('correl.desc')} paraQue={t('correl.paraQue')}>
           <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
             {t('correl.intro')}
           </p>

@@ -206,6 +206,7 @@ export default {
   },
 
   importar: {
+    paraQue: 'It saves you copying by hand what your broker has already written down. The NET result comes in, with swap and commission already deducted, which is the only thing that really says whether you won or lost.',
     aviso: {
       vacio: 'The file is empty.',
       sinTabla: 'No table was found in the file.',
@@ -233,6 +234,7 @@ export default {
   },
 
   medicion: {
+    paraQue: 'A backtest means running the rules over past market data to see what they would have produced. Traders use it to know whether a strategy has an edge BEFORE risking money on it. Here is ours, whatever it says.',
     titulo: 'Backtest over 5 years of real market',
     desc: 'What this app would have returned if it had existed since 2021.',
     avance: ({ acierto, valor }) => `It is right ${acierto}% of the time and still loses ${valor} per dollar risked.`,
@@ -303,6 +305,7 @@ export default {
   },
 
   calendario: {
+    paraQue: 'Traders check it to pick the HOUR to enter: minutes before a big release the price jumps and the spread widens, so that is when being wrong costs the most. It does not say which way the price will go, only when the shaking is coming.',
     titulo: ({ n }) => `Economic calendar (${n})`,
     desc: 'News that can move price',
     aviso: (v) => `${v.div}: major release in ${v.h} h`,
@@ -328,6 +331,7 @@ export default {
     pie: 'Only high and medium impact releases for the 8 currencies of the scan are shown; low impact ones are left out because they would bury the ones that matter. Times are your phone’s. Source: ForexFactory.',
   },
   correl: {
+    paraQue: 'Traders check it before opening two trades at once, so as not to repeat the same bet without realising. Two pairs that move alike do not spread the risk: they double it, and if it goes wrong it hurts twice as much.',
     titulo: ({ n }) => `Correlation between pairs (${n})`,
     desc: 'Pairs that move almost alike',
     intro: 'Before opening two trades at once, check whether these pairs move together. If they do, you are not spreading risk: you are making the same bet at double the size.',
@@ -336,6 +340,7 @@ export default {
     pie: 'Measured on the price changes of the last 60 sessions. From 0 to 1: the closer to 1, the more alike. A minus sign means they move in opposite directions, and that is the same risk.',
   },
   glosario: {
+    paraQue: 'If there is a word in the tables you do not recognise, look it up here. These are the terms you will meet on any trading platform, not inventions of this app: learning them helps you inside and outside of here.',
     titulo: 'Glossary',
     desc: 'What do these terms mean?',
     terminos: [
@@ -419,6 +424,7 @@ export default {
   },
 
   plegable: {
+    paraQue: 'What it is for',
     ver: 'View',
     cerrar: 'Close',
   },
@@ -451,6 +457,7 @@ export default {
   },
 
   tasas: {
+    paraQue: 'Traders check them when a trade will stay open overnight: they tell you in which pairs the interest works in your favour night after night and in which it works against you. It is not the exact figure your broker will charge.',
     titulo: 'Interest rates and swap',
     desc: 'What it costs to keep it open',
     aviso:
@@ -467,6 +474,7 @@ export default {
   },
 
   cot: {
+    paraQue: 'Traders check it to see whether a bet is already crowded: when almost all the big players are on the same side, few are left to get in and many to get out. It is background context, weekly and delayed. It does not say which pair to trade or when.',
     titulo: 'Commitments of Traders',
     desc: 'What the big players are holding',
     aviso: '⚠️ This does NOT say buy or sell. These are positions in CME futures, a small slice of the Forex market, and they arrive days late: the CFTC publishes on Fridays with the previous Tuesday’s data. And extreme positioning is read by some as the trend continuing and by others as a turn coming. Which one is right here has not been measured.',
@@ -481,6 +489,7 @@ export default {
   },
 
   diag: {
+    paraQue: 'Traders go over their own numbers to find where they lose without noticing: a type of pair, a direction, or one specific pair. With few trades it means nothing, which is why every percentage carries its margin right next to it.',
     titulo: ({ n }) => `Your numbers by group (${n})`,
     desc: 'Your trades split by pair type, by direction and by pair.',
     aviso: 'This counts what YOU did, nothing else. It is not advice, it does not say what to trade, and it has nothing to do with what the app flags.',

@@ -153,6 +153,7 @@ function MedicionLarga({ t, locale }) {
       sigla="BACKTEST"
       titulo={t('medicion.titulo')}
       desc={t('medicion.desc')}
+      paraQue={t('medicion.paraQue')}
       // El adelanto: el número, visible sin abrir. Ver `TarjetaPlegable`.
       //
       // ⚠️ VA SIN SIGNO Y SOLO SI SE PIERDE. La frase dice «pierde», así que

@@ -206,6 +206,7 @@ export default {
   },
 
   importar: {
+    paraQue: 'Serve para não copiares à mão o que o teu bróker já tem apontado. Entra o resultado LÍQUIDO, com o swap e a comissão já descontados, que é a única coisa que diz mesmo se ganhaste ou perdeste.',
     aviso: {
       vacio: 'O ficheiro está vazio.',
       sinTabla: 'Não se encontrou nenhuma tabela no ficheiro.',
@@ -233,6 +234,7 @@ export default {
   },
 
   medicion: {
+    paraQue: 'Um backtest é voltar a passar as regras pelo mercado do passado para ver o que teriam dado. Os traders usam-no para saber se uma estratégia tem vantagem ANTES de arriscar dinheiro. Aqui está o nosso, saia o que sair.',
     titulo: 'Teste sobre 5 anos de mercado real',
     desc: 'O que esta app teria dado se existisse desde 2021.',
     avance: ({ acierto, valor }) => `Acerta ${acierto}% das vezes e mesmo assim perde ${valor} por cada dólar arriscado.`,
@@ -303,6 +305,7 @@ export default {
   },
 
   calendario: {
+    paraQue: 'Os traders olham para escolher a HORA de entrar: minutos antes de um dado forte o preço dá saltos e o spread abre, por isso é quando errar sai mais caro. Não diz para onde o preço vai, só quando vai sacudir.',
     titulo: ({ n }) => `Calendário económico (${n})`,
     desc: 'Notícias que podem mover o preço',
     aviso: (v) => `${v.div}: dado importante em ${v.h} h`,
@@ -328,6 +331,7 @@ export default {
     pie: 'Só se mostram os dados de impacto alto e médio das 8 moedas da varredura; os de impacto baixo ficam de fora porque encobririam os que importam. As horas são as do seu telemóvel. Fonte: ForexFactory.',
   },
   correl: {
+    paraQue: 'Os traders olham antes de abrir duas operações ao mesmo tempo, para não repetirem a mesma aposta sem dar por isso. Dois pares que se movem igual não repartem o risco: duplicam-no.',
     titulo: ({ n }) => `Correlação entre pares (${n})`,
     desc: 'Pares que se movem quase igual',
     intro: 'Antes de abrir duas operações ao mesmo tempo, veja se estes pares andam juntos. Se andam, você não está dividindo o risco: está fazendo a mesma aposta com o dobro do tamanho.',
@@ -336,6 +340,7 @@ export default {
     pie: 'Medido sobre as variações de preço das últimas 60 sessões. De 0 a 1: quanto mais perto de 1, mais parecidos. O sinal de menos significa que vão em direções opostas, e isso é o mesmo risco.',
   },
   glosario: {
+    paraQue: 'Se houver uma palavra das tabelas que não reconheces, procura-a aqui. São os termos que vais encontrar em qualquer plataforma de trading, não invenções desta app: aprendê-los serve-te aqui e fora daqui.',
     titulo: 'Glossário',
     desc: 'O que significam estes termos?',
     terminos: [
@@ -419,6 +424,7 @@ export default {
   },
 
   plegable: {
+    paraQue: 'Para que serve',
     ver: 'Ver',
     cerrar: 'Fechar',
   },
@@ -451,6 +457,7 @@ export default {
   },
 
   tasas: {
+    paraQue: 'Os traders olham quando uma operação vai ficar aberta de um dia para o outro: dizem em que pares os juros jogam a teu favor noite após noite e em quais jogam contra. Não é o valor exato que o teu bróker vai cobrar.',
     titulo: 'Taxas de juro e swap',
     desc: 'O que custa mantê-la aberta',
     aviso:
@@ -467,6 +474,7 @@ export default {
   },
 
   cot: {
+    paraQue: 'Os traders olham para saber se uma aposta já está cheia: quando quase todos os grandes estão do mesmo lado, sobra pouca gente para entrar e muita para sair. É contexto de fundo, semanal e com atraso. Não diz que par operar nem quando.',
     titulo: 'Commitments of Traders',
     desc: 'O que os grandes operadores têm em posição',
     aviso: '⚠️ Isto NÃO diz comprar nem vender. São posições em futuros da CME, uma parte pequena do mercado Forex, e chegam com dias de atraso: a CFTC publica às sextas com os dados da terça anterior. E um posicionamento extremo uns leem como continuação da tendência e outros como uma virada. Qual acerta aqui não está medido.',
@@ -481,6 +489,7 @@ export default {
   },
 
   diag: {
+    paraQue: 'Os traders revêem os próprios números para encontrar onde perdem sem dar por isso: um tipo de par, uma direção ou um par concreto. Com poucas operações não significa nada, e por isso cada percentagem leva a sua margem ao lado.',
     titulo: ({ n }) => `Os teus números por grupos (${n})`,
     desc: 'As suas operações separadas por tipo de par, por direção e por par.',
     aviso: 'Isto conta o que TU fizeste, nada mais. Não é um conselho, não diz o que operar e não tem nada a ver com o que a app assinala.',

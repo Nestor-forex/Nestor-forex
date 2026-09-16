@@ -96,7 +96,7 @@ export default function Cot() {
     : ''
 
   return (
-    <TarjetaPlegable sigla={'COT'} titulo={t('cot.titulo')} desc={t('cot.desc')}>
+    <TarjetaPlegable sigla={'COT'} titulo={t('cot.titulo')} desc={t('cot.desc')} paraQue={t('cot.paraQue')}>
           {/* ⚠️ EL AVISO VA PRIMERO. Ver la cabecera del archivo: no es
               maquetación, es la única forma de que se lea. */}
           <div

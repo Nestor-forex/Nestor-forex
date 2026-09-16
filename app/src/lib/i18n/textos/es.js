@@ -245,6 +245,7 @@ export default {
   },
 
   importar: {
+    paraQue: 'Sirve para no copiar a mano lo que tu bróker ya tiene apuntado. Entra el resultado NETO, con el swap y la comisión ya descontados, que es lo único que dice de verdad si ganaste o perdiste.',
     aviso: {
       vacio: 'El archivo está vacío.',
       sinTabla: 'No se encontró ninguna tabla en el archivo.',
@@ -272,6 +273,7 @@ export default {
   },
 
   medicion: {
+    paraQue: 'Un backtest es volver a pasar las reglas por el mercado del pasado para ver qué habrían dado. Los traders lo usan para saber si una estrategia tiene ventaja ANTES de arriesgar dinero en ella. Aquí está el nuestro, salga como salga.',
     titulo: 'Prueba sobre 5 años de mercado real',
     desc: 'Qué habría dado esta app si hubiera existido desde 2021.',
     avance: ({ acierto, valor }) => `Acierta el ${acierto}% de las veces y aun así pierde ${valor} por cada dólar arriesgado.`,
@@ -342,6 +344,7 @@ export default {
   },
 
   calendario: {
+    paraQue: 'Los traders lo miran para elegir la HORA de entrar: minutos antes de un dato fuerte el precio pega saltos y el spread se abre, así que es cuando más caro sale equivocarse. No dice hacia dónde se va a mover, solo cuándo va a haber sacudida.',
     titulo: ({ n }) => `Calendario económico (${n})`,
     desc: 'Noticias que pueden mover el precio',
     aviso: (v) => `${v.div}: dato importante en ${v.h} h`,
@@ -367,6 +370,7 @@ export default {
     pie: 'Solo se muestran los datos de impacto alto y medio de las 8 divisas del barrido; los de impacto bajo se omiten porque taparían los que sí importan. Las horas son las de tu teléfono. Fuente: ForexFactory.',
   },
   correl: {
+    paraQue: 'Los traders la miran antes de abrir dos operaciones a la vez, para no repetir la misma apuesta sin darse cuenta. Dos pares que se mueven igual no reparten el riesgo: lo duplican, y si sale mal duele el doble.',
     titulo: ({ n }) => `Correlación entre pares (${n})`,
     desc: 'Pares que se mueven casi igual',
     intro: 'Antes de abrir dos operaciones a la vez, mira si estos pares van del brazo. Si van juntos, no estás repartiendo el riesgo: estás haciendo la misma apuesta con el doble de tamaño.',
@@ -375,6 +379,7 @@ export default {
     pie: 'Medido sobre los cambios de precio de las últimas 60 sesiones. De 0 a 1: mientras más cerca de 1, más se parecen. El signo menos quiere decir que van en direcciones contrarias, y eso es el mismo riesgo.',
   },
   glosario: {
+    paraQue: 'Si hay una palabra de las tablas que no reconoces, búscala aquí. Son los términos que vas a encontrar en cualquier plataforma de trading, no inventos de esta app: aprenderlos te sirve dentro y fuera de aquí.',
     titulo: 'Glosario',
     desc: '¿Qué significan estos términos?',
     terminos: [
@@ -446,6 +451,7 @@ export default {
   },
 
   plegable: {
+    paraQue: 'Para qué sirve',
     ver: 'Ver',
     cerrar: 'Cerrar',
   },
@@ -498,6 +504,7 @@ export default {
   },
 
   tasas: {
+    paraQue: 'Los traders las miran cuando una operación va a quedar abierta de un día para otro: dicen en qué pares el interés juega a tu favor noche tras noche y en cuáles en tu contra. No es la cifra exacta que te cobrará el bróker.',
     titulo: 'Tasas de interés y swap',
     desc: 'Lo que cuesta mantenerla abierta',
     aviso:
@@ -514,6 +521,7 @@ export default {
   },
 
   cot: {
+    paraQue: 'Los traders lo miran para saber si una apuesta ya está muy llena: cuando casi todos los grandes están del mismo lado, queda poca gente por entrar y mucha por salir. Es contexto de fondo, semanal y con retraso. No dice qué par operar ni cuándo.',
     titulo: 'Commitments of Traders',
     desc: 'Lo que tienen comprado los grandes',
     aviso: '⚠️ Esto NO dice comprar ni vender. Son posiciones en futuros del CME, una parte pequeña del mercado Forex, y llegan con días de retraso: la CFTC publica los viernes con los datos del martes anterior. Y un posicionamiento extremo unos lo leen como que la tendencia sigue y otros como que se va a dar la vuelta. No está medido cuál acierta.',
@@ -528,6 +536,7 @@ export default {
   },
 
   diag: {
+    paraQue: 'Los traders revisan sus propios números para encontrar dónde pierden sin darse cuenta: un tipo de par, una dirección o un par concreto. Con pocas operaciones no significa nada, y por eso cada porcentaje lleva su margen pegado.',
     titulo: ({ n }) => `Tus números por grupos (${n})`,
     desc: 'Tus operaciones separadas por tipo de par, por dirección y por par.',
     aviso: 'Esto cuenta lo que TÚ hiciste, nada más. No es un consejo, no dice qué operar y no tiene nada que ver con lo que la app señala.',

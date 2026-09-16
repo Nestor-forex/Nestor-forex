@@ -5515,3 +5515,328 @@ historial **reales de producción**, en español y en árabe:
 | hojas de datos en `rtl` | **0** en los dos idiomas |
 | desplazamiento lateral | ninguno |
 | errores de consola | ninguno |
+
+---
+
+# Cada herramienta dice ahora PARA QUÉ SIRVE (2026-09-16)
+
+Néstor volvió sobre lo mismo y con razón, porque de tres cosas que había
+pedido el día anterior solo se le habían entregado dos:
+
+> «en intradía no veo nada todavía y también noto que los botones tienen el
+> mismo triángulo invertido gris… quiero que todos esos botones tengan sus
+> nombres reales acompañados de sus siglas si las tienen, y agregado a eso lo
+> que es o lo que significa, y **adentro para qué sirve o para qué lo utilizan
+> los traders**, en una explicación abreviada pero con un mensaje claro,
+> preciso y conciso.»
+
+## ⚠️ Lo primero: no veía nada porque NO SE HABÍA FUSIONADO NADA
+
+Las dos observaciones tenían **una sola causa**, y no era caché ni service
+worker. Los PR #84 (Swing) y #60 (Intradía) se quedaron en borrador el día
+anterior —la API de GitHub cortó por límite de peticiones en el último paso— y
+nadie los fusionó. **Las dos apps publicadas seguían siendo las de antes**, con
+la flechita gris de 12 px y sin el calendario en la pestaña Barrido.
+
+Comprobado antes de contestar, no deducido: `grep` de los triángulos sueltos en
+los dos repos da **cero** —las ocho tarjetas ya usan `TarjetaPlegable`— y el
+`git log` de `main` no tenía los commits. Fusionados los dos y sigue lo demás.
+
+📌 **Y la lección no es «acordarse de fusionar»:** un trabajo verificado en
+navegador, con todas las pruebas en verde, **vale exactamente cero hasta que
+está en `main`**. Néstor no ve ramas: ve la app publicada.
+
+## Lo que faltaba de verdad: la cuarta cosa
+
+De las cuatro que pidió, se habían hecho tres —sigla, nombre real y descripción
+de qué es— y **faltaba la que más le importaba**: para qué se usa. La
+diferencia no es matiz:
+
+| | ejemplo |
+|---|---|
+| QUÉ ES (ya estaba, fuera) | «Lo que tienen comprado los grandes» |
+| **PARA QUÉ SIRVE** (nuevo, dentro) | «para saber si una apuesta ya está muy llena: cuando casi todos los grandes están del mismo lado, queda poca gente por entrar y mucha por salir» |
+
+Con lo primero la herramienta se entiende y no se sabe qué hacer con ella.
+
+`TarjetaPlegable` gana la ranura `paraQue`, que se pinta **lo primero al
+abrir**, con su rótulo y una raya al costado. Ocho tarjetas en Swing
+(calendario, tasas, COT, correlación, glosario, BACKTEST, tus números,
+importar) y cinco en Intradía, en los **13 idiomas** de cada app.
+
+## ⚠️ Las decisiones que no hay que ablandar
+
+⚠️ **NINGUNA LLEVA DIRECCIÓN.** Al redactar un «para qué sirve» la frase se
+quiere terminar sola en consejo («…así sabes cuándo comprar»), y eso convierte
+en FILTRO lo que es información — la línea que este proyecto no cruza sin pasar
+por el banco de pruebas. Por eso varias acaban diciendo lo que NO dicen: el
+calendario «no dice hacia dónde se va a mover, solo cuándo va a haber
+sacudida»; el COT «no dice qué par operar ni cuándo».
+
+⚠️ **VA ANTES DEL AVISO ROJO, y eso NO rompe la regla** de «el aviso va antes
+de ningún número»: esto no es un número. El orden queda **para qué sirve →
+aviso → datos**, y está comprobado en el navegador (`esPrimero`).
+
+⚠️ **LA PASTILLA PASÓ AL VERDE DE LA APP.** La primera versión la pintaba en
+`--text-secondary` sobre `--bg-input`: **gris sobre gris**, o sea del color de
+lo que no se toca — exactamente de lo que Néstor se quejaba, aunque ya llevara
+la palabra dentro. El verde es el acento de la marca y aquí **no afirma nada
+sobre ningún dato**: es un control, no un valor. Es el matiz de la regla
+«antes de pintar algo de color, preguntarse qué afirma ese color» — **un botón
+solo afirma que es un botón**.
+
+## La comprobación que lo vigila, y muerde
+
+`prueba-idiomas.mjs`, bloque nuevo (GEMELO, en las dos apps). **No lee una
+lista escrita a mano**: abre todos los `.jsx`, se queda con los que usan
+`TarjetaPlegable` y exige que cada uno pase un `paraQue` **y que la clave que
+nombra exista en `es.js`**.
+
+Vigila los dos fallos silenciosos de esta pantalla:
+- **la tarjeta novena que nadie explique** — no falla nada, solo sale sin el
+  bloque y nadie se entera;
+- **un `t('x.paraQue')` que no exista** — un `t()` sin clave **no da error:
+  sale en blanco**.
+
+Más una guarda para que no se adapte a lo que encuentre: si algún día se
+renombra el componente, el bucle no entraría nunca y quedaría en verde sin
+haber mirado ni una tarjeta.
+
+**Comprobado que muerde, con el daño verificado en su sitio antes de darlo por
+bueno** (lección del 2026-09-03): quitarle el `paraQue` al COT falla 1;
+apuntarlo a una clave inventada falla 1.
+
+## Cómo se verificó
+
+Lint, build y **todas** las pruebas sin internet en los dos repos (24 y 19).
+Los 56 gemelos siguen idénticos.
+
+Y en **Chromium a 390 px**, banco aislado (las tarjetas están detrás de
+Firebase), en español y en árabe, con tres tarjetas distintas a la vez:
+
+| qué se comprobó | resultado |
+|---|---|
+| las tres pastillas | palabra + flecha, en `oklch(0.78 0.13 155)` — el verde, no gris |
+| el bloque nuevo | rótulo traducido y 152-253 caracteres de texto en los dos idiomas |
+| su posición | **el primero** dentro de la tarjeta, antes del aviso |
+| el aviso urgente del calendario | «USD: dato importante en 6 h» sin abrir, y su versión árabe |
+| **árabe** | pastilla a la izquierda, la raya del bloque volteada, **12 hojas de datos y 0 en `rtl`** |
+| desplazamiento lateral | ninguno |
+| errores de la app | ninguno |
+
+📌 **Y dos tropiezos MÍOS del banco de pruebas, no de la app** — que es la
+cuarta vez que pasa y por eso se escribe: los datos de mentira tenían la forma
+equivocada (`Calendario` recibe el calendario, no el envoltorio del hook; el
+campo del Diario es `pl`, no `resultado`), así que dos de las tres tarjetas no
+se pintaban y parecía un fallo. Y una comprobación mía exigía «en 7 h» cuando
+el texto dice 6, porque `horasHasta` redondea hacia abajo. **Antes de creerse
+que la app está rota, comprobar que el banco de pruebas mide lo que dice
+medir.**
+
+---
+
+# El recuadro «VER», y el experimento de Intradía que nadie veía (2026-09-16)
+
+Néstor pidió cuatro cosas. Dos eran trabajo, una era una corrección mía y la
+cuarta se queda anotada para más adelante.
+
+## 1. El botón: tercera versión, y las dos anteriores fallaron por lo mismo
+
+> «en vez de tener el triángulo invertido le colocas un recuadro allí mismo con
+> la palabra VER dentro, pero el recuadro quiero que tenga color; ese color lo
+> escoges tú bajo tu propio criterio»
+
+| versión | qué era | por qué falló |
+|---|---|---|
+| 1ª | una flechita ▸ de 12 px en `--text-muted` | un triángulo del color del texto apagado dice «adorno», no «tócame» |
+| 2ª | la palabra dentro de una pastilla, **en gris sobre gris** | seguía siendo del color de lo que NO se toca — él lo dijo igual: «los botones tienen el mismo triángulo invertido gris» |
+| **3ª** | **recuadro RELLENO de color con la palabra dentro, sin flecha** | — |
+
+⚠️ **SIN FLECHA, porque él lo pidió así** («en vez de»). La palabra sola basta
+y no hay ningún glifo que interpretar. Al abrir cambia a «CERRAR».
+
+⚠️ **CERRADO VA RELLENO, ABIERTO VA HUECO.** No es estético: cerrado tiene que
+llamar; abierto ya cumplió. Ocho recuadros rellenos a la vez serían ocho cosas
+gritando y no se leería ninguna. Tiene comprobación propia en el navegador.
+
+### ⚠️⚠️ EL COLOR NO ES VERDE, Y ES LO MENOS OBVIO DE TODO ESTO
+
+Lo natural era usar el verde de la marca. **Sería un error en una app de
+trading:** el verde y el rojo YA significan dinero y así se usan en el
+Historial, el Diario y el detalle de la señal. Un botón verde sólido al lado de
+esos números se leería como «esto es lo bueno» — exactamente la regla de la
+casa: **antes de pintar algo de color, preguntarse qué afirma ese color.** Un
+botón solo debe afirmar que es un botón.
+
+Se usa **el acento de marca de cada app**, que no significa nada en plata:
+**cian en Swing, DORADO en Intradía** (`--cta`, `--cta-tinta`).
+
+📌 **Y de paso estuve a punto de borrar la identidad de Intradía.** Copié el
+`index.css` de Swing encima del suyo dando por hecho que era gemelo. **No lo
+es**, y su propio archivo lo decía: *«Dorado de la marca del intradía… Es el
+acento que distingue esta app de la de swing, que usa cian.»* Se restauró antes
+de commitear. La regla de siempre con otra cara: **`gemelos.mjs` dice qué se
+puede copiar; lo que no está en la lista se mira antes de tocarlo.**
+
+## 2. «En Intradía no tengo los experimentos» — tenía razón a medias
+
+Y la mitad que faltaba es la que importa. Comprobado contra el historial REAL
+de producción antes de contestarle, no deducido:
+
+| | ops | ganadas | pips |
+|---|---:|---:|---:|
+| app · tendencia | 27 | 6 | −629 |
+| app · rango | 24 | 10 | +43 |
+| **SOMBRA · retroceso** | **9** | **5** | **+74** |
+
+- **La reversión y «comprar la caída» NO están en Intradía a propósito**: están
+  medidas EN ESA APP y pierden («comprar la caída», −0,08 plano en los tres
+  tamaños). Portarlas sería traer una regla que ya se sabe que no funciona con
+  velas de una hora. No es un olvido.
+- **Pero Intradía SÍ tiene su propio experimento** —el **retroceso**— y
+  `resumir()` devuelve su cubo desde siempre… **sin que nadie lo pintara.**
+  Nueve operaciones reales acumuladas durante semanas y ni una visible.
+
+📌 **Es el mismo descuido que en Swing el 2026-09-07** (`filasTodas` no incluía
+`caida`). Van dos veces: **un experimento nuevo no termina cuando el vigía lo
+anota, termina cuando se puede VER.**
+
+Ahora Intradía tiene su bloque, con etiqueta ámbar `RETROCESO`, su raya de
+separación y su texto propio en los 13 idiomas. Más el título «Las señales de
+la app» sobre el primer bloque — el mismo arreglo que Swing, por la misma razón:
+sin él, ese porcentaje se lee como el total de todo.
+
+⚠️ **Los números NUNCA se suman.** Y **las filas de sombra siguen fuera de la
+lista** a propósito: `unir()` las filtra con un motivo escrito («se leerían como
+recomendaciones»), y esa decisión no se tocó. Se enseñan los NÚMEROS, no las
+señales.
+
+## 3. El COT no está en Intradía, y no debe estarlo
+
+Preguntó por él. **Es deliberado y ya estaba escrito:** el COT es semanal y
+llega con entre 3 y 10 días de retraso. Para operaciones de horas a días todavía
+dice algo; para una que abre y cierra el mismo día, no dice nada.
+
+## 4. ⚠️ PENDIENTE, NO CONSTRUIDO: que el robot también ABRA
+
+> «cuando por ejemplo tenga muchos suscriptores yo quisiera que también cierre y
+> abra, y que no toque lo que solo yo coloque a mano sin fechas»
+
+**Lo segundo YA se cumple hoy**: `decidir()` deja en paz a quien no tiene
+`venceEl` — es una de las guardas escritas del robot, con pruebas.
+
+**Lo primero NO está hecho y no se empieza sin confirmación.** Lo que hace falta
+antes, y no depende de código:
+
+1. **Una plataforma de pago elegida y respondiendo.** Hoy el robot no tiene a
+   quién preguntarle «¿este pagó?». Sigue pendiente la pregunta a Mercado Pago
+   (persona natural en Colombia cobrando a México, Argentina, Chile y Perú).
+2. ⚠️ **Y la asimetría no se ablanda sin más.** Hoy el robot SOLO CIERRA porque
+   los dos errores no cuestan lo mismo: cerrar de más se arregla con un toque y
+   la persona escribe para quejarse; **abrir de más regala el producto y no se
+   entera nadie.** Para que abra solo, lo que tiene que abrir no puede ser un
+   criterio nuestro: **tiene que ser un pago confirmado por la plataforma**, y
+   entonces «abrir» es solo copiar la fecha que ella da.
+
+📌 O sea que no es «añadirle una línea al robot»: es que exista la fuente de
+verdad. Mientras no la haya, abrir a mano es lo correcto, no una limitación.
+
+---
+
+# Los tres números de Intradía, cada uno por su lado (2026-09-16)
+
+Néstor: **«quiero que se vean todos —la app (tendencia), la app (rango),
+retroceso (en pruebas)— con operaciones, acertadas y pips, en Intradía en el
+historial como en Swing»**.
+
+## ⚠️ No era solo comodidad: el promedio escondía DOS comportamientos opuestos
+
+Los números reales de producción, que es lo que lo justifica:
+
+| | ops | acertadas | pips |
+|---|---:|---:|---:|
+| Modo tendencia | 27 | 6 (22 %) | **−629** |
+| Modo rango | 24 | 10 (42 %) | **+43** |
+| *la app, junta* | *51* | *16 (31 %)* | *−586* |
+| **SOMBRA · retroceso** | **9** | **5 (56 %)** | **+74** |
+
+**Un 31 % que no describe a ninguno de los dos.** Es exactamente la misma razón
+por la que la sombra nunca se suma a la app, y por la que en Swing los tres
+bloques van separados: **un promedio entre cosas distintas no es un resumen, es
+un número que no significa nada.**
+
+## Las decisiones de forma, que dicen cuál suma y cuál no
+
+⚠️ **Tendencia y rango van en filas COMPACTAS y pegadas al total**, porque son
+sus dos mitades (6+10 = 16 de 51 ✓, −629+43 = −586 ✓). **El retroceso va
+separado con su raya y su etiqueta ámbar**, porque NO suma. La forma tiene que
+decirlo sin que haya que leer nada.
+
+⚠️ **El acierto no se pinta de color y los pips sí.** Está medido en esta misma
+app que se puede acertar más y perder dinero — el modo rango acierta el doble
+que tendencia y aun así casi no gana. Pintar el porcentaje de verde afirmaría
+algo que el número no dice.
+
+⚠️ **Un grupo con cero operaciones se sigue enseñando.** Esconderlo dejaría en
+pantalla solo lo que parece significar algo, que es cómo se fabrica un
+espejismo. Misma decisión que en `Diagnostico`.
+
+## ⚠️ CADA CUBO SE DEFINE POR LO QUE ES, y hay un cajón para lo que no encaje
+
+`deTipo('tendencia')` y `deTipo('rango')`, nunca «todo lo que no sea…». Ese
+fallo ya mordió **cuatro veces** aquí (`esSombra`, `ventasPausadas`,
+`esDeLaApp`, la regla de Firestore): lo que se añada mañana cae dentro en
+silencio.
+
+📌 **Y se añadió un cubo `otros`**, que es la pieza que faltaba en las cuatro
+veces anteriores: un `tipo` nuevo sumaría en el total y **no saldría en ningún
+desglose**, o sea que desaparecería de la vista sin que nada fallara. Ahora
+aparece con su propia fila, aunque salga rara. También recoge el historial
+viejo sin `tipo`.
+
+Nueve comprobaciones nuevas en `prueba-resolver.mjs`, incluida la que de verdad
+importa: **un `tipo` que nadie ha inventado todavía no puede colarse en
+tendencia ni en rango, ni desaparecer.** Comprobado que MUERDE, con el daño
+verificado en su sitio: definir tendencia por descarte tumba **4**.
+
+## ⚠️ Y el error de dirección en árabe, por SÉPTIMA vez
+
+Al mirarlo en Chromium salieron **108 de 114 datos del Historial de Intradía
+pintados al revés en árabe**: el acierto, las operaciones, los pips netos, los
+códigos de par y el resultado de cada fila.
+
+**No lo causó este cambio.** Swing se arregló el 2026-09-15 y
+`HistorialTab.jsx` es **PRIMO**, así que Intradía nunca lo recibió — la misma
+pantalla, el mismo fallo, en el otro repositorio y un día después.
+
+📌 **La lección que este caso añade a las seis anteriores:** cuando se arregla
+algo visual en un archivo PRIMO, **hay que mirar si el gemelo espiritual del
+otro repositorio tiene el mismo agujero**. `gemelos.mjs` vigila los idénticos;
+los primos no los vigila nadie, y ahí es donde se acumulan estas cosas.
+
+Arreglado con la regla de siempre: `dir="ltr"` **solo en lo que NO es idioma**,
+sin tocar la fecha que arma `toLocaleString` ni las etiquetas traducidas.
+
+## 📌 Lo que solo se vio mirando la captura
+
+La primera versión de cada fila ponía **«27 ops» al lado de «6/27»** — el mismo
+número dos veces en el mismo renglón, en una pantalla de 390 px donde el ancho
+es lo que falta. Ni el build ni las siete comprobaciones del navegador lo ven:
+salió mirando la imagen, que es la enésima vez que esa costumbre paga.
+
+## Cómo se verificó
+
+Lint, build y las 19 pruebas sin internet. Los 56 gemelos siguen idénticos.
+
+Y en **Chromium a 390 px con el historial REAL de producción** (60 señales
+bajadas con `curl` y enchufadas por un alias de Vite que sustituye
+`useHistorial` — la pantalla está detrás de Firebase), en español y árabe:
+
+| qué se comprobó | resultado |
+|---|---|
+| los tres a la vista | 6/27 · 22 % · −629 · 10/24 · 42 % · +43 · 56 % · 9 · +74 |
+| que los números cuadren | −629 + 43 = −586, y 6+10 = 16 de 51 = 31 % |
+| el retroceso | separado, con su etiqueta ámbar |
+| **árabe** | **112 hojas de datos, 0 en `rtl`** — con el CSS calculado |
+| desplazamiento lateral | ninguno |
+| errores de la app | ninguno |
