@@ -40,6 +40,56 @@ async function bajarJsonl(archivo) {
   return salida
 }
 
+// ⚠️ EL RESUMEN REAL, PARA QUIEN NO NECESITA LA LISTA ENTERA (2026-09-16).
+//
+// El tablero completo enseña, al lado de la regla de reversión, cómo le va en
+// operaciones REALES. Hasta hoy ese número estaba ESCRITO A MANO en
+// `medicion.js` y se había quedado viejo: la pantalla decía «12 ops · 6–6 ·
+// +117 pips» EN VERDE cuando lo real eran 18 · 7–11 · −337 en rojo. O sea que
+// un experimento aparecía GANANDO mientras perdía — justo el error que este
+// proyecto entero existe para no cometer.
+//
+// Y es la SEGUNDA vez que ese mismo bloque envejece en silencio (la primera
+// está anotada dentro de `medicion.js`, con su corrección). Por eso el arreglo
+// no es volver a escribirlo bien: es que nadie tenga que acordarse. Se cuenta
+// en vivo con la MISMA función que usa la pestaña Historial, así que los dos
+// sitios no pueden discrepar entre sí.
+//
+// Baja SOLO `resultados.jsonl` (18 KB) y no `senales.jsonl`: `resumir` no
+// mira las señales, y el tablero no pinta ninguna lista. Y solo se baja al
+// abrir el tablero completo, que es donde se enseña.
+export function useResumenReal() {
+  const [estado, setEstado] = useState({ cargando: true, error: '', resumen: null })
+
+  useEffect(() => {
+    let vivo = true
+
+    bajarJsonl('resultados.jsonl')
+      .then((resultados) => {
+        if (vivo) setEstado({ cargando: false, error: '', resumen: resumir(resultados) })
+      })
+      .catch((e) => {
+        if (vivo) {
+          setEstado({
+            cargando: false,
+            error: e?.name === 'TimeoutError' ? 'tiempo' : e?.message || 'error',
+            // ⚠️ `null` y no un número de respaldo. Si no se pudo contar, la
+            // pantalla no enseña nada — nunca un número viejo. Los dos errores
+            // no cuestan lo mismo: una fila que falta se nota y se pregunta;
+            // un número inventado que favorece al experimento se cree.
+            resumen: null,
+          })
+        }
+      })
+
+    return () => {
+      vivo = false
+    }
+  }, [])
+
+  return estado
+}
+
 export function useHistorial() {
   const [estado, setEstado] = useState({ cargando: true, error: '', senales: [], resultados: [] })
 

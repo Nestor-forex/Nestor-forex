@@ -76,28 +76,31 @@ export const MEDICION = {
   },
 }
 
-// LO QUE LLEVA EN OPERACIONES REALES, que es distinto del banco de pruebas y
-// es lo que de verdad decide.
+// ⚠️⚠️ AQUÍ VIVÍA `REAL`, Y SE BORRÓ EL 2026-09-16. NO VOLVER A TRAERLO.
 //
-// 📌 ESTE BLOQUE CORRIGE UN NÚMERO QUE ESTUVO MAL ESCRITO AQUÍ.
-// Hasta el 2026-09-05 el comentario de arriba decía «en el historial real va
-// 0 de 5». Era verdad cuando se escribió y dejó de serlo sin que nadie lo
-// mirara: al contarlo de nuevo iban 12 resueltas, 6 y 6. Un número viejo en un
-// comentario envejece en silencio, que es justo lo que estas fechas evitan.
+// Era un bloque escrito a mano con lo que llevaban en operaciones REALES la
+// app y la reversión, y el tablero completo lo pintaba. **Se quedó viejo por
+// SEGUNDA vez**, y esta vez enseñando una PÉRDIDA COMO GANANCIA:
 //
-// CÓMO SE ACTUALIZAN: bajar
-// raw.githubusercontent.com/Nestor-forex/Nestor-forex/datos/historial/resultados.jsonl
-// y contar por `tipo`. La pestaña Historial ya lo calcula sola y en vivo; esto
-// es solo para poder enseñarlo al lado de la señal, sin esperar esa descarga.
-export const REAL = {
-  fecha: '2026-09-05',
-
-  // Las señales que la app da hoy. El contraste entre estas dos filas es el
-  // argumento entero: la app ACIERTA MÁS y PIERDE MÁS. Con el objetivo más
-  // cerca que el stop se gana muchas veces poquito y se pierde pocas veces
-  // mucho, y por eso el porcentaje de acierto, solo, no dice nada.
-  app: { resueltas: 17, ganadas: 11, perdidas: 6, pips: -462 },
-
-  // La reversión, anotada en paralelo desde el 2026-08-18.
-  reversion: { resueltas: 12, ganadas: 6, perdidas: 6, pips: 117 },
-}
+//   en pantalla:  12 ops · 6–6 · +117 pips  (en verde)
+//   la realidad:  18 ops · 7–11 · −337 pips (en rojo)
+//
+// Y el número de la app que guardaba (17 · 11 · −462) tenía además el signo al
+// revés: lo real era 18 · 14 · +462.
+//
+// 📌 La primera vez que envejeció se corrigió a mano y se escribió aquí mismo
+// «un número viejo en un comentario envejece en silencio». La corrección fue
+// correcta y NO SIRVIÓ DE NADA: diez días después había vuelto a pasar. La
+// lección no es que haga falta más cuidado — es que **un número que hay que
+// acordarse de actualizar acaba mintiendo**, y este favorecía a un
+// experimento, que es la peor dirección posible en este proyecto.
+//
+// Ahora el tablero lo cuenta EN VIVO con `useResumenReal()`, usando la misma
+// función que la pestaña Historial. No hay nada que actualizar y los dos
+// sitios no pueden discrepar.
+//
+// ⚠️ Lo de arriba (`MEDICION`) SÍ sigue a mano, y esto no es incoherencia: son
+// cosas distintas. Eso sale de descargar 1.400 días de velas y recalcular el
+// barrido día a día — media hora de servidor, imposible en el navegador. Esto
+// de aquí salía de contar un archivo de 18 KB que la app ya sabe leer. Cuando
+// contar en vivo es posible, escribirlo a mano no tiene defensa.
