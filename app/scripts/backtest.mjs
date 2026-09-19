@@ -57,6 +57,7 @@ import { GEOMETRIAS, simetrica, actual, atrFijo } from './lib/geometrias.mjs'
 import { reglaBarrido } from './lib/patrones.mjs'
 import { juzgar, PREREGISTRO, QUE_SIGNIFICA_APROBAR } from './lib/preregistro.mjs'
 import { resolver } from './lib/resolver.mjs'
+import { senalesLSSBanco } from './lib/lss-banco.mjs'
 
 // Días de arranque que no se juzgan: el EMA50 y el RSI necesitan historia
 // antes de valer algo.
@@ -1613,6 +1614,143 @@ console.log('═'.repeat(92))
   console.log('  ⚠️ Y aunque pase: estos días YA SE MIRARON, así que pasar aquí es')
   console.log('     necesario pero NO suficiente. Lo único limpio es el registro')
   console.log('     hacia adelante, que arranca hoy en la sombra.')
+}
+
+
+// --------------------------------------------------------------------------
+// NFX-LSS — el indicador que Néstor escribió para el concurso de TradingView.
+//
+// Barrido de liquidez sobre el ÚLTIMO PIVOTE CONFIRMADO, más una ruptura de
+// estructura dentro de una ventana. Ver `src/lib/lss.js`.
+//
+// ⚠️ NO es el barrido de liquidez que ya se midió aquí y perdió. Aquél perfora
+// el mínimo de las últimas N velas; éste perfora un pivote con forma de suelo,
+// que puede tener cuarenta velas. Y lo que nunca se ha medido en este proyecto
+// es la EXIGENCIA CONJUNTA de barrido + ruptura.
+//
+// ⚠️ LA FILA QUE DECIDE ES LA DE rr = 1, la vara neutra. Con el objetivo más
+// lejos que el stop se acierta menos y se necesita acertar menos: comparar
+// aciertos entre ratios distintos es comparar con dos varas. Por eso todas las
+// tablas llevan la columna de EQUILIBRIO al lado.
+// --------------------------------------------------------------------------
+
+{
+  const corteLSS = fechas[Math.floor((CALENTAMIENTO + fechas.length) / 2)]
+
+  const correrLSS = (op) => {
+    const senales = senalesLSSBanco(fechas, rangosPar, { calentamiento: CALENTAMIENTO, ...op })
+    const { resultados } = resolver(senales, completo)
+    return { senales, porClave: new Map(resultados.map((r) => [r.clave, r])) }
+  }
+
+  // Los valores que propuso Néstor para swing: pivote amplio, ventana ancha,
+  // objetivo generoso. Se miden ÉSOS y sus VECINOS: si solo funciona el del
+  // medio y los de al lado se caen, está ajustado a estos días y no sirve.
+  const BASE = { swingLen: 8, sweepWindow: 15, rr: 3 }
+
+  console.log('')
+  console.log('EL NFX-LSS (indicador del concurso), MEDIDO DE FRENTE')
+  console.log('Barrido de un pivote + ruptura de estructura. Stop en la mecha barrida.')
+  console.log('⚠️ Todas las filas llevan el spread descontado.')
+  console.log(`Las dos mitades se parten en ${corteLSS}.`)
+
+  const ac = (x) => (x === null ? '  — ' : (x.toFixed(0) + '%').padStart(4))
+  const pr = (x) => (x === null ? '   —  ' : ((x >= 0 ? '+' : '') + x.toFixed(2)).padStart(6))
+  const linea = (nombre, r, filtro = null) => {
+    const ss = filtro ? r.senales.filter(filtro) : r.senales
+    const m = medir(ss, r.porClave, { conSpread: true })
+    const m1 = medir(ss.filter((x) => x.vistoEl < corteLSS), r.porClave, { conSpread: true })
+    const m2 = medir(ss.filter((x) => x.vistoEl >= corteLSS), r.porClave, { conSpread: true })
+    const eq = m.equilibrio === null ? '  — ' : `${m.equilibrio.toFixed(0).padStart(3)}%`
+    console.log(
+      `${nombre.padEnd(34)} ${String(m.total).padStart(5)}   ${ac(m.acierto)}  ${eq}  ${pr(m.porRiesgo)}  │ ` +
+        `${String(m1.total).padStart(4)} ${pr(m1.porRiesgo)} │ ${String(m2.total).padStart(4)} ${pr(m2.porRiesgo)}`
+    )
+  }
+  const RAYA_LSS = '─'.repeat(92)
+  const CABL = 'qué se midió                       ops   acierto  equil.   por 1R  │  1ª mit  │  2ª mit'
+
+  // ── 1. La vara neutra: ¿sabe hacia dónde va el precio? ──────────────────
+  console.log('')
+  console.log('1) CON LA VARA NEUTRA 1:1 — ésta es la que decide')
+  console.log(CABL)
+  console.log(RAYA_LSS)
+  const neutraLSS = correrLSS({ ...BASE, rr: 1 })
+  linea('NFX-LSS tal como lo propuso', neutraLSS)
+  linea('  solo las COMPRA', neutraLSS, (x) => x.lado === 'COMPRA')
+  linea('  solo las VENTA', neutraLSS, (x) => x.lado === 'VENTA')
+  // La guía dice que un CHoCH «es más significativo que un simple BOS». Esto
+  // comprueba si eso es verdad o solo se repite en el sector.
+  linea('  solo los CHoCH (giro)', neutraLSS, (x) => x.evento === 'CHoCH')
+  linea('  solo los BOS (continuación)', neutraLSS, (x) => x.evento === 'BOS')
+  console.log(RAYA_LSS)
+  console.log('Para comparar, con las mismas velas:')
+  linea('  la app tal cual (vara neutra)', neutraPartida)
+
+  // ── 2. ¿El barrido aporta algo, o basta la ruptura? ─────────────────────
+  console.log('')
+  console.log('2) ¿EL BARRIDO APORTA ALGO? (vara neutra)')
+  console.log('Si exigir el barrido no mejora nada, el indicador es una ruptura de')
+  console.log('estructura con pasos de más.')
+  console.log(CABL)
+  console.log(RAYA_LSS)
+  linea('con barrido (lo que propone)', neutraLSS)
+  linea('CONTROL: solo la ruptura', correrLSS({ ...BASE, rr: 1, exigirSweep: false }))
+
+  // ── 3. Los vecinos de cada parámetro ────────────────────────────────────
+  console.log('')
+  console.log('3) LOS VECINOS DE CADA PARÁMETRO (vara neutra)')
+  console.log('Si solo funciona el del medio y los de al lado se caen, está')
+  console.log('ajustado a estos días y no sirve fuera.')
+  console.log(CABL)
+  console.log(RAYA_LSS)
+  console.log('· Sensibilidad del pivote')
+  for (const n of [5, 6, 8, 10, 12]) {
+    linea(`  pivote de ${n}${n === BASE.swingLen ? '  (el suyo)' : ''}`, correrLSS({ ...BASE, rr: 1, swingLen: n }))
+  }
+  console.log('· Ventana entre el barrido y la ruptura')
+  for (const w of [5, 10, 15, 20, 30]) {
+    linea(`  ventana de ${w}${w === BASE.sweepWindow ? '  (la suya)' : ''}`, correrLSS({ ...BASE, rr: 1, sweepWindow: w }))
+  }
+
+  // ── 4. El objetivo, con su equilibrio al lado ───────────────────────────
+  console.log('')
+  console.log('4) DÓNDE PONER EL OBJETIVO')
+  console.log('⚠️ Aquí el acierto NO se puede comparar entre filas: cada ratio tiene')
+  console.log('   su propia vara. Mirar «equil.» y «por 1R», no el acierto.')
+  console.log(CABL)
+  console.log(RAYA_LSS)
+  for (const r of [1, 1.5, 2, 3, 4]) {
+    linea(`  objetivo ${r}× el riesgo${r === BASE.rr ? '  (el suyo)' : ''}`, correrLSS({ ...BASE, rr: r }))
+  }
+
+  // ── 5. Pagando las noches ───────────────────────────────────────────────
+  console.log('')
+  console.log('5) EL NFX-LSS PAGANDO LAS NOCHES (vara neutra)')
+  {
+    const b = barridoSwap(neutraLSS.senales, neutraLSS.porClave)
+    if (!b.total) {
+      console.log('  (sin operaciones resueltas)')
+    } else {
+      console.log(`  ${b.total} ops · duran ${b.mediana} días de mediana, ${b.media.toFixed(1)} de media`)
+      console.log('     swap/noche      acierto   por 1R   coste medio')
+      const sinNada = medir(neutraLSS.senales, neutraLSS.porClave)
+      console.log(
+        `     sin costes      ${ac(sinNada.acierto)}   ${pr(sinNada.porRiesgo)}         —`
+      )
+      for (const { nivel, medicion: m, costeMedio } of b.filas) {
+        const etiqueta = nivel === 0 ? 'solo spread' : `+ ${nivel.toFixed(2)} pips`
+        console.log(
+          `     ${etiqueta.padEnd(14)} ${ac(m.acierto)}   ${pr(m.porRiesgo)}   ${costeMedio.toFixed(1).padStart(6)} pips`
+        )
+      }
+    }
+  }
+
+  console.log(RAYA_LSS)
+  console.log('⚠️ Pasar aquí NO enciende nada. Estos días ya se miraron: lo único')
+  console.log('   limpio es el registro hacia adelante, y para eso la regla tendría')
+  console.log('   que correr primero en la sombra durante meses.')
 }
 
 console.log('')
