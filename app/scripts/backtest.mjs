@@ -57,7 +57,7 @@ import { GEOMETRIAS, simetrica, actual, atrFijo } from './lib/geometrias.mjs'
 import { reglaBarrido } from './lib/patrones.mjs'
 import { juzgar, PREREGISTRO, QUE_SIGNIFICA_APROBAR } from './lib/preregistro.mjs'
 import { resolver } from './lib/resolver.mjs'
-import { senalesLSSBanco } from './lib/lss-banco.mjs'
+import { senalesLSSBanco, medirEstructura } from './lib/lss-banco.mjs'
 
 // Días de arranque que no se juzgan: el EMA50 y el RSI necesitan historia
 // antes de valer algo.
@@ -1722,6 +1722,86 @@ console.log('═'.repeat(92))
   console.log(RAYA_LSS)
   for (const r of [1, 1.5, 2, 3, 4]) {
     linea(`  objetivo ${r}× el riesgo${r === BASE.rr ? '  (el suyo)' : ''}`, correrLSS({ ...BASE, rr: r }))
+  }
+
+  // ── 5. LA v1.1 DE NÉSTOR ────────────────────────────────────────────────
+  //
+  // Tres cambios que él pidió tras leer la tabla de arriba. Se miden los tres,
+  // y cada uno por separado, porque juntarlos impediría saber cuál hizo qué.
+  console.log('')
+  console.log(RAYA_LSS)
+  console.log('LA v1.1 — LOS TRES AJUSTES, MEDIDOS UNO A UNO')
+  console.log(RAYA_LSS)
+
+  // ⚠️⚠️ LO PRIMERO, Y VA ANTES DE NINGÚN NÚMERO:
+  console.log('')
+  console.log('⚠️ EL CAMBIO 1 (quitar el barrido como filtro) NO SE PUEDE CONFIRMAR AQUÍ.')
+  console.log('   Salió de mirar ESTA MISMA tabla y quedarse con la fila que ganaba, así')
+  console.log('   que volver a correrla sobre los mismos días devuelve el mismo número')
+  console.log('   por construcción. No es una segunda muestra: es la misma.')
+  console.log('   Lo único que aquí informa de verdad son las DOS MITADES y los')
+  console.log('   cambios 2 y 3, que nunca se habían medido.')
+
+  console.log('')
+  console.log('5a) BARRIDO INFORMATIVO (nuevo por defecto) CONTRA MODO ESTRICTO')
+  console.log(CABL)
+  console.log(RAYA_LSS)
+  const informativo = correrLSS({ ...BASE, rr: 1, exigirSweep: false })
+  linea('informativo (v1.1)', informativo)
+  linea('  de ésas, las que SÍ tuvieron ⚡', informativo, (x) => x.huboSweep)
+  linea('  de ésas, las que NO tuvieron ⚡', informativo, (x) => !x.huboSweep)
+  linea('estricto (v1.0)', neutraLSS)
+
+  console.log('')
+  console.log('5b) EL COLCHÓN DE ATR EN EL STOP')
+  console.log('El stop se aleja del punto barrido. Eso quita stops tocados por un')
+  console.log('retest… y a la vez ENSANCHA el riesgo, así que cada acierto vale menos')
+  console.log('veces el riesgo. Cuál pesa más es lo que hay que ver aquí.')
+  console.log(CABL)
+  console.log(RAYA_LSS)
+  for (const b of [0, 0.15, 0.3, 0.5, 1]) {
+    const etiqueta = b === 0 ? 'sin colchón (v1.0)' : `colchón ${b}× ATR${b === 0.15 ? '  (el suyo)' : ''}`
+    linea(`  ${etiqueta}`, correrLSS({ ...BASE, rr: 1, exigirSweep: false, slBufferAtr: b }))
+  }
+
+  console.log('')
+  console.log('5c) OBJETIVO FIJO CONTRA SALIDA POR ESTRUCTURA CONTRARIA')
+  console.log('⚠️ LA COLUMNA «equil.» NO APLICA a la salida por estructura: se sale a un')
+  console.log('   precio que no se sabía antes, así que no hay una proporción fija con la')
+  console.log('   que calcularla. Y su «acierto» significa «salió en positivo», no «tocó')
+  console.log('   el objetivo». Lo comparable entre las dos es «por 1R».')
+  console.log('qué se midió                       ops   acierto  equil.   por 1R  │ dura  │ sin juzgar')
+  console.log(RAYA_LSS)
+  {
+    const conBuffer = { ...BASE, exigirSweep: false, slBufferAtr: 0.15 }
+    for (const rrFijo of [1, 2, 3]) {
+      const r = correrLSS({ ...conBuffer, rr: rrFijo })
+      const m = medir(r.senales, r.porClave, { conSpread: true })
+      const eq = m.equilibrio === null ? '  — ' : `${m.equilibrio.toFixed(0).padStart(3)}%`
+      console.log(
+        `  objetivo fijo ${rrFijo}×`.padEnd(34) +
+          ` ${String(m.total).padStart(5)}   ${ac(m.acierto)}  ${eq}  ${pr(m.porRiesgo)}  │   —   │ ${String(m.sinJuzgar).padStart(5)}`
+      )
+    }
+    // La salida por estructura no depende de `rr`: el objetivo no se usa.
+    const porEstructura = senalesLSSBanco(fechas, rangosPar, { calentamiento: CALENTAMIENTO, ...conBuffer, rr: 1 })
+    const me = medirEstructura(porEstructura, fechas, rangosPar, { conSpread: true })
+    console.log(
+      '  SALIDA POR ESTRUCTURA'.padEnd(34) +
+        ` ${String(me.total).padStart(5)}   ${ac(me.acierto)}   n/a  ${pr(me.porRiesgo)}  │ ${me.diasMedios === null ? ' — ' : me.diasMedios.toFixed(0).padStart(4)}d │ ${String(me.sinJuzgar).padStart(5)}`
+    )
+    // Y en dos mitades, que es lo que distingue una regla de una casualidad.
+    const m1 = medirEstructura(porEstructura.filter((x) => x.vistoEl < corteLSS), fechas, rangosPar, { conSpread: true })
+    const m2 = medirEstructura(porEstructura.filter((x) => x.vistoEl >= corteLSS), fechas, rangosPar, { conSpread: true })
+    console.log(`     1ª mitad: ${String(m1.total).padStart(4)} ops ${pr(m1.porRiesgo)}   ·   2ª mitad: ${String(m2.total).padStart(4)} ops ${pr(m2.porRiesgo)}`)
+    // Pagando las noches: una salida por estructura puede tardar mucho, así que
+    // esto no es un detalle.
+    for (const nivel of [0.25, 0.5, 1]) {
+      const ms = medirEstructura(porEstructura, fechas, rangosPar, { conSpread: true, swapPipsNoche: nivel })
+      console.log(`     con ${nivel.toFixed(2)} pips de swap por noche: ${pr(ms.porRiesgo)}`)
+    }
+    console.log(`     ⚠️ ${me.sinJuzgar} señales quedan SIN JUZGAR: el mercado no rompió en contra antes`)
+    console.log('        de que se acabara la serie. NO son ganadas.')
   }
 
   // ── 5. Pagando las noches ───────────────────────────────────────────────

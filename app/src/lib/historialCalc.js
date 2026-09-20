@@ -82,15 +82,39 @@ export function resumir(resultados) {
   // Por eso `ventasPausadas` se define ahora por lo que ES —señales de la app
   // que no se proponen— y no por descarte de las demás. Un experimento nuevo
   // no puede volver a colarse ahí.
+  // ⚠️ Y DESDE EL 2026-09-20 SON CUATRO. «Ruptura de estructura sola» —lo que
+  // queda del indicador del concurso cuando se le quitan sus tres señas de
+  // identidad— se anota en paralelo con `tipo: 'lss'`.
   const deReversion = todasJuzgadas.filter((r) => r.tipo === 'reversion')
   const deCaida = todasJuzgadas.filter((r) => r.tipo === 'caida')
+  const deRuptura = todasJuzgadas.filter((r) => r.tipo === 'lss')
   const esDeLaApp = (r) => !r.tipo || r.tipo === 'tendencia'
   const ventasPausadas = todasJuzgadas.filter((r) => r.sombra && esDeLaApp(r))
+
+  // ⚠️⚠️ EL CUBO PARA LO QUE NADIE HA INVENTADO TODAVÍA.
+  //
+  // Es la pieza que faltaba las CUATRO veces que este fallo mordió antes: un
+  // `tipo` nuevo no encaja en ningún cubo con nombre, así que DESAPARECE de
+  // todos los desgloses sin que nada falle. Se anota durante meses y nadie lo
+  // ve — pasó con «comprar la caída» y volvió a pasar con el retroceso en la
+  // app hermana.
+  //
+  // 📌 La app hermana ya lo arregló el 2026-09-16 y aquí NO llegó, porque este
+  // archivo es PRIMO: `gemelos.mjs` vigila los idénticos, y a los primos no los
+  // vigila nadie. Es justo donde se acumulan estas cosas.
+  //
+  // Éste es el ÚNICO cubo que se define por descarte, y a propósito: su trabajo
+  // es precisamente recoger lo que nadie enumeró. Todos los demás se definen
+  // por lo que SON.
+  const CONOCIDOS = new Set(['reversion', 'caida', 'lss'])
+  const otros = todasJuzgadas.filter((r) => r.tipo && !CONOCIDOS.has(r.tipo) && r.tipo !== 'tendencia')
 
   return {
     todas: cuenta(juzgadas),
     reversion: cuenta(deReversion),
     caida: cuenta(deCaida),
+    ruptura: cuenta(deRuptura),
+    otros: cuenta(otros),
     ventasPausadas: cuenta(ventasPausadas),
     // Se mantiene el cubo junto para no romper a quien ya lo lee, pero lo
     // que hay que enseñar son los dos de arriba.

@@ -178,6 +178,39 @@ console.log('\n11. El vigía sigue anotando las reversiones tras separarlas de l
     'y se la pide a derivarVista, que si no viene vacía',
     /incluirCaida:\s*true/.test(fuente)
   )
+
+  // ⚠️ Y DESDE EL 2026-09-20 SON CUATRO. «Ruptura de estructura sola» se
+  // genera FUERA de `derivarVista` —lee las velas crudas, como el banco de
+  // pruebas— así que el renglón que hay que vigilar es otro, pero el peligro
+  // es idéntico: si el vigía deja de sumarla, deja de anotarse sin un error.
+  comprobar(
+    'y la cuarta, la de «ruptura de estructura sola»',
+    fuente.includes('setupsLSS(') && fuente.includes('...setupsRuptura')
+  )
+  // Y que se genere con las velas crudas, no con el barrido publicado: ahí no
+  // están los máximos ni los mínimos y la regla no se puede calcular.
+  comprobar(
+    'y se genera con `rangosPar`, que es donde están las velas completas',
+    /setupsLSS\(\s*fechas,\s*rangosPar/.test(fuente)
+  )
+
+  // ⚠️⚠️ LA COMPROBACIÓN QUE PROTEGE LO IRRECUPERABLE.
+  //
+  // Una regla EN OBSERVACIÓN no puede tumbar el vigía. Si `setupsLSS` revienta
+  // y nadie la captura, muere la corrida entera y el historial de la APP
+  // —que no se puede reconstruir— pierde el día. Perder un día de un
+  // experimento sin validar solo retrasa una decisión; los dos errores no
+  // cuestan lo mismo.
+  comprobar(
+    'la regla en observación va dentro de un try: no puede tumbar el vigía',
+    /try\s*\{[\s\S]{0,200}setupsLSS\(/.test(fuente)
+  )
+  // Y que el fallo se GRITE. Capturarlo en silencio sería el otro error: la
+  // regla se pasaría meses sin anotarse y nadie lo notaría.
+  comprobar(
+    'y si falla, se imprime en el log en vez de callarse',
+    /catch[\s\S]{0,400}console\.error[\s\S]{0,200}NO se anotó/.test(fuente)
+  )
   comprobar(
     'y lo que compara no es `vista.setups` a secas',
     /compararConAnterior\(\s*(?!vista\.setups\s*,)/.test(fuente)
