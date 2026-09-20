@@ -183,12 +183,18 @@ console.log('\n9b. Cada experimento cuenta APARTE, y ninguno se cuela en otro')
     linea('c', 'reversion', true, 'ganada'),
     linea('d', 'caida', true, 'ganada'),
     linea('e', 'caida', true, 'perdida'),
+    linea('f', 'lss', true, 'ganada'),
   ])
 
   comprobar(r.todas.total === 1, 'las cuentas de la app solo miran lo que la app propone')
   comprobar(r.reversion.total === 1, 'la reversión cuenta aparte')
   comprobar(r.caida.total === 2, '«comprar la caída» cuenta aparte, no dentro de otro')
+  comprobar(r.ruptura?.total === 1, '«ruptura de estructura sola» cuenta aparte también')
   comprobar(r.ventasPausadas.total === 1, 'y las ventas pausadas siguen siendo SOLO las de la app')
+  // ⚠️ Ninguna regla de sombra puede colarse en el cubo de otra: son reglas
+  // OPUESTAS y un promedio entre ellas no describe a ninguna.
+  comprobar((r.ruptura?.total ?? -1) + r.caida.total + r.reversion.total === 4, 'y los tres experimentos no se pisan')
+  comprobar(r.otros?.total === 0, 'con tipos conocidos, el cajón de «otros» está vacío')
 
   // La que de verdad vigila: un experimento que nadie ha inventado todavía NO
   // puede caer dentro de «ventas pausadas». Si cae, alguien volvió a definir
@@ -197,6 +203,14 @@ console.log('\n9b. Cada experimento cuenta APARTE, y ninguno se cuela en otro')
     linea('a', 'tendencia', true, 'ganada'),
     linea('z', 'lo-que-inventemos-en-2027', true, 'ganada'),
   ])
+  // ⚠️⚠️ Y LA QUE FALTABA: ese tipo desconocido tiene que APARECER en algún
+  // sitio. Sin el cajón de «otros» no cae en ningún desglose y desaparece de
+  // la vista mientras se sigue anotando — que es exactamente lo que le pasó al
+  // retroceso en la app hermana durante semanas.
+  comprobar(
+    conFuturo.otros?.total === 1,
+    'un tipo que nadie ha inventado todavía APARECE en «otros», no desaparece',
+  )
   comprobar(
     conFuturo.ventasPausadas.total === 1,
     'un tipo que nadie ha visto todavía NO se cuela como «venta pausada»'

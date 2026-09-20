@@ -34,6 +34,12 @@ import {
   yaCorrioHoy,
 } from './lib/vigia-nucleo.mjs'
 import { resolver, resumir } from './lib/resolver.mjs'
+// La CUARTA regla en la sombra, desde el 2026-09-20. Viene del indicador que
+// Néstor escribió para el concurso de TradingView, pero con sus tres señas de
+// identidad quitadas: es una ruptura de estructura a secas. Ver la cabecera de
+// `lib/lss-sombra.mjs` y el listón en `lib/preregistro-lss.mjs`, escrito antes
+// de que se anotara ni una operación.
+import { setupsLSS } from './lib/lss-sombra.mjs'
 
 const DATOS = process.env.VIGIA_DATOS || fileURLToPath(new URL('../../datos-local', import.meta.url))
 const ESTADO = `${DATOS}/estado/vigia.json`
@@ -111,7 +117,49 @@ const vista = derivarVista(data, {
 // El historial es lo único de este proyecto que no se puede recuperar: si un
 // día no se anota, ese día se perdió para siempre. Por eso van juntas aquí y
 // hay una comprobación que exige que este archivo lea las dos.
-const todosLosSetups = [...vista.setups, ...vista.setupsReversion, ...vista.setupsCaida]
+// La cuarta de sombra. Se genera aparte de `derivarVista` a propósito: usa las
+// velas crudas (`rangosPar`) en vez del barrido ya calculado, que es
+// exactamente como las lee el banco de pruebas. Así lo que se anota y lo que se
+// midió no pueden separarse.
+//
+// ⚠️ REVIENTA si le faltan las velas, en vez de devolver cero señales. Una
+// lista vacía se lee como «hoy no hubo señales» y es indistinguible de «llevo
+// ocho meses sin anotar nada».
+//
+// ⚠️⚠️ Y SE ENVUELVE, que es la decisión que importa de todo este bloque.
+//
+// `setupsLSS` revienta si le faltan las velas, y eso está bien DENTRO de la
+// función. Pero aquí arriba las consecuencias no son simétricas:
+//
+//   · si revienta y se deja reventar, MUERE EL VIGÍA ENTERO, y el historial de
+//     la app —lo único de este proyecto que no se puede recuperar— pierde el
+//     día para siempre;
+//   · si se captura, lo que se pierde es un día de un experimento SIN VALIDAR,
+//     que solo retrasa una decisión.
+//
+// Los dos errores no cuestan lo mismo, así que la condición no puede ser
+// simétrica. Es la misma forma de escribir que `yaCorrioHoy` y `esSombra`.
+//
+// Y NO se pierde en silencio: el fallo se imprime en el log con todas las
+// letras. Lo que no puede pasar es que una regla en observación tire abajo el
+// registro de la que sí está en producción.
+let setupsRuptura = []
+try {
+  setupsRuptura = setupsLSS(fechas, rangosPar, data.pares)
+} catch (e) {
+  console.error(
+    '⚠️ «Ruptura de estructura sola» NO se pudo calcular hoy y NO se anotó: ' +
+      (e?.message || e) +
+      '\n   El resto del vigía sigue: el historial de la app es lo único irrecuperable.'
+  )
+}
+
+const todosLosSetups = [
+  ...vista.setups,
+  ...vista.setupsReversion,
+  ...vista.setupsCaida,
+  ...setupsRuptura,
+]
 
 // `estadoPrevio` se leyó arriba, para el guardián de los tres intentos. Se
 // reutiliza aquí a propósito: volver a leerlo daría lo mismo, pero dos
@@ -303,5 +351,13 @@ linea('Reversión en paralelo (la regla contraria a la app)', resumen.reversion)
 // nadie: la regla se habría anotado durante meses sin aparecer en el log de
 // ninguna corrida. Es el mismo descuido que ya se cazó en `filasTodas`.
 linea('«Comprar la caída» en paralelo (también en la sombra)', resumen.caida)
+// ⚠️ Y ésta, desde el 2026-09-20. Se imprime aquí porque NO se enseña en
+// ninguna pantalla de la app —lo pidió Néstor y es lo correcto: su estado es
+// «en observación»—, y una regla que no se puede ver en ningún sitio se pasa
+// meses anotándose sin que nadie lo note. Ya ocurrió dos veces.
+linea('«Ruptura de estructura sola» en paralelo (en observación, sin validar)', resumen.ruptura)
+// El cajón de lo que nadie ha inventado todavía. Si algún día sale un número
+// aquí, es que hay una regla anotándose que ningún desglose nombra.
+linea('Tipos que este log no conoce (revisar si sale algo)', resumen.otros)
 console.log(`Avisos al celular: ${JSON.stringify(avisos)}`)
 console.log('---VIGIA-FIN---')
