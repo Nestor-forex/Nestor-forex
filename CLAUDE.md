@@ -6222,3 +6222,108 @@ que suena más no es una app mejor.**
 el silencio del celular ES la información. Lo que hay que resolver no es la
 geometría —eso está medido— sino encontrar una regla de ENTRADA con ventaja.
 Que es exactamente para lo que corren las tres de la sombra.
+
+---
+
+# El marco de análisis de Néstor, contrastado con el código (2026-09-21)
+
+Néstor trajo un marco de análisis «maduro» (estructura por acción del precio →
+contexto → indicadores como filtro) y pidió saber **qué de eso hace la app y
+qué no**. Se contestó con el código delante, no de memoria.
+
+## Lo que la app decide HOY, literalmente
+
+```
+diferencia de fuerza entre las dos divisas > umbral
+  Y  precio por encima de su EMA20        (TENDENCIA_MIN = 'media')
+  Y  filtro RSI          ← RSI_MAX = null        APAGADO
+  Y  filtro confluencia  ← CONFLUENCIA_MIN = null APAGADO
+→ los 5 mejores por lado
+→ y SOLO ENTONCES los niveles: stop en lo10 − ½ATR, objetivo en max(hi20, c+2ATR)
+```
+
+## El mapeo, punto por punto
+
+| su punto | estado real |
+|---|---|
+| Máximos/mínimos crecientes · estructura | ❌ **NO.** La app lee **precio contra una media**, que no es estructura |
+| Soportes y resistencias | ⚠️ sí, pero **solo ponen los niveles; no deciden la entrada** |
+| Nivel clave | ⚠️ ídem |
+| **Liquidez** | ✅ **MEDIDO Y FALLÓ AL REVÉS** (ver abajo) |
+| Retrocesos | ❌ en Swing · ✅ en Intradía (sombra) |
+| RSI como filtro | ✅ medido → **apagado en Swing**, encendido en Intradía |
+| Medias para dirección | ✅ **la única condición técnica viva** |
+| ATR para stops | ✅ exactamente así |
+
+📌 **Y algo que su marco NO menciona y es el motor principal de la app:** la
+**fuerza relativa entre divisas**. La app no entra por «zona relevante» sino
+por diferencial de fuerza.
+
+## ⚠️ La app ya está del lado ✅ de su propia distinción, y aun así pierde
+
+Él lo resumió bien: ❌ «compro porque el RSI está sobrevendido» contra
+✅ «compro porque el precio reacciona en zona relevante dentro de una tendencia».
+
+**La app no puede cometer el error ❌ ni queriendo**: el RSI está apagado y no
+participa en la decisión. Hace tres cosas de su lista bien hechas —medias para
+dirección, ATR para stops, niveles reales para salidas— **y mide −0,03 por
+unidad de riesgo.**
+
+📌 **Eso no invalida su marco. Invalida algo más útil de saber: un método
+correcto no garantiza ventaja.** Se puede analizar con madurez, sin cometer
+ningún error de principiante, y no ganar dinero. Es la razón de ser de todo el
+banco de pruebas.
+
+## El único hueco real era el punto 1, y ya está corriendo
+
+La «ruptura de estructura sola» que arrancó en la sombra el 2026-09-20 **ES
+literalmente su punto 1** (pivotes, BOS/CHoCH). No es casualidad: su indicador
+del concurso iba por ahí. Seis de los siete elementos ya estaban.
+
+---
+
+# ⚠️ HALLAZGO: el objetivo 1:2 NUNCA se midió sobre la ruptura sola (2026-09-21)
+
+Néstor contó que otra plataforma, alimentada con capturas de la app, le dio
+**5 señales con geometría 1:2** que van en positivo, y preguntó si no habría
+que cambiar la app —«siempre arriesgando menos de lo que podríamos ganar y
+nuestra app hace lo contrario»—.
+
+Al ir a contestar con la rejilla ya medida apareció esto, comprobado en
+`backtest.mjs`:
+
+```js
+const BASE = { swingLen: 8, sweepWindow: 15, rr: 3 }   // exigirSweep por defecto = TRUE
+for (const r of [1, 1.5, 2, 3, 4])
+  linea(`objetivo ${r}× el riesgo`, correrLSS({ ...BASE, rr: r }))
+```
+
+**El barrido de objetivos corrió con el barrido de liquidez EXIGIDO**, o sea
+sobre la versión del indicador que mide −0,08 y de la que ya se sabe que
+selecciona las PEORES señales (−0,08 con barrido contra +0,05 sin él).
+
+⚠️ **Por tanto: el objetivo 1:2 sobre la RUPTURA SOLA —la que corre hoy en la
+sombra— es una casilla en blanco.** Nunca se midió. Y no es una casilla
+cualquiera: es exactamente la que Néstor lleva meses pidiendo.
+
+## Lo que SÍ está medido y no hay que confundir
+
+La rejilla del 2026-08-25 midió 1:2 **sobre las señales de la app**, y pierde
+en las tres variantes de stop (−0,09 · −0,07 · −0,12), con 30-31 % de acierto
+contra el 33 % que hace falta para empatar. **Eso cierra «poner 1:2 en la app
+tal cual». No cierra «1:2 sobre una entrada distinta».**
+
+## ⚠️ Las dos cosas que hay que decirle sobre sus 5 señales
+
+1. **Cinco operaciones no distinguen nada.** El margen del peor caso con n=5 es
+   **±44 puntos**. Es el mismo caso que su 89 % sobre 9 operaciones del
+   2026-08-25, y que el 0 de 5 de «comprar la caída» que hoy va 0 de 11.
+2. 📌 **Y una trampa propia del 1:2 que no es obvia: una operación ABIERTA en
+   ganancia no es una ganancia.** Con objetivo al doble del riesgo, casi todas
+   las operaciones pasan por una ganancia pequeña de camino al stop. Un sistema
+   1:2 **está diseñado para perder la mayoría de las veces**; que varias estén
+   en verde ahora mismo es lo que se espera tanto si funciona como si no.
+
+⚠️ **Y el 1:2 no es una propiedad de una buena señal: es una DECISIÓN sobre
+dónde poner el objetivo.** Cualquier sistema puede ponerse a 1:2. Lo que
+decide es si el precio llega hasta ahí suficientes veces.
