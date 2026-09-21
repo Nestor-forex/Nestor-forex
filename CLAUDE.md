@@ -6087,3 +6087,138 @@ perdido nada**: en ese repositorio `git fetch` está configurado para traerse
 semanas sin actualizarse. `git ls-remote` es el que dice la verdad. Es la misma
 lección de siempre: **antes de creer que algo se rompió, comprobar que la
 herramienta con la que miras está diciendo la verdad.**
+
+---
+
+# A los PRIMOS no los vigilaba nadie, y ya se cerró (2026-09-21)
+
+Néstor preguntó si el NFX-LSS y `barridoSwap` habían quedado bajo la vigilancia
+de `gemelos.mjs`, **porque si no, un arreglo en una app podría no llegar a la
+otra sin que nadie se entere**. La respuesta corta es que sí, pero comprobarlo
+destapó dos agujeros reales.
+
+## Lo que ya estaba bien
+
+| archivo | dónde | qué significa |
+|---|---|---|
+| `src/lib/lss.js` · `scripts/prueba-lss.mjs` | **GEMELOS** | se comparan byte a byte en cada push, cada PR y a diario |
+| `scripts/lib/backtest-nucleo.mjs` (donde vive `barridoSwap`) | PRIMO con motivo | deben diferir |
+| `scripts/lib/lss-banco.mjs` · `prueba-lss-banco.mjs` · `costes.mjs` | PRIMOS con motivo | ídem |
+
+📌 **Y lo que de verdad contesta su preocupación:** el registro en la sombra del
+LSS **corre SOLO en Swing** — comprobado, en Intradía no existe `lss-sombra.mjs`
+ni una sola llamada a `setupsLSS`. No hay una mitad de la que separarse, así que
+una divergencia entre apps **no podía invalidar en silencio** lo acumulado.
+
+## ⚠️ La distinción que hay que tener clarísima
+
+- **GEMELO = lo vigila una máquina.** Si se arregla en una app y no en la otra,
+  el workflow se pone rojo ese día.
+- **PRIMO = solo está documentado.** Nadie compara nada. Es la explicación, no
+  el guardia.
+
+## Agujero 1: el guardia de `barridoSwap` existía SOLO en Intradía
+
+El que lee todos los guiones como texto y falla si alguno usa los nombres de
+campo de la app hermana **se escribió solo allá**. Swing se quedó sin él. Ya
+tiene el suyo, espejado (allí se prohíben `mediana`/`media`, aquí
+`cruzaron`/`mediaNoches`). Swing estaba limpio; lo que faltaba era el guardia.
+
+## Agujero 2: nada detectaba un archivo duplicado fuera de las DOS listas
+
+Es el que cierra el hueco de verdad. La comprobación solo miraba lo que alguien
+**se acordó** de apuntar. Un archivo creado mañana en las dos apps —el caso
+normal al portar algo— caía fuera y nadie decía nada: ni se comprobaba que
+siguieran iguales, ni quedaba escrito por qué diferían.
+
+Ahora `prueba-gemelos.mjs` recorre las dos apps y **falla** (salida 1) si
+encuentra uno sin clasificar, con guarda para no pasar en verde si el recorrido
+se rompe. Eran **3**, ya en PRIMOS con su motivo: `Splash.jsx` (recortes
+distintos de la misma ilustración), `vite.config.js` (manifest y `base` de cada
+app) y `push/pausa.js` (la decisión es la misma, la **evidencia** no).
+
+Y `scripts/prueba-gemelos.mjs` pasa a ser **GEMELO (59)**: era idéntico por
+costumbre, no porque nadie lo exigiera, y es el archivo que decide con qué
+rasero vigila cada repositorio.
+
+📌 **Un falso hallazgo mío, por si sirve de aviso:** la primera medición dio
+«23 archivos sin clasificar». Era falsa — mi comparación no respetaba los
+comodines de PRIMOS (`textos/*.js`, `prueba-*.mjs`). Con ellos son 3. **Casi
+reporto veinte problemas inventados por no leer bien mi propia lista.**
+
+⚠️ Y una ventana que conviene conocer: **entre que se fusiona una mitad de un
+cambio emparejado y la otra, `main` contra `main` está genuinamente en rojo.**
+Aquí duró segundos porque se fusionaron seguidas. Es otra razón para no dejar
+nunca una mitad sin fusionar.
+
+---
+
+# El objetivo queda más cerca que el stop en 22 de cada 25 señales (2026-09-21)
+
+Néstor leyó el reporte del día y preguntó: **«veo en las apps que arriesgan más
+que el objetivo, ¿acaso no se puede corregir?»**. Los dos setups de ese día
+venían a 1:0.8 y 1:0.4.
+
+**No es una impresión.** Contadas las 25 señales que la app lleva registradas
+(2026-08-09 a 2026-09-16, 17 días con señal):
+
+| | |
+|---|---:|
+| señales con el objetivo MÁS CERCA que el stop | **22 de 25 (88 %)** |
+| R/B mediano | **0,71** |
+| llegaron a 1:1.5 y despertaron el celular | **1** |
+| el mayor de todos | 1,73 |
+
+## Por qué sale así — el mecanismo, que NO es un error
+
+```js
+sl: compra ? p.lo10 - 0.5 * p.atrAbs : p.hi10 + 0.5 * p.atrAbs
+tp: compra ? Math.max(p.hi20, p.c + 2 * p.atrAbs) : Math.min(p.lo20, p.c - 2 * p.atrAbs)
+```
+
+El stop se ancla al **mínimo de 10 días** más medio ATR de colchón; el objetivo
+es el **máximo de 20 días o 2 ATR**, lo que quede más lejos.
+
+📌 **La app compra lo que YA está fuerte.** Un par que lleva días subiendo deja
+su mínimo de 10 días muy atrás —o sea, el stop se aleja— mientras el objetivo
+sigue topado en 2 ATR. **Cuanto mejor ha ido la subida, peor sale la relación.**
+Es la consecuencia aritmética de la estrategia, no un fallo de cálculo.
+
+## ⚠️⚠️ SÍ SE PUEDE CAMBIAR, Y ESTÁ MEDIDO: TODO LO DEMÁS SALE PEOR
+
+La rejilla completa del 2026-08-25 —12 combinaciones de stop y objetivo sobre
+los mismos días, mismos pares, con costes— sigue siendo la respuesta:
+
+- **Las doce pierden**, y las doce se quedan por debajo de su acierto de
+  equilibrio.
+- **La mejor de las doce (−0,04) es PEOR que la geometría que la app ya usa
+  (−0,03).**
+- Y las filas con el objetivo a 1,5 veces el riesgo —que es justo «arreglarlo»—
+  dan **38 % de acierto y −0,07**, necesitando 40 % para empatar.
+
+Mover el stop y el objetivo **reparte el resultado entre acierto y tamaño; no
+crea ventaja donde no la hay.** Sigue en pie lo escrito el 2026-08-25: **no
+volver a proponer «ajustar el stop» o «alargar el objetivo» para Swing.**
+
+## Pero la pregunta destapa algo DISTINTO que sí sigue abierto
+
+Son dos preguntas y solo una está cerrada:
+
+| | estado |
+|---|---|
+| (a) ¿mover el stop/objetivo hace que la app gane? | **CERRADA: no.** Rejilla de 12 |
+| (b) ¿sirve de algo una app cuyo celular suena 1 de cada 25? | **ABIERTA** |
+
+La (b) estaba anotada como pregunta abierta desde el 2026-08-09 —«si se repite
+que la app encuentra señales y ninguna llega a 1.5, nunca sonará el celular»—
+y **hoy ya tiene número: 1 de 25.**
+
+⚠️ **Y la salida fácil es la trampa.** Bajar el umbral de 1.5 haría sonar el
+celular, y haría sonarlo con setups que están medidos perdiendo. El filtro no
+está roto: está diciendo la verdad sobre un sistema que mide −0,03. **Un celular
+que suena más no es una app mejor.**
+
+📌 Lo honesto, y es lo que sostiene todo el argumento de venta del proyecto:
+el silencio del celular ES la información. Lo que hay que resolver no es la
+geometría —eso está medido— sino encontrar una regla de ENTRADA con ventaja.
+Que es exactamente para lo que corren las tres de la sombra.
