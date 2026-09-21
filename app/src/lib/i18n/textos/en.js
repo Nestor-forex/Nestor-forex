@@ -430,6 +430,10 @@ export default {
   },
 
   historial: {
+    esRuptura: 'STRUCTURE BREAK',
+    rupturaTitulo: 'History of "structure break"',
+    rupturaIntro:
+      'The fourth rule, which enters when price breaks the last high or low it made. ⚠️ It is UNDER OBSERVATION and unvalidated: it has very few trades and its number does not mean anything yet. It is not a recommendation — it is shown so it can be followed, not traded.',
     esReversion: 'REVERSION',
     esCaida: "BUY THE DIP",
     caidaTitulo: "History of “buy the dip”",

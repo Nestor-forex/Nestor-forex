@@ -382,5 +382,65 @@ console.log('\n15. Una señal anterior a todas las velas sí caduca')
   )
 }
 
+// --- 16. NINGÚN EXPERIMENTO PUEDE DESAPARECER DE LA LISTA ------------------
+//
+// ⚠️ Esto vigila el fallo que ya mordió TRES veces en este proyecto:
+// «comprar la caída» (2026-09-07), el «retroceso» de Intradía (2026-09-16) y
+// la «ruptura de estructura» (2026-09-21). Las tres veces el vigía anotaba
+// bien y la pantalla no las pintaba, porque `filasTodas` ENUMERA los tipos
+// conocidos. No falla nada: la regla se anota durante meses y nadie la ve.
+//
+// La comprobación que de verdad importa es la última: un `tipo` que nadie ha
+// inventado todavía tiene que APARECER igual.
+
+console.log('\n16. La lista del Historial no se traga ningún experimento')
+{
+  const { unir } = await import('../src/lib/useHistorial.js')
+
+  const s = (id, extra) => ({ id, vistoEl: '2026-09-20T00:00:00Z', par: 'EUR/USD', lado: 'COMPRA', ...extra })
+  const senales = [
+    s('app', {}),
+    s('rev', { sombra: true, tipo: 'reversion' }),
+    s('cai', { sombra: true, tipo: 'caida' }),
+    s('rup', { sombra: true, tipo: 'lss' }),
+    s('pausada', { sombra: true, tipo: 'tendencia' }),
+    s('futura', { sombra: true, tipo: 'regla-que-nadie-ha-inventado' }),
+  ]
+  const u = unir(senales, [])
+  const ids = new Set(u.filasTodas.map((f) => f.id))
+
+  comprobar(ids.has('app'), 'la señal de la app sale en la lista')
+  comprobar(ids.has('rev'), 'la reversión sale')
+  comprobar(ids.has('cai'), '«comprar la caída» sale')
+  comprobar(ids.has('rup'), 'la ruptura de estructura sale')
+  comprobar(
+    ids.has('futura'),
+    '⚠️ y un tipo que NADIE ha inventado todavía TAMBIÉN sale, en vez de desaparecer'
+  )
+  // Cada cubo sigue conteniendo solo lo suyo: mezclarlos haría que ningún
+  // porcentaje respondiera su pregunta.
+  comprobar(u.filasRuptura.length === 1 && u.filasRuptura[0].id === 'rup', 'el cubo de la ruptura lleva solo la suya')
+  comprobar(u.filasCaida.every((f) => f.tipo === 'caida'), 'y no se le cuela nada al de la caída')
+  comprobar(
+    u.filasOtras.length === 1 && u.filasOtras[0].id === 'futura',
+    'el cajón de «otros» recoge exactamente lo desconocido, ni más ni menos'
+  )
+  comprobar(
+    !u.filasOtras.some((f) => f.tipo === 'lss' || f.tipo === 'caida' || f.tipo === 'reversion'),
+    'y NO se traga un experimento que sí tiene su propia lista'
+  )
+  // ⚠️ La venta pausada NO es un experimento desconocido: es una señal de la
+  // propia app que ya tiene su cubo y que a propósito no se lista, porque
+  // puesta entre las demás se leería como una recomendación que nunca se hizo.
+  comprobar(!ids.has('pausada'), 'una venta pausada NO se cuela en la lista de señales')
+  comprobar(
+    !u.filasOtras.some((f) => f.id === 'pausada'),
+    'ni en el cajón de «otros»: tiene su propio sitio'
+  )
+  // Sin duplicados: una señal en dos listas se contaría dos veces al leer.
+  comprobar(u.filasTodas.length === new Set(u.filasTodas.map((f) => `${f.id}@${f.vistoEl}`)).size,
+    'ninguna señal aparece dos veces en la lista')
+}
+
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')
 process.exit(fallos ? 1 : 0)

@@ -425,6 +425,10 @@ export default {
   },
 
   historial: {
+    esRuptura: 'YAPI KIRILIMI',
+    rupturaTitulo: '«Yapı kırılımı» geçmişi',
+    rupturaIntro:
+      'Dördüncü kural: fiyat işaretlediği son tepe ya da dibi kırdığında girer. ⚠️ GÖZLEM ALTINDA ve doğrulanmamış: çok az işlemi var ve sayısı henüz hiçbir şey ifade etmiyor. Bir öneri değil — işlem yapmak için değil, takip edilebilsin diye gösteriliyor.',
     esReversion: 'TERS',
     esCaida: "DÜŞÜŞÜ SATIN AL",
     caidaTitulo: "«Düşüşü satın al» geçmişi",

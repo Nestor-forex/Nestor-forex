@@ -1724,6 +1724,51 @@ console.log('═'.repeat(92))
     linea(`  objetivo ${r}× el riesgo${r === BASE.rr ? '  (el suyo)' : ''}`, correrLSS({ ...BASE, rr: r }))
   }
 
+  // ── 4b. EL MISMO BARRIDO, PERO SOBRE LA RUPTURA SOLA ────────────────────
+  //
+  // ⚠️⚠️ ESTA ERA UNA CASILLA EN BLANCO, y el motivo de que lo fuera es un
+  // descuido que conviene ver: el bloque 4 de arriba usa `BASE`, y `BASE` NO
+  // pone `exigirSweep: false`. O sea que todo el barrido de objetivos se midió
+  // sobre el indicador COMPLETO — justo la versión que el bloque 2 demuestra
+  // que se queda con las PEORES señales (−0,08 con barrido contra +0,05 sin
+  // él). El objetivo nunca se había barrido sobre la regla que de verdad corre
+  // en la sombra.
+  //
+  // Néstor lleva meses pidiendo «arriesgar menos de lo que se puede ganar», y
+  // el 2026-09-21 trajo 5 señales de otra plataforma con geometría 1:2. La
+  // rejilla del 2026-08-25 cierra «1:2 sobre las señales de la APP» (pierde en
+  // las tres variantes de stop). **No cierra 1:2 sobre una entrada distinta.**
+  //
+  // ⚠️ CÓMO HAY QUE LEER ESTA TABLA, y va escrito ANTES de verla:
+  //
+  //   · La columna que decide NO es el acierto. Con el objetivo al doble del
+  //     riesgo se acierta menos POR CONSTRUCCIÓN — el precio tiene que
+  //     recorrer el doble. Un 31 % aquí puede ser mejor que un 55 % a 1:1.
+  //     Lo que dice si gana o pierde es «equil.» contra «acierto», y «por 1R».
+  //   · Esto es un CRIBADO, no una confirmación. Estos 1.436 días ya se
+  //     miraron para elegir la regla, así que un número bueno aquí solo
+  //     autoriza a REGISTRARLO HACIA ADELANTE, nunca a encenderlo.
+  //   · Y la elección se congela UNA vez. Mirar la tabla, quedarse con la
+  //     fila que más gusta y volver a medirla es exactamente el pozo que
+  //     Néstor declaró agotado el 2026-09-20.
+  console.log('')
+  console.log('4b) DÓNDE PONER EL OBJETIVO — SOBRE LA RUPTURA SOLA (sin barrido)')
+  console.log('⚠️ El acierto BAJA solo con alargar el objetivo: el precio tiene que')
+  console.log('   recorrer más. Lo que decide es «acierto» contra «equil.», no el')
+  console.log('   acierto suelto. Y esto es un CRIBADO, no una confirmación.')
+  console.log(CABL)
+  console.log(RAYA_LSS)
+  const SIN_BARRIDO = { ...BASE, exigirSweep: false }
+  for (const r of [1, 1.5, 2, 2.5, 3]) {
+    linea(
+      `  objetivo ${r}× el riesgo${r === 1 ? '  (la sombra HOY)' : ''}`,
+      correrLSS({ ...SIN_BARRIDO, rr: r })
+    )
+  }
+  console.log(RAYA_LSS)
+  console.log('Para comparar, con las mismas velas:')
+  linea('  la app tal cual (vara neutra)', neutraPartida)
+
   // ── 5. LA v1.1 DE NÉSTOR ────────────────────────────────────────────────
   //
   // Tres cambios que él pidió tras leer la tabla de arriba. Se miden los tres,

@@ -457,6 +457,10 @@ export default {
   },
 
   historial: {
+    esRuptura: 'RUPTURA DE ESTRUCTURA',
+    rupturaTitulo: 'Historial de «ruptura de estructura»',
+    rupturaIntro:
+      'La cuarta regla, que entra cuando el precio rompe el último máximo o mínimo que marcó. ⚠️ Está EN OBSERVACIÓN y sin validar: lleva muy pocas operaciones y su número todavía no significa nada. No es una recomendación — se enseña para que se pueda seguir, no para operarla.',
     esReversion: 'REVERSIÓN',
     esCaida: "COMPRAR LA CAÍDA",
     caidaTitulo: "Historial de «comprar la caída»",
