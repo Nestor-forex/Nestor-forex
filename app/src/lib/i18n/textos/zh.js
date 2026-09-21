@@ -420,6 +420,10 @@ export default {
   },
 
   historial: {
+    esRuptura: '结构突破',
+    rupturaTitulo: '「结构突破」的历史记录',
+    rupturaIntro:
+      '第四条规则：当价格突破它最近形成的高点或低点时入场。⚠️ 它处于观察中且未经验证：交易次数很少，它的数字目前还没有任何意义。这不是建议 — 展示它是为了可以跟踪，而不是为了交易。',
     esReversion: '反向',
     esCaida: "买入下跌",
     caidaTitulo: "「买入下跌」的历史记录",

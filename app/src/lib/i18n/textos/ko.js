@@ -424,6 +424,10 @@ export default {
   },
 
   historial: {
+    esRuptura: '구조 돌파',
+    rupturaTitulo: '「구조 돌파」 기록',
+    rupturaIntro:
+      '네 번째 규칙으로, 가격이 직전에 만든 고점이나 저점을 돌파할 때 진입합니다. ⚠️ 관찰 중이며 검증되지 않았습니다: 거래 수가 매우 적어 그 수치는 아직 아무 의미가 없습니다. 권유가 아닙니다 — 따라갈 수 있도록 보여줄 뿐, 거래하라는 뜻이 아닙니다.',
     esReversion: '역방향',
     esCaida: "하락 매수",
     caidaTitulo: "「하락 매수」 기록",

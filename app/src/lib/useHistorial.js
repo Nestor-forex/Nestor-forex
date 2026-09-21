@@ -121,7 +121,7 @@ export function useHistorial() {
 
 // Junta cada señal con su resultado, si ya lo tiene, y las ordena de la más
 // reciente a la más vieja.
-function unir(senales, resultados) {
+export function unir(senales, resultados) {
   const porClave = new Map(resultados.map((r) => [r.clave, r]))
 
   const conResultado = (s) => {
@@ -164,7 +164,53 @@ function unir(senales, resultados) {
   // Néstor pudiera ver ni una.
   const filasCaida = senales.filter((s) => s.tipo === 'caida').map(conResultado).sort(masNuevaPrimero)
 
-  const filasTodas = [...filas, ...filasReversion, ...filasCaida].sort(masNuevaPrimero)
+  // Y la cuarta, «ruptura de estructura sola», desde el 2026-09-21. Mismo
+  // motivo exacto que la de arriba, y conviene ver que es la TERCERA vez que
+  // este descuido aparece en el proyecto (`caida` en el tablero, `retroceso`
+  // en Intradía): un experimento nuevo no termina cuando el vigía lo anota,
+  // termina cuando se puede VER. Sin esta línea sus señales no saldrían en
+  // ninguna pantalla y nadie lo notaría, porque nada falla.
+  const filasRuptura = senales.filter((s) => s.tipo === 'lss').map(conResultado).sort(masNuevaPrimero)
 
-  return { filas, filasReversion, filasCaida, filasTodas, resumen: resumir(resultados) }
+  // ⚠️⚠️ EL CAJÓN DE LO QUE NADIE HA INVENTADO TODAVÍA, y es la pieza que
+  // faltaba las TRES veces que este fallo mordió.
+  //
+  // Las listas de arriba ENUMERAN los tipos conocidos. Eso significa que una
+  // regla de sombra nueva —la que se añada el mes que viene— se anotaría
+  // durante meses sin salir en ninguna pantalla, exactamente como pasó con
+  // «comprar la caída» y con el «retroceso» de Intradía. Y no falla nada: la
+  // lista simplemente no la incluye y nadie lo nota.
+  //
+  // Con esto, un `tipo` desconocido APARECE (sin etiqueta bonita, pero
+  // aparece) en vez de desaparecer. Equivocarse hacia «sale una fila rara»
+  // cuesta una fila rara; hacia «no sale» cuesta meses de registro invisible.
+  // ⚠️ `'tendencia'` va en la lista de conocidos y NO es un descuido: una señal
+  // de sombra con ese tipo es una VENTA PAUSADA —una señal de la propia app
+  // que se anota pero no se propone—, ya tiene su cubo en `resumir()` y a
+  // propósito no se lista: puesta entre las demás se leería como una
+  // recomendación que la app nunca hizo. Lo mismo las señales viejas sin
+  // `tipo`. Aquí solo cae lo que de verdad no conoce nadie.
+  const CONOCIDOS = new Set(['tendencia', 'reversion', 'caida', 'lss'])
+  const filasOtras = senales
+    .filter((s) => s.sombra && s.tipo && !CONOCIDOS.has(s.tipo))
+    .map(conResultado)
+    .sort(masNuevaPrimero)
+
+  const filasTodas = [
+    ...filas,
+    ...filasReversion,
+    ...filasCaida,
+    ...filasRuptura,
+    ...filasOtras,
+  ].sort(masNuevaPrimero)
+
+  return {
+    filas,
+    filasReversion,
+    filasCaida,
+    filasRuptura,
+    filasOtras,
+    filasTodas,
+    resumen: resumir(resultados),
+  }
 }

@@ -85,6 +85,24 @@ export default function HistorialTab() {
             </div>
           )}
 
+          {/* ⚠️ La cuarta, desde el 2026-09-21. Néstor pidió verla —el
+              2026-09-20 se decidió esconderla, y él cambió de idea— y esto es
+              lo que se puede enseñar sin mentir: SUS NÚMEROS, no sus señales.
+              Su texto dice de frente que está en observación y sin validar,
+              porque una regla puesta en una pantalla se lee como aprobada por
+              el solo hecho de estar ahí. Aparece solo cuando tiene algo
+              resuelto, igual que las otras dos. */}
+          {resumen.ruptura.total > 0 && (
+            <div style={{ ...BLOQUE_EXPERIMENTO }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 12.5, fontWeight: 600 }}>{t('historial.rupturaTitulo')}</span>
+                <Etiqueta>{t('historial.esRuptura')}</Etiqueta>
+              </div>
+              <Resumen resumen={{ todas: resumen.ruptura }} t={t} />
+              <p style={{ ...TEXTO, margin: 0 }}>{t('historial.rupturaIntro')}</p>
+            </div>
+          )}
+
           <MedicionLarga t={t} locale={locale} />
 
           {/* Una sola lista, en orden de fecha. Cada reversión lleva su
@@ -329,6 +347,7 @@ function Fila({ f, t, locale }) {
               señalar, no al revés. */}
           {f.tipo === 'reversion' && <Etiqueta>{t('historial.esReversion')}</Etiqueta>}
           {f.tipo === 'caida' && <Etiqueta>{t('historial.esCaida')}</Etiqueta>}
+          {f.tipo === 'lss' && <Etiqueta>{t('historial.esRuptura')}</Etiqueta>}
         </div>
         <div style={{ fontSize: 12, fontWeight: 700, color: COLOR[estado] }}>
           {t('historial.' + estado)}

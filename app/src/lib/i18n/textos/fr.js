@@ -430,6 +430,10 @@ export default {
   },
 
   historial: {
+    esRuptura: 'CASSURE DE STRUCTURE',
+    rupturaTitulo: 'Historique de « cassure de structure »',
+    rupturaIntro:
+      'La quatrième règle, qui entre quand le prix casse le dernier sommet ou creux qu\'il a marqué. ⚠️ Elle est EN OBSERVATION et non validée : elle compte très peu d\'opérations et son chiffre ne signifie encore rien. Ce n\'est pas une recommandation — elle est affichée pour pouvoir être suivie, pas pour être tradée.',
     esReversion: 'INVERSION',
     esCaida: "ACHETER LA BAISSE",
     caidaTitulo: "Historique de « acheter la baisse »",
