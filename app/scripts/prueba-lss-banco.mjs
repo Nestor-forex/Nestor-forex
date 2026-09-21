@@ -364,5 +364,61 @@ titulo('5. LAS MISMAS LLAMADAS QUE HACE LA SECCIÓN v1.1 DEL BANCO')
   ok(conSwap.porRiesgo < sinSwap.porRiesgo, 'pagar el swap empeora el resultado, como en el resto del banco')
 }
 
+// ───────────────────────────────────────────────────────────────────────────
+titulo('6. Que NINGÚN guion use los nombres de `barridoSwap` de la app hermana')
+
+// ⚠️ `barridoSwap` DEVUELVE COSAS DISTINTAS EN CADA APP, y no por capricho de
+// quien las nombró: es una diferencia sobre el MERCADO.
+//
+//   · Aquí, en Swing, cada vela ES un día, así que las noches salen solas de
+//     `diasTardados` y el barrido devuelve `mediana` y `media`.
+//   · En Intradía una vela es una hora, así que las noches hay que contarlas
+//     por los cortes reales de las 22:00 UTC —depende de la hora de ENTRADA—
+//     y el barrido devuelve `cruzaron` y `mediaNoches`.
+//
+// Copiar esa línea de la app hermana no es un descuido de escritura: es
+// traerse una suposición sobre el mercado que aquí es falsa. Y no falla: el
+// campo sale `undefined` y se imprime tal cual en medio de una tabla.
+//
+// ⚠️ ESTO YA MORDIÓ DOS VECES EL MISMO DÍA (2026-09-20), en Intradía y en dos
+// archivos distintos: tumbó la tabla del M15 (112 créditos) y después la del
+// banco normal (28 créditos y 37 minutos). Las dos veces murió en el último
+// bloque, con los créditos del día ya gastados.
+//
+// 📌 Y el guardia se escribió SOLO EN INTRADÍA. Swing se quedó un día sin él,
+// que es exactamente el agujero de los PRIMOS: `gemelos.mjs` vigila los
+// archivos idénticos, y a los primos no los vigila nadie. Éste es el espejo:
+// allí se prohíben los campos de aquí, aquí los de allí.
+{
+  const { readdirSync, readFileSync } = await import('fs')
+  const dir = new URL('./', import.meta.url)
+  // Este mismo archivo queda fuera, y no por comodidad: lleva `b.cruzaron` y
+  // `b.mediaNoches` escritos DENTRO, en el propio patrón que busca. Sin
+  // excluirlo se marcaría a sí mismo y la prueba fallaría siempre, que es la
+  // forma más rápida de que alguien la desactive por pesada.
+  const YO = 'prueba-lss-banco.mjs'
+  const guiones = readdirSync(dir)
+    .filter((f) => f.endsWith('.mjs') && f !== YO)
+    .map((f) => [f, readFileSync(new URL(f, dir), 'utf8')])
+    .filter(([, src]) => src.includes('barridoSwap('))
+
+  // Guarda contra una prueba que se adapta a lo que encuentra: si nadie llama
+  // ya a `barridoSwap`, el bucle no entraría y esto quedaría en verde sin
+  // haber mirado ni un archivo.
+  ok(
+    guiones.length >= 2,
+    `hay guiones que llaman a \`barridoSwap\` (${guiones.length}); si no, esta prueba no comprueba nada`
+  )
+
+  for (const [nombre, src] of guiones) {
+    for (const campo of ['cruzaron', 'mediaNoches']) {
+      ok(
+        !new RegExp(`\\bb\\.${campo}\\b`).test(src),
+        `${nombre} NO usa \`b.${campo}\` — ése es el nombre de Intradía y aquí sale undefined`
+      )
+    }
+  }
+}
+
 console.log(`\n${mal ? `✗ ${mal} de ${n} MAL` : `✓ las ${n} comprobaciones pasan`}\n`)
 process.exit(mal ? 1 : 0)
