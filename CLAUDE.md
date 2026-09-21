@@ -5840,3 +5840,250 @@ bajadas con `curl` y enchufadas por un alias de Vite que sustituye
 | **árabe** | **112 hojas de datos, 0 en `rtl`** — con el CSS calculado |
 | desplazamiento lateral | ninguno |
 | errores de la app | ninguno |
+
+---
+
+# El NFX-LSS: el indicador del concurso, medido tres veces (2026-09-18 al 20)
+
+Néstor escribió un indicador en Pine Script para un concurso de TradingView
+—**NestorForex Smart Signal (NFX-LSS)**, barrido de liquidez + ruptura de
+estructura (BOS/CHoCH)— y pidió portarlo a las apps y medirlo.
+
+📌 **Lo primero, porque enmarca todo lo demás: que el backtest salga mal NO
+dice que el indicador esté mal hecho.** Un concurso de TradingView juzga la
+idea, cómo se ve y cómo está el código, no cinco años de Forex. El Pine está
+bien escrito y la idea es la que usan muchos operadores.
+
+## Qué se construyó
+
+```
+app/src/lib/lss.js              la lógica, traducida del Pine   GEMELO
+app/scripts/prueba-lss.mjs      82 comprobaciones               GEMELO
+app/scripts/lib/lss-banco.mjs   el adaptador al banco           PRIMO
+app/scripts/prueba-lss-banco.mjs                                PRIMO
+```
+
+⚠️ **Se hizo en JavaScript y no en Python, que es lo que él pidió.** El motivo
+no es comodidad: el banco de pruebas de este proyecto está en JavaScript, y
+solo pasando por él se mide con la MISMA vara neutra, los MISMOS spreads por
+par y el mismo corte en mitades que todo lo demás. Un número obtenido por otro
+camino no se podría comparar con nada.
+
+## Las tres tablas, y todas dicen lo mismo
+
+Vara neutra 1:1, spread por par descontado.
+
+| | el NFX-LSS | **CONTROL: solo la ruptura** | la app |
+|---|---:|---:|---:|
+| **Swing** (velas diarias, 14 pares) | −0,08 | **+0,02** | −0,04 |
+| **Intradía H1** (7 pares directos) | −0,14 | −0,10 | −0,10 |
+| **Intradía M15** (79.669 velas) | −0,16 | −0,15 | — |
+
+**En los tres, exigir el barrido de liquidez EMPEORA el resultado.** Y no es
+que quite las malas: quita cuatro de cada cinco señales y se queda con las
+peores.
+
+⚠️ **Sexta familia de filtros que se mide y falla.** Con RSI, ADX, confluencia
+de marcos, barrido de liquidez y COT, el patrón lleva meses siendo el mismo:
+**en estas apps, los filtros no funcionan.** Lo único que ha medido positivo
+son reglas de ENTRADA distintas.
+
+### El M15 y la trampa de compararlo con el H1
+
+Un pivote de 4 velas son **cuatro horas** en H1 y **una hora** en M15. La misma
+cifra en la misma casilla significa dos cosas distintas, así que la tabla mide
+las DOS lecturas —mismo número de velas y mismo tiempo de reloj— y cada fila
+dice a cuánto equivale. Sin eso, poner las dos tablas juntas es comparar dos
+reglas creyendo que son la misma.
+
+⚠️ `velas.mjs` de Intradía ganó una opción `intervalo` (por defecto `'1h'`, así
+que para el vigía, el reporte y el publicador no cambia nada). El M15 tiene
+guion y workflow **aparte y solo a mano**: 16 tandas = **112 créditos**.
+
+## La v1.1, y el veredicto
+
+Néstor ajustó el indicador leyendo la primera tabla y pidió re-medirlo. **Los
+tres cambios juntos miden −0,11: peor que la v1.0 (−0,08) y que la app (−0,04).**
+
+| cambio | veredicto |
+|---|---|
+| sweep como etiqueta, no filtro | reproduce el +0,02, **que no confirma nada** |
+| colchón de ATR en el stop | **no hace nada**: 5 niveles entre +0,01 y +0,02 |
+| salida por estructura contraria | **−0,11 contra +0,01** del objetivo fijo 1:1 |
+
+⚠️ **El colchón se canceló solo, y estaba escrito ANTES de medirlo**: alejar el
+stop quita stops tocados por un retest **y ensancha el riesgo en la misma
+medida**, así que cada acierto vale menos veces el riesgo.
+
+⚠️ La salida por estructura además **sostiene las operaciones 52 días de
+media**; con 0,25 pips de swap ya cae a −0,15.
+
+### ⚠️⚠️ El hallazgo que contradice la premisa del indicador
+
+De las 792 señales sin filtro:
+
+| | ops | acierto | por 1R | 1ª mit | 2ª mit |
+|---|---:|---:|---:|---:|---:|
+| las que **SÍ** tuvieron barrido (⚡) | 197 | 47 % | **−0,08** | −0,15 | −0,03 |
+| las que **NO** lo tuvieron | 595 | 53 % | **+0,05** | +0,11 | −0,02 |
+
+**El barrido marca las señales PEORES, no las mejores.** La premisa central del
+NFX-LSS —el barrido como trampa de stops que anticipa el movimiento real— sale
+del revés.
+
+📌 **Consecuencia para la ficha del concurso:** no se puede describir el ⚡ como
+«filtro que evita rupturas falsas». Néstor ya lo corrigió.
+
+⚠️ Y no se convierte en regla dura: decae de +0,11 a −0,02 entre mitades.
+
+## ⚠️ DOS COSAS QUE NO HAY QUE VOLVER A INTENTAR
+
+**1. Otra ronda de ajuste de parámetros sobre 2021-2026.** Néstor lo dijo
+primero —«ese pozo ya se agotó»— y tiene razón. Esos 1.436 días ya se usaron
+para ELEGIR la regla; volver a medir sobre ellos devuelve el mismo número por
+construcción.
+
+**2. Citar el +0,02 como confirmación.** Es el número con el que se eligió la
+regla, salido de mirar veinte filas y quedarse con la que ganaba. **No es una
+segunda muestra: es la misma.**
+
+📌 Y un dato de Néstor que resultó inexacto, comprobado contra el log: dijo que
+estirar el objetivo empeoraba «de forma consistente». En Swing va −0,08 /
+−0,11 / **−0,05** / −0,11 / −0,36 — ruido con un derrumbe solo en 4×, y el 2×
+es el mejor de los cinco. Donde sí tenía razón es en la ventana del barrido,
+que es monótona (5→−0,18 … 30→−0,03).
+
+## Lo que SÍ quedó en marcha: «ruptura de estructura sola», en la sombra
+
+```
+app/scripts/lib/preregistro-lss.mjs   el listón, fecha 2026-09-20 dentro
+app/scripts/lib/lss-sombra.mjs        genera la señal de HOY
+app/scripts/prueba-preregistro-lss.mjs   66 comprobaciones
+```
+
+Es el indicador **con sus tres señas de identidad quitadas**: sin barrido, sin
+colchón, objetivo fijo 1:1, pivote 8. O sea una ruptura de estructura a secas.
+Se llama `lss` en el historial porque de ahí viene, con el aviso escrito dentro
+de que **eso ya no es el NFX-LSS** — llamarlo así sería una etiqueta
+equivocada, y aquí está escrito que eso es un error de medición.
+
+### ⚠️ Este preregistro es MÁS estricto que el de «comprar la caída»
+
+Aquél se juzgaba con el histórico. **Éste no puede**, por lo de arriba. Por eso
+`fuenteDelVeredicto` dice literalmente `'registro hacia adelante'` y el
+histórico se guarda solo como promesa a comprobar — **incluido el dato incómodo
+de que decaía** (+0,06 y −0,02). Si se borrara, nadie sabría que arrancó
+cojeando.
+
+Seis criterios, todos obligatorios, y el veredicto lo **calcula** `juzgar()`:
+**≥150 operaciones reales** · gana con costes · **gana en las DOS mitades** ·
+supera a la app en el mismo periodo · aguanta 0,5 de swap · ningún par >40 %.
+
+⚠️ El mínimo de 150 va primero y no se ablanda: con 13 operaciones el margen
+del peor caso es ±27 puntos y un 40 % y un 70 % son el mismo número.
+
+### Las decisiones que no hay que ablandar
+
+⚠️ **NO SE ENSEÑA EN NINGUNA PANTALLA**, tampoco «solo para mirar». Lo pidió
+Néstor y es lo correcto: su estado es «en observación», y una regla sin validar
+puesta en una pantalla se lee como validada por el hecho de estar ahí. **Sí
+sale en el log del vigía** — la lección del 2026-09-07 resuelta por el lado que
+no engaña a ningún usuario.
+
+⚠️ **SOLO SE ANOTA LA SEÑAL DE LA ÚLTIMA VELA.** Sin eso, la primera corrida
+metería años de señales viejas fechadas como si fueran de hoy y envenenaría el
+historial sin dar ningún error.
+
+⚠️⚠️ **VA DENTRO DE UN `try`, y ésta es la decisión de fondo.** `setupsLSS`
+revienta si le faltan velas, y eso está bien dentro de la función. Pero arriba
+las consecuencias no son simétricas: sin capturar, **muere el vigía entero y el
+historial de la app —lo único irrecuperable— pierde el día**. Capturado, lo que
+se pierde es un día de un experimento sin validar. Y no se pierde en silencio:
+el fallo se grita en el log.
+
+### Cuánto hay que esperar
+
+**~12 meses.** El histórico da 12,7 señales/mes; 150 operaciones son ~11,8
+meses más unas semanas para que resuelvan las últimas.
+
+| a los… | ops | margen | qué se puede decir |
+|---|---:|---:|---|
+| 1 mes | 13 | ±27 | nada |
+| 3 meses | 38 | ±16 | solo una catástrofe |
+| 6 meses | 76 | ±11 | empieza a significar algo |
+| **12 meses** | **152** | **±8** | el listón |
+
+⚠️ **El ritmo real puede salir por debajo.** El vigía solo anota una señal
+cuando es NUEVA para ese par y lado; si el mismo par rompe dos días seguidos,
+el segundo no se cuenta. El banco contaba todas. Se verá en las primeras
+semanas.
+
+⚠️ **Y M15 no se toca hasta que esto pase el registro.** Lo pidió Néstor y es
+lo correcto: gastar 112 créditos en una versión que ya se sabe que pierde es
+tirar créditos.
+
+---
+
+## Las lecciones de estos tres días
+
+### ⚠️ `barridoSwap` NO devuelve lo mismo en las dos apps
+
+| | Swing | Intradía |
+|---|---|---|
+| devuelve | `mediana`, `media` | `cruzaron`, `mediaNoches` |
+| por qué | cada vela ES un día: las noches salen de la duración | se cuentan por los cortes reales de las 22:00 UTC |
+
+Una operación de 6 horas abierta a las 20:00 cruza el corte; una de 20 horas
+abierta a las 23:00 no cruza ninguno. **Copiar esa línea de la app hermana no
+es un descuido de escritura: es traerse una suposición sobre el mercado que
+allí es falsa.**
+
+Tumbó **dos tablas el mismo día** en el último bloque, con los créditos ya
+gastados: 112 en el M15 y 28 en el banco.
+
+📌 **Y la comprobación que escribí para cazarlo miraba UN SOLO archivo**, así
+que no vio la segunda. Ahora recorre todos los guiones que llaman a
+`barridoSwap`. **Un error recién cometido en un sitio es el que se va a cometer
+en el de al lado.**
+
+### 📌 A los PRIMOS no los vigila nadie, y ahí se acumulan las cosas
+
+`resumir` de Swing no tenía cubo para el tipo nuevo, así que los resultados no
+habrían caído en NINGÚN desglose. **Quinta vez que muerde ese fallo.**
+
+Y el motivo de fondo: **Intradía ya lo había arreglado el 2026-09-16** con un
+cajón de `otros`, y a Swing nunca llegó porque `historialCalc.js` es PRIMO.
+`gemelos.mjs` vigila los idénticos; a los primos no los vigila nadie.
+
+Swing ya tiene el cajón, con comprobación de que un tipo que nadie ha inventado
+**aparece** ahí en vez de desaparecer.
+
+### 📌 Tres tropiezos míos, todos en las PRUEBAS y no en el código
+
+1. **Mercado inventado demasiado liso**: con pivote 8 daba CERO señales, así que
+   la prueba habría pasado comparando listas vacías. Es el fallo que ya está
+   documentado en `prueba-barrido-publicado.mjs`. Se arregló con paseo
+   aleatorio y una vela final que fuerza la ruptura.
+2. **Identificar señales por su PRECIO** en vez de por su índice: falló por una
+   coincidencia de coma flotante. Lo que identifica una señal es el índice.
+3. **Un daño de prueba que hacía REVENTAR el guion** en vez de hacerle pasar la
+   comprobación: no medía lo que yo quería. Es la regla de siempre —**antes de
+   concluir que una comprobación no muerde, comprobar que el daño se hizo**— y
+   sigue costando.
+
+### 📌 Un fallo mío del que salió una convención
+
+Al fusionar **solo la mitad de Intradía** de un cambio emparejado, la
+comprobación de gemelos en `main` se puso roja. Era predecible y está escrito
+en este archivo desde el 2026-09-04. **Un cambio emparejado se fusiona ENTERO,
+las dos mitades seguidas**, o `main` queda en rojo hasta que llegue la otra.
+
+### 📌 Y una referencia de git que engaña
+
+Tras fusionar, `git` enseñaba la rama de Intradía apuntando a un commit de
+hace semanas, con 43 archivos de diferencia contra `main`. **No se había
+perdido nada**: en ese repositorio `git fetch` está configurado para traerse
+**solo `main`**, así que la referencia local de la rama de trabajo llevaba
+semanas sin actualizarse. `git ls-remote` es el que dice la verdad. Es la misma
+lección de siempre: **antes de creer que algo se rompió, comprobar que la
+herramienta con la que miras está diciendo la verdad.**
