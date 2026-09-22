@@ -205,6 +205,32 @@ for (const { id, s } of nuevas) {
       rsi: c.rsi,
       atrPct: c.atrPct != null ? Number(c.atrPct.toFixed(3)) : null,
       tend: c.tend,
+      // ⚠️⚠️ LO QUE UNA REGLA APUNTA ADEMÁS DE LOS NIVELES (2026-09-22).
+      //
+      // Esta lista de campos se escribió cuando todas las señales eran de la
+      // app y todas tenían exactamente los mismos datos. Una regla nueva puede
+      // traer en `crudo` algo que ninguna otra tiene, y hasta hoy ESO SE
+      // PERDÍA EN SILENCIO: `lss-sombra.mjs` calcula `huboSweep` —si la
+      // ruptura vino después de un barrido de liquidez— y lo documenta como
+      // «anotado desde el primer día», y sin embargo no llegaba al historial.
+      // Nada fallaba: el campo simplemente no salía en la línea escrita.
+      //
+      // Lo cazó Néstor preguntando por qué no marcamos las dos clases de
+      // ruptura para poder verlas. Se arregla el 2026-09-22, con CERO señales
+      // `lss` anotadas todavía, así que no se ha perdido ni una.
+      //
+      // Va con el mismo patrón que `sombra`: solo se escribe cuando existe, de
+      // modo que las 81 líneas ya escritas se siguen leyendo igual y no hay
+      // que reescribir nada.
+      //
+      // 📌 Y es el mismo fallo de familia que este archivo colecciona: una
+      // lista que ENUMERA lo que conoce se traga en silencio lo que venga
+      // después. La diferencia con `filasOtras` es que aquí no se puede poner
+      // un cajón genérico sin volcar `crudo` entero —que lleva objetos que no
+      // deben ir al historial—, así que lo que hay es esta nota y la
+      // comprobación de `prueba-vigia.mjs` que exige que `huboSweep` viaje.
+      ...(c.huboSweep !== undefined ? { huboSweep: c.huboSweep } : {}),
+      ...(c.evento !== undefined ? { evento: c.evento } : {}),
     }) + '\n',
     true
   )

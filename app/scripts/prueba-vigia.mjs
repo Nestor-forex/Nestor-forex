@@ -287,5 +287,53 @@ console.log('\n12. Los tres intentos del día son UNA corrida, y la duda se resu
   comprobar('y sigue habiendo `concurrency` para que no se solapen', /concurrency:/.test(wf))
 }
 
+console.log('\n13. Lo que una regla apunta ADEMÁS de los niveles llega al historial')
+{
+  // ⚠️ EL FALLO QUE ESTO VIGILA YA OCURRIÓ, y no dio error ni una vez.
+  //
+  // `lss-sombra.mjs` calcula `huboSweep` —si la ruptura de estructura vino
+  // después de un barrido de liquidez, que es justo lo que midió PEOR en el
+  // histórico— y su comentario dice que queda «anotado desde el primer día».
+  // No era verdad: la línea que el vigía escribe en `senales.jsonl` ENUMERA
+  // sus campos, así que el dato se calculaba y se tiraba en silencio.
+  //
+  // Se arregló el 2026-09-22 con cero señales `lss` anotadas, o sea sin perder
+  // ninguna. Sin esta comprobación, el siguiente campo que traiga una regla
+  // nueva se perdería igual y tampoco fallaría nada.
+  const vigia = readFileSync(new URL('./vigia.mjs', import.meta.url), 'utf8')
+
+  // Guarda: si algún día este bloque se mueve o se renombra, que la prueba no
+  // se quede en verde sin haber mirado nada.
+  comprobar(
+    'el vigía sigue escribiendo una línea por señal en LOG_SENALES',
+    /escribir\(\s*LOG_SENALES/.test(vigia)
+  )
+
+  for (const campo of ['huboSweep', 'evento']) {
+    comprobar(
+      `\`${campo}\` viaja de \`crudo\` a la línea del historial`,
+      new RegExp(`\\.\\.\\.\\(c\\.${campo} !== undefined \\? \\{ ${campo}: c\\.${campo} \\}`).test(vigia)
+    )
+  }
+
+  // ⚠️ Y que vaya CONDICIONADO, no a pelo. Escribirlo siempre metería
+  // `"huboSweep": null` en las señales de la app y de las otras dos reglas de
+  // sombra, que no tienen ese concepto — un campo vacío en una regla que no lo
+  // usa se lee algún día como «no hubo barrido» en vez de «aquí no aplica».
+  comprobar(
+    'y va solo cuando existe, así las 81 líneas ya escritas se leen igual',
+    !/^\s*huboSweep: c\.huboSweep,/m.test(vigia)
+  )
+
+  // Y que el dato exista de verdad al otro lado: si `lss-sombra` dejara de
+  // ponerlo en `crudo`, el campo viajaría vacío para siempre y arriba no
+  // fallaría nada.
+  const sombra = readFileSync(new URL('./lib/lss-sombra.mjs', import.meta.url), 'utf8')
+  comprobar(
+    'y la regla de sombra lo sigue poniendo en `crudo`',
+    /huboSweep: ultima\.huboSweep/.test(sombra)
+  )
+}
+
 console.log(fallos === 0 ? '\nTodas las comprobaciones pasaron.\n' : `\n${fallos} comprobación(es) fallaron.\n`)
 process.exit(fallos === 0 ? 0 : 1)
