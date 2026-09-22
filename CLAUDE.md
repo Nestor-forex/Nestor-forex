@@ -6327,3 +6327,133 @@ tal cual». No cierra «1:2 sobre una entrada distinta».**
 ⚠️ **Y el 1:2 no es una propiedad de una buena señal: es una DECISIÓN sobre
 dónde poner el objetivo.** Cualquier sistema puede ponerse a 1:2. Lo que
 decide es si el precio llega hasta ahí suficientes veces.
+
+---
+
+# El NFX-LSS y la «ruptura de estructura»: son el mismo motor (2026-09-22)
+
+Néstor pidió que se le explicara qué mide cada uno, dónde están los resultados
+de su indicador y si son lo mismo. Y después las tres preguntas que dan título
+a la mitad de abajo. Esto queda escrito porque **la respuesta a una de ellas
+destapó un fallo real**.
+
+## La diferencia cabe en una línea
+
+Los dos salen de `src/lib/lss.js` (GEMELO). El motor es uno solo:
+
+1. **Pivote** — un máximo (o mínimo) con 8 velas a cada lado que no lo superan.
+   Se confirma 8 velas después, así que **nunca se dibuja en la vela de hoy**.
+2. **Ruptura** — el precio **CIERRA** por encima del último pivote alto (o por
+   debajo del bajo). Cerrar, no tocar: una mecha que asoma y vuelve no cuenta.
+3. **BOS / CHoCH** — si la ruptura va a favor de la tendencia anterior es
+   continuación (BOS); si va en contra, es giro (CHoCH).
+4. **Barrido (⚡)** — antes de romper, el precio perforó el pivote contrario
+   **y cerró de vuelta dentro**. Es la «cacería de stops».
+
+| | el NFX-LSS de Néstor | la «ruptura de estructura» en la sombra |
+|---|---|---|
+| pivotes | ✅ | ✅ |
+| ruptura por cierre | ✅ | ✅ |
+| BOS / CHoCH | ✅ | ✅ |
+| **exige barrido ⚡** | **SÍ** | **NO** |
+| stop | en la mecha barrida, + colchón de ATR | en el pivote, sin colchón |
+| objetivo | por estructura contraria | **fijo a 1× el riesgo** |
+
+> **Toda señal del NFX-LSS es una ruptura de estructura. Solo 1 de cada 4
+> rupturas llega a ser señal del NFX-LSS** (197 de 792 en el histórico).
+
+## Dónde están los resultados del NFX-LSS, que era la otra pregunta
+
+**Backtest sí, en tres tablas** (Swing −0,08 · Intradía H1 −0,14 · M15 −0,16).
+**Registro real hacia adelante: CERO**, y no por descuido: lo que el vigía
+anota es la ruptura sola, no el indicador. Su versión entera **nunca se
+encendió en ninguna app**, así que no tiene ni una operación real.
+
+---
+
+# Las tres preguntas de Néstor sobre el barrido (2026-09-22)
+
+> «¿por qué el barrido marca las peores y no las mejores? ¿o por qué no marca
+> las dos para verlas, o hay algo positivo en esas marcas? ¿por qué no seguimos
+> las mejores?»
+
+## 1. ¿Por qué marca las peores? — **no se sabe, y decirlo es la respuesta**
+
+Lo medido:
+
+| | ops | acierto | por 1R |
+|---|---:|---:|---:|
+| rupturas **CON** ⚡ (= su NFX-LSS) | 197 | 47 % | **−0,08** |
+| rupturas **SIN** ⚡ | 595 | 53 % | **+0,05** |
+
+Eso dice **QUE** pasa. **No dice POR QUÉ**, y en este proyecto hay siete casos
+escritos de un mecanismo convincente que resultó falso al medirlo. Así que la
+hipótesis va marcada como hipótesis y nada más se apoya en ella:
+
+> *Hipótesis, sin medir:* exigir barrido obliga a esperar un amago previo, así
+> que la ruptura llega con parte del movimiento ya gastado; y el stop se coloca
+> **en la mecha que el mercado acaba de demostrar que va a buscar**.
+
+⚠️ **No convertir esa hipótesis en una regla.** Si algún día se quiere usar,
+se mide primero con su listón escrito antes.
+
+## 2. ¿Por qué no marcar las dos para verlas? — **se marcan, y NO llegaban**
+
+`lss-sombra.mjs` calcula `huboSweep` en cada señal y su comentario dice que
+queda «anotado desde el primer día». **Era falso.** La línea que el vigía
+escribe en `senales.jsonl` **enumera sus campos**, y `huboSweep` no estaba: se
+calculaba y se tiraba. Nada fallaba.
+
+📌 **Es el mismo fallo de familia que este archivo colecciona** —una lista que
+enumera lo que conoce se traga en silencio lo que venga después— pero por una
+cara nueva: hasta hoy había mordido en cubos de RESUMEN (`esSombra`,
+`ventasPausadas`, `esDeLaApp`, `filasOtras`, la regla de Firestore). Aquí mordía
+en **lo que se escribe en el disco**, que es peor: un cubo mal repartido se
+arregla releyendo el archivo; un campo que no se escribió **no se puede
+recuperar nunca**.
+
+✅ **Arreglado el 2026-09-22 con CERO señales `lss` anotadas** (81 líneas en el
+historial, ninguna de ruptura), así que no se perdió ni una. `huboSweep` y
+`evento` (BOS/CHoCH) viajan ya, con el mismo patrón condicional que `sombra`:
+solo se escriben cuando existen, así que las 81 líneas viejas se siguen
+leyendo igual y no hubo que reescribir nada.
+
+⚠️ **A propósito NO se escriben a pelo.** Poner `huboSweep: null` en las
+señales de la app y de las otras dos reglas de sombra —que no tienen ese
+concepto— dejaría un campo vacío que algún día se leería como «no hubo
+barrido» en vez de «aquí no aplica».
+
+`prueba-vigia.mjs` bloque 13 lo vigila, con guarda para no quedarse en verde si
+el bloque se mueve, y **comprobado que muerde** (quitar las dos líneas tumba 2,
+con el daño verificado en el archivo antes de darlo por bueno).
+
+## 3. ¿Hay algo positivo en esas marcas? — una cosa, y es la que vale
+
+**No cambian ni una señal** (`exigirSweep` está apagado, y hay una comprobación
+que lo exige) y **no se enseñan en ninguna pantalla**. Lo único que hacen es
+dejar la pregunta **re-respondible con datos limpios**: dentro de ~12 meses, el
+registro hacia adelante se podrá partir en «con ⚡» y «sin ⚡» y **el NFX-LSS
+tendrá por fin un número real**, sin haberse enseñado nunca como señal viva.
+
+📌 Es lo más barato que se puede hacer con una idea que el histórico rechaza:
+anotar el dato y esperar. No cuesta un crédito ni una pantalla.
+
+## 4. ¿Por qué no seguimos las mejores? — **se están siguiendo**
+
+Las 595 sin ⚡ **SON** la regla que corre en la sombra desde el 2026-09-20. No
+es que se hayan descartado: es exactamente lo que se eligió registrar.
+
+⚠️ **Y por eso está en la sombra y no encendida**, que es la parte que no hay
+que ablandar: ese +0,05 **decae entre mitades** (+0,10 → −0,02), y además es el
+número **con el que se eligió la regla** — mirar veinte filas y quedarse con la
+que gana no es una segunda muestra, es la misma. Por el listón de esta casa
+—ganar en las DOS mitades— hoy no pasa.
+
+**Lo único limpio será el registro hacia adelante**, y el listón está en
+`preregistro-lss.mjs` con fecha anterior a la primera operación anotada:
+≥150 operaciones reales · gana con costes · gana en las dos mitades · supera a
+la app en el mismo periodo · aguanta 0,5 de swap · ningún par >40 %.
+
+📌 **La respuesta corta a las cuatro preguntas juntas:** lo bueno ya se sigue,
+lo malo ya no se exige, las dos clases ya se anotan, y lo que falta no es una
+decisión más — es tiempo.
