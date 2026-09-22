@@ -133,6 +133,7 @@ export default {
       `${par} の直近 ${n} 本の終値。現在価格 ${precio}、stop-loss ${sl}、目標 ${tp}。`,
     hace: ({ n }) => `${n} 日前`,
     sinVelas: '終値 · ローソク足なし',
+    rangoDia: '高値 · 安値 · 終値',
     ahora: '最新',
     riesgoBeneficio: 'リスク / リワード',
     barraAria: ({ pct }) => `リスクは取引全体の ${pct} パーセントです。`,

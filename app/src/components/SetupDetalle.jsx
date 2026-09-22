@@ -1,10 +1,34 @@
 // Pantalla de detalle de un setup: el gráfico de los últimos 20 cierres con los
 // niveles encima, la relación riesgo/beneficio dibujada, y el plan en texto.
 //
-// A propósito NO dibuja velas: la fuente (tasas de referencia del BCE) entrega
-// un solo cierre por día, sin máximo ni mínimo del día, así que unas velas
-// serían inventadas. Por eso va una línea con área, igual que Sparkline pero
-// con ejes y niveles.
+// 📌 DESDE EL 2026-09-22 DIBUJA EL RANGO DE CADA DÍA, NO SOLO EL CIERRE. Y hay
+// que leer con cuidado qué es y qué no es, porque estuve a punto de colarlo mal.
+//
+// Aquí ponía: «A propósito NO dibuja velas: la fuente (tasas de referencia del
+// BCE) entrega un solo cierre por día, sin máximo ni mínimo, así que unas velas
+// serían inventadas».
+//
+// Esa frase fue verdad hasta el **2026-08-09**, cuando Swing pasó del BCE a
+// velas diarias de Twelve Data con máximo y mínimo REALES. El motivo desapareció
+// ese día y **nadie volvió a mirar este comentario**: durante mes y medio la app
+// dibujó una línea por una razón que ya no existía. Es el patrón de siempre
+// —**al cambiar algo, mirar también quién lo NOMBRA**— por su cara más cara:
+// la frase vieja no solo describía mal, **impedía una mejora**.
+//
+// ⚠️⚠️ PERO NO SON VELAS, Y LA DIFERENCIA NO ES DE NOMBRE. Una vela necesita
+// APERTURA, y `velas.mjs` solo se queda con `c`, `h` y `l` — comprobado en el
+// código, no supuesto. Dibujar cuerpos obligaría a inventarse la apertura (lo
+// habitual sería usar el cierre anterior, que en Forex **casi** coincide y
+// «casi» es justo lo que aquí no vale).
+//
+// Así que son **barras de máximo-mínimo con la marca del cierre**: un tipo de
+// gráfico de toda la vida, que enseña dónde llegó el precio y desde dónde lo
+// devolvieron —las mechas— sin afirmar ni un dato que no tengamos.
+//
+// 📌 O sea que el comentario viejo tenía razón en lo de fondo y se quedó viejo
+// solo en el motivo. Por eso el miedo que expresaba se conserva aquí entero:
+// si algún día el barrido dejara de traer `altos20`/`bajos20`, **se vuelve a la
+// línea** en vez de dibujar un rango inventado.
 //
 // Tampoco tiene botones de comprar/vender: la app no está conectada a ningún
 // bróker y no puede ejecutar nada. La acción real es pasar el setup al Diario.
@@ -71,7 +95,28 @@ export default function SetupDetalle({ setup, corte, onVolver, onAnotar }) {
     )
   }
 
-  const { dec, compra, precio, sl, tp, ema, rr, pipRiesgo, pipBeneficio, sup, res, serie20, rsi, atrPct, fuerzaB, fuerzaQ, b, q } = c
+  const { dec, compra, precio, sl, tp, ema, rr, pipRiesgo, pipBeneficio, sup, res, serie20, altos20, bajos20, rsi, atrPct, fuerzaB, fuerzaQ, b, q } = c
+
+  // ⚠️ El rango solo se dibuja si los tres vienen COMPLETOS y ALINEADOS. Un
+  // barrido viejo (publicado antes del 2026-09-22) no trae los extremos, y
+  // medio dibujado sería peor que no dibujarlo: una mecha que falta se lee como
+  // un día sin recorrido, que es una afirmación falsa sobre el mercado.
+  // ⚠️ Y se exige que sean NÚMEROS DE VERDAD, no solo que la lista esté. Lo
+  // destapó el banco de pruebas del 2026-09-22: con los extremos en `NaN` el
+  // gráfico no daba ningún error — dibujaba las 20 mechas **con altura cero**,
+  // todas a la misma altura. Eso se lee como «el precio no se movió en veinte
+  // días», que es una afirmación falsa sobre el mercado, perfectamente creíble
+  // y sin una sola señal de que algo vaya mal.
+  //
+  // Es la forma de romperse que esta app más teme, y aquí llegó por la puerta
+  // de siempre: un dato que falta y se convierte en dibujo en vez de en aviso.
+  const hayRango =
+    Array.isArray(altos20) &&
+    Array.isArray(bajos20) &&
+    altos20.length === serie20.length &&
+    bajos20.length === serie20.length &&
+    altos20.every(Number.isFinite) &&
+    bajos20.every(Number.isFinite)
   const f = (v) => v.toFixed(dec)
   const colorLado = compra ? 'var(--green)' : 'var(--red)'
   // ⚠️ La reversión queda fuera del aviso de «R/B bajo»: su 1:1 es deliberado
@@ -82,7 +127,11 @@ export default function SetupDetalle({ setup, corte, onVolver, onAnotar }) {
   const rrOk = setup.tipo === 'reversion' || rr >= 1.5
 
   // Dominio vertical: la serie más los niveles, para que ninguno quede fuera.
-  const todos = [...serie20, sl, tp, precio, sup, res]
+  // ⚠️ Con rango entran también los extremos: si no, las mechas se saldrían del
+  // lienzo por arriba y por abajo, recortadas justo donde más dicen.
+  const todos = hayRango
+    ? [...serie20, ...altos20, ...bajos20, sl, tp, precio, sup, res]
+    : [...serie20, sl, tp, precio, sup, res]
   const min = Math.min(...todos)
   const max = Math.max(...todos)
   const pad = (max - min) * 0.06 || 0.0001
@@ -150,7 +199,7 @@ export default function SetupDetalle({ setup, corte, onVolver, onAnotar }) {
         {/* --- par y lado --- */}
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
           <div style={{ minWidth: 0 }}>
-            <div className="mono" style={{ fontSize: 25, fontWeight: 600, letterSpacing: '-0.01em' }}>
+            <div className="mono" dir="ltr" style={{ fontSize: 25, fontWeight: 600, letterSpacing: '-0.01em' }}>
               {setup.name}
             </div>
             <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
@@ -219,8 +268,36 @@ export default function SetupDetalle({ setup, corte, onVolver, onAnotar }) {
               />
             ))}
 
-            {/* precio: área + línea (solo cierres) */}
+            {/* precio: área + línea de cierres */}
             <path d={area} fill={`url(#${gradId})`} />
+
+            {/* Hasta dónde llegó el precio cada día y desde dónde lo
+                devolvieron: las mechas. NO son velas — falta la apertura y no
+                nos la inventamos (ver la cabecera).
+
+                ⚠️ Va DEBAJO de la línea de cierres a propósito: el cierre es lo
+                que decide, el rango es el contexto. Al revés, veinte barras
+                taparían la línea que de verdad se lee.
+
+                📌 La primera versión pintaba además una marquita horizontal en
+                el cierre de cada día. Al mirarla ampliada en el navegador no se
+                veía NINGUNA: la línea verde ya pasa exactamente por ahí, así que
+                eran veinte elementos invisibles tapados por ella. Se quitaron.
+                No lo ve un build ni una prueba — solo mirar la captura. */}
+            {hayRango &&
+              serie20.map((_, i) => (
+                <line
+                  key={i}
+                  x1={x(i)}
+                  y1={y(altos20[i])}
+                  x2={x(i)}
+                  y2={y(bajos20[i])}
+                  stroke="var(--text-muted)"
+                  strokeWidth="1.1"
+                  opacity="0.55"
+                />
+              ))}
+
             <polyline
               points={puntos}
               fill="none"
@@ -283,7 +360,16 @@ export default function SetupDetalle({ setup, corte, onVolver, onAnotar }) {
             style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 6px 0', fontSize: 10, color: 'var(--text-muted)' }}
           >
             <span>{t('detalle.hace', { n: serie20.length })}</span>
-            <span>{t('detalle.sinVelas')}</span>
+            {/* ⚠️ EL PIE TIENE QUE DECIR LO QUE EL GRÁFICO DIBUJA HOY, no lo
+                que dibujaba ayer. Hasta el 2026-09-22 decía «cierres · sin
+                velas» y punto — cierto entonces y FALSO en cuanto empezó a
+                pintarse el rango del día.
+                Y se quedó falso en los 13 idiomas a la vez, porque nadie mira
+                un pie de gráfico al cambiar un gráfico. Lo cazó la captura del
+                navegador, no el build ni las pruebas.
+                Ahora lo elige `hayRango`: con rango dice qué trae, y sin él
+                sigue diciendo la verdad de antes. */}
+            <span>{t(hayRango ? 'detalle.rangoDia' : 'detalle.sinVelas')}</span>
             <span>{t('detalle.ahora')}</span>
           </div>
         </div>
@@ -294,6 +380,7 @@ export default function SetupDetalle({ setup, corte, onVolver, onAnotar }) {
             <Rotulo>{t('detalle.riesgoBeneficio')}</Rotulo>
             <span
               className="mono"
+              dir="ltr"
               style={{ marginLeft: 'auto', fontSize: 17, fontWeight: 600, color: rrOk ? 'var(--green-strong)' : 'var(--amber)' }}
             >
               1 : {rr.toFixed(1)}
@@ -336,8 +423,8 @@ export default function SetupDetalle({ setup, corte, onVolver, onAnotar }) {
         {/* --- niveles --- */}
         <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
           <Nivel color="var(--text)" nombre={t('setup.entrada')} valor={f(precio)} nota={t('detalle.nivelActual')} destacado />
-          <Nivel color="var(--red)" nombre={t('setup.stopLoss')} valor={f(sl)} nota={`${Math.round(pipRiesgo)} p`} destacado />
-          <Nivel color="var(--green)" nombre={t('setup.takeProfit')} valor={f(tp)} nota={`${Math.round(pipBeneficio)} p`} destacado />
+          <Nivel color="var(--red)" nombre={t('setup.stopLoss')} valor={f(sl)} nota={<span dir="ltr">{Math.round(pipRiesgo)} p</span>} destacado />
+          <Nivel color="var(--green)" nombre={t('setup.takeProfit')} valor={f(tp)} nota={<span dir="ltr">{Math.round(pipBeneficio)} p</span>} destacado />
           <Nivel color="oklch(0.6 0.02 255)" nombre={t('setup.resistencia')} valor={f(res)} nota={t('detalle.nivelMax20')} />
           <Nivel color="oklch(0.6 0.02 255)" nombre={t('setup.soporte')} valor={f(sup)} nota={t('detalle.nivelMin20')} ultimo />
         </div>
@@ -452,7 +539,7 @@ function Nivel({ color, nombre, valor, nota, destacado = false, ultimo = false }
         <i style={{ width: 3, height: 15, borderRadius: 2, background: color, flexShrink: 0 }} />
         {nombre}
       </span>
-      <span className="mono" style={{ marginLeft: 'auto', fontSize: 14 }}>
+      <span className="mono" dir="ltr" style={{ marginLeft: 'auto', fontSize: 14 }}>
         {valor}
       </span>
       <span className="mono" style={{ fontSize: 10.5, color: 'var(--text-muted)', minWidth: 52, textAlign: 'right' }}>

@@ -133,6 +133,7 @@ export default {
       `${par} के आख़िरी ${n} क्लोज़। अभी भाव ${precio}, stop-loss ${sl}, लक्ष्य ${tp}।`,
     hace: ({ n }) => `${n} दिन पहले`,
     sinVelas: 'क्लोज़ · कैंडल नहीं',
+    rangoDia: 'उच्च · निम्न · क्लोज़',
     ahora: 'आख़िरी',
     riesgoBeneficio: 'जोखिम / लाभ',
     barraAria: ({ pct }) => `जोखिम इस ट्रेड का ${pct} प्रतिशत है।`,

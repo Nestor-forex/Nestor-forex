@@ -129,6 +129,7 @@ export default {
       `${par} 最近 ${n} 个收盘价。当前价格 ${precio}，stop-loss ${sl}，目标 ${tp}。`,
     hace: ({ n }) => `${n} 天前`,
     sinVelas: '收盘价 · 无 K 线',
+    rangoDia: '最高 · 最低 · 收盘',
     ahora: '最新',
     riesgoBeneficio: '风险 / 收益',
     barraAria: ({ pct }) => `风险占这笔交易的 ${pct}%。`,

@@ -40,6 +40,7 @@ import { resolver, resumir } from './lib/resolver.mjs'
 // `lib/lss-sombra.mjs` y el listón en `lib/preregistro-lss.mjs`, escrito antes
 // de que se anotara ni una operación.
 import { setupsLSS } from './lib/lss-sombra.mjs'
+import { armarBarrido } from './lib/barrido-publicado.mjs'
 
 const DATOS = process.env.VIGIA_DATOS || fileURLToPath(new URL('../../datos-local', import.meta.url))
 const ESTADO = `${DATOS}/estado/vigia.json`
@@ -286,26 +287,39 @@ for (const r of resultados) {
 // es lo que dibuja el gráfico—: el archivo lo baja cada miembro cada vez que
 // abre la app, así que conviene que pese poco.
 //
-// ⚠️ `highs` y `lows` se quitan a propósito. Son 300 números por par y solo
-// los necesita el resolver, que corre aquí mismo. Dejarlos dentro llevaría el
-// archivo de 9 KB a más de medio mega, y lo paga cada miembro cada vez que
-// abre la app.
-escribir(
-  BARRIDO,
-  JSON.stringify({
-    generadoEl: ahora.toISOString(),
-    ultima: data.ultima,
-    raw: data.raw,
-    esc: data.esc,
-    // eslint-disable-next-line no-unused-vars -- highs/lows se descartan aquí
-    pares: data.pares.map(({ highs, lows, ...resto }) => resto),
-    ratesUSD: data.ratesUSD,
-    // Qué pares se mueven juntos, ~2 KB. SÍ se publica —al revés que
-    // `highs`/`lows`— porque la app no puede recalcularlo: necesita 60 cierres
-    // por par y el barrido solo lleva los últimos 20.
-    correl: data.correl,
-  }) + '\n'
-)
+// ⚠️ `highs` y `lows` COMPLETOS se quitan a propósito. Son 300 números por par
+// y solo los necesita el resolver, que corre aquí mismo.
+//
+// 📌 CORRECCIÓN DEL 2026-09-22, y el número viejo bloqueaba decisiones. Aquí
+// decía que dejarlos dentro llevaría el archivo «de 9 KB a más de medio mega».
+// Medido sobre el archivo REAL de producción, con los decimales y las
+// magnitudes de cada par:
+//
+//     hoy publicado ......... 11,3 KB
+//     + 20 días de máx/mín .. 14,4 KB   (+3,1)
+//     + 30 días ............. 15,7 KB   (+4,5)
+//     + los 300 completos ... 52,6 KB   (+41,4)
+//
+// O sea que «medio mega» estaba inflado unas DIEZ VECES. Con medio mega ni se
+// discutía; con 41 KB la pregunta pasa a ser si aporta algo — y para los 300
+// hoy la respuesta sigue siendo NO, pero por un motivo que no es el tamaño:
+// solo los necesita «comprar la caída», que corre en la sombra y NO se enseña
+// hasta pasar su listón. El vigía no los necesita publicados para anotarla:
+// los tiene en la mano cuando corre.
+//
+// Lo que SÍ se publica desde hoy son `altos20` y `bajos20` —los máximos y
+// mínimos de los mismos 20 días que ya viajaban como cierres— para que la
+// pantalla de detalle dibuje el recorrido de cada día. Son los +3,1 KB.
+//
+// ⚠️ Y esto NO gasta un crédito más de Twelve Data: el vigía ya se baja los
+// 300 extremos todos los días. Lo único que cambia es que deja de tirarlos.
+//
+// 📌 QUÉ se publica vive ahora en `lib/barrido-publicado.mjs`, no aquí. No es
+// orden: estando en línea dentro de este guion **no había forma de probarlo
+// sin arrancar el vigía entero**, que necesita red y créditos — y por eso Swing
+// llevaba desde el 2026-08-09 publicando sin una sola comprobación, mientras la
+// app hermana sí la tenía desde el 2026-09-02.
+escribir(BARRIDO, JSON.stringify(armarBarrido(data, ahora)) + '\n')
 
 // Avisos al celular. Va al FINAL y aislado, igual que en la app hermana: para
 // cuando llegamos aquí el historial ya está escrito en disco, así que ni un

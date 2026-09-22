@@ -533,10 +533,29 @@ en `estado/barrido.json` de la rama `datos`; `useMarketData.js` lee ese
 archivo. Igual de fresco y aguanta los miembros que hagan falta.
 `derivarVista` se sigue ejecutando en el navegador porque necesita el idioma.
 
-⚠️ **`barrido.json` descarta `highs` y `lows` al publicarse.** Son 300 números
-por par y solo los necesita el resolver, que corre en el propio vigía.
-Dejarlos llevaría el archivo de **9 KB a más de medio mega**, y lo paga cada
-miembro cada vez que abre la app.
+⚠️ **`barrido.json` descarta `highs` y `lows` COMPLETOS al publicarse.** Son 300
+números por par y solo los necesita el resolver, que corre en el propio vigía.
+
+📌 **CORRECCIÓN DEL 2026-09-22 — aquí decía «de 9 KB a más de medio mega» y era
+falso por un factor de DIEZ.** Medido sobre el archivo real de producción:
+**11,3 KB hoy · 14,4 con 20 días de máx/mín · 15,7 con 30 · 52,6 con los 300**.
+
+El número inflado **bloqueó una decisión durante mes y medio**: con medio mega
+ni se discute, con 41 KB la pregunta es si aporta algo. Y de paso yo se lo
+repetí a Néstor en el chat como si estuviera medido, sin haberlo medido — la
+lección de siempre, otra vez.
+
+Desde el 2026-09-22 **sí se publican `altos20` y `bajos20`** (+3,1 KB), para que
+la pantalla de detalle dibuje velas reales. Los 300 completos siguen fuera,
+pero **el motivo ya no es el tamaño**: solo los necesita «comprar la caída», que
+corre en la sombra y no se enseña hasta pasar su listón — y el vigía no los
+necesita publicados para anotarla, los tiene en la mano cuando corre.
+
+⚠️ **Publicarlos NO gasta créditos de Twelve Data.** El vigía ya se baja los 300
+extremos cada día para juzgar el historial; lo único que cambiaba es que los
+tiraba antes de escribir el archivo. Los KB son datos móviles del suscriptor,
+no llamadas a la API. Conviene tenerlo claro porque las dos cosas se confunden
+solas.
 
 ### Otras cosas del cambio
 
@@ -6457,3 +6476,136 @@ la app en el mismo periodo · aguanta 0,5 de swap · ningún par >40 %.
 📌 **La respuesta corta a las cuatro preguntas juntas:** lo bueno ya se sigue,
 lo malo ya no se exige, las dos clases ya se anotan, y lo que falta no es una
 decisión más — es tiempo.
+
+---
+
+# El gráfico del detalle enseña el recorrido del día (2026-09-22). Solo Swing
+
+Néstor preguntó si publicar los máximos y mínimos aportaría algo. Medirlo
+destapó que **el número con el que se había decidido que no era falso**, y de
+ahí salieron cuatro cosas más.
+
+## 1. «Medio mega» eran 52,6 KB. Un factor de DIEZ
+
+Medido sobre el `barrido.json` REAL de producción, con los decimales y las
+magnitudes de cada par:
+
+| | tamaño | contra hoy |
+|---|---:|---:|
+| **hoy publicado** | **11,3 KB** | — |
+| + 20 días de máx/mín | 14,4 KB | **+3,1** |
+| + 30 días | 15,7 KB | +4,5 |
+| + los 300 completos | 52,6 KB | +41,4 |
+
+⚠️ Y yo se lo repetí a Néstor en el chat como si estuviera medido. **No lo
+estaba: lo leí en la memoria y lo di por bueno.** El número inflado bloqueó una
+decisión durante mes y medio — con medio mega ni se discute.
+
+📌 **Y Néstor preguntó lo que había que preguntar: «¿eso es consumo de
+llamadas?».** NO. Los KB son datos móviles del suscriptor; los créditos los
+gasta el vigía al pedir velas, y **ése no sube ni uno**: ya se baja los 300
+extremos cada día y los tiraba antes de publicar. Las dos cosas se confunden
+solas y conviene tenerlo escrito.
+
+## 2. Un comentario llevaba mes y medio impidiendo una mejora
+
+`SetupDetalle.jsx` decía: «A propósito NO dibuja velas: la fuente (tasas del
+BCE) entrega un solo cierre por día». **Verdad hasta el 2026-08-09**, cuando
+Swing pasó a velas diarias reales de Twelve Data.
+
+Es el patrón de siempre —**al cambiar algo, mirar también quién lo NOMBRA**—
+por su cara más cara: la frase vieja no solo describía mal, **impedía** que
+alguien lo intentara.
+
+## ⚠️ 3. Pero NO son velas, y estuve a punto de colarlo
+
+`velas.mjs` solo guarda `c`, `h` y `l` — **no hay apertura**, comprobado en el
+código. Dibujar cuerpos obligaría a inventársela (lo habitual sería usar el
+cierre anterior, que en Forex **casi** coincide, y «casi» es justo lo que aquí
+no vale).
+
+Así que son **barras de máximo-mínimo**: enseñan dónde llegó el precio y desde
+dónde lo devolvieron, sin afirmar un dato que no tenemos. **El comentario viejo
+tenía razón en el fondo y se había quedado viejo solo en el motivo**, así que
+el miedo que expresaba se conserva: si el barrido dejara de traer los extremos,
+se vuelve a la línea.
+
+## 4. El pie del gráfico decía «cierres · sin velas» — y se volvió falso
+
+En los 13 idiomas a la vez, el mismo día, por mi propio cambio. **Lo cazó la
+captura del navegador**, no el build ni las 28 pruebas. Ahora lo elige
+`hayRango`: con rango dice «máx · mín · cierre»; sin él, la verdad de antes.
+
+📌 Es la lección de esta misma tarea aplicándose a sí misma en menos de una
+hora. **Nadie mira un pie de gráfico al cambiar un gráfico.**
+
+## ⚠️ 5. El fallo que MÁS importa: con `NaN` dibujaba mechas de altura cero
+
+El banco de pruebas le pasó extremos rotos y el gráfico **no dio ningún
+error**: pintó las 20 mechas planas, todas a la misma altura. Eso se lee como
+«el precio no se movió en veinte días» — una afirmación falsa sobre el mercado,
+perfectamente creíble y sin una sola señal de que algo vaya mal.
+
+`hayRango` exige ahora `Number.isFinite` en los 40 valores, no solo que las
+listas estén y midan lo mismo.
+
+## Y la prueba que Swing NO TENÍA
+
+```
+app/scripts/lib/barrido-publicado.mjs    extraído de `vigia.mjs`   PRIMO
+app/scripts/prueba-barrido-publicado.mjs  la prueba que faltaba
+```
+
+Al ir a probar el cambio se buscó el guardia que esta memoria describe con
+detalle… **y en Swing no existía**. Solo en Intradía, desde el 2026-09-02. O
+sea que Swing llevaba **desde el 2026-08-09 publicando sin una sola
+comprobación**.
+
+El motivo era estructural: la lógica vivía EN LÍNEA dentro de `vigia.mjs`, sin
+forma de importarla sin red ni créditos. Extraerla es lo que la hace probable.
+
+⚠️ **Y el agujero de vigilancia es nuevo y conviene tenerlo claro:** el detector
+de duplicados sin clasificar (2026-09-21) solo mira lo que está en las DOS
+apps. **Un archivo que falta ENTERO en una de ellas es invisible para él.**
+
+## 📌 TRES fallos míos en el banco de pruebas, ninguno en la app
+
+Los tres se presentaron como «la app está rota» y los tres eran del banco:
+
+1. **El precio del par es `q / b`, no `b / q`** (`px = serie[q] / serie[b]`).
+2. **El dólar vale 1 y punto**: `computarBarrido` hace `c === 'USD' ? 1 : …`,
+   o sea que IGNORA lo que traiga `rates[d].USD`. Un mercado inventado que haga
+   oscilar el dólar desajusta cierres y extremos menos de un 1 % — creíble.
+3. **`atr`/`precio` son nombres de `derivarVista`**, no del par crudo
+   publicado, que usa `atrPct`, `atrAbs` y `c`. Con los nombres malos salió
+   `NaN`… que es justo lo que destapó el fallo nº 5. Un error mío encontró un
+   fallo real.
+
+**Antes de creer que la app está rota, comprobar que el banco mide lo que dice
+medir.** Van seis o siete veces.
+
+## 📌 Y mi comprobación de dirección salió burda por SEXTA vez
+
+Marcó como error `RSI 65`, `ATR 0.56%` y `EUR 4.5 vs NZD 0.0` — números dentro
+de frases traducidas, que en árabe **se leen bien** porque los números son LTR
+por naturaleza. La captura lo desmintió.
+
+Lo que sí estaba mal y se arregló: el código del par, `1 : 0.8`, los valores de
+los niveles y las notas de pips. Regla de siempre: **`dir="ltr"` solo en lo que
+NO es idioma.**
+
+## Cómo se verificó
+
+28 pruebas sin internet, lint, build, los 59 gemelos idénticos. **Comprobado
+que la prueba nueva MUERDE**, con el daño verificado en el archivo antes de
+darlo por bueno: poner los cierres como extremos tumba 2 · desalinear los
+largos tumba 1 y nombra los pares.
+
+Y en **Chromium a 390 px** con el barrido real de producción, en español,
+árabe y con un barrido viejo sin extremos: 20 mechas con altura, cero
+desplazamiento lateral, cero errores de consola, y la caída a la línea cuando
+no hay datos.
+
+📌 **Mirar la captura ampliada pagó otra vez:** la primera versión pintaba
+además una marca horizontal en cada cierre y **no se veía ninguna** — la línea
+verde pasa exactamente por ahí. Eran veinte elementos invisibles. Quitados.
