@@ -133,6 +133,7 @@ export default {
       `Ultime ${n} chiusure di ${par}. Prezzo ora ${precio}, stop-loss ${sl}, obiettivo ${tp}.`,
     hace: ({ n }) => `${n} giorni fa`,
     sinVelas: 'chiusure · senza candele',
+    rangoDia: 'max · min · chiusura',
     ahora: 'ultima',
     riesgoBeneficio: 'Rischio / rendimento',
     barraAria: ({ pct }) => `Il rischio è il ${pct} per cento dell'operazione.`,

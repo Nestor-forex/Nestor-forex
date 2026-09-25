@@ -133,6 +133,7 @@ export default {
       `${par} son ${n} kapanış. Şu anki fiyat ${precio}, stop-loss ${sl}, hedef ${tp}.`,
     hace: ({ n }) => `${n} gün önce`,
     sinVelas: 'kapanışlar · mumsuz',
+    rangoDia: 'yüksek · düşük · kapanış',
     ahora: 'son',
     riesgoBeneficio: 'Risk / getiri',
     barraAria: ({ pct }) => `Risk, işlemin yüzde ${pct}’i kadar.`,

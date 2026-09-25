@@ -137,6 +137,7 @@ export default {
       `Last ${n} closes of ${par}. Price now ${precio}, stop-loss ${sl}, target ${tp}.`,
     hace: ({ n }) => `${n} days ago`,
     sinVelas: 'closes · no candles',
+    rangoDia: 'high · low · close',
     ahora: 'last',
     riesgoBeneficio: 'Risk / reward',
     barraAria: ({ pct }) => `Risk is ${pct} percent of the trade.`,

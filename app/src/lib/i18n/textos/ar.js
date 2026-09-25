@@ -134,6 +134,7 @@ export default {
       `آخر ${n} إغلاقات لـ ${par}. السعر الآن ${precio}، stop-loss ${sl}، الهدف ${tp}.`,
     hace: ({ n }) => `قبل ${n} أيام`,
     sinVelas: 'إغلاقات · بدون شموع',
+    rangoDia: 'أعلى · أدنى · إغلاق',
     ahora: 'الأخير',
     riesgoBeneficio: 'المخاطرة / العائد',
     barraAria: ({ pct }) => `المخاطرة تمثل ${pct} بالمئة من الصفقة.`,

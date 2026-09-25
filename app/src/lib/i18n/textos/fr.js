@@ -137,6 +137,7 @@ export default {
       `Les ${n} dernières clôtures de ${par}. Prix actuel ${precio}, stop-loss ${sl}, objectif ${tp}.`,
     hace: ({ n }) => `il y a ${n} jours`,
     sinVelas: 'clôtures · sans bougies',
+    rangoDia: 'haut · bas · clôture',
     ahora: 'dernier',
     riesgoBeneficio: 'Risque / gain',
     barraAria: ({ pct }) => `Le risque représente ${pct} pour cent de l'opération.`,

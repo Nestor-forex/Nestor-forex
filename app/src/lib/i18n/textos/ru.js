@@ -133,6 +133,7 @@ export default {
       `Последние ${n} закрытий ${par}. Цена сейчас ${precio}, stop-loss ${sl}, цель ${tp}.`,
     hace: ({ n }) => `${n} дней назад`,
     sinVelas: 'закрытия · без свечей',
+    rangoDia: 'макс · мин · закрытие',
     ahora: 'последнее',
     riesgoBeneficio: 'Риск / прибыль',
     barraAria: ({ pct }) => `Риск составляет ${pct} процентов сделки.`,

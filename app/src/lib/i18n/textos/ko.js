@@ -133,6 +133,7 @@ export default {
       `${par}의 최근 ${n}개 종가. 현재 가격 ${precio}, stop-loss ${sl}, 목표 ${tp}.`,
     hace: ({ n }) => `${n}일 전`,
     sinVelas: '종가 · 캔들 없음',
+    rangoDia: '고가 · 저가 · 종가',
     ahora: '최신',
     riesgoBeneficio: '리스크 / 수익',
     barraAria: ({ pct }) => `리스크는 이 거래의 ${pct} 퍼센트입니다.`,

@@ -176,6 +176,7 @@ export default {
       `Últimos ${n} cierres de ${par}. Precio ahora ${precio}, stop-loss ${sl}, objetivo ${tp}.`,
     hace: ({ n }) => `hace ${n} días`,
     sinVelas: 'cierres · sin velas',
+    rangoDia: 'máx · mín · cierre',
     ahora: 'último',
     riesgoBeneficio: 'Riesgo / beneficio',
     barraAria: ({ pct }) => `El riesgo es ${pct} por ciento de la operación.`,

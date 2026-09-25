@@ -137,6 +137,7 @@ export default {
       `Letzte ${n} Schlusskurse von ${par}. Kurs jetzt ${precio}, Stop-loss ${sl}, Ziel ${tp}.`,
     hace: ({ n }) => `vor ${n} Tagen`,
     sinVelas: 'Schlusskurse · ohne Kerzen',
+    rangoDia: 'Hoch · Tief · Schluss',
     ahora: 'letzter',
     riesgoBeneficio: 'Risiko / Ertrag',
     barraAria: ({ pct }) => `Das Risiko beträgt ${pct} Prozent des Trades.`,

@@ -260,6 +260,18 @@ export function computarBarrido(fechas, rates, rangosPar = null) {
       // El gráfico dibuja CIERRES, no máximos: es la línea del precio, no el
       // rango. (Antes `last20` eran los cierres y servía para las dos cosas.)
       serie20: closes.slice(-20),
+      // Los máximos y mínimos de esos MISMOS 20 días, para que la pantalla de
+      // detalle pueda dibujar velas de verdad en vez de una línea.
+      //
+      // ⚠️ SÍ se publican en `barrido.json`, al revés que `highs`/`lows`
+      // completos. La diferencia es el tamaño, y está MEDIDO sobre el archivo
+      // real de producción (2026-09-22): estos 20 son +3,1 KB sobre 11,3;
+      // los 300 completos serían +41,4 KB. Ver el comentario de `vigia.mjs`.
+      //
+      // No cuestan ni un cálculo nuevo: `last20` y `bajos20` ya se calculan
+      // aquí arriba para el soporte y la resistencia.
+      altos20: last20,
+      bajos20,
       // Series completas, alineadas con `fechas`. Las usa scripts/lib/
       // resolver.mjs para saber si una señal llegó a su objetivo o a su stop:
       // hace falta el recorrido entero, no solo el último valor. Se exponen
@@ -548,6 +560,10 @@ const mkSetup = (p, lado, esc = {}, t, tipo = 'tendencia') => {
       e50: p.e50,
       e100: p.e100,
       serie20: p.serie20,
+      // Las mechas de esos mismos 20 días. Van juntos a propósito: el gráfico
+      // dibuja los tres a la vez y desalinearlos pintaría velas falsas.
+      altos20: p.altos20,
+      bajos20: p.bajos20,
       rsi: Math.round(p.rsiV),
       atrPct: p.atrPct,
       tend: p.tend,
