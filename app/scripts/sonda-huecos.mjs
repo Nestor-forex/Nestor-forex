@@ -114,9 +114,35 @@ const urlBis = (n) =>
   `https://stats.bis.org/api/v2/data/dataflow/BIS/WS_CBPOL/1.0/D.${ZONAS}` +
   `?lastNObservations=${n}&format=csv`
 
-// Se prueban dos tamaños para ver si hay tope: uno que debería sobrar para
-// encontrar el último cambio de los ocho bancos, y otro mucho mayor.
-for (const n of [400, 2000]) {
+// ⚠️⚠️ SEGUNDA RONDA (2026-09-29, el mismo día). La primera contestó «sí, la
+// serie viene» y de paso destapó algo que HABRÍA ROTO LA PANTALLA:
+//
+//     CA  400 obs · 99 cambios  · últimos: 2026-09-07:2.25 2026-09-12:NaN 2026-09-14:2.25
+//     NZ  400 obs · 116 cambios · últimos: 2026-09-07:2.75 2026-09-12:NaN 2026-09-14:2.75
+//
+// **El BIS publica filas con `OBS_VALUE` VACÍO** (días sin dato), y contar los
+// escalones sin quitarlas convierte cada hueco en DOS cambios falsos. De ahí
+// los 99 de Canadá y los 116 de Nueva Zelanda, cuando un banco central mueve su
+// tasa unas pocas veces en 19 meses (Australia 6, Suiza 3, Japón 3).
+//
+// Y el daño no sería una cifra rara en un log: la pantalla habría dicho
+// «el Banco de Canadá cambió su tasa el 14 de septiembre» cuando ese día solo
+// hubo un hueco en la serie. Un dato correcto sobre algo distinto de lo que uno
+// cree estar midiendo — la misma familia que el ATR de cierre a cierre.
+//
+// 📌 `leerTasasCSV` en `src/lib/tasas.js` YA las salta (comprueba que el texto
+// no esté vacío antes de mirar el número). O sea que el fallo era de la sonda,
+// no del lector — pero solo se vio porque la sonda enseñaba los escalones.
+//
+// Ahora se cuentan las dos cosas, con y sin huecos, para que la diferencia esté
+// a la vista y nadie la vuelva a confundir.
+//
+// Los tamaños: 400 observaciones cubren entre 13 y 19 meses según la zona (la
+// densidad NO es la misma: `US` trae ~30 al mes y `AU` ~21, así que la misma N
+// llega más atrás en unas que en otras). Se prueba 1000 para ver hasta dónde
+// llega y cuánto pesa, porque el publicador tiene que alcanzar el último cambio
+// REAL de las ocho, incluidas las que llevan años quietas.
+for (const n of [400, 1000]) {
   const r = await pedir(urlBis(n))
   console.log('')
   console.log(`  lastNObservations=${n} → ${r.estado ?? 'sin respuesta'} en ${r.ms} ms${r.error ? ` (${r.error})` : ''}`)
@@ -156,25 +182,40 @@ for (const n of [400, 2000]) {
   }
 
   console.log(`    zonas: ${porZona.size} de ${Object.keys(DIVISA_ZONA).length}`)
+  console.log('      zona   obs  huecos   rango                     cambios  últimos escalones REALES')
+  const sinCambio = []
   for (const [z, obs] of [...porZona].sort()) {
     obs.sort((a, b) => (a.f < b.f ? -1 : 1))
-    // Los ESCALONES: cada vez que el valor cambia. Es lo que de verdad hace
-    // falta para decir «subió» o «bajó», y lo que decide si N observaciones
-    // alcanzan o no.
+
+    // ⚠️ LOS HUECOS SE QUITAN ANTES DE CONTAR NADA. Ver el bloque de arriba:
+    // el BIS publica filas con `OBS_VALUE` vacío, y sin quitarlas cada hueco
+    // se lee como dos cambios de tasa que nunca ocurrieron.
+    const buenas = obs.filter((o) => o.v !== '' && Number.isFinite(Number(o.v)))
+    const huecos = obs.length - buenas.length
+
+    // Los ESCALONES: cada vez que el valor cambia de verdad. Es lo que hace
+    // falta para decir «subió» o «bajó», y lo que decide si N alcanza.
     const pasos = []
-    for (const o of obs) if (!pasos.length || pasos[pasos.length - 1].v !== o.v) pasos.push(o)
+    for (const o of buenas) if (!pasos.length || pasos[pasos.length - 1].v !== o.v) pasos.push(o)
     const ult = pasos.slice(-3).map((p) => `${p.f}:${p.v}`).join('  ')
+
+    // Y los que se contarían SIN quitar los huecos, para que la diferencia
+    // quede impresa en vez de explicada.
+    const falsos = []
+    for (const o of obs) if (!falsos.length || falsos[falsos.length - 1].v !== o.v) falsos.push(o)
+
     console.log(
-      `      ${String(z).padEnd(3)} ${String(obs.length).padStart(5)} obs  ` +
-        `${obs[0]?.f} → ${obs[obs.length - 1]?.f}  ·  ${pasos.length} cambios  ·  últimos: ${ult}`
+      `      ${String(z).padEnd(3)} ${String(buenas.length).padStart(5)} ${String(huecos).padStart(7)}   ` +
+        `${buenas[0]?.f} → ${buenas[buenas.length - 1]?.f}  ${String(pasos.length).padStart(7)}` +
+        `${falsos.length !== pasos.length ? ` (sin quitar huecos saldrían ${falsos.length})` : ''}  ${ult}`
     )
+    if (pasos.length < 2) sinCambio.push(z)
   }
 
   // ⚠️ La pregunta que decide: ¿alcanzan estas N observaciones para ver al
   // menos UN cambio en TODAS las zonas? Con una zona sin cambios dentro de la
   // ventana no se puede decir de dónde viene, y eso hay que saberlo ANTES de
   // escribir el lector, no después.
-  const sinCambio = [...porZona].filter(([, obs]) => new Set(obs.map((o) => o.v)).size < 2).map(([z]) => z)
   if (porZona.size >= Object.keys(DIVISA_ZONA).length) {
     if (sinCambio.length) {
       console.log(`    ⚠️ Estas zonas NO cambian dentro de la ventana: ${sinCambio.join(', ')}`)
@@ -281,8 +322,40 @@ for (const semanas of [156, 520]) {
   console.log(
     `    ${completos} de ${Object.keys(CONTRATOS).length} contratos traen al menos el 90 % de las ${semanas} semanas pedidas.`
   )
+
+  // ⚠️⚠️ Y LA TRAMPA QUE LA PRIMERA RONDA DESTAPÓ CON 520 SEMANAS, que hay que
+  // dejar impresa: `$limit` es un tope GLOBAL de filas, no por contrato. Con el
+  // orden por fecha descendente, los cinco contratos con historial largo se
+  // comen el presupuesto y los tres que la CFTC renombró en febrero de 2022
+  // (GBP, NZD y USD) se quedan cortados en 242 informes mientras los otros
+  // llegan a 687.
+  //
+  // Eso NO da ningún error. Daría percentiles de tres divisas medidos sobre 242
+  // semanas y de cinco sobre 687, puestos uno al lado del otro en la misma
+  // pantalla como si fueran comparables. Es una etiqueta equivocada, y aquí eso
+  // es un error de medición.
+  const cuentas = [...porContrato.values()]
+  const desigual = cuentas.length > 1 && Math.max(...cuentas) - Math.min(...cuentas) > semanas * 0.05
+  if (desigual) {
+    console.log(
+      `    ⚠️ VENTANAS DESIGUALES: del contrato con más (${Math.max(...cuentas)}) al de menos ` +
+        `(${Math.min(...cuentas)}) hay ${Math.max(...cuentas) - Math.min(...cuentas)} informes de diferencia.`
+    )
+    console.log('       Con esta ventana NO se pueden comparar las ocho entre sí.')
+  } else {
+    console.log('    ✓ Las ocho traen la MISMA cantidad de informes: la ventana es comparable.')
+  }
+
   if (!hallado.cot && completos >= 1) {
-    hallado.cot = { semanas, filas: filas.length, informes: orden.length, desde: orden[0], kb: KB(r.cuerpo), completos }
+    hallado.cot = {
+      semanas,
+      filas: filas.length,
+      informes: orden.length,
+      desde: orden[0],
+      kb: KB(r.cuerpo),
+      completos,
+      desigual,
+    }
   }
 }
 
@@ -301,7 +374,51 @@ raya('3) ORO Y PETRÓLEO: ¿están en el plan, y con qué símbolo?')
 // sentimiento. Se prueban de uno en uno para que el error de uno no tumbe al
 // resto (con varios símbolos en una consulta, el fallo de uno oscurece a los
 // demás), y con pausas para no chocar con los 8 créditos por minuto.
-const CANDIDATOS = ['XAU/USD', 'XAG/USD', 'WTI/USD', 'BRENT/USD', 'USOIL', 'CL', 'GOLD', 'XAUUSD']
+//
+// ⚠️⚠️ SEGUNDA RONDA (2026-09-29): LA PRIMERA CASI COLÓ DOS ACTIVOS FALSOS, y
+// esto es lo más importante de toda la sonda.
+//
+// Tres símbolos respondieron 200 con cinco velas perfectamente válidas:
+//
+//   XAU/USD  →  4134.51   type: "Precious Metal"   currency_base: "Gold Spot"
+//   CL       →    86.52   type: "Common Stock"     exchange: NYSE
+//   GOLD     →    42.85   type: "Common Stock"     exchange: NYSE
+//
+// **Solo el primero es oro.** Los otros dos son ACCIONES que cotizan en la
+// bolsa de Nueva York y se llaman así por casualidad. Un lector que aceptara
+// «200 con velas» habría publicado «oro: 42,85» — un número plausible, con su
+// fecha, su máximo y su mínimo, y completamente falso.
+//
+// Es la misma familia que el `FutOnly` contra `Combined` del COT y que el ATR
+// de cierre a cierre: **un dato correcto de una cosa distinta de la que uno
+// cree estar midiendo.** Y no se caza mirando el código de respuesta: se caza
+// mirando `type`.
+//
+// 📌 Y el agravante, que también vale escribirlo: el RESUMEN de mi propia sonda
+// imprimió «SÍ — sirven: XAU/USD, CL, GOLD». El detalle traía el `meta` que lo
+// desmentía —lo imprimí a propósito— y el resumen lo ignoró. Un resumen que no
+// mira lo que el detalle ya sabe es peor que no tener resumen.
+//
+// Por eso ahora la sonda EXIGE que `type` sea de materia prima o divisa, y a
+// cualquier cosa que venga como acción le pide el nombre a `/quote` para dejar
+// impreso QUÉ es en realidad, en vez de que alguien tenga que adivinarlo.
+//
+// Los tres nombres inválidos de la primera ronda (BRENT/USD, USOIL, XAUUSD) se
+// quitan: ya está comprobado que no existen. Entran en su lugar candidatos de
+// petróleo que podrían estar en el plan gratuito, incluidos dos ETF — y si
+// alguno sirve, **hay que decir que es un ETF y no el crudo**, porque llamarlo
+// «petróleo» sería justo la etiqueta equivocada de la que trata este bloque.
+const CANDIDATOS = ['XAU/USD', 'WTI/USD', 'USO', 'BNO', 'BZ', 'WTI']
+
+// ⚠️ Los tipos que SÍ son lo que buscamos. Cualquier otro se rechaza aunque
+// responda 200 con velas. Ante la duda, se rechaza: equivocarse hacia «no
+// sirve» cuesta probar otro nombre; hacia «sirve», publicar el precio de una
+// acción llamándolo oro.
+const TIPOS_BUENOS = [/precious metal/i, /commodity/i, /physical currency/i, /digital currency/i]
+
+// Un ETF no es la materia prima, pero tampoco es un error: es un fondo que la
+// sigue. Se acepta APARTE y con etiqueta propia, nunca mezclado con el spot.
+const TIPOS_ETF = [/\betf\b/i, /fund/i]
 
 let llave = null
 try {
@@ -347,11 +464,49 @@ if (llave) {
     }
 
     const v = j.values[0] ?? {}
-    console.log(`    ✓ ${j.values.length} velas`)
+    const tipo = String(j.meta?.type ?? '')
+    console.log(`    respondió con ${j.values.length} velas`)
     console.log(`      campos: ${Object.keys(v).join(', ')}`)
     console.log(`      1ª vela cruda: ${JSON.stringify(v)}`)
     console.log(`      meta: ${JSON.stringify(j.meta ?? {}).slice(0, 300)}`)
-    vistos.push(sym)
+
+    // ⚠️⚠️ AQUÍ SE DECIDE, Y NO POR EL CÓDIGO DE RESPUESTA. Ver el bloque de
+    // arriba: `CL` y `GOLD` dan 200 con velas válidas de una ACCIÓN de la bolsa
+    // de Nueva York. Lo único que los distingue del oro de verdad es `type`.
+    const esBueno = TIPOS_BUENOS.some((re) => re.test(tipo))
+    const esEtf = TIPOS_ETF.some((re) => re.test(tipo))
+
+    if (esBueno) {
+      console.log(`    ✓ SIRVE — type «${tipo}», que es materia prima o divisa`)
+      vistos.push({ sym, tipo, clase: 'spot', precio: v.close })
+      continue
+    }
+
+    if (esEtf) {
+      // Un ETF sigue a la materia prima pero NO es la materia prima: tiene
+      // comisión, se desvía y cierra cuando cierra su bolsa. Entra con etiqueta
+      // propia para que nadie lo enseñe como «el precio del petróleo».
+      console.log(`    ~ ES UN ETF — type «${tipo}». Sigue al activo, NO es el activo.`)
+      vistos.push({ sym, tipo, clase: 'etf', precio: v.close })
+      continue
+    }
+
+    // Y si no es ninguna de las dos cosas, se le pregunta QUÉ es, en vez de
+    // dejar que alguien lo adivine mirando un precio suelto. Cuesta un crédito
+    // más y ahorra el error que este bloque existe para evitar.
+    console.log(`    ✗ NO SIRVE — type «${tipo || '(sin tipo)'}» no es materia prima ni divisa.`)
+    const q = await pedir(
+      `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(sym)}&apikey=${llave}`
+    )
+    try {
+      const jq = JSON.parse(q.cuerpo)
+      console.log(
+        `      qué es en realidad: «${jq?.name ?? '(sin nombre)'}» · ${jq?.exchange ?? '?'} · ` +
+          `${jq?.type ?? '?'} · último ${jq?.close ?? '?'}`
+      )
+    } catch {
+      console.log(`      (no se pudo averiguar el nombre: ${q.cuerpo.slice(0, 120)})`)
+    }
   }
   hallado.activos = vistos
 }
@@ -364,6 +519,12 @@ if (llave) {
 // escriben parecido y significan lo contrario, y en este proyecto ya se
 // publicó una vez un veredicto de «no lo publican» habiendo leído cero
 // páginas. Así que el resumen lo dice con esas palabras.
+//
+// ⚠️⚠️ Y EL RESUMEN NO PUEDE AFIRMAR MÁS QUE EL DETALLE. En la primera ronda
+// esta misma línea imprimió «SÍ — sirven: XAU/USD, CL, GOLD» mientras el
+// detalle, tres pantallas arriba, traía el `meta` que decía que dos de los tres
+// eran acciones de la bolsa de Nueva York. Un resumen que ignora lo que el
+// detalle ya sabe es peor que no tener resumen: se lee como la conclusión.
 console.log('')
 raya('RESUMEN — lo que esta sonda dejó comprobado')
 console.log('')
@@ -372,14 +533,26 @@ const di = (q, v, siNo) => console.log(`  ${q.padEnd(38)} ${v === null ? 'NO SE 
 
 di('1. La serie de las tasas (BIS)', hallado.tasas, (h) =>
   `SÍ — ${h.n} observaciones, ${h.kb}, ${h.zonas} zonas` +
-  (h.sinCambio.length ? `, sin cambio en ${h.sinCambio.join('/')}` : ', con cambio en las ocho')
+  (h.sinCambio.length ? `, SIN cambio en ${h.sinCambio.join('/')}` : ', con cambio en las ocho')
 )
 di('2. El histórico del COT (CFTC)', hallado.cot, (h) =>
-  `SÍ — ${h.informes} informes desde ${h.desde}, ${h.filas} filas, ${h.kb}`
+  `SÍ — ${h.informes} informes desde ${h.desde}, ${h.filas} filas, ${h.kb}` +
+  (h.desigual ? ' ⚠️ VENTANAS DESIGUALES entre divisas' : ' · ventana comparable')
 )
-di('3. Oro y petróleo (Twelve Data)', hallado.activos, (v) =>
-  v.length ? `SÍ — sirven: ${v.join(', ')}` : 'NINGUNO de los 8 nombres probados dio datos'
-)
+di('3. Oro y petróleo (Twelve Data)', hallado.activos, (v) => {
+  const spot = v.filter((x) => x.clase === 'spot')
+  const etf = v.filter((x) => x.clase === 'etf')
+  if (!spot.length && !etf.length) return `NINGUNO de los ${CANDIDATOS.length} nombres probados es el activo`
+  const trozos = []
+  if (spot.length) trozos.push(`spot: ${spot.map((x) => `${x.sym} (${x.precio})`).join(', ')}`)
+  if (etf.length) trozos.push(`solo como ETF: ${etf.map((x) => x.sym).join(', ')}`)
+  return trozos.join(' · ')
+})
 
 console.log('')
 console.log('  Con esto delante se escribe cada lector. Nunca al revés.')
+console.log('')
+console.log('  ⚠️ Un «SÍ» aquí dice que el DATO se puede conseguir, no que la app deba')
+console.log('     enseñarlo ni mucho menos filtrar señales con él. Todo esto sería')
+console.log('     INFORMACIÓN: no apaga ni una señal. Un filtro va al banco de pruebas con')
+console.log('     su listón escrito antes — siete familias medidas, siete fallando.')
