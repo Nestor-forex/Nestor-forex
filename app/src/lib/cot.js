@@ -241,11 +241,192 @@ export function leerFilas(filas) {
   return out
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// EL PERCENTIL: ¿es mucho o es normal PARA ESTA DIVISA?
+// ─────────────────────────────────────────────────────────────────────────
+//
+// Añadido el 2026-09-29, a pedido de Néstor sobre la tabla de «dónde las apps
+// son ciegas». El problema que resuelve es real y concreto:
+//
+//     «+19,2 % en AUD» no dice nada. «La posición más comprada de los últimos
+//     tres años» sí dice algo.
+//
+// ⚠️⚠️ Y LO MENOS OBVIO, QUE ES LA RAZÓN DE SER DE ESTO: EL PERCENTIL ES CONTRA
+// LA PROPIA HISTORIA DE ESA DIVISA, NO CONTRA LAS OTRAS SIETE.
+//
+// Cada divisa tiene su propia costumbre. En una que esté NETA VENDIDA casi
+// siempre, un −5 % puede ser lo más comprado que ha estado en tres años —
+// mientras que ese mismo −5 % en otra sería de lo más normal. El número suelto
+// esconde exactamente eso, y es lo que un análisis externo sí dice.
+//
+// ⚠️ A propósito NO se nombra ninguna divisa concreta aquí. La primera versión
+// decía «el dólar australiano suele estar vendido casi siempre», y eso es un
+// hecho sobre el mercado que NO está medido en este proyecto: lo único real que
+// hay delante es una semana de COT publicada, y en ella el AUD está +19,2 %, o
+// sea neto COMPRADO. El ejemplo apuntaba al revés del único dato disponible.
+// El punto se explica igual de bien sin afirmar nada de nadie.
+//
+// Por eso la pantalla tiene que decir «para esta divisa» con esas palabras: sin
+// eso, dos percentiles de dos divisas se leen como comparables entre sí y no lo
+// son.
+//
+// ⚠️ SALE GRATIS. Es la misma consulta a la CFTC pidiendo más semanas: ni un
+// crédito de Twelve Data, ningún secreto, 449 KB y medio segundo.
+
+// Cuántas semanas de historia. Elegido CON LA SONDA (`sonda-huecos.mjs`,
+// 2026-09-29) y **no se puede subir sin más**:
+//
+//   · con 156 semanas los OCHO contratos traen 156 informes cada uno, de
+//     2023-10-03 a 2026-09-22. Ventana idéntica, comparables entre sí;
+//   · con 520 semanas la respuesta trae 687 informes de cinco contratos y solo
+//     242 de GBP, NZD y USD — los tres que la CFTC renombró en febrero de 2022.
+//     `$limit` es un tope GLOBAL de filas, no por contrato, así que los de
+//     historial largo se comen el presupuesto.
+//
+// ⚠️ Eso NO daría ningún error: daría percentiles de tres divisas medidos sobre
+// dos años y de cinco sobre trece, puestos uno al lado del otro en la misma
+// pantalla como si fueran lo mismo. Una etiqueta equivocada, y aquí eso es un
+// error de medición. Hay una comprobación dedicada solo a esto.
+export const SEMANAS_HISTORIA = 156
+
+// Por debajo de esto no se da percentil. Dos años de semanas.
+//
+// ⚠️ El motivo es el de siempre en esta app: con pocas observaciones el número
+// no distingue nada. Con 104 semanas, el percentil mueve un punto entero por
+// cada semana, que ya es resolución de sobra; con 20 semanas, «percentil 95»
+// significa «la más alta de las últimas veinte», o sea casi nada. Y devolver
+// `null` en vez de 50 es la misma decisión que `pearson` en `correlacion.js`:
+// «no lo sé» y «está en el medio» no son lo mismo.
+export const MINIMO_PERCENTIL = 104
+
+// Dónde cae `valor` dentro de `valores`, de 0 a 100.
+//
+// ⚠️ SE USA EL RANGO MEDIO para los empates: los que están por debajo, más la
+// mitad de los que están igual. Sin eso, una serie con varias semanas en el
+// mismo nivel daría percentiles distintos según se cuente «<» o «<=», y la
+// diferencia puede ser de varios puntos.
+//
+// Devuelve `null` si hay menos de `MINIMO_PERCENTIL` valores o si el valor no
+// es un número. Nunca 50.
+export function percentil(valores, valor, minimo = MINIMO_PERCENTIL) {
+  if (!Array.isArray(valores) || typeof valor !== 'number' || !Number.isFinite(valor)) return null
+  const buenos = valores.filter((v) => typeof v === 'number' && Number.isFinite(v))
+  if (buenos.length < minimo) return null
+
+  let debajo = 0
+  let iguales = 0
+  for (const v of buenos) {
+    if (v < valor) debajo++
+    else if (v === valor) iguales++
+  }
+  return (100 * (debajo + iguales / 2)) / buenos.length
+}
+
+// La historia de `fondosPct` por divisa, de más vieja a más nueva.
+//
+// ⚠️ Solo de los FONDOS (`lev_money`), que es lo que la pantalla enseña. Añadir
+// aquí las gestoras sin enseñarlas sería peso en el archivo a cambio de nada.
+//
+// Una fila cuyo contrato no esté en `CONTRATOS` se ignora, igual que en
+// `leerFilas`: colar un cruce sería medir el EUR/JPY creyendo que es el euro.
+export function historiaDeFilas(filas) {
+  if (!Array.isArray(filas)) return {}
+
+  const porFecha = {}
+  for (const f of filas) {
+    const divisa = PARA_DIVISA[String(f?.market_and_exchange_names ?? '').trim()]
+    if (!divisa) continue
+
+    const fecha = String(f?.report_date_as_yyyy_mm_dd ?? '').slice(0, 10)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) continue
+
+    const pct = pctDelInteres(
+      neto(num(f?.lev_money_positions_long), num(f?.lev_money_positions_short)),
+      num(f?.open_interest_all),
+    )
+    // Sin porcentaje la semana no sirve para el percentil. Se salta en vez de
+    // entrar como 0, que diría «esa semana no estaban posicionados».
+    if (pct == null) continue
+
+    ;(porFecha[divisa] ||= new Map()).set(fecha, pct)
+  }
+
+  const out = {}
+  for (const [divisa, mapa] of Object.entries(porFecha)) {
+    out[divisa] = [...mapa.entries()]
+      .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+      .map(([, pct]) => pct)
+  }
+  return out
+}
+
+// El percentil de la ÚLTIMA semana de cada divisa, dentro de su propia
+// historia. Una divisa con pocas semanas simplemente no aparece.
+//
+// ⚠️ NO DEVUELVE NINGÚN VEREDICTO. No hay `lado`, ni `extremo`, ni
+// `recomendacion`. El COT es un FILTRO, no información, y como filtro está
+// MEDIDO Y SUSPENDIÓ (2026-09-14: las once variantes pierden, y la dirección
+// que gana cambia de una mitad del periodo a la otra, que es la firma de una
+// moneda al aire). Enseñar un percentil con su fecha es legítimo; deducir de él
+// qué operar no lo es. Hay una comprobación que falla si aparece un veredicto,
+// para que añadirlo obligue a venir aquí a borrarla a mano.
+export function percentilesDeFilas(filas) {
+  const historia = historiaDeFilas(filas)
+  const out = {}
+
+  for (const [divisa, serie] of Object.entries(historia)) {
+    if (!serie.length) continue
+    const actual = serie[serie.length - 1]
+    const pct = percentil(serie, actual)
+    if (pct == null) continue
+
+    out[divisa] = {
+      // Redondeado a un decimal: publicar quince cifras de un percentil sobre
+      // 156 semanas es precisión inventada, y son bytes que baja cada miembro.
+      pct: Math.round(pct * 10) / 10,
+      // Cuántas semanas lo respaldan. Va en el archivo porque la pantalla LO
+      // DICE: «de las últimas 156 semanas» tiene que salir del dato y no
+      // escrito a mano, o envejece solo — es la lección de las etiquetas
+      // «(hoy)» del banco de pruebas.
+      n: serie.length,
+      // Los extremos de la ventana, para que el percentil sea comprobable: con
+      // el mínimo y el máximo delante, un «percentil 94» se puede situar.
+      min: Math.round(Math.min(...serie) * 10) / 10,
+      max: Math.round(Math.max(...serie) * 10) / 10,
+      // ¿Es el más alto o el más bajo de toda la ventana? Es un hecho sobre la
+      // serie, no un veredicto: «la posición más comprada de las últimas 156
+      // semanas» se puede comprobar contando.
+      esMaximo: actual >= Math.max(...serie),
+      esMinimo: actual <= Math.min(...serie),
+    }
+  }
+  return out
+}
+
+// ¿Miden todas las divisas sobre la MISMA cantidad de semanas?
+//
+// ⚠️ Esto existe por el fallo que la sonda destapó con 520 semanas: `$limit` es
+// un tope global, así que los contratos de historial largo se comen el
+// presupuesto y los tres que la CFTC renombró en 2022 se quedan cortos. Sin
+// esta comprobación, la pantalla pondría un percentil de dos años al lado de
+// uno de trece sin decirlo.
+export function ventanaDesigual(percentiles, tolerancia = 0.05) {
+  const ns = Object.values(percentiles || {}).map((p) => p?.n).filter((n) => typeof n === 'number')
+  if (ns.length < 2) return false
+  const max = Math.max(...ns)
+  return max - Math.min(...ns) > max * tolerancia
+}
+
 // Lo que se publica en `estado/cot.json`.
 //
 // `tipoInforme` viaja dentro a propósito: es lo que permite que la pantalla
 // diga cuál de los dos informes está enseñando, en vez de que haya que venir
 // aquí a mirarlo.
+//
+// ⚠️ CAMBIO ADITIVO (2026-09-29): `divisas` sigue siendo exactamente lo que
+// era, así que un lector viejo no nota nada. `percentiles` se añade al lado, y
+// la pantalla tiene que aguantar que NO esté — un archivo publicado antes de
+// esa fecha no lo trae.
 export function prepararCot(filas, ahora = new Date()) {
   const divisas = leerFilas(filas)
   const fechas = Object.values(divisas)
@@ -258,6 +439,7 @@ export function prepararCot(filas, ahora = new Date()) {
     fecha: fechas.length ? fechas[fechas.length - 1] : null,
     tipoInforme: TIPO_INFORME,
     divisas,
+    percentiles: percentilesDeFilas(filas),
   }
 }
 

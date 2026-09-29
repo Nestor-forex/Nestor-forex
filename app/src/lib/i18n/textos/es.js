@@ -522,7 +522,14 @@ export default {
       neutro: 'Casi la misma tasa: apenas pesa',
     },
     cabeceraSueltas: 'Tasa de cada banco central',
-    pie: (v) => `Fuente: BIS (Banco de Pagos Internacionales). Cada fila lleva la fecha de SU dato: una tasa de referencia solo cambia el día que se reúne el banco central. El más antiguo es de hace ${v.dias} días.`,
+    subio: (v) => `Subió desde ${v.de} % · ${v.cuando}`,
+    bajo: (v) => `Bajó desde ${v.de} % · ${v.cuando}`,
+    haceDias: (v) => `hace ${v.n} ${v.n === 1 ? 'día' : 'días'}`,
+    haceMeses: (v) => `hace ${v.n} ${v.n === 1 ? 'mes' : 'meses'}`,
+    haceAnios: (v) => `hace ${v.n} ${v.n === 1 ? 'año' : 'años'}`,
+    pieTendencia:
+      'La flecha dice de qué tasa viene la de hoy y cuánto lleva en ese nivel. Una divisa sin flecha no se movió dentro de la ventana que la app mira: eso no dice que su banco central esté en pausa, solo que ahí dentro no cambió.',
+    pie: (v) => `Fuente: BIS (Banco de Pagos Internacionales). El BIS publica con unos días de retraso, así que la fecha de cada fila es hasta cuándo llega SU dato — no el día en que ese banco decidió. La más antigua es de hace ${v.dias} días.`,
   },
 
   cot: {
@@ -537,6 +544,12 @@ export default {
     cambio: (v) => `${v.n} contratos esta semana`,
     sinCambio: 'Sin cambio esta semana',
     indice: 'El dólar contra una cesta, no contra una sola divisa',
+    percentil: (v) => `Más comprado que en el ${v.pct} % de sus últimas ${v.n} semanas`,
+    percentilVendido: (v) => `Más vendido que en el ${v.pct} % de sus últimas ${v.n} semanas`,
+    esMaximo: (v) => `Lo MÁS comprado de sus últimas ${v.n} semanas`,
+    esMinimo: (v) => `Lo MÁS vendido de sus últimas ${v.n} semanas`,
+    piePercentil:
+      'Cada porcentaje se compara con la historia de SU divisa, no con las otras siete. Eso importa porque cada divisa tiene su propia costumbre: en una que casi siempre está vendida, un número negativo puede ser lo más comprado que ha estado en tres años, mientras que ese mismo número en otra sería de lo más normal. Y un extremo no dice qué va a pasar: unos lo leen como que la tendencia sigue y otros como que se da la vuelta.',
     pie: (v) => `Fuente: CFTC, informe del ${v.fecha} (hace ${v.dias} días). Solo futuros, sin opciones. Entre 3 y 10 días de antigüedad es lo normal: se publica los viernes con los datos del martes. La barra solo sirve para comparar de un vistazo; el número es el dato.`,
   },
 

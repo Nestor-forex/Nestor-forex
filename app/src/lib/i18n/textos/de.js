@@ -475,7 +475,14 @@ export default {
       neutro: 'Fast derselbe Zins: fällt kaum ins Gewicht',
     },
     cabeceraSueltas: 'Zins jeder Zentralbank',
-    pie: (v) => `Quelle: BIS (Bank für Internationalen Zahlungsausgleich). Jede Zeile zeigt das Datum IHRER Angabe: ein Leitzins ändert sich nur an dem Tag, an dem die Zentralbank tagt. Die älteste ist ${v.dias} Tage alt.`,
+    subio: (v) => `Gestiegen von ${v.de} % · ${v.cuando}`,
+    bajo: (v) => `Gefallen von ${v.de} % · ${v.cuando}`,
+    haceDias: (v) => `vor ${v.n} ${v.n === 1 ? 'Tag' : 'Tagen'}`,
+    haceMeses: (v) => `vor ${v.n} ${v.n === 1 ? 'Monat' : 'Monaten'}`,
+    haceAnios: (v) => `vor ${v.n} ${v.n === 1 ? 'Jahr' : 'Jahren'}`,
+    pieTendencia:
+      'Der Pfeil zeigt, von welchem Zinssatz der heutige kommt und wie lange er schon auf diesem Stand ist. Eine Währung ohne Pfeil hat sich innerhalb des Zeitfensters der App nicht bewegt: das sagt nicht, dass ihre Zentralbank pausiert, nur dass sich darin nichts geändert hat.',
+    pie: (v) => `Quelle: BIS (Bank für Internationalen Zahlungsausgleich). Die BIS veröffentlicht mit einigen Tagen Verzögerung, deshalb sagt das Datum jeder Zeile, bis wann IHRE Daten reichen — nicht den Tag, an dem diese Bank entschieden hat. Das älteste ist ${v.dias} Tage alt.`,
   },
 
   cot: {
@@ -490,6 +497,12 @@ export default {
     cambio: (v) => `${v.n} Kontrakte diese Woche`,
     sinCambio: 'Keine Änderung diese Woche',
     indice: 'Der Dollar gegen einen Korb, nicht gegen eine einzelne Währung',
+    percentil: (v) => `Stärker gekauft als in ${v.pct} % seiner letzten ${v.n} Wochen`,
+    percentilVendido: (v) => `Stärker verkauft als in ${v.pct} % seiner letzten ${v.n} Wochen`,
+    esMaximo: (v) => `Am MEISTEN gekauft in seinen letzten ${v.n} Wochen`,
+    esMinimo: (v) => `Am MEISTEN verkauft in seinen letzten ${v.n} Wochen`,
+    piePercentil:
+      'Jeder Prozentwert wird mit der Geschichte SEINER Währung verglichen, nicht mit den anderen sieben. Das ist wichtig, weil jede Währung ihre eigene Gewohnheit hat: bei einer, die fast immer netto verkauft ist, kann ein negativer Wert der höchste Kaufstand seit drei Jahren sein, während derselbe Wert bei einer anderen völlig gewöhnlich wäre. Und ein Extremwert sagt nicht, was danach kommt: manche lesen ihn als Fortsetzung des Trends, andere als Wende.',
     pie: (v) => `Quelle: CFTC, Bericht vom ${v.fecha} (vor ${v.dias} Tagen). Nur Futures, ohne Optionen. Zwischen 3 und 10 Tagen alt ist normal: er erscheint freitags mit den Daten vom Dienstag. Der Balken dient nur zum schnellen Vergleich; die Zahl ist der eigentliche Wert.`,
   },
 

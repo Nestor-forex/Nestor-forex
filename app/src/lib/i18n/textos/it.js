@@ -471,7 +471,14 @@ export default {
       neutro: 'Quasi lo stesso tasso: pesa appena',
     },
     cabeceraSueltas: 'Tasso di ogni banca centrale',
-    pie: (v) => `Fonte: BIS (Banca dei Regolamenti Internazionali). Ogni riga porta la data del SUO dato: un tasso di riferimento cambia solo il giorno in cui la banca centrale si riunisce. Il più vecchio è di ${v.dias} giorni fa.`,
+    subio: (v) => `Salito da ${v.de} % · ${v.cuando}`,
+    bajo: (v) => `Sceso da ${v.de} % · ${v.cuando}`,
+    haceDias: (v) => `${v.n} ${v.n === 1 ? 'giorno' : 'giorni'} fa`,
+    haceMeses: (v) => `${v.n} ${v.n === 1 ? 'mese' : 'mesi'} fa`,
+    haceAnios: (v) => `${v.n} ${v.n === 1 ? 'anno' : 'anni'} fa`,
+    pieTendencia:
+      'La freccia dice da quale tasso viene quello di oggi e da quanto tempo è a quel livello. Una valuta senza freccia non si è mossa nella finestra che l\u2019app guarda: questo non dice che la sua banca centrale sia in pausa, solo che lì dentro non è cambiata.',
+    pie: (v) => `Fonte: BIS (Banca dei Regolamenti Internazionali). Il BIS pubblica con qualche giorno di ritardo, quindi la data di ogni riga dice fin dove arriva IL SUO dato — non il giorno in cui quella banca ha deciso. La più vecchia è di ${v.dias} giorni.`,
   },
 
   cot: {
@@ -486,6 +493,12 @@ export default {
     cambio: (v) => `${v.n} contratti questa settimana`,
     sinCambio: 'Nessuna variazione questa settimana',
     indice: 'Il dollaro contro un paniere, non contro una sola valuta',
+    percentil: (v) => `Più comprato che nel ${v.pct} % delle sue ultime ${v.n} settimane`,
+    percentilVendido: (v) => `Più venduto che nel ${v.pct} % delle sue ultime ${v.n} settimane`,
+    esMaximo: (v) => `Il PIÙ comprato delle sue ultime ${v.n} settimane`,
+    esMinimo: (v) => `Il PIÙ venduto delle sue ultime ${v.n} settimane`,
+    piePercentil:
+      'Ogni percentuale si confronta con la storia della SUA valuta, non con le altre sette. Questo conta perché ogni valuta ha la sua abitudine: in una che è quasi sempre netta venditrice, un numero negativo può essere il livello più comprato degli ultimi tre anni, mentre lo stesso numero su un\u2019altra sarebbe del tutto normale. E un estremo non dice cosa viene dopo: alcuni lo leggono come tendenza che continua e altri come inversione.',
     pie: (v) => `Fonte: CFTC, rapporto del ${v.fecha} (${v.dias} giorni fa). Solo futures, senza opzioni. Tra 3 e 10 giorni di anzianità è normale: esce il venerdì con i dati del martedì. La barra serve solo a confrontare a colpo d’occhio; il numero è il dato.`,
   },
 

@@ -475,7 +475,14 @@ export default {
       neutro: 'Almost the same rate: it barely weighs',
     },
     cabeceraSueltas: 'Rate of each central bank',
-    pie: (v) => `Source: BIS (Bank for International Settlements). Each row shows the date of ITS own figure: a policy rate only changes on the day the central bank meets. The oldest is ${v.dias} days old.`,
+    subio: (v) => `Up from ${v.de} % · ${v.cuando}`,
+    bajo: (v) => `Down from ${v.de} % · ${v.cuando}`,
+    haceDias: (v) => `${v.n} ${v.n === 1 ? 'day' : 'days'} ago`,
+    haceMeses: (v) => `${v.n} ${v.n === 1 ? 'month' : 'months'} ago`,
+    haceAnios: (v) => `${v.n} ${v.n === 1 ? 'year' : 'years'} ago`,
+    pieTendencia:
+      'The arrow shows which rate today\u2019s one came from and how long it has been at that level. A currency with no arrow did not move inside the window the app looks at: that does not say its central bank is on hold, only that it did not change in there.',
+    pie: (v) => `Source: BIS (Bank for International Settlements). The BIS publishes with a few days\u2019 delay, so each row\u2019s date is how far ITS data goes \u2014 not the day that bank decided. The oldest is ${v.dias} days old.`,
   },
 
   cot: {
@@ -490,6 +497,12 @@ export default {
     cambio: (v) => `${v.n} contracts this week`,
     sinCambio: 'No change this week',
     indice: 'The dollar against a basket, not against a single currency',
+    percentil: (v) => `More bought than in ${v.pct} % of its last ${v.n} weeks`,
+    percentilVendido: (v) => `More sold than in ${v.pct} % of its last ${v.n} weeks`,
+    esMaximo: (v) => `The MOST bought of its last ${v.n} weeks`,
+    esMinimo: (v) => `The MOST sold of its last ${v.n} weeks`,
+    piePercentil:
+      'Each percentage is compared with the history of ITS own currency, not with the other seven. That matters because each currency has its own habit: in one that is almost always net short, a negative number can be the most bought it has been in three years, while that same number in another would be perfectly ordinary. And an extreme does not say what comes next: some read it as the trend continuing and others as it turning around.',
     pie: (v) => `Source: CFTC, report of ${v.fecha} (${v.dias} days ago). Futures only, no options. Between 3 and 10 days old is normal: it is published on Fridays with Tuesday’s data. The bar is only for comparing at a glance; the number is the data.`,
   },
 
