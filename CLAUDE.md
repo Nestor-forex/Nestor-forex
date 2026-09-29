@@ -6609,3 +6609,134 @@ no hay datos.
 📌 **Mirar la captura ampliada pagó otra vez:** la primera versión pintaba
 además una marca horizontal en cada cierre y **no se veía ninguna** — la línea
 verde pasa exactamente por ahí. Eran veinte elementos invisibles. Quitados.
+
+---
+
+# Las apps contra el mercado: la comparación, explicada para suscriptores (2026-09-29)
+
+Néstor pidió dos cosas el 2026-09-29: un análisis propio de los 5 mejores pares
+tomando los datos crudos de las dos apps (**sin usar sus señales ni ninguno de
+los experimentos**), y **una comparación de eso contra lo que dicen las fuentes
+del mercado**. Después pidió guardar la explicación para los suscriptores.
+
+Va con las siete del mismo tipo —el volumen, TradingView, la correlación, el
+swap, la actividad, el margen de error y Historial contra Diario— y es, de
+todas, **la única que se puede verificar desde fuera**: cualquiera puede abrir
+las mismas fuentes y comprobar los números.
+
+## El texto
+
+> **¿Los datos de esta app coinciden con los del mercado de verdad?**
+>
+> Lo comprobamos de frente el 29 de septiembre de 2026, y lo contamos con los
+> números delante.
+>
+> Tomamos lo que la app calcula por su cuenta y lo pusimos al lado de lo que
+> publicaban ese día las mesas de análisis (MUFG, ING, NAB, Wells Fargo,
+> FXStreet, DailyForex). **Siete puntos, siete coincidencias:**
+>
+> | | lo que dice la app | lo que decían fuera |
+> |---|---|---|
+> | Dólar | fuerza **10,0 de 10** | DXY sobre 101, rendimientos al alza, Fed subiendo |
+> | EUR/USD | soporte de 20 días en **1,1353** | «mínimos de varias semanas cerca de **1,1350**» |
+> | USD/JPY | máximo de 20 días **159,0292** | máximo reciente **159,03** (MUFG) |
+> | AUD/USD | mínimo de 20 días **0,7004** | «desafiando la contención de **0,7000**» |
+> | AUD/USD RSI | **31** | **34** |
+> | USD/CAD | resistencia de 20 días **1,4178** | «el nivel crucial de **1,42**, ahí esperaría resistencia» |
+> | CAD | fuerza 0,8/10, fondos 15 % cortos | banco central en pausa, guerra comercial |
+>
+> Dos de esos números coinciden **al segundo decimal**. No es que se parezcan:
+> es el mismo mercado medido por dos caminos independientes.
+>
+> **Y hubo una discrepancia, que también te contamos:** la media de 20 días de
+> AUD/USD. La app decía 0,7081 y una de las fuentes 0,7100 — diecinueve pips,
+> probablemente media exponencial contra simple. No cambió ninguna conclusión,
+> pero cuando dos fuentes discrepan **el stop va del lado seguro**, y así se
+> hizo.
+>
+> ### ⚠️ Y ahora lo que esto NO significa, que es la parte que casi nadie te dice
+>
+> Que los datos coincidan quiere decir que la app **mide bien**. No quiere
+> decir que **acierte al operar**. Son dos cosas distintas:
+>
+> > Un termómetro que coincide con todos los demás termómetros es un buen
+> > termómetro. **Eso no quiere decir que sepa si va a llover.**
+>
+> Esta app mide el mercado igual de bien que cualquiera. Y su propio banco de
+> pruebas, sobre cinco años de mercado real y con los costes descontados, mide
+> que **decidir con esos datos pierde**: unos 3 centavos por cada dólar
+> arriesgado en la app de swing, unos 10 en la de intradía. Esos números están
+> en la pantalla de mediciones, dentro de la app.
+>
+> Medir bien es **necesario** para que algún día haya una ventaja. No es
+> suficiente. Quien te venda lo primero como si fuera lo segundo te está
+> vendiendo humo.
+>
+> ### Lo que la app tiene y las fuentes de fuera no
+>
+> Tres cosas concretas, y ninguna aparece en un artículo de análisis:
+>
+> · **El ranking de fuerza de las 8 divisas en una sola tabla.** Ese día el
+>   franco suizo estaba en 0,0 de 10 —el más débil de los ocho— y **no salió
+>   en ninguna de las fuentes consultadas**. Fue la base de dos de las cinco
+>   ideas del análisis.
+> · **El spread REAL de tu bróker, en vivo.** Ese día EUR/USD costaba 0,8 pips
+>   y EUR/NZD 3,3: **cuatro veces más**. Eso decide si una operación vale la
+>   pena, y ninguna web lo sabe porque depende de tu cuenta.
+> · **La correlación medida entre pares.** Es lo que reveló que las cinco ideas
+>   del análisis eran, en el fondo, **una sola apuesta al dólar expresada cinco
+>   veces**. Ningún analista externo puede decirte eso, porque no sabe qué más
+>   tienes abierto.
+>
+> ### Y una observación que no está en ningún lado por separado
+>
+> Ese día el franco suizo era la divisa más débil de las ocho **justo cuando
+> había tensión geopolítica que debería fortalecerlo** — es la moneda refugio
+> de manual. No lo estaba. Con su tasa en 0 % contra 3,875 % del dólar, el
+> carry le estaba ganando al refugio.
+>
+> Eso no sale de la app sola ni de los artículos solos. Sale de cruzarlos.
+
+## ⚠️ Lo que este día corrigió, y es un error mío que vale escribir
+
+En el informe que se le entregó a Néstor puse una tabla de «dónde las apps son
+CIEGAS», y la primera fila decía que el calendario da el dato anterior pero
+**no** el pronóstico del mercado, y que por eso la app «no puede saber» que se
+esperaba el RBA en 4,60 %.
+
+**Era falso por partida doble.** El feed de ForexFactory trae `forecast`,
+`normalizarEvento` lo guarda como `f`, el archivo publicado lo lleva en 21 de
+sus 30 eventos —incluido `Cash Rate previsto 4,60 % · anterior 4,35 %`— y
+`Calendario.jsx` **lo pinta en pantalla** (línea 222).
+
+📌 **Y el mecanismo del error es el que este archivo lleva meses coleccionando:**
+al extraer el calendario para analizarlo, mi propio comando imprimía `prev=` y
+**no imprimía el campo del pronóstico**. Miré los datos a través de un filtro
+que escondía justo lo que buscaba — literalmente lo mismo que pasó con
+`PARECE_DIVISA` en la sonda del COT, que tapó el contrato que se estaba
+buscando.
+
+**Antes de afirmar que un dato no existe, imprimir la fila entera.**
+
+## Los huecos que SÍ son reales, y cuáles se pueden cerrar
+
+De las seis filas de aquella tabla, una era falsa (arriba) y las otras cinco se
+reparten así:
+
+| hueco | ¿se puede cerrar? | cómo |
+|---|---|---|
+| Tendencia de las tasas, no solo el nivel | **sí, gratis** | los datos ya están guardados: el USD pasó de 3,625 % el 2026-09-09 a 3,875 %. Enseñar el cambio no pide ninguna fuente nueva |
+| Otros activos (oro, petróleo) | **sí, barato** | misma fuente que ya se usa; ~2 créditos más por corrida de los 800 |
+| El COT en percentil | **sí, gratis** | «+19,2 % en AUD» dice poco; «la posición más larga en N meses» dice algo. El histórico ya se baja |
+| Riesgo de intervención de un banco central | **no** | es texto, no números |
+| Geopolítica | **no** | ídem |
+
+⚠️ **Todo eso sería INFORMACIÓN, no filtros: no apagaría ni una señal.** Esa
+distinción es la que decide si hace falta medirlo antes. Un filtro («no operar
+dos horas antes de la Fed») va al banco de pruebas con su listón escrito antes
+— y van **siete familias de filtros medidas y siete fallando**.
+
+⚠️ Y sobre leer noticias con una máquina: se puede, pero es meter un
+intérprete que se equivoca **en silencio** dentro de una app cuyo argumento
+entero es no afirmar más de lo que se puede demostrar. No se hace sin decidirlo
+a conciencia.
