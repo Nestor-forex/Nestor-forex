@@ -13,15 +13,21 @@ import {
   CONTRATOS,
   CONTRATOS_MUERTOS,
   CONTRATOS_QUE_SON_CRUCES,
+  MINIMO_PERCENTIL,
+  SEMANAS_HISTORIA,
   TIPO_INFORME,
   diasDelDato,
   divisasOrdenadas,
   esIndice,
+  historiaDeFilas,
   leerFilas,
   neto,
   num,
   pctDelInteres,
+  percentil,
+  percentilesDeFilas,
   prepararCot,
+  ventanaDesigual,
 } from '../src/lib/cot.js'
 
 let hechas = 0
@@ -312,6 +318,167 @@ console.log('17. Aquí NO se decide comprar ni vender')
   for (const k of prohibidas) {
     ok(!(k in d), `el COT no devuelve «${k}»: es información, no un filtro`)
   }
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// EL PERCENTIL (añadido el 2026-09-29)
+// ═════════════════════════════════════════════════════════════════════════
+//
+// Una historia de mentira, pero con la FORMA de la real: filas de Socrata con
+// los números en texto, una por semana y por contrato.
+//
+// ⚠️ El AUD se construye a propósito como la divisa que este bloque existe para
+// explicar: está neto VENDIDO casi siempre, así que su valor de hoy puede ser
+// de lo más comprado que ha estado **para él** y seguir siendo un número
+// negativo. Es justo lo que el número suelto esconde.
+const historia = (nombre, valores) =>
+  valores.map((pct, i) => {
+    // `pct` es el % del interés abierto que se quiere obtener. Con un interés
+    // de 1000 contratos, el neto que lo produce es `pct * 10`.
+    const neto = Math.round(pct * 10)
+    const dia = String(((i % 28) + 1)).padStart(2, '0')
+    const mes = String(((i / 28) | 0) % 12 + 1).padStart(2, '0')
+    const anio = 2023 + (((i / 28) | 0) / 12 | 0)
+    return fila(
+      nombre,
+      `${anio}-${mes}-${dia}`,
+      '1000',
+      String(Math.max(0, neto)),
+      String(Math.max(0, -neto)),
+      '0',
+      '0',
+      '0',
+      '0',
+    )
+  })
+
+console.log('18. El percentil: rango medio, y «no lo sé» en vez de 50')
+{
+  // Cien valores de 0 a 99. El 50 tiene 50 por debajo y ninguno igual.
+  const cien = Array.from({ length: 150 }, (_, i) => i)
+  ok(percentil(cien, 0) === (100 * 0.5) / 150, 'el más bajo no da 0 exacto sino medio rango')
+  ok(percentil(cien, 149) === (100 * 149.5) / 150, 'el más alto no da 100 exacto sino medio rango')
+  ok(Math.abs(percentil(cien, 75) - 50.333) < 0.01, `el del medio ronda el 50 y dio ${percentil(cien, 75)}`)
+
+  // ⚠️ EL RANGO MEDIO IMPORTA con empates: sin él, la misma serie daría
+  // percentiles distintos según se cuente «<» o «<=».
+  const empates = Array.from({ length: 120 }, () => 5)
+  ok(percentil(empates, 5) === 50, `todo empatado tiene que dar 50 exacto y dio ${percentil(empates, 5)}`)
+  ok(percentil(empates, 6) === 100, 'por encima de todos los empates, 100')
+  ok(percentil(empates, 4) === 0, 'por debajo de todos los empates, 0')
+
+  // ⚠️ POR DEBAJO DEL MÍNIMO DEVUELVE `null`, NO 50. «No lo sé» y «está en el
+  // medio» no son lo mismo: un 50 inventado se leería como «posicionamiento
+  // normal». Misma decisión que `pearson` en `correlacion.js`.
+  ok(percentil([1, 2, 3], 2) === null, `con 3 valores devuelve null y devolvió ${percentil([1, 2, 3], 2)}`)
+  ok(percentil(cien.slice(0, MINIMO_PERCENTIL - 1), 5) === null, `con ${MINIMO_PERCENTIL - 1} valores, null`)
+  ok(percentil(cien.slice(0, MINIMO_PERCENTIL), 5) !== null, `con ${MINIMO_PERCENTIL} valores ya sí`)
+
+  ok(percentil(null, 5) === null, 'con null devuelve null sin reventar')
+  ok(percentil(cien, null) === null, 'sin valor devuelve null')
+  ok(percentil(cien, NaN) === null, 'con NaN devuelve null')
+  // Los huecos de la serie no cuentan como valores.
+  ok(percentil([...cien, null, undefined, NaN], 75) === percentil(cien, 75), 'los huecos se ignoran')
+}
+
+console.log('19. La historia por divisa, en orden y sin repetir semanas')
+{
+  const filas = [...historia(CONTRATOS.EUR, [1, 2, 3]), ...historia(CONTRATOS.AUD, [-5, -6])]
+  const h = historiaDeFilas(filas)
+  ok(h.EUR?.length === 3, `el EUR debía traer 3 semanas y trajo ${h.EUR?.length}`)
+  ok(h.AUD?.length === 2, `el AUD debía traer 2 semanas y trajo ${h.AUD?.length}`)
+  ok(Math.abs(h.EUR[0] - 1) < 0.01 && Math.abs(h.EUR[2] - 3) < 0.01, 'de más vieja a más nueva')
+
+  // Un contrato que no es de los ocho se ignora, igual que en `leerFilas`.
+  const conCruce = [...filas, ...historia('EURO FX/JAPANESE YEN XRATE', [50, 50])]
+  ok(
+    JSON.stringify(historiaDeFilas(conCruce)) === JSON.stringify(h),
+    'un cruce no entra en la historia de ninguna divisa',
+  )
+
+  ok(Object.keys(historiaDeFilas(null)).length === 0, 'con null devuelve {} sin reventar')
+  ok(Object.keys(historiaDeFilas('hola')).length === 0, 'con un texto devuelve {} sin reventar')
+}
+
+console.log('20. El percentil es contra la PROPIA historia de esa divisa')
+{
+  // ⚠️⚠️ LA COMPROBACIÓN QUE EXPLICA POR QUÉ ESTO EXISTE.
+  //
+  // El AUD va de −20 a −5 y hoy está en −5: para ÉL, lo más comprado de la
+  // ventana. El EUR va de 0 a 15 y hoy está en 0: para ÉL, lo más vendido.
+  //
+  // El número suelto diría «AUD −5 %, EUR 0 %», o sea que el euro está más
+  // comprado. El percentil dice lo contrario, y es lo que el número esconde.
+  const nSem = MINIMO_PERCENTIL + 20
+  const aud = Array.from({ length: nSem }, (_, i) => -20 + (15 * i) / (nSem - 1))
+  const eur = Array.from({ length: nSem }, (_, i) => 15 - (15 * i) / (nSem - 1))
+  const filas = [...historia(CONTRATOS.AUD, aud), ...historia(CONTRATOS.EUR, eur)]
+
+  const p = percentilesDeFilas(filas)
+  ok(p.AUD?.esMaximo === true, 'el AUD está en su MÁXIMO de la ventana aunque su número sea negativo')
+  ok(p.EUR?.esMinimo === true, 'el EUR está en su MÍNIMO de la ventana aunque su número sea positivo')
+  ok(p.AUD?.pct > 90, `el percentil del AUD debía ser alto y fue ${p.AUD?.pct}`)
+  ok(p.EUR?.pct < 10, `el percentil del EUR debía ser bajo y fue ${p.EUR?.pct}`)
+  ok(p.AUD?.min < 0 && p.AUD?.max < 0, 'los extremos del AUD son los dos negativos, y se publican')
+  ok(p.AUD?.n === nSem, `n debía ser ${nSem} y fue ${p.AUD?.n}`)
+
+  // Con pocas semanas NO aparece. No aparece con percentil 50.
+  const pocas = percentilesDeFilas(historia(CONTRATOS.EUR, [1, 2, 3]))
+  ok(!('EUR' in pocas), 'una divisa con 3 semanas no aparece en los percentiles')
+  ok(Object.keys(percentilesDeFilas(null)).length === 0, 'con null devuelve {} sin reventar')
+}
+
+console.log('21. La ventana desigual entre divisas se detecta')
+{
+  // ⚠️ EL FALLO QUE ESTO CAZA ESTÁ MEDIDO, no imaginado: con 520 semanas la
+  // CFTC devolvió 687 informes de cinco contratos y 242 de GBP, NZD y USD —los
+  // tres que renombró en febrero de 2022—, porque `$limit` es un tope GLOBAL de
+  // filas. Sin esta comprobación, la pantalla pondría un percentil de dos años
+  // al lado de uno de trece sin decirlo.
+  ok(ventanaDesigual({ A: { n: 156 }, B: { n: 156 } }) === false, 'misma ventana: no hay aviso')
+  ok(ventanaDesigual({ A: { n: 687 }, B: { n: 242 } }) === true, 'los números reales del fallo: sí hay aviso')
+  ok(ventanaDesigual({ A: { n: 156 }, B: { n: 154 } }) === false, 'dos semanas de diferencia no es desigual')
+  ok(ventanaDesigual({ A: { n: 156 } }) === false, 'con una sola divisa no se puede comparar: no hay aviso')
+  ok(ventanaDesigual(null) === false, 'con null no revienta')
+
+  // Y que la ventana pedida sea la comprobada con la sonda.
+  ok(SEMANAS_HISTORIA === 156, `SEMANAS_HISTORIA debía ser 156 (lo medido) y vale ${SEMANAS_HISTORIA}`)
+  ok(
+    SEMANAS_HISTORIA > MINIMO_PERCENTIL,
+    `no tiene sentido pedir ${SEMANAS_HISTORIA} semanas si hacen falta ${MINIMO_PERCENTIL}`,
+  )
+}
+
+console.log('22. El percentil TAMPOCO decide comprar ni vender')
+{
+  // ⚠️ Misma comprobación que el bloque 17, sobre los campos nuevos. El COT como
+  // FILTRO está medido y SUSPENDIÓ (2026-09-14: las once variantes pierden, y la
+  // dirección que gana cambia de una mitad del periodo a la otra). Un percentil
+  // se puede enseñar; deducir de él qué operar, no.
+  const nSem = MINIMO_PERCENTIL + 5
+  const p = percentilesDeFilas(
+    historia(CONTRATOS.EUR, Array.from({ length: nSem }, (_, i) => i / 10)),
+  ).EUR
+  const prohibidas = ['lado', 'senal', 'señal', 'compra', 'venta', 'direccion', 'dirección', 'extremo', 'sugerencia']
+  for (const k of prohibidas) {
+    ok(!(k in p), `el percentil no devuelve «${k}»: es información, no un filtro`)
+  }
+
+  // Y lo que se publica sobrevive el viaje por JSON, que es como llega al
+  // navegador. Un booleano o un número que no sobreviviera se vería distinto en
+  // la app de lo que el publicador escribió.
+  const publicado = prepararCot(REALES, new Date('2026-09-14T07:20:00Z'))
+  const releido = JSON.parse(JSON.stringify(publicado))
+  ok('percentiles' in releido, 'lo publicado trae el hueco de los percentiles')
+  ok(
+    JSON.stringify(releido.divisas) === JSON.stringify(publicado.divisas),
+    '`divisas` sale idéntico: el cambio es aditivo y un lector viejo no nota nada',
+  )
+  // Con las filas reales (una sola semana) NO hay percentil, y eso es correcto.
+  ok(
+    Object.keys(releido.percentiles).length === 0,
+    'con una sola semana de datos reales no se inventa ningún percentil',
+  )
 }
 
 console.log('')

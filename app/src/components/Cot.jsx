@@ -38,6 +38,31 @@ import { useCot } from '../lib/useCot'
 //    en ICE y es un contrato pequeño. «+10 % comprado» no significa lo mismo
 //    en esa fila que en las demás.
 //
+// **6. EL PERCENTIL (añadido el 2026-09-29) VA CONTRA LA PROPIA HISTORIA DE ESA
+//    DIVISA, Y LA PANTALLA TIENE QUE DECIRLO CON ESAS PALABRAS.**
+//
+//    Néstor lo pidió: «+19,2 % en AUD» no dice nada, «la posición más comprada
+//    de los últimos tres años» sí. Pero el número solo significa algo contra la
+//    historia de ESA divisa, y eso no es un matiz:
+//
+//      en una divisa que esté neta VENDIDA casi siempre, un −5 % puede ser lo
+//      más comprado que ha estado en tres años — mientras que ese mismo −5 % en
+//      otra sería de lo más normal.
+//
+//    ⚠️ Y no se nombra ninguna divisa: decir «el dólar australiano suele estar
+//    vendido» sería un hecho sobre el mercado sin medir, y encima el único dato
+//    real delante (+19,2 % esta semana) apunta al revés.
+//
+//    Sin decir «de esta misma divisa», dos percentiles de dos filas se leen
+//    como comparables y no lo son. Hay una comprobación en `prueba-cot.mjs`
+//    construida justo sobre ese caso.
+//
+//    ⚠️ Y SIGUE SIN SER UN VEREDICTO. El COT como filtro está medido y
+//    SUSPENDIÓ: las once variantes pierden, y la dirección que gana cambia de
+//    una mitad del periodo a la otra, que es la firma de una moneda al aire. Un
+//    percentil extremo no dice «vuelta» ni «continuación» — media industria lo
+//    lee de cada manera y no está medido cuál acierta.
+//
 // Va plegada por defecto, como el glosario, la correlación y las tasas: es
 // contexto, no lo primero que se viene a mirar.
 
@@ -85,6 +110,12 @@ export default function Cot() {
   const filas = divisasOrdenadas(datos)
   if (!filas.length) return null
 
+  // ⚠️ Un archivo publicado ANTES del 2026-09-29 no trae `percentiles`. Se
+  // aguanta sin reventar: se enseñan los niveles como siempre y la línea del
+  // percentil no sale. Misma decisión que con `correl` y con las tendencias de
+  // las tasas.
+  const hayPercentiles = Object.keys(datos.percentiles ?? {}).length > 0
+
   const dias = diasDelDato(datos.fecha)
   const fecha = datos.fecha
     ? new Date(datos.fecha + 'T00:00:00Z').toLocaleDateString(locale, {
@@ -116,7 +147,7 @@ export default function Cot() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {filas.map((d) => (
-              <Fila key={d.divisa} d={d} t={t} />
+              <Fila key={d.divisa} d={d} t={t} p={datos.percentiles?.[d.divisa]} />
             ))}
           </div>
 
@@ -130,11 +161,14 @@ export default function Cot() {
               idioma; en las columnas de datos (el % y los contratos) van en
               cifras latinas, `mono` y `ltr` fijo, como los precios. */}
           <p style={PIE}>{t('cot.pie', { fecha, dias: (dias ?? 0).toLocaleString(locale) })}</p>
+          {/* Solo se explica el percentil si hay alguno que explicar. Un archivo
+              publicado antes del 2026-09-29 no los trae. */}
+          {hayPercentiles && <p style={PIE}>{t('cot.piePercentil')}</p>}
     </TarjetaPlegable>
   )
 }
 
-function Fila({ d, t }) {
+function Fila({ d, t, p }) {
   const pct = d.fondosPct
   const etiqueta = pct > 0 ? t('cot.comprados') : pct < 0 ? t('cot.vendidos') : t('cot.igualados')
 
@@ -168,6 +202,41 @@ function Fila({ d, t }) {
       </div>
 
       <Barra pct={pct} />
+
+      {/* ⚠️ EL PERCENTIL, y va CONTRA LA PROPIA HISTORIA DE ESTA DIVISA. Ver el
+          punto 6 de la cabecera: sin decirlo, dos filas se leerían como
+          comparables entre sí y no lo son.
+
+          Neutro, como todo lo demás de esta tarjeta: un extremo no es bueno ni
+          malo, y media industria lo lee como continuación y la otra media como
+          vuelta. No está medido cuál acierta.
+
+          `<bdi>` alrededor de la frase entera y NO `dir="ltr"`: lleva números
+          dentro de texto traducido, y forzar la dirección al renglón despega el
+          `%` del número. Es la lección del calendario en árabe. */}
+      {p && (
+        <div style={{ marginTop: 5, fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.45 }}>
+          <bdi>
+            {/* ⚠️ POR DEBAJO DE 50 LA FRASE SE DA LA VUELTA, y esto salió
+                MIRANDO la captura. El franco suizo salía con «−12,3 %» y
+                debajo «más comprado que en el 5 % de sus últimas 156
+                semanas»: verdad —solo el 5 % de las semanas estuvo más
+                vendido— y se lee justo al revés de lo que pasa.
+
+                Es el MISMO hecho dicho por el lado que se entiende: si el 5 %
+                está por debajo, el 95 % está por encima, o sea que hoy está
+                más vendido que en el 95 % de sus semanas. Ni un número se
+                inventa; solo cambia desde qué extremo se cuenta. */}
+            {p.esMaximo
+              ? t('cot.esMaximo', { n: p.n })
+              : p.esMinimo
+                ? t('cot.esMinimo', { n: p.n })
+                : p.pct >= 50
+                  ? t('cot.percentil', { pct: p.pct.toFixed(0), n: p.n })
+                  : t('cot.percentilVendido', { pct: (100 - p.pct).toFixed(0), n: p.n })}
+          </bdi>
+        </div>
+      )}
 
       <div
         style={{

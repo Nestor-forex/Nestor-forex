@@ -36,10 +36,13 @@ import {
   COLUMNAS,
   CONJUNTO,
   CONTRATOS,
+  MINIMO_PERCENTIL,
+  SEMANAS_HISTORIA,
   TIPO_INFORME,
   diasDelDato,
   divisasOrdenadas,
   prepararCot,
+  ventanaDesigual,
 } from '../src/lib/cot.js'
 
 const DESTINO = join(process.env.VIGIA_DATOS || 'datos', 'estado', 'cot.json')
@@ -52,10 +55,29 @@ const comillas = (s) => `'${String(s).replace(/'/g, "''")}'`
 
 // ⚠️ SE PIDEN VARIAS SEMANAS, NO SOLO LA ÚLTIMA, y no es por capricho: si una
 // semana la CFTC no publica un contrato, con una sola semana esa divisa
-// desaparecería de la pantalla. Pidiendo diez semanas se enseña su último dato
-// con SU fecha, que es lo honesto. `leerFilas` se queda con la más reciente de
-// cada una.
-const SEMANAS = 10
+// desaparecería de la pantalla. Así se enseña su último dato con SU fecha, que
+// es lo honesto. `leerFilas` se queda con la más reciente de cada una.
+//
+// ⚠️ DE 10 SEMANAS A 156 (cambiado el 2026-09-29). Hasta esa fecha se pedían
+// diez, que bastan para el último dato y NO bastan para saber si ese dato es
+// mucho o es normal. Con tres años sale el PERCENTIL, que es la diferencia
+// entre «+19,2 % en AUD» —que no dice nada— y «la posición más comprada de los
+// últimos tres años».
+//
+// ⚠️⚠️ Y 156 NO SE PUEDE SUBIR SIN MÁS. Está medido con la sonda del
+// 2026-09-29: con 156 los ocho contratos traen 156 informes cada uno (ventana
+// idéntica, comparables); con 520 la respuesta trae 687 informes de cinco
+// contratos y solo 242 de GBP, NZD y USD — los tres que la CFTC renombró en
+// febrero de 2022. `$limit` es un tope GLOBAL de filas, no por contrato, así
+// que los de historial largo se comen el presupuesto. Eso no da error: da
+// percentiles de dos años al lado de percentiles de trece. Ver
+// `SEMANAS_HISTORIA` en `src/lib/cot.js` y la comprobación de `ventanaDesigual`.
+//
+// No cuesta un crédito ni un secreto: es el mismo organismo público y la misma
+// dirección. La descarga pasa de 29 KB a 449 KB, medio segundo, y la baja el
+// runner una vez al día — lo que viaja al teléfono sigue siendo pequeño, porque
+// la historia se resume aquí en un percentil y no se publica.
+const SEMANAS = SEMANAS_HISTORIA
 const TOPE = Object.keys(CONTRATOS).length * SEMANAS
 
 const URL =
@@ -128,14 +150,50 @@ console.log(`  informe del: ${datos.fecha}`)
 // Las ocho al log con sus números. No es adorno: si un día la pantalla enseña
 // algo raro, el log de ese día dice exactamente qué se publicó.
 console.log('')
-console.log('  divisa   neto fondos      % del interés   cambio semana   dato del')
+console.log('  divisa   neto fondos      % del interés   cambio semana   dato del     percentil (n · mín…máx)')
 for (const d of divisasOrdenadas(datos)) {
+  const p = datos.percentiles?.[d.divisa]
+  const cola = p
+    ? `${p.pct.toFixed(1).padStart(6)}  (${p.n} sem · ${p.min}…${p.max})` +
+      (p.esMaximo ? '  ← MÁXIMO de la ventana' : p.esMinimo ? '  ← MÍNIMO de la ventana' : '')
+    : '   — (sin suficiente historia)'
   console.log(
     `    ${d.divisa}   ${String(d.fondosNeto).padStart(12)}` +
       `   ${d.fondosPct.toFixed(1).padStart(10)} %` +
       `   ${String(d.cambioNeto ?? '—').padStart(10)}` +
-      `      ${d.f}`,
+      `      ${d.f}   ${cola}`,
   )
+}
+
+// ⚠️⚠️ LA VENTANA TIENE QUE SER LA MISMA PARA LAS OCHO, y esto lo vigila.
+//
+// El fallo que caza está MEDIDO, no imaginado: `$limit` es un tope GLOBAL de
+// filas, así que si se subiera `SEMANAS` demasiado, los cinco contratos con
+// historial largo se comerían el presupuesto y GBP, NZD y USD —renombrados por
+// la CFTC en febrero de 2022— se quedarían cortos. Con 520 semanas salían 687
+// informes contra 242.
+//
+// Eso no da ningún error: pondría un percentil de dos años al lado de uno de
+// trece en la misma pantalla. Es un aviso y no un fallo porque el archivo sigue
+// siendo útil (los niveles son correctos), pero hay que enterarse el día que
+// pase y no ocho meses después.
+if (ventanaDesigual(datos.percentiles)) {
+  const ns = Object.entries(datos.percentiles).map(([d, p]) => `${d}:${p.n}`)
+  console.log('')
+  console.log('⚠ VENTANAS DESIGUALES entre divisas: ' + ns.join(' · '))
+  console.log('  Los percentiles NO son comparables entre sí así.')
+  console.log(`  Lo más probable: SEMANAS (${SEMANAS}) es demasiado alto y el tope de filas`)
+  console.log('  se lo comen los contratos con historial largo. Bajarlo.')
+}
+
+// ⚠️ Un aviso, no un fallo: los niveles se publican igual. Que salga en el log
+// importa porque la primera explicación no es «esa divisa es nueva» sino «se
+// pidieron pocas semanas», y eso se arregla subiendo SEMANAS.
+const sinPercentil = Object.keys(datos.divisas).filter((d) => !datos.percentiles?.[d])
+if (sinPercentil.length) {
+  console.log('')
+  console.log(`⚠ Sin percentil (menos de ${MINIMO_PERCENTIL} semanas): ${sinPercentil.join(', ')}`)
+  console.log(`  Se publican igual con su nivel. Si se repite, mirar SEMANAS (hoy ${SEMANAS}).`)
 }
 
 const dias = diasDelDato(datos.fecha)
