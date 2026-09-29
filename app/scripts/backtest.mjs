@@ -1656,19 +1656,39 @@ console.log('═'.repeat(92))
 
   const ac = (x) => (x === null ? '  — ' : (x.toFixed(0) + '%').padStart(4))
   const pr = (x) => (x === null ? '   —  ' : ((x >= 0 ? '+' : '') + x.toFixed(2)).padStart(6))
+  // ⚠️ LA COLUMNA «BRUTO» (sin costes) SE AÑADIÓ EL 2026-09-29, y es la que
+  // distingue «la regla funciona mejor» de «el stop es más ancho, así que el
+  // spread pesa menos».
+  //
+  // Nació de una pregunta de Néstor —probar su indicador en temporalidades más
+  // altas— y de que los tres puntos que había (M15 −0,16, H1 −0,14, diario
+  // −0,08) mejoran al subir SIN que se pudiera saber por qué: en velas de un día
+  // el stop es ~120 pips y 2 de spread son el 1,8 % del riesgo; en velas de una
+  // hora el stop es ~30 y los mismos 2 pips son el 7 %. O sea que el gradiente
+  // podía ser la regla mejorando o solo menos peaje, y sin esta columna no había
+  // forma de distinguirlo.
+  //
+  // ⚠️ La fila de DIARIO es la que más importa aquí: es la única de las tres que
+  // midió positivo en el control (+0,02), y es la temporalidad de esta app.
+  //
+  // Cuesta cero: `medir` vuelve a sumar sobre señales ya resueltas, no regenera.
   const linea = (nombre, r, filtro = null) => {
     const ss = filtro ? r.senales.filter(filtro) : r.senales
+    const bruto = medir(ss, r.porClave)
     const m = medir(ss, r.porClave, { conSpread: true })
     const m1 = medir(ss.filter((x) => x.vistoEl < corteLSS), r.porClave, { conSpread: true })
     const m2 = medir(ss.filter((x) => x.vistoEl >= corteLSS), r.porClave, { conSpread: true })
     const eq = m.equilibrio === null ? '  — ' : `${m.equilibrio.toFixed(0).padStart(3)}%`
     console.log(
-      `${nombre.padEnd(34)} ${String(m.total).padStart(5)}   ${ac(m.acierto)}  ${eq}  ${pr(m.porRiesgo)}  │ ` +
+      `${nombre.padEnd(34)} ${String(m.total).padStart(5)}   ${ac(m.acierto)}  ${eq}  ` +
+        `${pr(bruto.porRiesgo)}  ${pr(m.porRiesgo)}  │ ` +
         `${String(m1.total).padStart(4)} ${pr(m1.porRiesgo)} │ ${String(m2.total).padStart(4)} ${pr(m2.porRiesgo)}`
     )
+    return { bruto, m, m1, m2, ss }
   }
-  const RAYA_LSS = '─'.repeat(92)
-  const CABL = 'qué se midió                       ops   acierto  equil.   por 1R  │  1ª mit  │  2ª mit'
+  const RAYA_LSS = '─'.repeat(102)
+  const CABL =
+    'qué se midió                       ops   acierto  equil.    bruto   por 1R  │  1ª mit  │  2ª mit'
 
   // ── 1. La vara neutra: ¿sabe hacia dónde va el precio? ──────────────────
   console.log('')
