@@ -6971,3 +6971,150 @@ gradiente sin costes**». El gradiente se confirmó. Y aun así la recomendació
 
 ⚠️ **Y lo que NO hay que hacer con esto:** aflojar un criterio del listón. Para
 eso se escribió antes de correrlo.
+
+---
+
+# El oro, y por qué NO es solo un precio (2026-09-29). Solo Swing
+
+Cierra la última fila abierta de la tabla de «dónde las apps son CIEGAS». El
+petróleo **no entra** y el motivo está medido: `WTI/USD` contesta *«This symbol
+is available starting with the Grow or Venture plan»*, y los únicos que
+responden gratis (`USO`, `BNO`) son **ETF** — siguen al crudo pero no son el
+crudo. Llamarlos «petróleo» sería justo la etiqueta equivocada.
+
+```
+app/src/lib/oro.js             las cuentas puras (Node + navegador)
+app/scripts/publicar-oro.mjs   baja XAU/USD y escribe estado/oro.json
+app/src/lib/useOro.js          lo lee desde la app
+app/src/components/Oro.jsx     la tarjeta, la última de la pestaña Barrido
+app/scripts/prueba-oro.mjs     66 comprobaciones, sin internet
+.github/workflows/oro.yml      lunes a viernes, 07:50 UTC
+```
+
+## ⚠️⚠️ LA DECISIÓN QUE DA SENTIDO A TODA LA TARJETA
+
+**El precio del oro, solo, habría sido la primera tarjeta decorativa de esta
+app.** «Oro 4.131, +0,4 %» no dice nada sobre ningún par, y lo que pasa cuando
+un número no dice nada es que cada uno le pone el significado que ya traía:
+«el oro sube → hay miedo → compro francos». Eso es una afirmación sobre el
+mercado que **nadie ha medido aquí**.
+
+Así que la tarjeta no la afirma: la **MIDE**. La correlación del oro con cada
+uno de los 14 pares, con el mismo motor, la misma ventana de 60 sesiones y la
+misma disciplina que la correlación entre pares.
+
+📌 Es lo mismo que hace creíble al resto de la app: no se cuenta la relación,
+se enseña el número.
+
+## ⚠️ LO QUE CUESTA, DICHO SIN ADORNOS: 15 CRÉDITOS, NO 1
+
+Le dije a Néstor «el oro cuesta un crédito al día». **El oro solo, sí.** La
+versión construida cuesta **15**: 1 el oro y **14 los pares de la
+correlación**, que es exactamente la diferencia entre la tarjeta que informa y
+la que decora.
+
+Gasto total de Swing al día: 14 (vigía) + 7 (reporte) + **15 (oro)** = **36 de
+800**. Queda sitio de sobra.
+
+⚠️ **Y por eso el workflow SÍ lleva `TWELVEDATA_KEY`**, al revés que el del COT
+y el de las tasas. Sin ese `env` el guion falla.
+
+## ⚠️ La trampa que este código existe para evitar: `GOLD` NO es oro
+
+La sonda pidió `GOLD` y `CL` a Twelve Data y **las dos contestaron 200 con
+cinco velas perfectamente válidas** — de una ACCIÓN de la bolsa de Nueva York
+(42,85 y 86,52). `WTI` resultó ser «W&T Offshore Inc.» y `BZ` una empresa china
+de reclutamiento.
+
+Un lector que aceptara «200 con velas» habría publicado **«oro: 42,85»**, con
+su fecha, su máximo y su mínimo, y completamente falso. **No se caza por el
+código de respuesta: se caza mirando `type`.** `esOroDeVerdad` lo exige y el
+publicador se niega a escribir si no cuadra.
+
+## Las decisiones que no hay que ablandar
+
+⚠️ **LAS FECHAS SE INTERSECAN, SIEMPRE.** El oro viene de UNA consulta y los 14
+pares de OTRA, y sus calendarios no coinciden. Comparar por POSICIÓN —el
+elemento 5 del oro contra el 5 del par— bastaría un día de diferencia para
+estar comparando el martes del oro con el miércoles del par, y **no daría
+ningún error**: daría una correlación creíble calculada sobre días distintos.
+Misma familia que el ATR de cierre a cierre. Cada fila lleva **su** número de
+sesiones comunes, porque una puede salir de 60 y otra de 45.
+
+⚠️ **SI NO SALE NI UNA CORRELACIÓN, NO SE PUBLICA** y el workflow falla. Es el
+fallo silencioso propio de este guion: el precio seguiría saliendo bien y en
+pantalla se vería una tarjeta correcta «a la que hoy no le salieron
+correlaciones», indistinguible de un mercado tranquilo. Mismo peligro que
+vigila el respaldo del historial: lo grave no es que algo desaparezca, es que
+encoja en silencio.
+
+⚠️ **65 SEGUNDOS DE PAUSA ENTRE EL ORO Y LOS PARES**, y es aritmética: el plan
+gratuito da **8 créditos por minuto**, el oro gasta 1 y `obtenerVelas` arranca
+pidiendo 7 sin esperar. 1 + 7 = 8, **justo en el límite y sin un crédito de
+margen**. Un 429 ahí no se ve venir: faltarían algunos pares, la correlación
+saldría con menos filas y la tarjeta se vería bien.
+
+⚠️ **NADA SE PINTA DE VERDE NI DE ROJO, y NADA DEVUELVE UN VEREDICTO.** Que el
+oro suba no es bueno ni malo para quien opera Forex: depende del par y del
+lado. El oro como **FILTRO** cambiaría las señales y tendría que pasar por el
+banco de pruebas con su listón escrito antes, como el COT — que se midió y
+suspendió. Hay una comprobación que falla si aparece un veredicto.
+
+⚠️ **NO SE PUBLICA NINGUNA SERIE DE CIERRES.** Hubo un `serie20` para un
+gráfico y se quitó **antes de llegar a producción**, por dos motivos. El
+general: publicar un dato que nadie pinta es el descuido del tick volume, que
+estuvo un día entero llegando a la nada. El propio: el `Sparkline` de esta app
+**pinta verde si subió y rojo si bajó**, y en el oro eso diría «que suba es
+bueno» — la afirmación que la tarjeta existe para no hacer. Un gráfico aquí
+pide un `Sparkline` neutro, o sea tocar un GEMELO por un adorno. Primero el
+color, después el gráfico.
+
+## 📌 El fallo de árabe que se arregló a sí mismo al revés
+
+La primera versión formateaba los días con el locale **«para evitar el fallo
+del COT»**. Leyendo el árabe de verdad en el navegador salió esto:
+
+```
+بيانات 2026-09-26 — منذ ٣ يومًا
+```
+
+La fecha es una cadena ISO —latina siempre— y el `toLocaleString` sacaba el
+`٣` en árabo-índicas. **Dos sistemas de dígitos en la misma frase: el fallo del
+COT exacto, provocado por lo que se puso para evitarlo.** En el mismo renglón
+van además `−1`, `+1` y `0`, latinos los tres.
+
+📌 **La regla no es «localizar siempre» ni «nunca»: es mirar qué más hay en la
+frase.** Donde el vecino es un `toLocaleDateString`, se localiza; donde es una
+fecha ISO, no. Hay comprobación en el banco de navegador que mira el **renglón
+entero** y no el número suelto.
+
+## 📌 Y el `grep` con la palabra equivocada, por tercera vez
+
+Al comprobar que la prueba nueva muerde conté los fallos con `grep -c "MAL"` y
+salió **0**, con el daño puesto en su sitio. El marcador de ese guion es `✗`.
+La prueba mordía perfectamente. Es hermano del `grep borrar` del 2026-09-14 y
+del `grep FALLA` del 2026-09-15. **El daño sí se comprobó en el archivo antes
+de sacar conclusiones, que es lo único que salvó esto.**
+
+## Cómo se verificó
+
+Lint, build y las 29 pruebas sin internet. Los **59 gemelos** siguen idénticos
+(el oro es solo de Swing, así que no hay cambio emparejado).
+
+Y en **Chromium a 390 px**, componente aislado (la tarjeta está detrás de
+Firebase), en cuatro cargas separadas:
+
+| caso | resultado |
+|---|---|
+| español | 6 correlaciones (≥0,5), ordenadas por valor ABSOLUTO, −0,81 arriba |
+| **árabe** | todo reflejado, **16 hojas de datos y 0 en `rtl`** con el CSS calculado |
+| `correl: {}` | **aquí SÍ dice que no hay nada** — la tarjeta ya está abierta enseñando un precio, y el hueco en silencio se leería como un olvido |
+| sin archivo | **no pinta absolutamente nada** |
+
+Cero errores de consola y cero desplazamiento lateral en los cuatro.
+
+⚠️ **Los números del navegador son INVENTADOS, y esta vez del todo.** El
+workflow no ha corrido aún, así que no hay archivo real de producción que
+enchufar —al revés que con el COT y las tasas—. Los nombres de par sí son los
+14 de verdad. **Lo comprobado es cómo se PINTA**, no que esas correlaciones
+sean las de hoy.

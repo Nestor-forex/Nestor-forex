@@ -480,6 +480,23 @@ export default {
     pie: (v) => `Kaynak: BIS (Uluslararası Ödemeler Bankası). BIS birkaç gün gecikmeyle yayınlar, bu yüzden her satırın tarihi KENDİ verisinin nereye kadar geldiğini gösterir — o bankanın karar verdiği günü değil. En eskisi ${v.dias} gün önce.`,
   },
 
+  oro: {
+    paraQue: 'Yatırımcılar altına bakar, çünkü genelde dolarla ters yönde hareket eder ve piyasa gerildiğinde yükselir. Ama bu bir alışkanlıktır, kural değil: burada bunu söylemiyoruz — son 60 seansta her paritenin yanında ne kadar hareket ettiğinin ölçülmüş sayısını gösteriyoruz, işine yarayıp yaramadığına sen karar ver.',
+    titulo: 'Altın',
+    desc: 'Paritelerinle ne kadar birlikte hareket ediyor',
+    aviso: '⚠️ Bu bir sinyal DEĞİLDİR. Altın hiçbir paritede al ya da sat demez. Aşağıdaki, son üç ayda ne kadar BİRLİKTE hareket ettikleridir — geçmişe dair bir olgu, tahmin değil. Ve iki şeyin birlikte hareket etmesi, birinin diğerini hareket ettirdiği anlamına gelmez.',
+    dolares: 'ons başına dolar',
+    enUnDia: 'Bir günde',
+    enVeinteDias: '20 günde',
+    intro: 'Fiyatın kendisi üzerinden değil, her günün değişimi üzerinden ölçülür ve yalnızca ikisinde de veri olan seanslar kullanılır. Listede ne kadar yukarıdaysa hareketleri o kadar benzer.',
+    cabeceraCorrel: 'Altın her pariteyle ne kadar birlikte hareket ediyor',
+    juntos: 'Aynı yönde hareket ediyorlar',
+    alReves: 'Ters yönde hareket ediyorlar',
+    sobreDias: (v) => `${v.n} ortak seans`,
+    sinCorrel: 'Son seanslarda hiçbir parite altına benzer şekilde hareket etmedi. Bu da bir veridir: bugün altın bu on dört parite hakkında sana bir şey söylemiyor.',
+    pie: (v) => `Kaynak: Twelve Data, spot fiyat (XAU/USD), ${v.fecha} verisi — ${v.dias} gün önce. Sayı −1 ile +1 arasındadır: +1\u2019e yakınsa neredeyse aynı hareket ederler, −1\u2019e yakınsa ters, 0\u2019a yakınsa benzemezler. Her satır kaç seans üzerinden hesaplandığını söyler.`,
+  },
+
   cot: {
     paraQue: 'Yatırımcılar bir bahsin çoktan kalabalıklaşıp kalabalıklaşmadığını anlamak için bakar: büyükler neredeyse tamamen aynı taraftaysa, girecek az, çıkacak çok kişi kalır. Haftalık ve gecikmeli bir arka plan bilgisidir. Hangi pariteyi ne zaman işlem yapacağınızı söylemez.',
     titulo: 'Commitments of Traders',

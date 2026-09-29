@@ -485,6 +485,23 @@ export default {
     pie: (v) => `Quelle: BIS (Bank für Internationalen Zahlungsausgleich). Die BIS veröffentlicht mit einigen Tagen Verzögerung, deshalb sagt das Datum jeder Zeile, bis wann IHRE Daten reichen — nicht den Tag, an dem diese Bank entschieden hat. Das älteste ist ${v.dias} Tage alt.`,
   },
 
+  oro: {
+    paraQue: 'Trader schauen auf Gold, weil es sich meist gegenläufig zum Dollar bewegt und steigt, wenn der Markt nervös wird. Aber das ist eine Gewohnheit, kein Gesetz: hier sagen wir es dir nicht — wir zeigen dir die gemessene Zahl, wie stark es sich in den letzten 60 Sitzungen gemeinsam mit jedem Paar bewegt hat, und du entscheidest, ob dir das nützt.',
+    titulo: 'Gold',
+    desc: 'Wie stark es sich mit deinen Paaren bewegt',
+    aviso: '⚠️ Das ist KEIN Signal. Gold sagt bei keinem Paar kaufen oder verkaufen. Unten steht, wie stark sie sich in den letzten drei Monaten GEMEINSAM bewegt haben — eine Tatsache über die Vergangenheit, keine Vorhersage. Und dass sich zwei Dinge gemeinsam bewegen, heißt nicht, dass eines das andere bewegt.',
+    dolares: 'Dollar je Unze',
+    enUnDia: 'An einem Tag',
+    enVeinteDias: 'In 20 Tagen',
+    intro: 'Gemessen wird an der Veränderung jedes Tages, nicht am Preis, und nur an Sitzungen, die in beiden Daten haben. Je weiter oben, desto ähnlicher ihre Bewegungen.',
+    cabeceraCorrel: 'Wie stark sich Gold mit jedem Paar bewegt',
+    juntos: 'Sie bewegen sich gemeinsam',
+    alReves: 'Sie bewegen sich gegenläufig',
+    sobreDias: (v) => `${v.n} gemeinsame Sitzungen`,
+    sinCorrel: 'Kein Paar hat sich in den letzten Sitzungen ähnlich wie Gold bewegt. Auch das ist eine Angabe: heute sagt dir Gold nichts über diese vierzehn.',
+    pie: (v) => `Quelle: Twelve Data, Kassapreis (XAU/USD), Wert vom ${v.fecha} — vor ${v.dias} Tagen. Die Zahl reicht von −1 bis +1: nahe +1 bewegen sie sich fast gleich, nahe −1 gegenläufig, nahe 0 gar nicht ähnlich. Jede Zeile nennt, über wie viele Sitzungen gerechnet wurde.`,
+  },
+
   cot: {
     paraQue: 'Trader schauen darauf, um zu sehen, ob eine Wette schon überfüllt ist: Wenn fast alle Großen auf derselben Seite stehen, bleiben wenige zum Einsteigen und viele zum Aussteigen. Das ist Hintergrund, wöchentlich und verzögert. Es sagt nicht, welches Paar oder wann.',
     titulo: 'Commitments of Traders',

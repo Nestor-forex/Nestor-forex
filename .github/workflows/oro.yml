@@ -1,0 +1,112 @@
+name: Oro (XAU/USD y su correlación con los pares)
+
+# Baja el precio al contado del oro y lo publica en `estado/oro.json` de la rama
+# `datos`, junto con su correlación MEDIDA con los 14 pares. La app lo lee de
+# ahí.
+#
+# Ver la cabecera de `app/src/lib/oro.js` para por qué la tarjeta no es solo un
+# precio: «oro 4.131, +0,4 %» en una app de Forex no dice nada sobre ningún par
+# e invita a que cada uno se invente la relación. El número medido la sustituye.
+#
+# ⚠️⚠️ ESTO SÍ GASTA CRÉDITOS DE TWELVE DATA: **15 de los 800 del día** — 1 el
+# oro y 14 los pares de la correlación. Gasto total de Swing al día:
+# 14 (vigía) + 7 (reporte) + 15 (esto) = 36 de 800.
+#
+# ⚠️ Y POR ESO NECESITA EL SECRETO. Sin el `env` de abajo, `leerLlave` no
+# encuentra la llave y el guion falla — la llave se sacó de `.env.production` el
+# 2026-09-03 justamente para que no viajara dentro de la app. Cualquier workflow
+# nuevo que llame a estos guiones tiene que pasarle el secreto.
+
+on:
+  schedule:
+    # 07:50 UTC, de lunes a viernes.
+    #
+    # LA HORA: después del COT (07:20, que no gasta créditos) y a más de siete
+    # horas del reporte (15:30) y del vigía (15:50, 16:20, 16:50). Esa distancia
+    # es lo que importa: el plan gratuito da 8 créditos POR MINUTO, así que dos
+    # guiones pidiendo velas a la vez se estorbarían con 429 y ninguno de los
+    # dos daría error claro.
+    #
+    # LOS DÍAS: el oro cotiza de domingo 22:00 UTC a viernes 21:00 UTC. Correr
+    # sábado y domingo gastaría 30 créditos a la semana para volver a bajar el
+    # cierre del viernes, que ya está publicado.
+    #
+    # ⚠️ Y AQUÍ LA DECISIÓN ES LA CONTRARIA A LA DEL COT, a propósito. Allí se
+    # corre a diario porque **el reloj de GitHub se salta horas** —el vigía de
+    # Swing perdió el viernes 5 de septiembre entero— y una corrida semanal
+    # convertiría un salto en una semana de retraso. Aquí un salto cuesta que la
+    # tarjeta diga «hace 2 días» en vez de «hace 1 día», **y lo dice ella
+    # misma**: el archivo lleva dentro la fecha de SU dato. Un retraso que se
+    # delata en pantalla no hace falta blindarlo con créditos.
+    - cron: '50 7 * * 1-5'
+  workflow_dispatch:
+
+# Escribe en la rama `datos`: por defecto el token de Actions es de solo
+# lectura.
+permissions:
+  contents: write
+
+concurrency:
+  group: oro
+  cancel-in-progress: false
+
+jobs:
+  oro:
+    runs-on: ubuntu-latest
+    # Sin esto GitHub deja correr un trabajo hasta SEIS HORAS, y con
+    # `concurrency` sin cancelar una corrida atascada bloquearía las siguientes
+    # media jornada.
+    #
+    # Lo normal aquí son ~2,5 minutos: el oro, 65 s de pausa para no rozar el
+    # límite de créditos por minuto, la primera tanda de 7 pares, otros 65 s y
+    # la segunda. 10 minutos dejan margen para reintentos sin dejar la cola
+    # bloqueada.
+    timeout-minutes: 10
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - name: Traer los datos
+        uses: actions/checkout@v4
+        with:
+          ref: datos
+          path: datos
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # No hace falta `npm ci`: el publicador solo usa `fetch` y `node:fs`, que
+      # vienen con Node, más funciones puras de `src/lib/`.
+      - name: Bajar y preparar
+        working-directory: app
+        env:
+          # ⚠️ SIN ESTO EL GUION FALLA. Ver la cabecera.
+          TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
+          VIGIA_DATOS: ${{ github.workspace }}/datos
+        run: node scripts/publicar-oro.mjs
+
+      - name: Guardar
+        working-directory: datos
+        run: |
+          git config user.name 'Oro Nestor Forex Swing'
+          git config user.email 'noreply@anthropic.com'
+          git add estado/oro.json
+          # ⚠️ AQUÍ «no cambió nada» SÍ ES SOSPECHOSO, al revés que en el COT.
+          #
+          # Allí el informe es semanal y seis días de cada siete no cambia nada.
+          # Aquí el archivo lleva `actualizadoEl`, que cambia en CADA corrida,
+          # así que un diff vacío solo puede significar que el guion no escribió
+          # — y eso no puede pasar en silencio.
+          if git diff --cached --quiet; then
+            echo '✗ El archivo del oro no cambió, y `actualizadoEl` debería cambiar siempre.'
+            echo '  Eso significa que el guion no escribió nada. Mirar el paso anterior.'
+            exit 1
+          fi
+          git commit -m "Oro $(date -u +'%Y-%m-%d')"
+          for i in 1 2 3; do
+            git pull --rebase origin datos && git push origin HEAD:datos && exit 0
+            sleep $((i * 5))
+          done
+          echo 'No se pudo guardar tras 3 intentos.'
+          exit 1
