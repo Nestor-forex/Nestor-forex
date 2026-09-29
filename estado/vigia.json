@@ -1,5 +1,5 @@
 {
-  "actualizadoEl": "2026-09-28T21:23:19.173Z",
+  "actualizadoEl": "2026-09-29T20:14:37.219Z",
   "cierre": "2026-09-29",
   "senales": [
     "USD/CHF|COMPRA|tendencia",
@@ -8,8 +8,11 @@
     "NZD/USD|VENTA|tendencia",
     "AUD/USD|VENTA|tendencia",
     "EUR/USD|VENTA|tendencia",
+    "NZD/USD|COMPRA|reversion",
+    "AUD/USD|COMPRA|reversion",
     "USD/CHF|VENTA|reversion",
-    "USD/CAD|VENTA|reversion",
-    "NZD/USD|COMPRA|reversion"
+    "NZD/USD|COMPRA|caida",
+    "AUD/USD|COMPRA|caida",
+    "USD/CHF|VENTA|caida"
   ]
 }
