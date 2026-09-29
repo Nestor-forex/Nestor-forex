@@ -1,0 +1,51 @@
+name: Sonda de los tres huecos
+
+# Contesta las tres preguntas que hacen falta para que las apps dejen de estar
+# ciegas donde sí se puede: la TENDENCIA de las tasas (no solo el nivel), el COT
+# en PERCENTIL (no solo el número de esta semana) y el ORO Y EL PETRÓLEO.
+# Ver la cabecera de app/scripts/sonda-huecos.mjs.
+#
+# EXISTE POR EL MISMO MOTIVO QUE LAS OTRAS SONDAS: la red de las sesiones donde
+# se programa esta app bloquea `stats.bis.org`, `publicreporting.cftc.gov` y
+# `api.twelvedata.com` — comprobado con `curl` el 2026-09-29, los tres dan
+# `CONNECT tunnel failed, response 403`. Desde allí no se puede ver ni si
+# responden. Primero se mira, después se escribe el lector.
+#
+# ⚠️ GASTA HASTA 8 CRÉDITOS de Twelve Data, una sola vez: la tercera pregunta
+# prueba ocho nombres distintos de oro y petróleo porque no se sabe cuál es el
+# bueno. Las dos primeras son de organismos públicos y no gastan nada.
+#
+# ⚠️ LLEVA EL SECRETO A PROPÓSITO. Sin él la tercera pregunta se queda sin
+# mirar, y la sonda lo dice con esas palabras en vez de dar por hecho que no
+# existe el dato. Es la regla de esta casa desde que un workflow se quedó sin
+# `env` y habría fallado sin explicación.
+#
+# Solo a mano. No tiene sentido programarlo: se lanza cuando hay que decidir.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    # Las peticiones tienen 45 s de tope cada una, y la tercera pregunta lleva
+    # una pausa de 65 s en medio para no pasarse de los 8 créditos por minuto.
+    # Con 10 minutos sobra; sin esto GitHub lo dejaría correr seis horas.
+    timeout-minutes: 10
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # No hace falta `npm ci`: la sonda solo usa `fetch`, que ya viene en Node.
+      - name: Sondear
+        working-directory: app
+        env:
+          TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
+        run: node scripts/sonda-huecos.mjs
