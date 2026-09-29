@@ -6740,3 +6740,234 @@ dos horas antes de la Fed») va al banco de pruebas con su listón escrito antes
 intérprete que se equivoca **en silencio** dentro de una app cuyo argumento
 entero es no afirmar más de lo que se puede demostrar. No se hace sin decidirlo
 a conciencia.
+
+---
+
+# Las apps dejan de estar ciegas donde se puede (2026-09-29)
+
+Néstor, sobre la tabla de «dónde las apps son ciegas»: **«¿por qué no hacemos
+algo para que ya no estén ciegas?»**. De las seis filas de aquella tabla:
+
+| fila | qué pasó |
+|---|---|
+| el pronóstico del calendario | **era un error mío.** Ya lo trae y ya lo pinta |
+| riesgo de intervención de un banco central | **texto, no números.** No se cierra |
+| geopolítica | ídem |
+| **tendencia de las tasas** | ✅ **hecho**, gratis, en las dos apps |
+| **el COT en percentil** | ✅ **hecho**, gratis, solo Swing |
+| **oro y petróleo** | ⚠️ **el oro sí; el petróleo NO** — ver abajo |
+
+## La sonda primero, y contestó tres cosas de las que dos eran trampas
+
+`app/scripts/sonda-huecos.mjs` + su workflow a mano. Los tres hosts están
+**bloqueados** desde el entorno donde se programa —comprobado con `curl`, no
+supuesto: `CONNECT tunnel failed, response 403` en `stats.bis.org`,
+`publicreporting.cftc.gov` y `api.twelvedata.com`—, así que desde allí no se
+puede ver ni si responden. Mismo camino que el calendario, las tasas, el COT y
+el sentimiento.
+
+### ⚠️⚠️ TRAMPA 1: el BIS publica filas con `OBS_VALUE` VACÍO
+
+De 1000 observaciones, Nueva Zelanda trae **283 huecos** y Canadá 122. Contar
+los escalones sin quitarlos convierte cada hueco en DOS cambios de tasa:
+
+```
+2026-09-07: 2.75  →  2026-09-12: (vacío)  →  2026-09-14: 2.75
+```
+
+Nueva Zelanda salía con **294 cambios** en vez de 12.
+
+📌 Y el daño no habría sido un número raro en un log. Al romperlo a propósito
+para comprobar que la prueba muerde salió lo peor: en el Reino Unido el hueco
+entraba como 0, así que el último escalón pasaba de `4 → 3.75` a `0 → 3.75` y
+**la pantalla habría dicho que el Banco de Inglaterra SUBIÓ su tasa cuando la
+bajó.** Un dato correcto sobre algo distinto de lo que uno cree medir, otra vez.
+
+### ⚠️⚠️ TRAMPA 2: `CL` y `GOLD` de Twelve Data no son petróleo ni oro
+
+Tres símbolos respondieron 200 con cinco velas perfectamente válidas:
+
+| símbolo | precio | `type` | qué es de verdad |
+|---|---:|---|---|
+| **XAU/USD** | 4131,58 | Precious Metal | ✅ **oro de verdad** |
+| CL | 86,52 | Common Stock (NYSE) | una acción |
+| GOLD | 42,85 | Common Stock (NYSE) | una acción |
+| WTI | 3,58 | Common Stock (NYSE) | **«W&T Offshore Inc.»** |
+| BZ | 14,18 | ADR (NASDAQ) | **«Kanzhun Ltd»**, reclutamiento |
+
+Un lector que aceptara «200 con velas» habría publicado **«oro: 42,85»** — con
+su fecha, su máximo y su mínimo, y completamente falso. **No se caza por el
+código de respuesta: se caza mirando `type`.** Ahora la sonda lo exige y a lo
+que venga como acción le pregunta el nombre a `/quote`.
+
+📌 **Y el agravante, que es lo que más vale escribir:** el RESUMEN de mi propia
+sonda imprimió «SÍ — sirven: XAU/USD, CL, GOLD» mientras el detalle, tres
+pantallas más arriba, traía el `meta` que lo desmentía — que yo había puesto a
+propósito. **Un resumen que ignora lo que el detalle ya sabe es peor que no
+tener resumen, porque se lee como la conclusión.**
+
+### ⚠️ TRAMPA 3: `$limit` de la CFTC es un tope GLOBAL de filas
+
+Con 520 semanas la respuesta trae 687 informes de cinco contratos y **solo 242
+de GBP, NZD y USD** — los tres que la CFTC renombró en febrero de 2022. Los de
+historial largo se comen el presupuesto. Eso no da error: daría percentiles de
+dos años al lado de otros de trece, en la misma pantalla. **Con 156 semanas los
+ocho traen 156 informes cada uno**, y por eso ése es el número.
+
+## 1. La tendencia de las tasas — GEMELO, en las dos apps
+
+El publicador pasa de `lastNObservations=1` a **1000**. Con eso viene la serie
+entera: 5,5 MB, 0,7 s, cero créditos, ningún secreto. Lo que viaja al teléfono
+sigue pesando **menos de 2 KB**, porque la serie se resume aquí y no se publica.
+
+El tamaño sale de la sonda: con 1000 las OCHO zonas tienen al menos 6 cambios
+reales dentro (Japón 6, EE. UU. 8, Suiza 10, zona euro 11, Canadá y NZ 12,
+R. Unido 13, Australia 14). Con 400 alcanzaba por poco.
+
+⚠️ **Se dice «vigente desde», NUNCA «lo decidieron ese día».** Con huecos en la
+serie, un cambio ocurrido dentro de uno aparece fechado el primer día publicado
+después. Lo que se puede afirmar es desde cuándo la serie la VE así.
+
+⚠️ **Una divisa SIN cambio en la ventana no enseña nada** — ni flecha, ni «sin
+cambios». Suiza lleva en 0 % toda la ventana; decir «está quieta» sería una
+afirmación sobre su banco central. Misma decisión que `pearson` con `null`.
+
+📌 **Y de paso, `tasas.pie` llevaba meses con un motivo falso** en los 13
+idiomas: «una tasa de referencia solo cambia el día que se reúne el banco
+central». La serie lo desmiente — el retraso es de **publicación**, entre 7 y 12
+días. Es «al cambiar algo, mirar quién lo NOMBRA», esta vez al revés: el dato
+nuevo desmintió la explicación vieja.
+
+## 2. El percentil del COT — solo Swing
+
+«+19,2 % en AUD» no dice nada. «Lo más comprado de sus últimas 156 semanas» sí.
+
+⚠️ **ES CONTRA LA PROPIA HISTORIA DE ESA DIVISA, y la pantalla lo dice con esas
+palabras.** Cada divisa tiene su costumbre: en una que esté vendida casi
+siempre, un número negativo puede ser lo más comprado que ha estado en tres
+años, mientras el mismo número en otra sería normal. Sin decirlo, dos filas se
+leen como comparables y no lo son.
+
+⚠️ Rango medio para los empates, y **`null` —nunca 50— por debajo de 104
+semanas**. Y **ningún veredicto**: el COT como filtro ya se midió y suspendió
+(2026-09-14). Hay una comprobación que falla si aparece uno.
+
+## ⚠️ UNA AFIRMACIÓN MÍA SIN MEDIR, QUITADA ANTES DE PUBLICARSE
+
+El texto de los 13 idiomas decía **«el dólar australiano suele estar vendido
+casi siempre»**. Eso es un hecho sobre el mercado que **no está medido en este
+proyecto** — y encima el único dato real delante (el AUD a +19,2 % esta semana)
+apunta al revés. Se quitó; el punto se explica igual sin nombrar ninguna divisa.
+
+📌 Es la misma familia que el «coincide solo en el 3 %» del 2026-09-07: una
+frase que suena a dato de mercado, colada en un texto que va a la pantalla.
+
+## Tres cosas que solo se vieron MIRANDO LA CAPTURA
+
+1. **«hace 466 días» no se lee.** Cinco de las ocho filas reales pasaban de dos
+   meses. Ahora días / meses / años, con una clave por unidad. ⚠️ A propósito
+   **no** se usa `Intl.RelativeTimeFormat`, que lo haría solo en los 13: en
+   árabe saca cifras árabo-índicas y la misma frase lleva la tasa en latinas —
+   dos sistemas de dígitos en una frase, el fallo del COT del 2026-09-14.
+2. «de las últimas 156 semanas de esta misma divisa» partía en dos renglones en
+   las ocho filas. Queda «de sus últimas 156 semanas».
+3. ⚠️ **Y el que importa:** con percentil bajo, «más comprado que en el 5 %» es
+   verdad y **se lee al revés**. El franco suizo salía con −12,3 % y debajo «más
+   comprado que…». Por debajo de 50 la frase se da la vuelta: «más vendido que
+   en el 96 %». Mismo hecho, contado desde el extremo que se entiende.
+
+## Y CINCO tropiezos míos en el banco de pruebas, ninguno en la app
+
+Van seis o siete veces que pasa, y por eso se sigue escribiendo:
+
+- el guion de reemplazo de idiomas se pasó por `head -30`, y **el SIGPIPE lo
+  mató a media pasada**: tres idiomas se quedaron sin las claves. Lo cazó
+  `prueba-idiomas.mjs`;
+- el banco de navegador abría los botones «de menos de 20 caracteres» y el botón
+  de `TarjetaPlegable` lleva dentro el título entero — **no abría ninguna
+  tarjeta**, y las trece comprobaciones fallaban como si la app estuviera rota;
+- una comprobación buscaba «sin cambios» en toda la página y cazaba **«Sin
+  cambio esta semana» del COT**, que es otra cosa;
+- corregida, seguía cazándola: el pie `pieTendencia` **NOMBRA** la frase «en
+  pausa» justo para negarla. Va la cuarta vez que una comprobación mía exige lo
+  que no debe exigir;
+- y una pedía `s.US` cuando el lector devuelve claves de DIVISA (`s.USD`).
+
+📌 Lo que de verdad había que comprobar no era que la palabra no apareciera:
+era **que una divisa sin tendencia no enseñe nada**. Eso ahora se comprueba con
+un caso propio, quitándole la tendencia al franco suizo.
+
+## Lo que queda de la tercera fila: el oro SÍ, el petróleo NO
+
+- **Oro: `XAU/USD`, gratis, 1 crédito por corrida.** Comprobado que es oro de
+  verdad (`type: "Precious Metal"`, `currency_base: "Gold Spot"`).
+- **Petróleo: NO.** `WTI/USD` contesta *«This symbol is available starting with
+  the Grow or Venture plan»*. Los únicos que responden gratis son **ETF**
+  (`USO`, `BNO`), que siguen al crudo pero **no son el crudo**: tienen comisión,
+  se desvían y cierran cuando cierra su bolsa. Llamarlos «petróleo» sería
+  exactamente la etiqueta equivocada de la que trata todo este bloque.
+
+⚠️ **No se construye ninguna de las dos sin decidirlo con Néstor**, porque la
+pregunta ya no es técnica: el oro cuesta un crédito al día de los 800 y el
+petróleo cuesta dinero al mes. Eso lo decide él.
+
+---
+
+# El NFX-LSS en velas de 4 horas: NO PASA, pero el gradiente es REAL (2026-09-29)
+
+Néstor: «ya lo probamos en H1 y no funcionó, pero quiero que probemos con
+temporalidades MÁS ALTAS a ver cómo nos sale». H4 es la única medición que lo
+aísla: sale de **reagrupar** la descarga de H1 que el banco ya paga, en la misma
+app, con los mismos 7 pares, los mismos días y los mismos parámetros.
+
+Vara neutra 1:1, spread por par. 19.897 velas H1 → 5.117 velas H4.
+
+| qué se midió | ops | acierto | **bruto** | por 1R | 1ª mit | 2ª mit |
+|---|---:|---:|---:|---:|---:|---:|
+| **NFX-LSS en H4** | 596 | 50 % | **+0,00** | **−0,03** | +0,06 | −0,09 |
+| CONTROL: solo la ruptura, H4 | 2.365 | 50 % | −0,01 | −0,03 | −0,00 | −0,06 |
+| NFX-LSS en H1 | 2.249 | 46 % | −0,08 | −0,14 | −0,10 | −0,17 |
+| CONTROL: solo la ruptura, H1 | 8.636 | 48 % | −0,05 | −0,09 | −0,06 | −0,13 |
+
+**NO PASA. Falla 2 de 6: no gana (−0,03) y no gana en las dos mitades**
+(+0,06 y −0,09).
+
+## ⚠️⚠️ Pero el criterio que se inventó para este caso SÍ pasó, y eso importa
+
+El sexto criterio —**«la mejora sobre H1 también tiene que aparecer SIN
+costes»**— se escribió porque el mecanismo contrario estaba medido: la app en
+M15 pierde el doble que en H1 **acertando exactamente igual**, o sea que la
+diferencia era el peaje y no la dirección. Subir de temporalidad ensancha el
+stop, el spread pesa menos y el número mejora sin que la regla acierte una vez
+más.
+
+**Aquí no es eso:** sin costes, H4 da **0,000** contra los **−0,080** de H1. La
+mejora es real en el número bruto, no solo en el peaje.
+
+📌 O sea que la respuesta a la pregunta de Néstor es **sí, subir de temporalidad
+mejora de verdad** — y aun así la regla no sirve, porque **mejora hacia CERO, no
+hacia positivo**. Con la vara honesta, el NFX-LSS en H4 no pierde por los costes:
+es que no tiene ninguna ventaja que perder.
+
+## ⚠️ Y por eso NO se sube a semanal, aunque la condición se cumpliera
+
+`SEMANAL_SOLO_SI` decía «solo si el H4 pasa el listón **o al menos confirma el
+gradiente sin costes**». El gradiente se confirmó. Y aun así la recomendación es
+**no**, por dos razones que estaban escritas antes:
+
+1. **El destino del gradiente es cero, no ganancia.** Extrapolar de −0,08 → 0,00
+   que el semanal dará positivo es suponer que la línea sigue subiendo después
+   de cruzar el cero, y no hay ninguna razón para eso.
+2. ⚠️ **En semanal manda el SWAP, no el spread.** Una operación semanal dura
+   meses, o sea decenas de noches pagando — y el swap no se puede conocer:
+   depende del diferencial de tipos y del margen de cada bróker, cambia mes a
+   mes y no hay histórico, que es por lo que el banco lo **barre** a cinco
+   niveles. Subir a semanal cambiaría el único coste que se puede medir por el
+   único que no. Con ~287 velas y ~150 operaciones el margen del peor caso es
+   **±8 puntos**, más ancho que el efecto que se busca.
+
+📌 Precedente exacto: la salida por estructura del v1.1 sostenía las operaciones
+**52 días de media**, y con solo 0,25 pips de swap ya caía a −0,15.
+
+⚠️ **Y lo que NO hay que hacer con esto:** aflojar un criterio del listón. Para
+eso se escribió antes de correrlo.
