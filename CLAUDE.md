@@ -7445,3 +7445,130 @@ créditos de holgura que no existen.
 
 Gasto real de Intradía: 336 (publicador) + 168 (vigía) + 7 (reporte) = **511 de
 800**. Las dos sondas de hoy gastaron **11** más, a mano y una sola vez.
+
+---
+
+# La rejilla de velas, explicada para suscriptores (2026-09-30)
+
+Néstor preguntó tres cosas al ver el trabajo de la rejilla: si está en Swing,
+dónde se ve en las apps, y para qué sirve esto. Las tres tienen respuesta y la
+primera destapó algo sobre Swing.
+
+Es la **novena** de esta serie —el volumen, TradingView, la correlación, el
+swap, la actividad, el margen de error, Historial contra Diario, las apps
+contra el mercado y el oro— y funciona por el mismo motivo: **es una forma de
+engañarse que la app decide no usar, contada con el mecanismo delante.**
+
+## ⚠️ Lo primero, que NO era la pregunta: Swing tiene un primo del problema
+
+Comprobado **gratis y con el historial REAL de producción**, no supuesto. De
+las 29 fechas de vela que Swing lleva registradas:
+
+| día de la vela | veces |
+|---|---:|
+| lunes a viernes | 23 · 16 · 32 · 16 · 17 |
+| sábado | 0 |
+| **DOMINGO** | **6** |
+
+**Hay velas de domingo en la rejilla DIARIA de Swing.** Y el Forex abre el
+domingo a las 22:00 UTC, así que una vela «diaria» fechada en domingo contiene
+como mucho **dos horas de mercado** — y entra en el ATR como si fuera un día
+entero.
+
+📌 Es la misma familia que el hallazgo de Intradía, con otra cara: allí son
+horas cerradas dentro de una serie horaria; aquí es **un «día» que son dos
+horas**. No se buscó: salió al contestar «¿está hecho en Swing?».
+
+⚠️ **Lo medido es el reparto de arriba. La consecuencia NO está medida.** Que
+una vela corta arrastre el ATR hacia abajo es aritmética de Wilder (pesa 1/14),
+pero cuánto importa en pips es otra pregunta — y en este proyecto un mecanismo
+convincente ya ha salido falso ocho veces.
+
+## Dónde se ve en las apps: **en ninguna parte, y a propósito**
+
+Nada de esto está en una pantalla, ni «solo para mirar». Su estado es «en
+observación», y **una medición sin validar puesta en una pantalla se lee como
+validada por el hecho de estar ahí** — la misma decisión que con la ruptura de
+estructura. Se ve en el log del workflow, que es donde no engaña a ningún
+suscriptor.
+
+## El texto para los suscriptores
+
+> **¿Para qué sirve medir la «rejilla» de velas?**
+>
+> La app decide **dónde poner el stop con aritmética, no con opinión.** Mide
+> cuánto se mueve normalmente el par y pone el stop a una vez y media esa
+> distancia. La dirección es una opinión —y le decimos que acierta el 48 %—
+> pero **el stop es una cuenta.**
+>
+> Y una cuenta se puede alimentar con números malos.
+>
+> **Qué es una vela.** Es el resumen de un rato de mercado: hasta dónde subió,
+> hasta dónde bajó y dónde acabó. Si ese rato el mercado estaba **cerrado**,
+> casi nada se movió, así que la vela sale **diminuta**. Meta suficientes velas
+> diminutas en la medida y la app se cree que el par se mueve menos de lo que
+> se mueve → **pone el stop demasiado cerca** → y el ruido normal del mercado
+> se lo lleva antes de que la operación tenga ninguna oportunidad.
+>
+> **Qué encontramos el 30 de septiembre de 2026, con números:**
+>
+> · **Intradía:** de cada 300 velas de una hora, **86 (el 28,7 %)** caen en
+>   horas en las que el mercado no puede estar abierto — sábado entero, domingo
+>   de día, viernes de noche. Y esas horas se mueven **5,2 veces menos**.
+> · **Swing:** de los 29 días que lleva registrados, en **6** la última vela
+>   era de **domingo**. El Forex abre el domingo a las 22:00, así que ese «día»
+>   son unas **dos horas de mercado** contadas como un día completo.
+>
+> ⚠️ **Y ahora lo que NO sabemos, que es la mitad honesta:** no sabemos
+> todavía si eso aprieta el stop lo suficiente para que importe. Los números de
+> arriba están medidos. **La consecuencia no.** Se está midiendo, y si sale que
+> no importa, se lo contamos igual.
+>
+> **Y por qué puede creer que le vamos a contar el resultado aunque sea
+> aburrido: porque ya pasó.** En agosto de 2026 los stops de la app de swing
+> salían de **12 pips en un par que se mueve 40 en un día tranquilo**. La causa
+> era de esta misma familia: la medida se estaba alimentando con los números
+> equivocados. Se midió, se arregló, y **los stops se duplicaron**. Consecuencia
+> práctica para usted: con el stop del doble de ancho, **el lote baja a la mitad
+> para arriesgar lo mismo**. Los números de su pantalla cambiaron, y no era un
+> error — era el arreglo.
+>
+> **Lo que esto NO hace, y hay que decirlo.** No hace que la app gane. La app
+> mide 3 centavos de pérdida por cada dólar arriesgado en swing y unos 10 en
+> intradía, y arreglar la rejilla **no cambia eso**. Lo que hace es que el stop
+> sea **honesto**. Son dos cosas distintas, y confundirlas es justo lo que aquí
+> no se hace.
+>
+> Dicho de una línea: **no revisamos esto para acertar más. Lo revisamos para
+> que cuando le digamos «arriesgue 30 pips», esos 30 pips signifiquen algo.**
+
+## Por qué esto vende, y en qué se diferencia de las otras ocho
+
+📌 Las otras ocho explican una decisión **ya tomada**. Ésta es la primera que le
+cuenta al suscriptor **una pregunta todavía abierta, con el resultado sin
+saber.** Y eso es más fuerte, no más débil: cualquiera puede publicar sus
+hallazgos cuando ya son buenos. Contar el de en medio es lo que demuestra que
+lo que se publica no está filtrado.
+
+📌 Y tiene el ancla que le falta a las demás: **el precedente de los 12 pips.**
+No es una promesa de rigor, es un caso con fecha, número y consecuencia visible
+en la pantalla de Néstor — el lote a la mitad.
+
+⚠️ **Lo que NO se puede hacer con este texto:** publicarlo diciendo que el
+problema está arreglado. Hoy lo único hecho son el listón y el diagnóstico, en
+Intradía, y **nada de esto ha cambiado una sola señal de ninguna de las dos
+apps.** Si se publica antes de tener el resultado, se publica tal cual está
+escrito arriba: con la pregunta abierta a la vista.
+
+## Lo que queda pendiente, y es concreto
+
+1. **Lanzar el diagnóstico de Intradía** (7 créditos, workflow a mano). Dice si
+   el derrumbe del arranque de semana es real.
+2. ⚠️ **Y medir lo mismo en SWING**, que no estaba en el plan y sale de esta
+   pregunta de Néstor. Ahí la pregunta es otra: no «horas cerradas dentro de la
+   serie» sino **«¿qué hace en el ATR una vela de domingo que son dos horas?»**.
+   Cuesta 14 créditos (Swing pide los 14 pares directos) de los 800.
+
+📌 Y la lección que este día añade a la de los PRIMOS: **la pregunta «¿está
+hecho en la otra app?» encontró un problema que nadie estaba buscando.** Vale
+la pena hacerla siempre, aunque la respuesta esperada sea «no aplica».
