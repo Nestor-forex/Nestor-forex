@@ -7260,3 +7260,188 @@ INFORMACIÓN y no apaga ni una señal.
 del publicador en producción. Si alguien los repite dentro de seis meses, van a
 ser otros — **eso es justo lo que dice el punto 1**, y conviene que el ejemplo
 lleve su fecha pegada por la misma razón que la llevan las mediciones.
+
+---
+
+# El oro en Intradía, y la rejilla de velas que nadie había mirado (2026-09-30)
+
+Néstor preguntó si la tarjeta del oro de Swing serviría también en Intradía.
+Se contestó con **dos sondas** y salieron tres cosas, cada una más grande que
+la anterior. La última no tiene nada que ver con el oro.
+
+⚠️ **Nada de esto cambió ni una línea de ninguna de las dos apps.** Los dos
+workflows nuevos viven en Intradía, son `workflow_dispatch` y llevan
+`permissions: contents: read`: no pueden escribir aunque quisieran.
+
+```
+app/scripts/lib/sonda-oro.mjs        las cuentas puras (solo Intradía)
+app/scripts/sonda-oro-h1.mjs         ¿se puede pedir el oro en velas de 1 h?
+app/scripts/sonda-rejilla.mjs        ¿la rejilla del barrido trae horas cerradas?
+app/scripts/prueba-sonda-oro-h1.mjs  100 comprobaciones, sin internet
+.github/workflows/sonda-oro-h1.yml · sonda-rejilla.yml
+```
+
+## 1. La puerta del oro SÍ está abierta, y es más barata que en Swing
+
+| | |
+|---|---|
+| `XAU/USD` en `1h` | ✅ `type: "Precious Metal"` · base `"Gold Spot"` |
+| en `15min` | ✅ también (52 días) — **no autoriza nada**, ver abajo |
+| historia en una consulta | **208 días** (7 meses) |
+| cruce de calendarios | **100 %**, cero horas perdidas |
+| coste | **8 créditos**, no 15 |
+
+Cuesta 8 y no 15 porque **Intradía pide 7 SÍMBOLOS y deriva los 11 cruces**,
+mientras Swing pide los 14 pares directos. Y derivar aquí no estorba: el
+problema de derivar era con los **máximos y mínimos** (suponer que los dos
+extremos pasaron en el mismo instante, lo que reventó el ATR el 2026-08-09);
+la correlación solo usa **cierres**, y los cierres se derivan exactos.
+
+⚠️ **Que `15min` responda NO autoriza construirlo.** Está escrito que M15 no se
+toca hasta que la ruptura de estructura pase su registro hacia adelante. Se
+preguntó porque preguntar cuesta un crédito y no preguntar cuesta otra sonda.
+
+⚠️ **Y la ventana sigue sin decidir**, que es la pregunta que de verdad manda.
+En Swing son 60 sesiones = 60 **días** ≈ 3 meses. Aquí 60 sesiones son 60
+**horas**: dos días y medio, que no es una relación sino una foto de esta
+semana. Por eso `correlacion.js` no existe en Intradía —decidido el
+2026-09-08— y sigue sin existir. `veredicto()` devuelve `autoriza: false`.
+
+## 2. ⚠️ El «100 %» de mi propia sonda era verdad y engañaba
+
+Imprimió «no falta ninguna hora: los dos calendarios coinciden enteros». Es
+literalmente cierto. Pero **no coinciden porque el oro y el Forex abran a las
+mismas horas: coinciden porque Twelve Data los sirve en la misma rejilla
+uniforme.** Y eso sale de una división que la sonda no hacía:
+
+```
+1h     → 5000 velas en 208,3 días = 24,0 por día
+15min  → 5000 velas en  52,1 días = 96,0 por día = 24 horas/día
+```
+
+**24 velas por día de calendario es imposible en un mercado que abre 120 de las
+168 horas de la semana** (17,1 por día). Ni contando solo días hábiles cuadra:
+5000 entre los ~148 hábiles darían 33,6, y un día no tiene más de 24. Los dos
+intervalos lo dicen por separado.
+
+📌 **Séptima vez que un resumen es verdad y engaña igual.** No afirmaba nada
+falso — le faltaba un paso de aritmética, y sin él quien lo lea construye
+encima de un «100 %» que significa otra cosa.
+
+⚠️ **Y la medida que lo destapó tenía un agujero, cazado al PROBARLA y no al
+usarla:** una rejilla honesta de lunes a viernes medida sobre su propio tramo
+(4,96 días, sin ningún fin de semana dentro) da 24,2 por día y se marcaría en
+falso. No estaba mal calculada: estaba **mal preguntada**. De ahí
+`MIN_DIAS_PARA_JUZGAR = 21`, que devuelve `null` — «no se puede juzgar» no es
+«está bien».
+
+## 3. ⚠️⚠️ CONFIRMADO: el barrido de Intradía usa horas en que el mercado está cerrado
+
+Segunda sonda, 1 crédito, **las mismas 300 velas que pide el vigía**:
+
+| | |
+|---|---:|
+| tramo | 12,5 días → **24,1 velas/día** |
+| horas de MERCADO seguro | 198 |
+| horas de FRONTERA (el cambio de hora decide; no cuentan) | 16 |
+| **horas CERRADAS seguras** | **86 de 300 = 28,7 %** |
+
+Sábado entero, domingo de día, viernes de noche. Es un **suelo**, no una
+estimación: son horas que ningún horario de verano puede convertir en mercado.
+
+⚠️ **`clasificarHora` tiene TRES respuestas y la del medio es lo que hace esto
+honesto.** El Forex abre el domingo por la noche en horario de Nueva York, así
+que el borde se mueve una hora con el cambio de hora. **El domingo a las 22:00
+el mercado SÍ abre**, y llamar «cerrada» a una hora de mercado sería la
+etiqueta equivocada — que en este archivo está escrito como un error de
+medición. Las de frontera se cuentan aparte y **no** suman al hallazgo.
+
+### 📌 Y mi explicación de qué eran esas velas resultó FALSA
+
+Diseñé la prueba esperando que salieran **planas** — «nadie negoció, luego el
+precio se repite». Salió **0 % planas en horas cerradas y 0 % en horas de
+mercado**. Llevan recorrido, pequeño pero real.
+
+**Octava vez en este proyecto que un mecanismo convincente resulta falso al
+medirlo**, y esta vez me lo dijo una prueba que yo mismo había escrito para
+otra cosa. Por eso la prueba se queda: contestó lo contrario de lo que esperaba
+y eso es exactamente su trabajo.
+
+### El número que decide, entonces: 5,2× más estrechas
+
+| | velas | media | mediana |
+|---|---:|---:|---:|
+| horas de MERCADO | 198 | 0,000781 | **0,000680** |
+| horas CERRADAS | 86 | 0,000314 | **0,000130** |
+
+**Las de mercado se mueven 2,5× más por la media y 5,2× más por la mediana.**
+
+## ⚠️ La consecuencia, que es una INFERENCIA bien fundada y NO está medida
+
+El ATR de Intradía es **Wilder de 14 velas** (`atrWilder`, `p = 14`) y el stop
+es **`ATR_STOP = 1.5`**, o sea 1,5 × ATR. Comprobado en `marketCalc.js`, no de
+memoria.
+
+Un fin de semana son **~45 horas cerradas seguidas**, y 45 es mucho más que 14.
+El ATR de Wilder arrastra memoria, pero tras 45 velas el peso de lo anterior
+queda en (13/14)^45 ≈ **4 %**. O sea que **el lunes de madrugada el ATR está
+calculado casi entero sobre horas finas**, y el stop con él.
+
+Y el vigía **corre a esas horas**: su cron es `20 * * * 1-5`, así que trabaja el
+lunes desde las 00:20 UTC.
+
+⚠️ **Eso apunta a un stop demasiado estrecho justo en la apertura del lunes**,
+que es cuando hay huecos. Es el mismo tipo de fallo que el ATR de cierre a
+cierre del 2026-08-09 en Swing, donde el stop salía de 12 pips en un par que se
+mueve 40.
+
+📌 **Pero NO está medido, y la diferencia importa.** Lo que está medido es el
+28,7 % y el 5,2×; lo del lunes se sigue de tres hechos comprobados y de una
+aritmética de decaimiento, no de una medición. **En este proyecto un mecanismo
+convincente ya ha salido falso ocho veces**, y esta misma tarde una de ellas fue
+mía. Medirlo de verdad es calcular el ATR hora a hora y ver cómo varía por día
+de la semana: eso va al **banco de pruebas**, que ya se baja miles de velas, no
+a una sonda.
+
+## Lo que esto NO significa, y va escrito porque la pregunta la hizo Néstor
+
+Preguntó, con razón, si la comprobación «toca o cambia todo lo que tiene la
+app». No, y la respuesta tiene dos mitades:
+
+1. **La sonda no cambia nada** — permiso de solo lectura, no toca archivos, ni
+   señales, ni la rama `datos`, ni el historial.
+2. **Y el hallazgo tampoco cambia nada por sí solo:**
+   - **los números medidos de Intradía no se vuelven falsos.** Los −0,13 por
+     unidad de riesgo, las 8.000 operaciones, el filtro de RSI en 70, el ADX
+     aflojado a 10: **todo se midió con estos mismos datos**, así que describen
+     lo que la app hace de verdad. Una app con otra rejilla sería **otra app** y
+     habría que medirla desde cero.
+   - **cambiar la rejilla cambia las señales**, así que va al banco de pruebas
+     con su listón escrito antes. Van **siete familias medidas y siete
+     fallando**: aquí nada se cambia porque suene mejor.
+   - **el historial sigue valiendo**: registra lo que la app DIJO cada día con
+     los precios de ese día, y eso no depende de esto.
+
+## El orden recomendado cuando se retome
+
+1. **Medir el ATR por hora de la semana en el banco de pruebas.** Es lo más
+   importante de todo esto y no tiene nada que ver con el oro: afecta a las
+   señales que la app ya da.
+2. **Si sale que sí, preregistrar el cambio** (filtrar horas cerradas) con su
+   listón escrito antes, como «comprar la caída» y el LSS. Nunca al revés.
+3. **Y solo después la ventana del oro**, que ahora tiene compañera: elegirla
+   obliga a decidir también si se filtran esas horas.
+
+## 📌 De paso: el gasto de créditos de Intradía estaba mal escrito
+
+`publicar-barrido.yml` **se contradice a sí mismo**: su cabecera dice 24
+corridas y **343** créditos al día; su propio bloque de horarios, 40 líneas más
+abajo, dice 48 corridas y **511**. El correcto es **511** — la cabecera se quedó
+vieja cuando se añadió el segundo horario, y este archivo copió el número viejo.
+
+Es otra vez **«al cambiar algo, mirar también quién lo NOMBRA»**. No cambia nada
+práctico, pero con el número viejo alguien decidiría creyendo que hay 168
+créditos de holgura que no existen.
+
+Gasto real de Intradía: 336 (publicador) + 168 (vigía) + 7 (reporte) = **511 de
+800**. Las dos sondas de hoy gastaron **11** más, a mano y una sola vez.
