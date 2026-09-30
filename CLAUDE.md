@@ -7459,30 +7459,137 @@ swap, la actividad, el margen de error, Historial contra Diario, las apps
 contra el mercado y el oro— y funciona por el mismo motivo: **es una forma de
 engañarse que la app decide no usar, contada con el mecanismo delante.**
 
-## ⚠️ Lo primero, que NO era la pregunta: Swing tiene un primo del problema
+## ⚠️⚠️ CORRECCIÓN DEL MISMO DÍA: aquí decía «6 de 29 fechas son domingo» y era FALSO
 
-Comprobado **gratis y con el historial REAL de producción**, no supuesto. De
-las 29 fechas de vela que Swing lleva registradas:
+Lo publiqué el 2026-09-30 y lo desmentí una hora después, al ir a construir la
+versión de Swing. Queda escrito entero porque el mecanismo del error es el que
+este archivo lleva meses coleccionando.
 
-| día de la vela | veces |
+**Lo que decía:** «de las 29 fechas de vela que Swing lleva registradas, 6 caen
+en domingo — lun 23 · mar 16 · mié 32 · jue 16 · vie 17 · sáb 0 · DOM 6».
+
+**Lo que es:** el historial tiene **28 fechas de vela distintas y UNA sola cae
+en domingo** — el **2026-08-09**, la primera corrida del vigía, lanzada a mano.
+El cron corre de lunes a viernes.
+
+📌 **Era un conteo por SEÑAL presentado como conteo por FECHA.** Los siete
+números suman 110, que es el número de LÍNEAS de `senales.jsonl`, no de fechas.
+Y las «6 del domingo» son las seis señales de ese único domingo — un número que
+esta memoria ya tenía escrito desde el 2026-08-09 («el vigía corrió por primera
+vez el 2026-08-09 y dejó 6 señales registradas»). O sea que el dato que lo
+desmentía llevaba siete semanas dentro de este mismo archivo.
+
+⚠️ Es la familia de siempre —**un número bien calculado que describe otra cosa
+de la que dice describir**— y ya van cuatro en tres semanas: la etiqueta «(hoy)»
+que envejeció sola, el «+13,302» con coma inglesa, las «señales al mes»
+divididas entre días de calendario, y esto.
+
+## Y el hallazgo REAL, que es más grande y también salió gratis
+
+Al buscar el dato bien apareció otro sitio donde mirar: el `barrido.json`
+publica **20 máximos y 20 mínimos por par** desde el 2026-09-22. Con eso, sin
+gastar un crédito:
+
+| | |
+|---|---|
+| pares mirados | 14 |
+| velas por par | 20 |
+| **posiciones sistemáticamente estrechas** | **1, 8 y 15 — espaciadas 7** |
+| en cuántos pares pasa | **los CATORCE** |
+| rango de esas velas | entre el **13 %** y el **65 %** del mediano de su par |
+| velas exactamente planas (máx = mín) | **0 de 280** |
+
+**Una de cada siete velas de la serie con la que la app calcula contiene muy
+poco mercado.** No es un hueco (ninguna es plana) y no es casualidad de un par
+(sale en los catorce).
+
+⚠️ **Y esto NO es lo que decía la versión falsa.** Aquélla decía «pasó 6 veces
+en dos meses»; esto dice «pasa una vez por semana, siempre, en todos los
+pares». El número era falso y **se quedaba corto**.
+
+## Lo que ya está contestado, también gratis, y es la mitad tranquilizadora
+
+De las **46 señales reales** de la app con ATR y stop apuntados:
+
+| | |
 |---|---:|
-| lunes a viernes | 23 · 16 · 32 · 16 · 17 |
-| sábado | 0 |
-| **DOMINGO** | **6** |
+| ATR mediano | 47,0 pips |
+| stop mediano | 155,5 pips |
+| **el cojín de 0,5 × ATR es** | **el 16,6 % del stop** (del 7,7 % al 43,5 %) |
 
-**Hay velas de domingo en la rejilla DIARIA de Swing.** Y el Forex abre el
-domingo a las 22:00 UTC, así que una vela «diaria» fechada en domingo contiene
-como mucho **dos horas de mercado** — y entra en el ATR como si fuera un día
-entero.
+Con eso, el **techo aritmético** de lo que puede hacer UNA vela: en Wilder la
+más nueva pesa 1/14 = 7,14 %, así que 7,14 % × 16,6 % × 155,5 pips = **1,84
+pips**. El spread típico de esta app es ~2. **Por debajo del suelo de costes.**
 
-📌 Es la misma familia que el hallazgo de Intradía, con otra cara: allí son
-horas cerradas dentro de una serie horaria; aquí es **un «día» que son dos
-horas**. No se buscó: salió al contestar «¿está hecho en Swing?».
+⚠️⚠️ **Y los dos hallazgos NO se contradicen, que es lo menos obvio de todo
+esto.** El techo de 1/14 vale para UNA vela. Si una de cada siete es estrecha,
+el sesgo ya no lo acota el 1/14: lo arrastra el promedio entero — con seis velas
+normales y una al 28 %, el ATR sale ~10 % por debajo del real.
 
-⚠️ **Lo medido es el reparto de arriba. La consecuencia NO está medida.** Que
-una vela corta arrastre el ATR hacia abajo es aritmética de Wilder (pesa 1/14),
-pero cuánto importa en pips es otra pregunta — y en este proyecto un mecanismo
-convincente ya ha salido falso ocho veces.
+📌 **El paso barato dijo «no» a la pregunta pequeña y «sí» a la grande.** Eso
+es exactamente para lo que existe el paso barato.
+
+## Lo único que NO se puede tener gratis: las fechas
+
+El barrido descarta las 300 fechas al publicarse, así que desde fuera se ve el
+patrón de 1 cada 7 y **no se puede saber qué día es**. Y sin el día no se puede
+elegir entre los dos arreglos posibles.
+
+⚠️ **NO se presupone que sea domingo.** Sería repetir el error de arriba con
+otra cara: ponerle nombre a algo que no se ha mirado.
+
+## Swing ya tiene su listón y su diagnóstico
+
+```
+app/scripts/lib/preregistro-rejilla-diaria.mjs   el listón, fecha 2026-09-30
+app/scripts/lib/rejilla-diaria.mjs               las cuentas puras
+app/scripts/medir-rejilla-diaria.mjs             el diagnóstico, 14 créditos
+app/scripts/prueba-rejilla-diaria.mjs            89 comprobaciones, sin internet
+.github/workflows/rejilla-diaria.yml             solo a mano, permiso de LECTURA
+```
+
+⚠️⚠️ **NO es el de Intradía, y la diferencia no es de estilo.** Se midió en el
+código antes de escribir una línea:
+
+| | Intradía | **Swing (aquí)** |
+|---|---|---|
+| la pregunta | ¿horas cerradas en una serie HORARIA? | **¿qué es una vela diaria sin un día de mercado dentro?** |
+| `atrWilder` | ventana DURA de 60 velas | **la serie ENTERA** |
+| el stop | 1,5 × ATR (el stop entero) | **lo10 − 0,5 × ATR (medio cojín)** |
+| el umbral | derrumbe de 1,5× | **2 % del stop = el peso del spread** |
+
+O sea que aquí **el ATR no es el stop**: es medio cojín encima de un nivel
+estructural. Copiar el umbral de allá habría sido traerse una suposición sobre
+el mercado que en esta app es falsa — la lección de `barridoSwap`, otra vez.
+
+**Los dos arreglos van NOMBRADOS antes de medir**, y cuál es el fiel lo decide
+un hecho y no una opinión: si la vela estrecha es un día con algunas horas de
+mercado, el fiel es **FUNDIRLA** con la siguiente (esas horas existieron); si es
+un día sin mercado ninguno, **QUITARLA**. Se miden y se enseñan las dos.
+
+⚠️ El veredicto lo **calcula** `juzgarPar()`, y devuelve `null` —«no se pudo
+mirar»— y nunca «no pasa nada» cuando falta un número.
+
+### Comprobado que las pruebas MUERDEN
+
+Con el daño verificado en el archivo antes de darlo por bueno:
+
+| daño | caen |
+|---|---:|
+| reimplementar el ATR con la ventana de 60 de Intradía | 1 |
+| `diaCulpable` sin la condición de densidad | 1 |
+| `fundir` quedándose el cierre de la vela estrecha | 1 |
+| **`lo10` sobre toda la serie en vez de las 10 últimas** | **2** |
+
+📌 **Y el cuarto NO mordía al principio: las 87 seguían en verde con el daño
+puesto.** El mercado inventado se movía poco, así que el mínimo global y el de
+10 días quedaban casi pegados. Se añadió un fondo viejo y hundido, fuera de las
+10 últimas, y ahí sí muerde. Es el agujero de siempre — una prueba que se
+adapta a lo que encuentra no comprueba nada.
+
+📌 Y dos tropiezos míos más, los dos en la prueba y no en el código: **dije que
+el 2026-09-30 era martes y es miércoles** (la prueba me lo cantó), y la primera
+comprobación de dirección del `lo10` no existía.
 
 ## Dónde se ve en las apps: **en ninguna parte, y a propósito**
 
@@ -7497,9 +7604,9 @@ suscriptor.
 > **¿Para qué sirve medir la «rejilla» de velas?**
 >
 > La app decide **dónde poner el stop con aritmética, no con opinión.** Mide
-> cuánto se mueve normalmente el par y pone el stop a una vez y media esa
-> distancia. La dirección es una opinión —y le decimos que acierta el 48 %—
-> pero **el stop es una cuenta.**
+> cuánto se mueve normalmente el par y usa esa distancia para colocarlo. La
+> dirección es una opinión —y le decimos que acierta el 48 %— pero **el stop es
+> una cuenta.**
 >
 > Y una cuenta se puede alimentar con números malos.
 >
@@ -7515,14 +7622,30 @@ suscriptor.
 > · **Intradía:** de cada 300 velas de una hora, **86 (el 28,7 %)** caen en
 >   horas en las que el mercado no puede estar abierto — sábado entero, domingo
 >   de día, viernes de noche. Y esas horas se mueven **5,2 veces menos**.
-> · **Swing:** de los 29 días que lleva registrados, en **6** la última vela
->   era de **domingo**. El Forex abre el domingo a las 22:00, así que ese «día»
->   son unas **dos horas de mercado** contadas como un día completo.
+> · **Swing:** de cada **siete** velas diarias, **una** trae entre el 13 % y el
+>   65 % del recorrido normal de su par — y pasa en los **catorce** pares a la
+>   vez. Ninguna está vacía del todo, así que no es un hueco: es un día con muy
+>   poco mercado dentro, contado como un día completo.
 >
-> ⚠️ **Y ahora lo que NO sabemos, que es la mitad honesta:** no sabemos
-> todavía si eso aprieta el stop lo suficiente para que importe. Los números de
-> arriba están medidos. **La consecuencia no.** Se está midiendo, y si sale que
-> no importa, se lo contamos igual.
+> ⚠️ **Y ahora la parte honesta, que son DOS mitades y van las dos.**
+>
+> La primera es tranquilizadora, y ya está medida: en la app de swing el stop
+> **no sale de esa medida sola**. Se apoya en el mínimo de los últimos diez días
+> y la medida solo añade un colchón encima, que en sus operaciones reales es el
+> **16,6 %** del stop. Con la cuenta hecha, **una vela mala no puede mover su
+> stop más de 1,84 pips**, y el costo de abrir la operación ya son unos 2. O
+> sea: por debajo de lo que le cuesta entrar.
+>
+> La segunda es la que sigue abierta: **una de cada siete no es una.** Si se
+> repite cada semana, el sesgo ya no lo acota esa cuenta — lo arrastra el
+> promedio entero, y ahí podría ser un 10 %. **Eso no lo sabemos todavía.** Se
+> está midiendo, y si sale que no importa, se lo contamos igual.
+>
+> 📌 Y le contamos hasta el error de en medio: el 30 de septiembre publicamos
+> que esto pasaba «6 veces en dos meses». Era falso — habíamos contado señales
+> creyendo que contábamos días. El número real es **una vez por semana, siempre,
+> en todos los pares**. Nos equivocamos **hacia el lado cómodo**, y lo corregimos
+> el mismo día.
 >
 > **Y por qué puede creer que le vamos a contar el resultado aunque sea
 > aburrido: porque ya pasó.** En agosto de 2026 los stops de la app de swing
@@ -7562,13 +7685,18 @@ escrito arriba: con la pregunta abierta a la vista.
 
 ## Lo que queda pendiente, y es concreto
 
-1. **Lanzar el diagnóstico de Intradía** (7 créditos, workflow a mano). Dice si
-   el derrumbe del arranque de semana es real.
-2. ⚠️ **Y medir lo mismo en SWING**, que no estaba en el plan y sale de esta
-   pregunta de Néstor. Ahí la pregunta es otra: no «horas cerradas dentro de la
-   serie» sino **«¿qué hace en el ATR una vela de domingo que son dos horas?»**.
-   Cuesta 14 créditos (Swing pide los 14 pares directos) de los 800.
+Las dos mitades están construidas y las dos están **sin lanzar**. Cada una es
+un botón, cada una contesta una pregunta distinta, y ninguna escribe nada:
+
+1. **Intradía** — Actions → «Diagnóstico de la rejilla (ATR por semana)» → Run
+   workflow. **7 créditos.** Dice si el derrumbe del arranque de semana es real.
+2. **Swing** — Actions → «Diagnóstico de la rejilla diaria» → Run workflow.
+   **14 créditos.** Trae **las fechas**, que es lo único que no se puede tener
+   gratis, y con ellas el día de la vela estrecha y cuál de los dos arreglos es
+   el fiel.
 
 📌 Y la lección que este día añade a la de los PRIMOS: **la pregunta «¿está
-hecho en la otra app?» encontró un problema que nadie estaba buscando.** Vale
-la pena hacerla siempre, aunque la respuesta esperada sea «no aplica».
+hecho en la otra app?» encontró un problema que nadie estaba buscando** — y al
+ir a contestarla bien, el número que yo había publicado se cayó y el problema
+resultó ser **siete veces más frecuente** de lo que dije. Vale la pena hacerla
+siempre, aunque la respuesta esperada sea «no aplica».
