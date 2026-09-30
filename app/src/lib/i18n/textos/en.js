@@ -485,6 +485,23 @@ export default {
     pie: (v) => `Source: BIS (Bank for International Settlements). The BIS publishes with a few days\u2019 delay, so each row\u2019s date is how far ITS data goes \u2014 not the day that bank decided. The oldest is ${v.dias} days old.`,
   },
 
+  oro: {
+    paraQue: 'Traders watch gold because it tends to move opposite the dollar and to rise when the market gets nervous. But that is a habit, not a law: we do not tell you that here — we show you the measured number of how much it has moved alongside each pair over the last 60 sessions, and you decide whether it is useful.',
+    titulo: 'Gold',
+    desc: 'How much it moves with your pairs',
+    aviso: '⚠️ This is NOT a signal. Gold does not say buy or sell on any pair. What follows is how much they have moved TOGETHER over the last three months — a fact about the past, not a prediction. And two things moving together does not mean one moves the other.',
+    dolares: 'dollars per ounce',
+    enUnDia: 'In one day',
+    enVeinteDias: 'In 20 days',
+    intro: 'It is measured on each day\\u2019s change, not on the price, and only on sessions that have data in both. The higher up the list, the more alike their moves.',
+    cabeceraCorrel: 'How much gold moves with each pair',
+    juntos: 'They move together',
+    alReves: 'They move opposite',
+    sobreDias: (v) => `${v.n} sessions in common`,
+    sinCorrel: 'No pair has moved much like gold over the last sessions. That is a fact too: today gold tells you nothing about these fourteen.',
+    pie: (v) => `Source: Twelve Data, spot price (XAU/USD), figure from ${v.fecha} — ${v.dias} days ago. The number runs from −1 to +1: near +1 they move almost alike, near −1 opposite, and near 0 they are unrelated. Each row says how many sessions it was computed on.`,
+  },
+
   cot: {
     paraQue: 'Traders check it to see whether a bet is already crowded: when almost all the big players are on the same side, few are left to get in and many to get out. It is background context, weekly and delayed. It does not say which pair to trade or when.',
     titulo: 'Commitments of Traders',

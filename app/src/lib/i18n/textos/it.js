@@ -481,6 +481,23 @@ export default {
     pie: (v) => `Fonte: BIS (Banca dei Regolamenti Internazionali). Il BIS pubblica con qualche giorno di ritardo, quindi la data di ogni riga dice fin dove arriva IL SUO dato — non il giorno in cui quella banca ha deciso. La più vecchia è di ${v.dias} giorni.`,
   },
 
+  oro: {
+    paraQue: 'I trader guardano l\\u2019oro perché tende a muoversi al contrario del dollaro e a salire quando il mercato è nervoso. Ma è un\\u2019abitudine, non una legge: qui non te lo diciamo — ti mostriamo il numero misurato di quanto si è mosso insieme a ogni coppia nelle ultime 60 sedute, e decidi tu se ti serve.',
+    titulo: 'Oro',
+    desc: 'Quanto si muove con le tue coppie',
+    aviso: '⚠️ Questo NON è un segnale. L\\u2019oro non dice di comprare né di vendere nessuna coppia. Qui sotto c\\u2019è quanto si sono mossi INSIEME negli ultimi tre mesi — un fatto sul passato, non una previsione. E che due cose si muovano insieme non vuol dire che una muova l\\u2019altra.',
+    dolares: 'dollari per oncia',
+    enUnDia: 'In un giorno',
+    enVeinteDias: 'In 20 giorni',
+    intro: 'Si misura sulla variazione di ogni giorno, non sul prezzo, e solo sulle sedute con dato in entrambi. Più in alto, più i loro movimenti si somigliano.',
+    cabeceraCorrel: 'Quanto l\\u2019oro si muove con ogni coppia',
+    juntos: 'Si muovono insieme',
+    alReves: 'Si muovono al contrario',
+    sobreDias: (v) => `${v.n} sedute in comune`,
+    sinCorrel: 'Nessuna coppia si è mossa in modo simile all\\u2019oro nelle ultime sedute. Anche questo è un dato: oggi l\\u2019oro non ti dice nulla su queste quattordici.',
+    pie: (v) => `Fonte: Twelve Data, prezzo a pronti (XAU/USD), dato del ${v.fecha} — ${v.dias} giorni fa. Il numero va da −1 a +1: vicino a +1 si muovono quasi uguale, vicino a −1 al contrario, vicino a 0 non si somigliano. Ogni riga dice su quante sedute è stato calcolato.`,
+  },
+
   cot: {
     paraQue: 'I trader lo guardano per capire se una scommessa è già affollata: quando quasi tutti i grandi stanno dalla stessa parte, resta poca gente per entrare e molta per uscire. È contesto di fondo, settimanale e in ritardo. Non dice quale coppia né quando.',
     titulo: 'Commitments of Traders',

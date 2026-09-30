@@ -532,6 +532,23 @@ export default {
     pie: (v) => `Fuente: BIS (Banco de Pagos Internacionales). El BIS publica con unos días de retraso, así que la fecha de cada fila es hasta cuándo llega SU dato — no el día en que ese banco decidió. La más antigua es de hace ${v.dias} días.`,
   },
 
+  oro: {
+    paraQue: 'Los traders miran el oro porque suele moverse al revés que el dólar y porque sube cuando hay nervios en el mercado. Pero eso es una costumbre, no una ley: aquí no te lo decimos, te enseñamos el número medido de cuánto se ha movido junto a cada par en las últimas 60 sesiones, y tú decides si te sirve.',
+    titulo: 'Oro',
+    desc: 'Cuánto se mueve con tus pares',
+    aviso: '⚠️ Esto NO es una señal. El oro no dice comprar ni vender ningún par. Lo que hay abajo es cuánto se han movido JUNTOS en los últimos tres meses — un hecho sobre el pasado, no una predicción. Y que dos cosas se muevan juntas no quiere decir que una mueva a la otra.',
+    dolares: 'dólares por onza',
+    enUnDia: 'En un día',
+    enVeinteDias: 'En 20 días',
+    intro: 'Se mide sobre el cambio de cada día, no sobre el precio, y sobre las sesiones que tienen dato en los dos. Cuanto más arriba, más se parecen sus movimientos.',
+    cabeceraCorrel: 'Cuánto se mueve el oro con cada par',
+    juntos: 'Se mueven juntos',
+    alReves: 'Se mueven al revés',
+    sobreDias: (v) => `${v.n} sesiones en común`,
+    sinCorrel: 'Ningún par se ha movido de forma parecida al oro en las últimas sesiones. Eso también es un dato: hoy el oro no te dice nada sobre estos catorce.',
+    pie: (v) => `Fuente: Twelve Data, precio al contado (XAU/USD), dato del ${v.fecha} — hace ${v.dias} días. El número va de −1 a +1: cerca de +1 se mueven casi igual, cerca de −1 al revés, y cerca de 0 no se parecen. Cada fila dice sobre cuántas sesiones se calculó.`,
+  },
+
   cot: {
     paraQue: 'Los traders lo miran para saber si una apuesta ya está muy llena: cuando casi todos los grandes están del mismo lado, queda poca gente por entrar y mucha por salir. Es contexto de fondo, semanal y con retraso. No dice qué par operar ni cuándo.',
     titulo: 'Commitments of Traders',

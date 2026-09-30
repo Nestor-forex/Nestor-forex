@@ -485,6 +485,23 @@ export default {
     pie: (v) => `Fonte: BIS (Banco de Compensações Internacionais). O BIS publica com alguns dias de atraso, por isso a data de cada linha é até onde chega O SEU dado — não o dia em que esse banco decidiu. A mais antiga é de há ${v.dias} dias.`,
   },
 
+  oro: {
+    paraQue: 'Os traders olham o ouro porque costuma mover-se ao contrário do dólar e sobe quando há nervosismo no mercado. Mas isso é um costume, não uma lei: aqui não to dizemos — mostramos o número medido de quanto se moveu junto com cada par nas últimas 60 sessões, e tu decides se te serve.',
+    titulo: 'Ouro',
+    desc: 'Quanto se move com os teus pares',
+    aviso: '⚠️ Isto NÃO é um sinal. O ouro não diz comprar nem vender nenhum par. Abaixo está quanto se moveram JUNTOS nos últimos três meses — um facto sobre o passado, não uma previsão. E dois movimentos juntos não querem dizer que um mova o outro.',
+    dolares: 'dólares por onça',
+    enUnDia: 'Num dia',
+    enVeinteDias: 'Em 20 dias',
+    intro: 'Mede-se sobre a variação de cada dia, não sobre o preço, e só nas sessões com dado nos dois. Quanto mais acima, mais parecidos os seus movimentos.',
+    cabeceraCorrel: 'Quanto o ouro se move com cada par',
+    juntos: 'Movem-se juntos',
+    alReves: 'Movem-se ao contrário',
+    sobreDias: (v) => `${v.n} sessões em comum`,
+    sinCorrel: 'Nenhum par se moveu de forma parecida ao ouro nas últimas sessões. Isso também é um dado: hoje o ouro não te diz nada sobre estes catorze.',
+    pie: (v) => `Fonte: Twelve Data, preço à vista (XAU/USD), dado de ${v.fecha} — há ${v.dias} dias. O número vai de −1 a +1: perto de +1 movem-se quase igual, perto de −1 ao contrário, e perto de 0 não se parecem. Cada linha diz sobre quantas sessões foi calculado.`,
+  },
+
   cot: {
     paraQue: 'Os traders olham para saber se uma aposta já está cheia: quando quase todos os grandes estão do mesmo lado, sobra pouca gente para entrar e muita para sair. É contexto de fundo, semanal e com atraso. Não diz que par operar nem quando.',
     titulo: 'Commitments of Traders',

@@ -485,6 +485,23 @@ export default {
     pie: (v) => `Source : BIS (Banque des règlements internationaux). Le BIS publie avec quelques jours de retard, donc la date de chaque ligne indique jusqu\u2019où va SA donnée — pas le jour où cette banque a décidé. La plus ancienne date de ${v.dias} jours.`,
   },
 
+  oro: {
+    paraQue: 'Les traders regardent l\\u2019or parce qu\\u2019il bouge souvent à l\\u2019inverse du dollar et qu\\u2019il monte quand le marché est nerveux. Mais c\\u2019est une habitude, pas une loi : ici on ne te le dit pas — on te montre le nombre mesuré de combien il a bougé avec chaque paire sur les 60 dernières séances, et tu décides si ça te sert.',
+    titulo: 'Or',
+    desc: 'Combien il bouge avec tes paires',
+    aviso: '⚠️ Ce n\\u2019est PAS un signal. L\\u2019or ne dit d\\u2019acheter ni de vendre aucune paire. Ci-dessous : combien ils ont bougé ENSEMBLE ces trois derniers mois — un fait sur le passé, pas une prévision. Et que deux choses bougent ensemble ne veut pas dire que l\\u2019une fait bouger l\\u2019autre.',
+    dolares: 'dollars par once',
+    enUnDia: 'En un jour',
+    enVeinteDias: 'En 20 jours',
+    intro: 'C\\u2019est mesuré sur la variation de chaque jour, pas sur le prix, et seulement sur les séances qui ont une donnée des deux côtés. Plus c\\u2019est haut, plus leurs mouvements se ressemblent.',
+    cabeceraCorrel: 'Combien l\\u2019or bouge avec chaque paire',
+    juntos: 'Ils bougent ensemble',
+    alReves: 'Ils bougent à l\\u2019inverse',
+    sobreDias: (v) => `${v.n} séances en commun`,
+    sinCorrel: 'Aucune paire n\\u2019a bougé comme l\\u2019or ces dernières séances. C\\u2019est aussi une donnée : aujourd\\u2019hui l\\u2019or ne te dit rien sur ces quatorze.',
+    pie: (v) => `Source : Twelve Data, prix au comptant (XAU/USD), donnée du ${v.fecha} — il y a ${v.dias} jours. Le nombre va de −1 à +1 : près de +1 ils bougent presque pareil, près de −1 à l\u2019inverse, près de 0 ils ne se ressemblent pas. Chaque ligne indique sur combien de séances le calcul a été fait.`,
+  },
+
   cot: {
     paraQue: 'Les traders le regardent pour savoir si un pari est déjà encombré : quand presque tous les gros sont du même côté, il reste peu de monde pour entrer et beaucoup pour sortir. C\'est un contexte de fond, hebdomadaire et en retard. Il ne dit ni quelle paire ni quand.',
     titulo: 'Commitments of Traders',

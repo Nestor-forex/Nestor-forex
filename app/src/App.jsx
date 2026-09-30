@@ -10,6 +10,7 @@ import AvisosCard from './components/AvisosCard'
 import CotizacionesVivo from './components/CotizacionesVivo'
 import Tasas from './components/Tasas'
 import Cot from './components/Cot'
+import Oro from './components/Oro'
 import Calendario from './components/Calendario'
 import HistorialTab from './components/HistorialTab'
 import TableroCompleto from './components/TableroCompleto'
@@ -223,6 +224,17 @@ export default function App() {
                       ⚠️ Solo en Swing: el COT es semanal y llega con entre 3 y
                       10 días de retraso. Ver la cabecera de `useCot.js`. */}
                   <Cot />
+                  {/* El oro va el ÚLTIMO de las herramientas de información, y
+                      es deliberado: es la que menos habla de los pares. Las
+                      cuatro de arriba dicen algo DE la operación —a qué hora no
+                      entrar, qué cuesta abrirla, qué cuesta mantenerla, cómo
+                      está posicionada esa divisa— y ésta es contexto de otro
+                      mercado que solo toca a los pares a través de un número
+                      medido.
+                      ⚠️ Solo en Swing, por el mismo motivo que la correlación
+                      entre pares: la ventana de 60 sesiones son 60 DÍAS aquí y
+                      60 HORAS en la app hermana. Ver `useOro.js`. */}
+                  <Oro />
                 </>
               )}
               {tab === 'diario' && (
