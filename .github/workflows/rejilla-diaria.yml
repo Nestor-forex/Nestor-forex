@@ -1,0 +1,78 @@
+name: Diagnóstico de la rejilla diaria
+
+# ¿Qué es esa vela que trae un cuarto de rango, y qué le hace al stop?
+#
+# Del `barrido.json` y del `senales.jsonl` REALES de producción ya se sabe,
+# GRATIS: una de cada siete velas es estrecha en los CATORCE pares, ninguna es
+# plana, el cojín de ATR es el 16,6 % del stop, y por tanto una sola vela nueva
+# no puede mover el stop más de 1,84 pips — menos que el spread.
+#
+# Lo único que NO se puede tener gratis son LAS FECHAS: el barrido las descarta
+# al publicarse. Sin el día no se puede elegir entre QUITAR la vela estrecha y
+# FUNDIRLA con la siguiente, y elegirlo a ojo sería ponerle nombre a algo que no
+# se ha mirado.
+#
+# ⚠️⚠️ NO CAMBIA NADA, y no es una promesa: es el permiso.
+#
+# `permissions: contents: read` — no puede escribir en ninguna rama aunque
+# quisiera. No toca un archivo de la app, ni una señal, ni el barrido publicado,
+# ni el historial, ni ninguno de los experimentos que ya corren.
+#
+# Néstor lo pidió con estas palabras: «sin tocar nada de lo que hemos hecho en
+# las apps… pero sin quitar los experimentos, porque creo que vale la pena
+# seguir midiendo y tener todo el historial de lo que hemos hecho».
+#
+# ⚠️ EL LISTÓN ESTÁ ESCRITO ANTES, en
+# `app/scripts/lib/preregistro-rejilla-diaria.mjs` con fecha 2026-09-30,
+# incluido lo que significa CADA resultado posible y los DOS arreglos posibles.
+# Sin eso, cualquier número se lee como una confirmación de algo.
+#
+# ⚠️ ESTE NO ES EL DE INTRADÍA. Allá la pregunta es «¿hay horas de mercado
+# cerrado dentro de una serie horaria?»; aquí las velas son diarias y el
+# `atrWilder` de esta app recorre la serie ENTERA (el de Intradía tiene una
+# ventana dura de 60), y el stop es `lo10 − 0,5 × ATR` (allá es 1,5 × ATR).
+# Copiar el umbral de allá habría sido traerse una suposición falsa.
+#
+# ⚠️ SOLO A MANO. Contesta una pregunta de una vez; no vigila nada.
+#
+# ⚠️⚠️ NECESITA EL SECRETO. Son 14 créditos de Twelve Data (los 14 pares
+# directos, en dos tandas de 7 con una pausa de 65 s), así que sin el `env` de
+# abajo `leerLlave` no encuentra la llave y el guion falla. Cualquier workflow
+# nuevo que llame a estos guiones tiene que pasársela — ya pasó de verdad con
+# `comparar-reglas.yml` en la app hermana.
+
+on:
+  workflow_dispatch:
+
+# Solo lee. No aflojar esto para «aprovechar y guardar el resultado»: lo que
+# este trabajo NO puede hacer es escribir.
+permissions:
+  contents: read
+
+jobs:
+  diagnostico:
+    runs-on: ubuntu-latest
+    # Sin esto GitHub deja correr un trabajo hasta SEIS HORAS. Lo normal aquí
+    # son ~70 segundos: dos tandas de velas con una pausa de 65 s y aritmética.
+    timeout-minutes: 10
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Primero las comprobaciones sin internet. Si el ATR del diagnóstico no
+      # fuera el de la app, el log daría un número creíble sobre otra cosa — y
+      # eso ya pasó en la app hermana (0,00032541 contra 0,00032576).
+      - name: Comprobar las cuentas y el listón (sin internet)
+        working-directory: app
+        run: node scripts/prueba-rejilla-diaria.mjs
+
+      - name: Medir
+        working-directory: app
+        env:
+          # ⚠️ SIN ESTO EL GUION FALLA. Ver la cabecera.
+          TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
+        run: node scripts/medir-rejilla-diaria.mjs
