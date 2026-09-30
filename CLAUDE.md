@@ -7118,3 +7118,145 @@ workflow no ha corrido aún, así que no hay archivo real de producción que
 enchufar —al revés que con el COT y las tasas—. Los nombres de par sí son los
 14 de verdad. **Lo comprobado es cómo se PINTA**, no que esas correlaciones
 sean las de hoy.
+
+---
+
+# El oro, explicado para suscriptores (2026-09-30)
+
+Néstor leyó la tarjeta del oro recién fusionada y preguntó: **«esos números qué
+quieren decir o qué me están indicando como patrón»**. Se lo conté con los 14
+pares delante y pidió guardarlo.
+
+Es la **octava** de esta serie —el volumen, TradingView, la correlación entre
+pares, el swap, la actividad, el margen de error, Historial contra Diario y las
+apps contra el mercado— y funciona por el mismo motivo que las otras: **es una
+forma de exagerar que la app decide no usar, contada con el mecanismo delante.**
+
+⚠️ Pero ésta tiene algo que las demás no: **el lector puede rehacer la
+comprobación él mismo** con los números que la propia tarjeta le enseña. No hay
+que creerse nada.
+
+## El texto
+
+> **¿Qué significan esos números que salen al lado de cada par?**
+>
+> Van de **−1 a +1** y miden **cuánto se han movido dos cosas al mismo tiempo
+> en las últimas 60 sesiones.** Nada más.
+>
+> | | |
+> |---|---|
+> | **+1** | suben y bajan exactamente igual, siempre |
+> | **+0,6** | se parecen bastante, pero no siempre |
+> | **0** | no tienen nada que ver |
+> | **−0,6** | cuando uno sube, el otro suele bajar |
+> | **−1** | espejo perfecto, siempre al revés |
+>
+> El signo dice **hacia qué lado**. El tamaño dice **qué tan seguido**.
+>
+> ### Los cinco primeros números son la misma frase dicha cinco veces
+>
+> Así salieron el 30 de septiembre de 2026:
+>
+> | par | número | ¿dónde está el USD? |
+> |---|---:|---|
+> | USD/CHF | **−0,62** | **delante** |
+> | USD/CAD | **−0,61** | **delante** |
+> | EUR/USD | **+0,60** | detrás |
+> | AUD/USD | **+0,53** | detrás |
+> | NZD/USD | **+0,51** | detrás |
+>
+> La clave es pura mecánica del nombre del par:
+>
+> · **USD/CHF sube** = el dólar se pone **fuerte** (un dólar compra más francos)
+> · **EUR/USD sube** = el dólar se pone **débil** (un euro compra más dólares)
+>
+> Son la misma cosa medida al revés. Por eso uno sale − y el otro +. Traducido,
+> los cinco dicen esto:
+>
+> > **Cuando el oro sube, el dólar suele estar bajando. Y al revés.**
+>
+> No son cinco relaciones. Es **una sola**.
+>
+> ### Y aquí está la prueba, que usted puede comprobar solo
+>
+> Mire los 14 pares, no solo los 5 de arriba. Sepárelos en dos grupos:
+>
+> **Los que llevan dólar** (7) — el oro los sigue:
+> ```
+> USD/CHF −0,62 · USD/CAD −0,61 · EUR/USD +0,60
+> AUD/USD +0,53 · NZD/USD +0,51 · GBP/USD +0,47 · USD/JPY −0,41
+> ```
+>
+> **Los cruces, que NO llevan dólar** (7) — al oro le dan casi igual:
+> ```
+> EUR/NZD −0,21 · GBP/JPY −0,21 · GBP/CAD −0,17
+> NZD/CAD +0,17 · NZD/CHF −0,15 · EUR/CAD −0,01
+> ```
+>
+> **Seis de los siete cruces están pegados al cero.** Si el oro tuviera algo que
+> ver con el euro, con la libra o con el dólar australiano *por sí mismos*, los
+> cruces también se moverían con él. No lo hacen. Eso confirma que lo que el oro
+> sigue **no es ninguna de esas monedas: es el dólar.**
+>
+> *(La excepción: EUR/CHF sale en −0,44, alto para un cruce. Hay una explicación
+> de manual —el franco suizo también es refugio, como el oro— pero **eso no lo
+> hemos medido aquí**, así que se lo damos como teoría, no como hecho.)*
+>
+> ### Tres cosas que este número NO le está diciendo
+>
+> **1. No le dice el futuro.** Mide los últimos tres meses. Que se hayan movido
+> juntos hasta hoy no garantiza que lo hagan mañana. Estas relaciones cambian.
+>
+> **2. No le dice que uno mueva al otro.** El oro no empuja al dólar ni el dólar
+> al oro. Lo más probable es que los dos estén reaccionando a lo mismo (las
+> tasas, la Fed, el miedo del mercado). Es como el paraguas y las botas: se ven
+> juntos, pero ninguno causa al otro — los causa la lluvia.
+>
+> **3. Y 0,60 no es «siempre».** Un 0,60 significa que van en la misma dirección
+> unos **7 días de cada 10**. Los otros 3 se contradicen. *(Ese 7 de cada 10 es
+> una cuenta aproximada que sale del propio número, no un conteo de días que
+> hayamos hecho.)*
+>
+> ### Para qué le sirve de verdad: como aviso de riesgo, no como señal
+>
+> Ese mismo día la app proponía tres cosas: **USD/CHF COMPRA · USD/CAD COMPRA ·
+> USD/JPY COMPRA**. Los tres con el dólar delante. Los tres comprando dólar.
+>
+> **No son tres operaciones: es una sola apuesta al dólar, repetida tres veces.**
+> Si el dólar se voltea, se voltean las tres a la vez.
+>
+> Y el oro agrega una pieza: venía bajando un 3,77 % en 20 días, y acabamos de
+> ver que el oro bajando va con el dólar subiendo. O sea que **el oro le estaba
+> dando la razón a esos tres setups.**
+>
+> ⚠️ **Eso no los convierte en buenos.** Dos de los tres tenían una relación
+> riesgo/beneficio de 1:0,4 —se arriesgaba más del doble de lo que se buscaba
+> ganar— y RSI de 79 y 83, con la propia app diciendo *no perseguir*. El oro
+> solo dice que la apuesta de fondo es coherente con lo que hace el mercado, no
+> que vaya a ganar.
+>
+> **La tarjeta no le dice qué comprar. Le dice cuándo tres cosas distintas son
+> en realidad la misma.**
+
+## Por qué esto vende, y por qué es distinto de las otras siete
+
+📌 Las otras siete se sostienen en que **nosotros** medimos algo y se lo
+contamos. Ésta se sostiene en que **el suscriptor puede rehacerla él**: los 14
+números están en su pantalla, separarlos en «con dólar» y «sin dólar» es mirar
+el nombre del par, y el resultado salta solo. **No le pedimos que nos crea.**
+
+📌 Y de paso enseña la única forma correcta de usar una correlación: no para
+elegir el par, sino para **descubrir que varias operaciones son la misma
+apuesta**. Es el mismo argumento que el cruce de riesgo entre señales
+(2026-09-15), pero llegando por otro camino y con el suscriptor haciendo la
+cuenta.
+
+⚠️ **Lo que NO se puede convertir esto en una regla.** «El oro baja → compra
+dólar» sería un FILTRO, y los filtros van al banco de pruebas con su listón
+escrito antes: siete familias medidas, siete fallando. La tarjeta es
+INFORMACIÓN y no apaga ni una señal.
+
+📌 Los números de este texto son los REALES del 2026-09-30, la primera corrida
+del publicador en producción. Si alguien los repite dentro de seis meses, van a
+ser otros — **eso es justo lo que dice el punto 1**, y conviene que el ejemplo
+lleve su fecha pegada por la misma razón que la llevan las mediciones.
