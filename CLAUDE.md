@@ -7700,3 +7700,161 @@ hecho en la otra app?» encontró un problema que nadie estaba buscando** — y 
 ir a contestarla bien, el número que yo había publicado se cayó y el problema
 resultó ser **siete veces más frecuente** de lo que dije. Vale la pena hacerla
 siempre, aunque la respuesta esperada sea «no aplica».
+
+---
+
+# Los dos diagnósticos corrieron, y dicen cosas OPUESTAS (2026-09-30)
+
+Lanzados los dos seguidos, 21 créditos en total, **sin escribir nada**: los dos
+workflows llevan `permissions: contents: read`.
+
+| | veredicto calculado | qué significa |
+|---|---|---|
+| **Intradía** | `noSeMueve`, **7 de 7** | mi inferencia era FALSA |
+| **Swing** | `cambiaLosStops`, **12 de 14** | la app mide el ATR de menos |
+
+⚠️⚠️ **Y NO son contradictorios, porque NO preguntan lo mismo.** Es el detalle
+que hay que entender antes de leer cualquiera de las dos tablas:
+
+| | qué midió |
+|---|---|
+| Intradía | el ATR **al abrir la semana** contra el de media semana — una pregunta de POSICIÓN |
+| Swing | el ATR **con y sin** las velas estrechas — una pregunta de NIVEL |
+
+**La pregunta de Swing NUNCA se le hizo a Intradía.** Así que el `noSeMueve` de
+allá dice «el ATR del lunes no está especialmente hundido»; **no** dice «quitar
+las horas cerradas no cambiaría el ATR». Eso sigue sin medirse allí.
+
+## Intradía: la inferencia del lunes era falsa. La NOVENA
+
+```
+             ATR arranque   ATR medio sem.   derrumbe   al limpiar   sube
+  EUR       0.000766         0.000756      0.99×        1.04×   0.95×
+  GBP       0.000605         0.000718      1.19×        1.09×   1.10×
+  JPY       0.146960         0.143612      0.98×        1.08×   0.89×
+  CHF       0.000708         0.000889      1.26×        1.11×   1.15×
+  AUD       0.001540         0.001786      1.16×        1.08×   1.08×
+  NZD       0.001957         0.002509      1.28×        1.14×   1.13×
+  CAD       0.000967         0.000972      1.01×        1.03×   0.98×
+```
+
+5.000 velas, 180 arranques de semana, 3.285 velas de media semana, 1.289
+quitadas al limpiar (25,8 %).
+
+**El umbral del preregistro era 1,50× y el máximo real es 1,28×.** Tres pares
+(EUR, JPY, CAD) salen POR DEBAJO de 1: el ATR del arranque es incluso algo más
+ANCHO que el de media semana. Y en esos tres, limpiar la rejilla lo BAJA
+(`sube` 0,95 · 0,89 · 0,98) — lo contrario de lo que predije.
+
+⚠️ **El umbral NO se toca, y para eso estaba escrito antes.** El preregistro
+decía literalmente «si el número real sale por debajo, el umbral no se vuelve a
+tocar». **El paso 3 de Intradía no se hace.**
+
+📌 **Lo que sí se ve, y es honesto decirlo:** hay un efecto leve y **en la
+dirección que predije** en los cuatro pares donde el derrumbe pasa de 1,15
+(GBP, CHF, AUD, NZD): limpiar los acerca a 1 (1,19→1,09 · 1,26→1,11 ·
+1,16→1,08 · 1,28→1,14). El mecanismo existe; **es demasiado pequeño para
+importar.** Eso no rescata la inferencia: la predicción era un derrumbe grande.
+
+## ⚠️⚠️ Swing: es EL FIN DE SEMANA, y es inequívoco
+
+```
+velas estrechas: 51 de 300 (17,0 %)
+rango mediano del par:  4,860e-3
+rango de las estrechas: 1,320e-3   ← el 27 % de lo normal
+
+  domingo      9 / 38
+  lunes        0 / 44     ← CERO
+  martes       2 / 44
+  miércoles    1 / 44
+  jueves       4 / 44
+  viernes      0 / 43     ← CERO
+  sábado      35 / 43     ← el 81 % de los sábados
+```
+
+**44 de las 51 estrechas (86 %) caen en sábado o domingo, y CERO en lunes y
+viernes.** Twelve Data emite velas «diarias» de fin de semana en la serie de
+Forex. El mercado cierra el viernes a las 22:00 UTC y abre el domingo a las
+22:00, así que:
+
+- **el sábado no tiene mercado NINGUNO** → el arreglo fiel es **QUITAR**;
+- **el domingo tiene ~2 horas** → el fiel es **FUNDIR** con el lunes.
+
+### 📌 Mi propio criterio preguntó lo que NO había que preguntar
+
+`diaCulpable` imprimió **«NO HAY DÍA CULPABLE»** con el sábado a 35 de 43. No
+es un fallo de cálculo: pedía que **UN** día concentrara el 70 % de las
+estrechas, y el sábado solo llega al **68,6 %** — falla por punto y medio. Pero
+el problema de fondo no es el umbral: **la respuesta es DOS días, y mi criterio
+solo sabía buscar uno.**
+
+⚠️ **NO se afloja el 70 % para que el sábado «gane».** Ése es exactamente el
+momento para el que se escribe un listón antes. Y no hace falta: **el reparto
+crudo decide solo** — 86 % en fin de semana, 0 % en lunes y viernes no necesita
+ningún umbral para leerse.
+
+📌 Es la lección de la sonda del oro con otra cara: **una medida puede estar
+bien calculada y estar MAL PREGUNTADA.** Van dos veces en dos días.
+
+### Y los dos arreglos que nombré tampoco son la respuesta, por lo mismo
+
+El fiel es **un MIX** (quitar el sábado, fundir el domingo), que no es ninguna
+de las dos opciones que escribí. ✅ Lo que salva la medición es que **los dos
+arreglos miden casi igual** (EUR/USD +23,5 % contra +24,9 %), así que la
+elección no cambia el veredicto — pero eso es suerte, no diseño.
+
+### El tamaño, que es MUCHO mayor de lo que estimé
+
+| | mediana | rango |
+|---|---:|---|
+| el **ATR** sube | **+18,5 %** | de +9,8 % a +31,3 % |
+| el **stop de la app** sube | **+5,2 %** | de +1,0 % a **+80,8 %** |
+| el **stop de la reversión** sube | **+18,5 %** | = el ATR entero (1,5 × ATR) |
+
+**12 de 14 pares pasan el umbral del 2 %.** Yo había estimado ~10 % en el ATR;
+el real es **+18,5 % de mediana**, casi el doble.
+
+### ⚠️ EL HALLAZGO QUE NO ANTICIPÉ: el ATR no es lo que más mueve el stop
+
+USD/JPY sube **+80,8 %** y NZD/CAD **+37,4 %**, cuando su ATR solo sube 31 % y
+16 %. Con el ATR al 16,6 % del stop, el ATR explica **5,2** y **2,7** puntos —
+el resto (**75,6** y **34,7**) viene de otra parte, y es aritmética sobre los
+números medidos, no una hipótesis.
+
+**Viene de `lo10`.** El stop es `(cierre − mínimo de 10 velas) + 0,5 × ATR`, y
+al quitar 51 velas **«las 10 últimas» dejan de ser 10 días de calendario y
+pasan a ser ~14**. Una ventana más larga alcanza fondos más profundos.
+
+📌 **O sea que el efecto grande del arreglo no es el ATR: es que «10 días»
+vuelva a significar 10 días.** Eso no estaba en ninguna de mis dos hipótesis, y
+es la mitad del resultado. La medición contestó una pregunta que no se le hizo.
+
+⚠️ Y es también el motivo de que el stop de la app sea **el que menos sube de
+mediana** (+5,2 %) y a la vez **el que más sube en el extremo** (+80,8 %): son
+dos mecanismos distintos sumados, no uno.
+
+## Lo que esto autoriza: NADA. Y lo que queda pendiente
+
+El propio informe lo dice y el preregistro lo decía antes: **es un
+diagnóstico.** Cambiar la rejilla cambia el DATO de entrada, así que cambia
+EMA20, EMA50, RSI, ATR y los soportes a la vez — y eso va al banco de pruebas
+con su propio listón escrito antes, nunca de pasada.
+
+📌 Y lo que **no** se puede citar en contra: «aquí los filtros no funcionan,
+siete familias medidas y siete fallando». **Esto no es un filtro.**
+
+**Lo siguiente, y NO se empieza sin que Néstor lo confirme:**
+
+1. **Un preregistro nuevo para el cambio de rejilla en Swing**, con el mix
+   (quitar sábado, fundir domingo) escrito antes de medir.
+2. **La medición completa en el banco de pruebas** — mismas señales, mismos
+   días, vara neutra, spread por par, mitades. Es lo único que dice si la app
+   MEJORA, no solo si cambia.
+3. ⚠️ **Y hacerle a Intradía la pregunta de Swing**, que nunca se le hizo: no
+   «¿se hunde el ATR del lunes?» sino «¿cuánto sube el ATR al quitar las horas
+   cerradas?». El `noSeMueve` de allá no contesta eso.
+
+⚠️ **Lo que NO cambia mientras tanto:** los números medidos de las dos apps
+siguen describiendo lo que las apps hacen de verdad (Swing −0,03, Intradía
+−0,13), porque se midieron con estos mismos datos. Una app con otra rejilla
+sería **otra app** y habría que medirla desde cero.
