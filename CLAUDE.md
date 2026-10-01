@@ -7858,3 +7858,219 @@ siete familias medidas y siete fallando». **Esto no es un filtro.**
 siguen describiendo lo que las apps hacen de verdad (Swing −0,03, Intradía
 −0,13), porque se midieron con estos mismos datos. Una app con otra rejilla
 sería **otra app** y habría que medirla desde cero.
+
+---
+
+# Los tres puntos de arriba, construidos (2026-10-01)
+
+Néstor pidió los tres seguidos. Están los tres hechos y **ninguno ha corrido
+todavía**: lo construido son el listón, la medición y las comprobaciones. Nada
+toca un archivo de ninguna de las dos apps y los dos workflows van con
+`permissions: contents: read`.
+
+## 1 y 2. Swing: el listón del cambio de rejilla, y la medición completa
+
+```
+app/scripts/lib/rejilla-limpia.mjs             la limpieza (pura)
+app/scripts/lib/preregistro-rejilla-swing.mjs  el listón, fecha 2026-09-30 dentro
+app/scripts/medir-rejilla-swing.mjs            la medición, 14 créditos
+app/scripts/prueba-rejilla-limpia.mjs          73 comprobaciones, sin internet
+.github/workflows/rejilla-swing.yml            solo a mano, permiso de LECTURA
+```
+
+**El arreglo es el MIX**: quitar el sábado (no tiene mercado ninguno), fundir
+el domingo con el lunes (tiene ~2 horas, 22:00-24:00 UTC). Lo dictó el reparto
+medido —44 de las 51 velas estrechas en fin de semana, CERO en lunes y
+viernes— aplicando la regla que el listón anterior ya tenía escrita.
+
+⚠️ Y queda dicho que fue una limitación de cómo escribí aquel listón: nombré
+los dos arreglos **por separado** y el fiel resultó ser **uno por día**, que no
+era ninguna de las dos opciones sueltas.
+
+### ⚠️⚠️ Lo que hace esta medición distinta de todas las anteriores
+
+**LAS SEÑALES NO SON LAS MISMAS.** No es un filtro que puntúe las señales de
+hoy: cambia el DATO con el que se calculan, así que cambia EMA20, EMA50, RSI,
+ATR y los soportes a la vez. Es **«la app contra OTRA app»**, o sea dos
+muestras independientes.
+
+Y eso tiene un número: con resultados por operación que van de −1 a +1, el
+error típico de cada media sobre ~1.800 operaciones ronda **0,024 por unidad
+de riesgo**, o sea **MÁS que el umbral del listón (0,02)**. Un total mejor
+puede ser ruido.
+
+📌 **Lo que el ruido no hace es repetirse en las dos mitades.** Por eso el
+criterio de las mitades no es un adorno de rigor: es el único que distingue
+una mejora de un reparto afortunado. Está escrito así dentro del listón.
+
+### Los cuatro resultados posibles, escritos antes
+
+| veredicto | qué significa |
+|---|---|
+| `mejora` | pasa los cinco criterios → se le PROPONE a Néstor encenderla |
+| `noPasa` | el total mejora pero falla un criterio. No se enciende |
+| `igual` | la rejilla no mueve el resultado → el argumento deja de ser el rendimiento y pasa a ser que el stop sea honesto. Decisión de Néstor |
+| `empeora` | ⚠️⚠️ **NO autoriza quedarse con los datos sucios** |
+
+⚠️ El cuarto es el que más falta hacía cerrar **antes** de verlo: que la
+rejilla de hoy mide el ATR de menos es **aritmética, no opinión**, y un sistema
+que solo «funciona» con un dato mal medido no funciona — funciona el error. Lo
+que un «empeora» autorizaría es volver a mirar la GEOMETRÍA sobre la rejilla
+buena, nunca volver a la mala. Hay una comprobación que falla si alguien borra
+ese texto.
+
+### Se miden DOS cosas, y la segunda no es un adorno
+
+**A) todo en la rejilla limpia** — señales y resolución. Es la que decide,
+porque es la app que existiría.
+
+**B) señales limpias juzgadas en la rejilla de HOY** — diagnóstico, para
+separar el efecto de las SEÑALES del de la RESOLUCIÓN.
+
+⚠️ **B no es hipotético y ya costó datos reales.** El comentario de
+`resolver.mjs` lo lleva escrito: la vela de domingo del 2026-08-09 hizo que
+`indexOf` devolviera −1 y **8 señales reales quedaron «caducada» para
+siempre**, sobre 18 visibles. La rejilla sucia no solo mueve el stop: ya se
+comió casi la mitad de un día de historial.
+
+### Los cinco criterios, y el que no es obvio
+
+Umbral 0,02 · mejora en las DOS mitades · **aguanta 0,5 de swap** · la app no
+baja del 70 % de sus señales · ningún par aporta más del 40 % de la mejora.
+
+⚠️ El del swap pesa más aquí que en otras mediciones y por un motivo propio:
+**la rejilla limpia tiene menos velas, así que `diasTardados` baja y el swap
+medido baja con él.** Parte de cualquier mejora podría ser eso y nada más — una
+operación que «dura 10 días» en vez de 12 paga dos noches menos sin que el
+precio haya hecho nada distinto.
+
+### 📌 Un detalle de coma flotante que decidía veredictos
+
+`−0,06 − (−0,04)` en JavaScript **no da −0,02**, da −0,019999999999999997. Sin
+una tolerancia, un resultado que cae exactamente en el umbral se iría al lado
+cómodo por el último bit de un decimal, y el veredicto dependería de algo que
+nadie escribió en ningún listón. Lo cazó la comprobación del borde exacto.
+
+**Comprobado que las pruebas MUERDEN**, con el daño verificado en el archivo
+antes de darlo por bueno: quedarse el cierre del domingo tumba 2 · fundir en
+`i+1` a pelo tumba 3 · dejar el domingo final en la serie tumba 2 · quitar una
+fecha ilegible tumba 5.
+
+Y la plomería se probó con un mercado inventado antes de gastar un crédito: la
+salida de `limpiar` entra en `generarSenales` y en `resolver` sin tocar la app,
+porque las dos reciben la rejilla **como parámetro**.
+
+## 3. Intradía: la pregunta de Swing, que allí nunca se hizo
+
+Néstor lo señaló bien: «el "no" de Intradía solo contesta la primera». El
+`noSeMueve` del 2026-09-30 contesta **«¿se HUNDE el ATR al abrir la semana?»**
+—una pregunta de POSICIÓN—; Swing midió **«¿cuánto SUBE al quitar las horas
+cerradas?»** —una de NIVEL—.
+
+`cuantoSubeElATR` y `huecoDeApertura` en `rejilla-atr.mjs`, con el listón
+ampliado y 110 comprobaciones (eran 85).
+
+### El umbral es 7 % y en Swing 2 %. Derivado, no copiado
+
+| | stop típico | spread | el spread pesa | umbral |
+|---|---:|---:|---:|---:|
+| Swing | ~155 pips | ~2 | 1,3 % | **2 %** |
+| Intradía | ~30 pips | ~2 | **6,7 %** | **7 %** |
+
+El mismo bróker y el mismo spread, cuatro veces más peso. Copiar el 2 % habría
+sido traerse una suposición que aquí es falsa.
+
+### ⚠️⚠️ El estadístico que decide NO es la mediana, y me lo corrigió el mercado sintético
+
+Escribí la mediana del cociente como «la que decide». El mercado sintético
+—escrito para TENER el efecto— la desmintió **antes de correr nada real**:
+
+| | |
+|---|---:|
+| mediana del cociente | **1,000 EXACTO** |
+| p90 del cociente | 1,32 |
+| velas que suben más del 7 % | **23,9 %** |
+| techo estructural (velas que PUEDEN cambiar) | 46,7 % |
+
+Con el efecto delante, la mediana dice que no pasa nada. Y no es un fallo: es
+aritmética de esta app. `atrWilder` de Intradía tiene una **ventana DURA de 60
+velas**, así que solo cambian las velas con horas cerradas dentro de su
+ventana. Más de la mitad no puede cambiar y la mediana se queda clavada en 1.
+
+📌 **Y ahí está la diferencia de fondo con Swing, que es lo que hacía falta
+entender para hacer bien la pregunta:** allá `atrWilder` recorre **la serie
+ENTERA**, así que quitar velas cambia TODOS los valores y una mediana los ve.
+Aquí el efecto es **LOCAL**. El mismo estadístico, la misma pregunta, y no
+significa lo mismo en las dos apps.
+
+Decide la **PROPORCIÓN de velas de mercado afectadas**, con mínimo del 15 %:
+la app puede dar señal en cualquier hora de mercado y en cada una pone el stop
+con el ATR de esa hora, así que lo que importa es en qué fracción de esas horas
+el stop sale desviado más de lo que cuesta entrar.
+
+⚠️ Corregir una medida tras verla fallar en un mercado **sintético** no es
+corregir un umbral tras ver un resultado: lo sintético enseñó que la medida
+estaba mal elegida, no cuál es la respuesta. Es exactamente lo que ya había
+pasado con `atrMedioGlobal` en ese mismo archivo.
+
+### ⚠️⚠️ Y mi mecanismo candidato era FALSO. El DÉCIMO
+
+Para explicar por qué el ATR apenas se mueve habiendo quitado un 25,8 % de
+velas 5,2× más estrechas, propuse: al limpiar, la primera vela de la semana
+mide su rango contra el cierre del **viernes** y se come el hueco del fin de
+semana.
+
+**Falso, y lo desmintió la comprobación que escribí para sostenerlo.** En la
+rejilla limpia de Intradía **la FRONTERA se conserva** (domingo 21:00-23:00
+UTC, donde el cambio de hora decide si hubo mercado), así que **la vela
+anterior a la apertura es LA MISMA en las dos rejillas**: 0 de 19 arranques con
+el cierre previo distinto. No hay ningún hueco que comerse — la frontera hace
+de puente.
+
+Es el **décimo** mecanismo convincente de este proyecto que resulta falso al
+medirlo, y **el segundo en dos días** (el anterior fue el derrumbe del lunes).
+La explicación verdadera es la ventana dura de 60 velas, y ésa sí está medida.
+
+📌 La medición **se queda** y el informe imprime **las dos fechas** del cierre
+previo: si algún día la fuente dejara de emitir las horas de frontera, el
+puente desaparecería y el mecanismo volvería a estar en juego. Un cociente
+solo lo esconderría.
+
+### Y lo que YA se sabía de la otra mitad, dicho en vez de callado
+
+En la corrida del 2026-09-30 el ATR del **arranque** sube +9 % (GBP), +11 %
+(CHF), +8 % (AUD) y +14 % (NZD), y **baja** en EUR, JPY y CAD. O sea **4 de 7
+por encima del umbral: sin mayoría.** Esa parte de la pregunta de Swing ya
+tenía respuesta y estaba impresa en el log.
+
+## Cómo se verificó todo esto
+
+Lint, build y **todas** las pruebas sin internet en los dos repos (31 en Swing,
+24 en Intradía). Los **59 gemelos** siguen idénticos.
+
+**Comprobado que las pruebas de Intradía MUERDEN**, con el daño verificado en
+el archivo antes de darlo por bueno: decidir con la mediana tumba 1 · tirar la
+frontera al limpiar tumba 2.
+
+Y el informe de Intradía se corrió **de punta a punta con un mercado
+inventado**, no solo compilando: se sustituyó el lector de velas por uno falso
+y se leyeron las dos secciones nuevas enteras. Mereció la pena — una línea
+larga salía sin cortar y la columna de la mediana estaba rotulada como «la que
+decide» cuando ya no lo era.
+
+## Lo siguiente, y son dos botones
+
+Los dos están construidos y **sin lanzar**. Ninguno escribe nada:
+
+1. **Swing** — Actions → «¿Mejora la app con la rejilla limpia?» → Run
+   workflow. **14 créditos.** Es el que contesta si la app mejora.
+2. **Intradía** — Actions → «Diagnóstico de la rejilla (ATR por semana)» → Run
+   workflow. **7 créditos.** Ahora contesta también la pregunta de Swing.
+
+⚠️ **Y lo que ninguno de los dos autoriza:** encender nada. Cambiar la rejilla
+en la app sería una decisión aparte, de Néstor, con su propio PR, su prueba y
+su verificación en navegador como todo lo demás de este repositorio.
+
+⚠️ **El paso 3 de Intradía del preregistro anterior sigue sin hacerse**, y eso
+no cambia: el derrumbe del lunes midió 1,28× contra el 1,50 pedido y **el
+umbral no se vuelve a tocar**. Para eso se escribió antes.
