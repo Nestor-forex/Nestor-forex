@@ -1,0 +1,83 @@
+name: ¿Mejora la app con la rejilla limpia?
+
+# La medición completa, no el diagnóstico. Son dos preguntas distintas:
+#
+#   · «Diagnóstico de la rejilla diaria» (ya corrido, 2026-09-30) preguntaba
+#     **¿la vela de fin de semana CAMBIA el stop?** → SÍ: el ATR +18,5 % de
+#     mediana, el stop de la app +5,2 %, 12 de 14 pares por encima del umbral.
+#     Y trajo las fechas: 44 de las 51 velas estrechas son sábado o domingo, y
+#     CERO son lunes o viernes.
+#
+#   · esto pregunta lo que aquél decía expresamente que no autorizaba:
+#     **¿la app MEJORA con la rejilla limpia?** Cambiar el stop y mejorar no
+#     son lo mismo.
+#
+# ⚠️⚠️ LAS SEÑALES NO SON LAS MISMAS. Esto no puntúa las señales de hoy:
+# cambia el dato con el que se calculan, así que cambia EMA20, EMA50, RSI, ATR
+# y los soportes a la vez. La comparación es «la app contra OTRA app», o sea
+# dos muestras independientes — y dos muestras de ~1.800 operaciones se
+# diferencian solas (error típico ~0,024 por unidad de riesgo, más que el
+# umbral del listón). Lo que el ruido no hace es repetirse en las dos mitades,
+# y por eso ése es el criterio que decide.
+#
+# ⚠️ EL LISTÓN ESTÁ ESCRITO ANTES, en
+# `app/scripts/lib/preregistro-rejilla-swing.mjs` con fecha 2026-09-30,
+# incluidos los cuatro resultados posibles. El que más falta hacía cerrar antes
+# de verlo es «empeora»: que la app mida peor con datos honestos NO autoriza
+# quedarse con los datos sucios — que la rejilla de hoy mide el ATR de menos
+# es aritmética, no opinión.
+#
+# ⚠️⚠️ NO CAMBIA NADA, y no es una promesa: es el permiso.
+#
+# `permissions: contents: read` — no puede escribir en ninguna rama aunque
+# quisiera. No toca un archivo de la app, ni una señal, ni el barrido
+# publicado, ni el historial, ni ninguno de los experimentos que ya corren.
+# Encender el cambio en la app sería una decisión aparte, de Néstor, con su
+# propio PR.
+#
+# ⚠️ SOLO A MANO. Contesta una pregunta de una vez; no vigila nada.
+#
+# ⚠️⚠️ NECESITA EL SECRETO. Son 14 créditos de Twelve Data (los 14 pares
+# directos, en dos tandas de 7 con una pausa de 65 s), **una sola descarga para
+# las dos rejillas**. Sin el `env` de abajo `leerLlave` no encuentra la llave y
+# el guion falla. Cualquier workflow nuevo que llame a estos guiones tiene que
+# pasársela — ya pasó de verdad con `comparar-reglas.yml` en la app hermana.
+
+on:
+  workflow_dispatch:
+
+# Solo lee. No aflojar esto para «aprovechar y guardar el resultado»: lo que
+# este trabajo NO puede hacer es escribir.
+permissions:
+  contents: read
+
+jobs:
+  medir:
+    runs-on: ubuntu-latest
+    # Sin esto GitHub deja correr un trabajo hasta SEIS HORAS. Aquí hay dos
+    # descargas de velas con su pausa de 65 s y DOS pasadas completas de
+    # `generarSenales` sobre ~1.400 días, que es lo que tarda de verdad.
+    timeout-minutes: 30
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Primero las comprobaciones sin internet. Si la limpieza se quedara el
+      # cierre del domingo, el informe enseñaría una vela que no existió —
+      # máximo de lunes y cierre de domingo— y nada fallaría.
+      - name: Comprobar la limpieza y el listón (sin internet)
+        working-directory: app
+        run: |
+          node scripts/prueba-rejilla-limpia.mjs
+          node scripts/prueba-rejilla-diaria.mjs
+
+      - name: Medir
+        working-directory: app
+        env:
+          # ⚠️ SIN ESTO EL GUION FALLA. Ver la cabecera.
+          TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
+        run: node scripts/medir-rejilla-swing.mjs
