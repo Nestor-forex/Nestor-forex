@@ -1,0 +1,58 @@
+name: ¿Llegan a su hora los programas?
+
+# Mide, programa por programa de las DOS apps, cuánto tarda GitHub en disparar
+# cada cron. Ver la cabecera de app/scripts/lib/puntualidad.mjs para el porqué
+# y para los números que lo motivaron.
+#
+# ⚠️⚠️ ESTO EXISTE PORQUE EL PROBLEMA ES INVISIBLE. Un cron que llega cinco
+# horas tarde NO falla: el workflow sale verde, el archivo se publica y nadie
+# se entera. El único síntoma es que Néstor abre la app a media mañana y ve el
+# dato de ayer, y eso se confunde con mil cosas.
+#
+# Y es la vara con la que se comprueba cualquier arreglo. Cuando se ponga un
+# reloj de fuera que llame a `workflow_dispatch`, la pregunta «¿ya va mejor?»
+# se contesta con esto, no con una impresión.
+#
+# NO gasta créditos de Twelve Data, NO necesita secretos y NO escribe nada.
+
+on:
+  # Una vez al día. ⚠️ Y sí, este cron también llegará tarde — da exactamente
+  # igual: lo que mide son los últimos 30 días, así que la hora a la que corra
+  # no cambia el resultado. Es el único programa del proyecto al que su propio
+  # retraso no le afecta.
+  #
+  # Escrito como entrada diaria (no horaria) porque está medido que las diarias
+  # disparan casi siempre: ver la tabla en la cabecera de `vigia.yml` de la app
+  # hermana.
+  schedule:
+    - cron: '35 4 * * *'
+  workflow_dispatch:
+
+# Solo lee la API pública de Actions. No aflojar esto: lo que este trabajo NO
+# puede hacer es escribir.
+permissions:
+  contents: read
+
+jobs:
+  medir:
+    runs-on: ubuntu-latest
+    # Son ~20 peticiones a la API. Lo normal son segundos.
+    timeout-minutes: 10
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Medir
+        working-directory: app
+        # ⚠️ SIN `env` de token, a propósito. Los dos repositorios son públicos
+        # y la API de Actions se lee sin credencial (comprobado: HTTP 200 sin
+        # token). Mandar uno solo añade formas de fallar — y ya falló una vez,
+        # con una variable de relleno que daba 401 en los diez programas.
+        #
+        # Y el `GITHUB_TOKEN` por defecto NO serviría para las dos apps: está
+        # acotado a su propio repositorio, así que leer la hermana daría 403.
+        run: node scripts/medir-puntualidad.mjs
