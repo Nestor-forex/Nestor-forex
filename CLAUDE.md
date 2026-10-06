@@ -8361,3 +8361,151 @@ con fecha, número y una consecuencia que Néstor vio en su propia app.
 ⚠️ **Lo que NO se puede hacer con este texto:** presentarlo como una mejora del
 rendimiento. Dice lo contrario, y ahí está su fuerza. Si alguien lo reescribe
 en plan «hemos mejorado la app», se cae el único argumento que tiene.
+
+---
+
+# El reloj de GitHub, MEDIDO sobre un mes: 17 %, no «se salta horas» (2026-10-06)
+
+Néstor pidió revisar que las dos apps estuvieran al día y sin fallos. Los 17
+workflows estaban en verde y ningún archivo publicado estaba roto ni truncado.
+Lo que salió fue otra cosa, y salió de contar en vez de mirar las últimas filas.
+
+## El número
+
+Corridas reales por día hábil, 22 días seguidos (2026-09-10 a 2026-10-05):
+
+| programa de Intradía | debería | corre | cumple |
+|---|---:|---:|---:|
+| Vigía por hora (`20 * * * 1-5`) | 24/día | **4,2** | **17 %** |
+| Publicador del barrido (2 crones) | 48/día | **7,5** | **16 %** |
+
+No es un día malo: es **todos los días**, sin excepción, con huecos de 7 y 8
+horas seguidas y retrasos de hasta 36 minutos sobre el minuto programado.
+
+⚠️ **Esto desmiente por tamaño lo que decía esta memoria.** Estaba escrito «3
+corridas donde tocaban 13» (23 %, medido una vez el 2026-08-09) y «huecos de
+7,6 h». Lo primero era una muestra de un día; lo segundo describía el síntoma
+sin el ritmo. **Nadie lo había contado sobre un mes**, y el número real es peor
+y constante.
+
+## Lo que NO rompe, y hay que decirlo antes de lo que sí
+
+La app de Intradía **nunca se queda sin datos**: el publicador, aunque corra 7
+veces en vez de 48, publicó hace minutos, y las velas de una hora **ya
+cerradas no se mueven**. Lo que se degrada es el **historial**: si el vigía solo
+mira 4 veces al día, una señal que apareció y se resolvió entre dos miradas no
+queda anotada nunca — y el historial es lo único del proyecto que no se puede
+volver a fabricar.
+
+📌 Swing **no tiene este problema**, y es su propio arreglo el que lo demuestra:
+su vigía corre una vez al día y los **tres crones de respaldo** (2026-09-07)
+funcionaron — el lunes 5 dispararon los tres (22:11, 22:43, 22:55, o sea más de
+6 horas tarde) y `yaCorrioHoy` dejó trabajar al primero y saltar a los otros dos.
+Sin esos tres intentos, con un 17 % de cumplimiento, Swing perdería días enteros
+de historial a menudo.
+
+⚠️ **La conclusión que esto sugiere, sin medir todavía:** Intradía necesita algo
+equivalente —varios intentos por hora con un guardián de «ya corrió esta hora»—
+o aceptar por escrito que su historial tiene agujeros. No se construye sin
+decidirlo.
+
+## ⚠️⚠️ Y un número de ESTA memoria que estaba mal por un factor de 6
+
+Aquí está escrito que Intradía gasta **511 créditos de los 800** al día (336 del
+publicador + 168 del vigía + 7 del reporte). Esa cuenta supone que los crones
+disparan. Con la cadencia real:
+
+| | supuesto | real |
+|---|---:|---:|
+| publicador (7 créditos/corrida) | 336 | **53** |
+| vigía (7/corrida) | 168 | **29** |
+| reporte | 7 | 7 |
+| **total de 800** | **511** | **≈ 89** |
+
+Swing gasta 36 (14 vigía + 7 reporte + 15 oro).
+
+📌 **Esto importa porque ya bloqueó una decisión.** El 2026-09-30 se dejó la
+pregunta del petróleo y del oro en «lo decide Néstor porque cuesta créditos»,
+contando el margen con los 511. El margen real es siete veces mayor. Es el mismo
+patrón que el «medio mega» de `barrido.json`, que era 52 KB y bloqueó una mejora
+mes y medio: **un número inflado en la memoria no es un detalle, es una decisión
+que no se toma.**
+
+⚠️ Y el aviso correspondiente: **arreglar la cadencia subiría el gasto.** Si
+algún día el vigía de Intradía corre de verdad 24 veces, son 168 créditos, no 29.
+La holgura es holgura mientras el reloj falle.
+
+---
+
+# La rejilla, confirmada por un proveedor DISTINTO (2026-10-06)
+
+Al comparar los datos de las apps contra fuentes externas —lo que pidió Néstor—
+apareció la mejor evidencia que tiene el proyecto del problema de la rejilla, y
+no viene de datos propios.
+
+Se tomó EUR/USD y se comparó contra **Alpha Vantage**, calculando además el RSI
+de Wilder **a mano** sobre sus cierres para no fiarse tampoco de su número:
+
+| medida de EUR/USD al 2026-10-05 | la app | independiente |
+|---|---:|---:|
+| RSI(14) | **13,70** | **18,90** |
+| mi RSI(14) sobre los cierres de Alpha Vantage | — | 19,45 ← reproduce el suyo |
+| mi RSI con período **10** | — | **14,46** ← aquí cuadra con la app |
+| máximo de «20 días» | **1.15572** | 1.16530 (20 días de mercado) |
+| máximo de **14 días de mercado** | — | **1.15560** ← cuadra a 1,2 pips |
+
+**Las dos medidas dicen lo mismo por caminos distintos: los «20 días» de la app
+son 14 días de mercado, y su «RSI de 14» se comporta como un RSI de 9-10.**
+
+📌 Es exactamente lo que predice la rejilla sucia (velas de sábado y domingo
+contadas como días completos), y es la primera vez que se confirma **desde
+fuera**, con otro proveedor y con el cálculo hecho a mano en vez de aceptando el
+número publicado. Hasta hoy todo lo que sostenía ese hallazgo eran datos propios
+medidos con herramientas propias.
+
+⚠️ **Y lo que NO cambia:** las dos lecturas marcan «extremadamente sobrevendido»
+y la conclusión de mercado es la misma. Lo que cambia es que la de la app
+**exagera hacia el extremo**, que es justo la dirección en la que un ATR
+subestimado deja el stop demasiado estrecho.
+
+📌 Esto refuerza el PR de la rejilla limpia y no lo sustituye: el veredicto del
+banco sigue siendo `igual` en rendimiento, y el motivo para encenderla sigue
+siendo la honestidad del dato, no el resultado.
+
+## Y lo que la comparación dijo de bueno, que era el riesgo de fondo del proyecto
+
+Diez puntos comparados contra seis mesas externas (Sucden, RoboForex, ING,
+Rabobank, Deutsche Bank, FXStreet/Myfxbook) el mismo día: **coinciden en los
+diez**, dos de ellos al segundo decimal (el mínimo de EUR/USD a 1,7 pips, el
+USD/CHF a 1 pip). Y el H1 de Intradía dando USD y CHF como los más débiles de
+las últimas horas coincidió con OCBC diciendo que «la demanda de refugio que
+apoyó al franco se está desvaneciendo».
+
+⚠️ **Las apps MIDEN bien. Eso no es que ACIERTEN.** Un termómetro que coincide
+con todos los demás termómetros es un buen termómetro y no sabe si va a llover.
+La frase va a la landing y ya está escrita así en la explicación para
+suscriptores del 2026-09-29.
+
+## El parte entregado
+
+Artifact privado (única copia del análisis; si se pierde el enlace se rehace
+desde los datos, que siguen publicados):
+https://claude.ai/artifact/GzQxXdfcjVZy2w2pq8SC3A
+
+Cinco pares de Swing y cinco de Intradía con entrada, stop y objetivo, elegidos
+por mí **sin usar ninguna señal de las apps ni ninguno de los experimentos** —
+lo pidió así. Lo que más valió del ejercicio, y conviene reusarlo:
+
+📌 **La matriz de correlación de la app convirtió «cinco operaciones» en «tres
+apuestas».** Aplicando el lado a cada par: NZD/USD venta y EUR/USD venta dan
+**+0,79 efectivo** y USD/CAD compra con EUR/USD venta **+0,68** — la misma
+apuesta al dólar expresada tres veces. Solo EUR/CHF y GBP/CAD salieron
+independientes de todo. Es el uso para el que existe `riesgoEntreSenales`, y
+aplicado a mano sobre elecciones propias funciona igual.
+
+📌 **Y el spread real del puente decidió un par.** La mejor idea del H1 por
+fuerza (NZD/CHF: hueco 10,0 contra 0,0, ADX 30,5) **no pasa el listón de 1,5
+después de coste** (1,34), porque 1,9 pips de spread son el 16 % de su rango
+horario. La misma idea vía GBP/USD da 1,72 con 1,2 pips. **El par con mejor
+señal no es el par que conviene operar**, y eso solo se ve con el spread real
+delante — la tabla estimada no lo habría dicho.
