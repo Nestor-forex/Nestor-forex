@@ -8784,3 +8784,169 @@ se lea. `robots.txt` sirve para **DESCARTAR, nunca para aprobar**.
 **Actions → «Sonda del contexto que no vemos» → Run workflow.** No gasta ni un
 crédito de Twelve Data y no escribe nada. Con la forma real delante se escribe
 el lector; nunca al revés.
+
+---
+
+# CERO de 162 corridas llegaron a su hora (2026-10-06). Y la causa es de GitHub
+
+Néstor, después de fusionar el arreglo de los crones: **«veo que continúa el
+mismo problema con lo de GitHub que va a seguir enviando reportes retardados,
+eso no nos sirve así, porque entonces quiere decir que estamos dando
+información falsa… no podemos dar un barrido con horas de retraso, eso sería
+irresponsable»**.
+
+Tenía razón, y lo medido es **peor de lo que yo le había contado ese mismo
+día**. Pero una mitad de su frase hay que corregirla, y la corrección importa
+para elegir el arreglo.
+
+## 1. El número, medido con `medir-puntualidad.mjs` sobre 30 días
+
+**De 162 corridas programadas con hora fija en las dos apps, CERO llegaron a
+tiempo.** Ni una.
+
+| programa | pedido (UTC) | retraso mediano | a tiempo (≤15 min) |
+|---|---|---:|---:|
+| Swing · vigía | 15:50 / 16:20 / 16:50 | **183 min** | **0 de 64** |
+| Swing · reporte diario | 15:55 | 209 min | 0 de 22 |
+| Swing · tasas | 06:20 | **329 min** | 0 de 27 |
+| Swing · COT | 07:20 | 329 min | 0 de 23 |
+| Swing · oro | 07:50 | **418 min** | 0 de 4 |
+| Intradía · reporte diario | 13:00 | 277 min | 0 de 22 |
+
+Y los que deberían mirar cada hora, contados en **horas distintas cubiertas**:
+calendario de Swing 4,2 de 6 (**70 %**) · publicador de Intradía 7,0 de 24
+(**29 %**) · vigía de Intradía 4,3 de 24 (**18 %**).
+
+📌 **8,7 corridas al día del publicador cubren solo 7,0 horas distintas.** Es la
+confirmación en producción de lo que el PR del arreglo predijo: los retrasos
+amontonan entradas en la misma hora y `concurrency` cancela la pendiente. **Por
+eso se cuentan horas y no corridas.**
+
+## 2. ⚠️⚠️ MOVER EL CRON A OTRA HORA NO SIRVE. Medido, no supuesto
+
+Era el arreglo más barato posible y había que descartarlo con datos. Se midió a
+las **06:20, 07:20, 07:50, 13:00, 15:50 y 15:55** y **las seis llegan igual de
+tarde**. No es una ventana de carga a una hora concreta: es el reloj.
+
+**No volver a proponer «cámbialo de hora».**
+
+## 3. La causa es EXTERNA y tiene fecha
+
+Hay una regresión documentada de GitHub que arranca **alrededor del 2026-08-26**
+(discusiones de su comunidad: workflows programados que no disparan o llegan con
+horas de retraso). Y encaja con nuestra medición sin forzar nada — horas vistas
+al día por el vigía de Intradía, por semana:
+
+```
+semana del 17-ago  12,4 de 24
+semana del 24-ago  10,8        ← la regresión arranca aquí
+semana del 31-ago   5,4
+semana del  7-sep   5,6
+semana del 28-sep   4,0
+```
+
+📌 **No es nada de nuestro montaje.** Conviene tenerlo claro para no andar
+buscando el fallo en el repositorio.
+
+## 4. ⚠️ LA CORRECCIÓN A «INFORMACIÓN FALSA», y hay que ser exacto
+
+**Las apps NO mienten.** Comprobado en el código antes de contestarle:
+
+| | qué rotula | ¿es cierto con retraso? |
+|---|---|---|
+| Swing | «Datos al cierre del [fecha] · velas diarias» | **sí** — la vela diaria es la del día, se calcule a las 15:50 o a las 20:34 |
+| Intradía | «Vela H1 más reciente: [hora] hora de Colombia ([utc] UTC)» | **sí, y además enseña la HORA**, así que el retraso se ve |
+
+⚠️ **Lo que sí es un agujero real: ninguna de las dos enseña CUÁNDO SE GENERÓ el
+barrido.** `barrido.json` lleva `generadoEl` desde siempre y **la app no lo lee**
+— comprobado: `useMarketData` solo usa `ultima` (la fecha de la vela) y
+`guardadoEl` (cuándo lo bajó el navegador, que es «hoy» siempre). Así que un
+barrido de hace siete horas se ve idéntico a uno de hace diez minutos.
+
+📌 **Entonces el veredicto honesto es: no es falso, es TARDE.** Y para un
+producto que promete un barrido de la mañana, tarde es una promesa incumplida —
+que es lo que Néstor llamó irresponsable, y en eso tiene toda la razón.
+
+## 5. Lo que SÍ funciona, y es el único camino medido
+
+**`workflow_dispatch` corre en SEGUNDOS.** Medido de dos maneras:
+
+- los tres lanzamientos a mano de ese día arrancaron entre 7 y 10 segundos
+  después de pulsarlo;
+- la **espera en cola es 0 s en las 600 corridas** de las dos apps, de los
+  cuatro tipos de disparo. O sea que todo el retraso que se ve está en que
+  GitHub decida CREAR la corrida, y eso solo le pasa a `schedule`.
+
+**Por tanto el arreglo es que algo de FUERA pulse el botón.** No hay que tocar
+ni una línea de código de las apps: los workflows ya tienen `workflow_dispatch`.
+
+### Las alternativas investigadas, con lo que cuesta cada una
+
+| | gratis | lo que hay que hacer | riesgo |
+|---|---|---|---|
+| **cron-job.org** | sí | un formulario web: URL, cabecera y cuerpo. ~10 min de clics | el token vive en un formulario de un servicio de donaciones |
+| **Cloudflare Workers** | sí (5 crones por cuenta) | crear cuenta y pegar ~15 líneas en su panel | el token vive en un almacén de secretos de verdad |
+| **El PC de Néstor** | sí | el puente de MT5 ya corre ahí cada 15 min y ya tiene token | **solo mientras el PC esté encendido** |
+
+⚠️ **El riesgo del token, dicho exacto:** hace falta un token *fine-grained* con
+**`Actions: write`** en los dos repositorios. Con eso se puede disparar,
+re-lanzar, cancelar y **desactivar** workflows, y borrar artefactos y cachés.
+**NO** se puede subir código, **NO** se puede leer un secreto y **NO** se puede
+tocar `main`. O sea que el peor caso es que alguien gaste créditos de Twelve
+Data o apague el vigía — malo, acotado y visible.
+
+⚠️ **Y el token CADUCA.** El día que caduque, todo vuelve a llegar cinco horas
+tarde **en silencio**. Por eso la herramienta de medición se construyó PRIMERO:
+es lo único que lo cantaría.
+
+### ⚠️ Lo que NO funciona, para no volver sobre ello
+
+- **Mover el cron de hora** — medido en seis horas distintas (punto 2).
+- **Más entradas de cron** — ya está hecho: disparan el 94-100 % y llegan 3-5
+  horas tarde. Arregla «no dispara», no «llega tarde».
+- **Pagar GitHub.** `schedule` está documentado como «mejor esfuerzo» en todos
+  los planes; no es una limitación del plan gratuito.
+- **Un workflow que se re-lance a sí mismo.** Necesita un token igual
+  (`GITHUB_TOKEN` **no puede** disparar workflows, por diseño, para evitar
+  bucles) y **una sola caída rompe la cadena para siempre** sin nada que la
+  reinicie.
+
+## 6. La herramienta, y los dos fallos que ella misma destapó
+
+```
+app/scripts/lib/puntualidad.mjs      las cuentas puras
+app/scripts/medir-puntualidad.mjs    lee la API de las DOS apps
+app/scripts/prueba-puntualidad.mjs   44 comprobaciones, sin internet
+.github/workflows/puntualidad.yml    diario, permiso de LECTURA, sin secretos
+```
+
+📌 **Cogía `process.env.GITHUB_TOKEN`**, y en el entorno donde se programa esa
+variable viene con **un valor de relleno de 14 caracteres** que no es un token.
+401 en los diez programas. Ahora **no se manda ninguno**: los dos repositorios
+son públicos y la API se lee sin credencial (comprobado, HTTP 200). Así el
+workflow tampoco necesita secreto — y el `GITHUB_TOKEN` por defecto no habría
+servido igual, porque está acotado a su propio repositorio.
+
+⚠️⚠️ **Y el grave:** con los diez en 401, el guion imprimió **«✓ ninguno está
+inservible»** y salió con 0. **La herramienta escrita para hacer visible un
+problema invisible era, al fallar, indistinguible de «todo va bien».** Es el
+agujero de `veredictoBusqueda` del 2026-09-14. Ahora si no se pudo mirar
+NINGUNO, falla; uno suelto no, porque un programa recién añadido sin corridas no
+es un fallo.
+
+⚠️ **La mediana con un número PAR de corridas toma el de arriba de los dos del
+medio**, a propósito: equivocarse hacia «hay más retraso del que hay» cuesta
+mirar un log, y hacia «va bien» cuesta justo lo que esto viene a cazar. Misma
+asimetría que el resolver.
+
+⚠️ Detalle del entorno: **`fetch` de Node no usa el proxy de estas sesiones**, así
+que para correrlo desde aquí hace falta `NODE_USE_ENV_PROXY=1`. En Actions no hay
+proxy y no se necesita.
+
+## 7. Lo pendiente, y lo que decide Néstor
+
+1. **Elegir el reloj de fuera** (los tres de la tabla). Es su decisión porque la
+   diferencia no es técnica: es dónde vive el token y de qué depende.
+2. **Que la app enseñe cuándo se generó el barrido** («generado hace 3 h»), que
+   es el agujero real del punto 4. No arregla el retraso: lo hace visible en vez
+   de invisible. Son 13 idiomas × 2 apps, así que no se hace sin su OK.
