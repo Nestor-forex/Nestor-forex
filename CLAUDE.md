@@ -8209,6 +8209,46 @@ ahora se cobra por noches de calendario, así que las filas que lo barren
 cambian **aunque la rejilla no hubiera cambiado**. Dos razones distintas, el
 mismo botón.
 
+### Lo que cambió en pantalla, con los números
+
+Corrida del 2026-10-06, **1.343 días** (2021-08-09 a 2026-10-06).
+
+| fila de la pantalla | antes | ahora |
+|---|---|---|
+| la app (su geometría, con spread) | 2.320 · 56 % · −0,03 | **2.095 · 56 % · −0,04** |
+| la app con la vara neutra | 2.331 · 48 % · −0,05 | **2.103 · 49 % · −0,04** |
+| la reversión M2 | 872 · 55 % · +0,051 | **870 · 54 % · +0,05** |
+
+⚠️ **Los 1.343 días NO son menos periodo que los 1.436 de antes.** Es el mismo
+calendario: lo que baja es el número de VELAS, porque las de fin de semana ya no
+se cuentan como días. Sin decirlo, se lee como que se perdieron tres meses de
+historia.
+
+⚠️⚠️ **Y `reversion.porRiesgo` CAMBIÓ DE SIGNIFICADO, con el parecido de los
+números tapándolo:** 0,051 era la fila **pagando 0,5 pips de swap por noche** y
+0,05 es la de **solo spread**. De un vistazo parece «casi no se movió» y no es
+eso. Se cambió para que las tres filas lleven el mismo peaje —spread por par y
+nada de swap—, porque enseñar la app sin swap y la reversión con swap la
+castigaba a ella sola y hacía la comparación injusta **en la dirección cómoda**.
+
+📌 Es la familia de siempre de este archivo —un número bien calculado que
+describe otra cosa de la que dice describir— pero por una cara nueva: aquí lo
+que engaña no es el número viejo, es que el nuevo se le PAREZCA.
+
+### De paso, «comprar la caída» dejó de pasar su listón
+
+Con la rejilla limpia y el swap por noches de calendario, `C10` da 1.772 ops ·
+53 % · **+0,041**, gana en las dos mitades (+0,005 / +0,073)… y **falla el
+criterio del swap**: pagando 0,5 pips por noche queda en **−0,003**.
+
+El 2026-09-07 pasaba los seis. Ahora pasa cinco.
+
+⚠️ **Eso NO cambia nada: ya corría en la sombra y sigue en la sombra.** Y el
+criterio no se afloja — está escrito desde antes por qué existe: «una regla que
+solo gana con swap cero no gana en una cuenta real». Lo único que dice este
+número es que la regla era algo más frágil de lo que parecía, y que parte de su
+margen venía de contar las noches de menos.
+
 ---
 
 # La rejilla, cerrada para suscriptores (2026-10-06). La DÉCIMA de la serie
