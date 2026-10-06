@@ -18,6 +18,8 @@
 
 import { readFileSync } from 'node:fs'
 
+import { limpiar } from './rejilla-limpia.mjs'
+
 // Los 14 que muestra la app, en el formato que usa Twelve Data.
 export const PARES = [
   'EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'USD/CAD', 'AUD/USD', 'NZD/USD',
@@ -162,8 +164,45 @@ async function bajarTanda(simbolos, apiKey, velas) {
  *              años. (En la app hermana, con velas de una hora, esos mismos
  *              5000 son solo 7 meses — por eso allí hace falta pedir por
  *              tramos de fechas y aquí no.)
+ *
+ * @param rejilla `'limpia'` (lo normal) o `'cruda'`. Ver abajo.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️⚠️ LA REJILLA SE LIMPIA AQUÍ, Y POR DEFECTO
+ * ─────────────────────────────────────────────────────────────────────────
+ * Twelve Data emite velas «diarias» de FIN DE SEMANA en la serie de Forex, y
+ * el mercado está cerrado el sábado entero y abre el domingo solo a las 22:00
+ * UTC. Medido sobre 300 velas reales el 2026-09-30: 44 de las 51 velas
+ * estrechas caen en fin de semana, CERO en lunes y viernes, y el 81 % de los
+ * sábados son estrechos — traen el 27 % del recorrido normal de su par.
+ *
+ * Contarlas como días completos mide el ATR DE MENOS (+18,5 % de mediana al
+ * quitarlas, 12 de 14 pares por encima del umbral) y, peor, hace que «los
+ * últimos 10 días» de `lo10` sean en realidad unos 14 — de ahí que el stop de
+ * USD/JPY se moviera un 80 %. Eso no es una opinión sobre el mercado: es
+ * aritmética sobre el dato de entrada.
+ *
+ * ⚠️ Y NO ES PORQUE LA APP MIDA MEJOR ASÍ. Está medido que no:
+ * `medir-rejilla-swing.mjs` dio veredicto `igual` (−0,035 sucia contra −0,040
+ * limpia, dentro del ruido de 0,024). Se limpia por HONESTIDAD DEL DATO, que
+ * es una razón distinta y se decidió a conciencia — el listón escrito antes
+ * ya decía que un resultado peor NO autoriza quedarse con datos sucios.
+ *
+ * ⚠️ POR DEFECTO, a propósito, y la asimetría es la de siempre: un guion nuevo
+ * que se escriba mañana y se olvide de limpiar le daría a alguien un stop
+ * calculado con días que no existieron; uno que pida `'cruda'` sin querer
+ * compara lo mismo contra lo mismo y se ve. Los dos errores no cuestan igual,
+ * así que el seguro va de serie.
+ *
+ * ⚠️ `'cruda'` es SOLO para los guiones que estudian la rejilla misma — los
+ * que tienen que ver las dos para poder compararlas. `prueba-rejilla-limpia`
+ * tiene un manifiesto de quién pide cada cosa y FALLA si aparece un guion
+ * nuevo que no haya decidido, para que no se cuele por descuido.
  */
-export async function obtenerVelas(apiKey, { minBarras = 60, velas = 300 } = {}) {
+export async function obtenerVelas(apiKey, { minBarras = 60, velas = 300, rejilla = 'limpia' } = {}) {
+  if (rejilla !== 'limpia' && rejilla !== 'cruda') {
+    throw new Error(`rejilla debe ser 'limpia' o 'cruda', no ${JSON.stringify(rejilla)}`)
+  }
   const porPar = {}
   for (let i = 0; i < PARES.length; i += POR_TANDA) {
     if (i > 0) await esperar(PAUSA_MS)
@@ -174,7 +213,6 @@ export async function obtenerVelas(apiKey, { minBarras = 60, velas = 300 } = {})
   // no cotizó por feriado local.
   const primero = porPar[PARES[0]]
   const fechas = [...primero.keys()].filter((d) => PARES.every((p) => porPar[p].has(d))).sort()
-  if (fechas.length < minBarras) throw new Error('no hay suficientes días recientes para calcular los indicadores')
 
   const rates = {}
   const rangosPar = {}
@@ -200,5 +238,20 @@ export async function obtenerVelas(apiKey, { minBarras = 60, velas = 300 } = {})
     rangosPar[d] = filaRangos
   }
 
-  return { fechas, rates, rangosPar }
+  const cruda = { fechas, rates, rangosPar }
+  const salida = rejilla === 'cruda' ? cruda : limpiar(cruda)
+
+  // ⚠️ EL MÍNIMO SE COMPRUEBA DESPUÉS DE LIMPIAR, no antes.
+  //
+  // «Suficientes días para calcular los indicadores» significa días de
+  // MERCADO: un sábado no aporta nada a una EMA20. Comprobarlo antes dejaría
+  // pasar una serie que parece de 60 días y en realidad trae 43 útiles.
+  if (salida.fechas.length < minBarras) {
+    throw new Error(
+      `no hay suficientes días recientes para calcular los indicadores ` +
+        `(${salida.fechas.length} de mercado, mínimo ${minBarras})`
+    )
+  }
+
+  return salida
 }

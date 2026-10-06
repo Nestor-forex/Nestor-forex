@@ -265,11 +265,23 @@ export function medir(
     // menos cuanto más ancho sea el stop de esa operación concreta, así que se
     // calculan por operación y no como un descuento global al final.
     //
-    // Las noches salen del resolver (`diasTardados`): una operación que se
-    // resolvió al día siguiente pagó una noche, una que tardó tres semanas
-    // pagó veintiuna. Por eso el swap castiga sobre todo a las que se quedan
-    // colgadas, que es exactamente como funciona en la cuenta real.
-    const costePips = conSpread ? costeEnPips(s.par, r.diasTardados ?? 0, swapPipsNoche, tablaSpread) : 0
+    // Las noches salen del resolver. Por eso el swap castiga sobre todo a las
+    // que se quedan colgadas, que es exactamente como funciona en la cuenta
+    // real.
+    //
+    // ⚠️ `noches` ANTES que `diasTardados`, y el orden no es estético: desde
+    // el arreglo de la rejilla una vela ya NO es un día de calendario. Con
+    // sábados fuera y domingos fundidos, un viernes→lunes es UNA vela y TRES
+    // noches, y el bróker cobra las tres. Usar las velas cobraría un ~28 %
+    // menos de swap del real y haría que TODAS las reglas parecieran mejores
+    // de lo que son.
+    //
+    // El `?? diasTardados` es para las líneas del historial escritas antes de
+    // que `noches` existiera: en la rejilla vieja las dos cuentas daban el
+    // mismo número, así que leerlas así no cambia ni un resultado antiguo.
+    const costePips = conSpread
+      ? costeEnPips(s.par, r.noches ?? r.diasTardados ?? 0, swapPipsNoche, tablaSpread)
+      : 0
     const coste = costePips / s.pipRiesgo
     // Se acumulan sobre las MISMAS operaciones que entran en el resultado (las
     // resueltas), no sobre todas las señales: si no, el equilibrio hablaría de
@@ -340,10 +352,15 @@ export function barridoSwap(senales, porClave, niveles = NIVELES_SWAP) {
   for (const s of senales) {
     const r = porClave.get(`${s.id}@${s.vistoEl}`)
     if (!r || (r.resultado !== 'ganada' && r.resultado !== 'perdida')) continue
-    // En swing cada vela ES un día, así que los días que tardó son las noches
-    // que se pagaron. En la app hermana no vale esta cuenta: allí depende de
-    // la HORA de entrada y hay que mirar los cortes reales.
-    resueltas.push({ par: s.par, noches: r.diasTardados ?? 0 })
+    // ⚠️ Las noches de CALENDARIO que calculó el resolver, no las velas.
+    //
+    // Hasta el arreglo de la rejilla aquí decía «en swing cada vela ES un día,
+    // así que los días que tardó son las noches que se pagaron». Era verdad
+    // mientras la serie traía una vela por cada día del calendario, fin de
+    // semana incluido — y dejó de serlo justo al quitarlos. En la app hermana
+    // sigue sin valer esta cuenta por otro motivo: allí depende de la HORA de
+    // entrada y hay que mirar los cortes reales de las 22:00 UTC.
+    resueltas.push({ par: s.par, noches: r.noches ?? r.diasTardados ?? 0 })
   }
 
   const total = resueltas.length

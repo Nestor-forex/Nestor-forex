@@ -158,7 +158,14 @@ export function limpiar({ fechas, rates, rangosPar } = {}) {
       const hs = [base[p]?.h, ...fundir.map((j) => rangosPar[fechas[j]]?.[p]?.h)].filter(Number.isFinite)
       const ls = [base[p]?.l, ...fundir.map((j) => rangosPar[fechas[j]]?.[p]?.l)].filter(Number.isFinite)
       if (!hs.length || !ls.length) continue
-      nuevo[p] = { h: Math.max(...hs), l: Math.min(...ls) }
+      // ⚠️ El `c` es el del día QUE SE QUEDA, igual que en `rates`, y va aquí
+      // para que la vela fundida tenga la MISMA FORMA que una sin fundir
+      // (`obtenerVelas` entrega `{ h, l, c }`). Hoy `computarBarrido` solo lee
+      // `h` y `l`, así que omitirlo no rompía nada — pero desde que esto corre
+      // en producción, una fila con menos campos que sus vecinas es una trampa
+      // esperando a que alguien lea `c` y le salga `undefined` un lunes de
+      // cada siete, sin error y sin patrón visible.
+      nuevo[p] = { h: Math.max(...hs), l: Math.min(...ls), ...(Number.isFinite(base[p]?.c) ? { c: base[p].c } : {}) }
     }
     salida.rangosPar[f] = nuevo
   }
