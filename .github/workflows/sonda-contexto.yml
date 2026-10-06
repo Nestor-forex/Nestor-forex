@@ -1,0 +1,53 @@
+name: Sonda del contexto que no vemos
+
+# ¿Se pueden leer, sin llave, las cuatro cosas que los analistas dicen y las
+# apps no ven? El petróleo, el Tesoro a 2 años, la prima de riesgo francesa y
+# los registros de intervención de Japón.
+#
+# Ver la cabecera de app/scripts/sonda-contexto.mjs para el porqué de cada una
+# y, sobre todo, para lo que queda escrito ANTES de ver los datos: que dos de
+# las cuatro son PROXIES del juicio del analista y no el juicio, y que ninguna
+# sería un filtro.
+#
+# ⚠️⚠️ NO CAMBIA NADA, y no es una promesa: es el permiso.
+#
+# `permissions: contents: read` — no puede escribir en ninguna rama aunque
+# quisiera. No toca un archivo de la app, ni una señal, ni el barrido
+# publicado, ni el historial, ni ninguno de los experimentos que ya corren.
+#
+# ⚠️ NO NECESITA EL SECRETO de Twelve Data: todos los candidatos van sin llave,
+# que es justo lo que la sonda viene a comprobar. Si algún día se le añade un
+# candidato que sí la use, hay que pasarle el `env` o fallará — ya pasó de
+# verdad con `comparar-reglas.yml` en la app hermana.
+#
+# ⚠️ SOLO A MANO. Contesta una pregunta de una vez; no vigila nada, así que no
+# tiene cron. Si algún día se le pone uno, que sea de UNA VEZ AL DÍA y no
+# horario: medido el 2026-10-06, una entrada horaria solo dispara el 21 % de
+# las veces y una diaria el ~95 %.
+
+on:
+  workflow_dispatch:
+
+# Solo lee. No aflojar esto para «aprovechar y guardar el resultado»: lo que
+# este trabajo NO puede hacer es escribir.
+permissions:
+  contents: read
+
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    # Sin esto GitHub deja correr un trabajo hasta 6 horas. La sonda hace una
+    # docena de peticiones con tope de 20 segundos cada una: lo normal es medio
+    # minuto.
+    timeout-minutes: 10
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Sondear
+        working-directory: app
+        run: node scripts/sonda-contexto.mjs
