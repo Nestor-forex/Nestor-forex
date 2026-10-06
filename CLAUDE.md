@@ -8364,7 +8364,7 @@ en plan «hemos mejorado la app», se cae el único argumento que tiene.
 
 ---
 
-# El reloj de GitHub, MEDIDO sobre un mes: 17 %, no «se salta horas» (2026-10-06)
+# El reloj de GitHub, MEDIDO sobre un mes: 21 %, no «se salta horas» (2026-10-06)
 
 Néstor pidió revisar que las dos apps estuvieran al día y sin fallos. Los 17
 workflows estaban en verde y ningún archivo publicado estaba roto ni truncado.
@@ -8376,11 +8376,19 @@ Corridas reales por día hábil, 22 días seguidos (2026-09-10 a 2026-10-05):
 
 | programa de Intradía | debería | corre | cumple |
 |---|---:|---:|---:|
-| Vigía por hora (`20 * * * 1-5`) | 24/día | **4,2** | **17 %** |
-| Publicador del barrido (2 crones) | 48/día | **7,5** | **16 %** |
+| Vigía por hora (`20 * * * 1-5`) | 24/día | **5,0** | **21 %** |
+| Publicador del barrido (2 crones) | 48/día | **10,1** | **21 %** |
 
-No es un día malo: es **todos los días**, sin excepción, con huecos de 7 y 8
-horas seguidas y retrasos de hasta 36 minutos sobre el minuto programado.
+No es un día malo: es **todos los días**, sin excepción, con huecos de mediana
+5 horas y máximo 9, y retrasos de mediana 29 minutos y máximo 59 sobre el
+minuto programado.
+
+📌 **CORREGIDO EL MISMO DÍA, unas horas después: aquí decía 4,2 · 7,5 y 17 %
+· 16 %.** Esa primera cuenta contaba los días con la ventana mal alineada
+(metía días sin corrida de los extremos). Al rehacerla sobre los 22 días
+hábiles exactos salen 5,0 y 10,1, o sea **21 % los dos**. El veredicto no
+cambia —sigue siendo un desastre— pero los números de abajo sí, y de aquí salía
+la cuenta de créditos.
 
 ⚠️ **Esto desmiente por tamaño lo que decía esta memoria.** Estaba escrito «3
 corridas donde tocaban 13» (23 %, medido una vez el 2026-08-09) y «huecos de
@@ -8404,10 +8412,20 @@ funcionaron — el lunes 5 dispararon los tres (22:11, 22:43, 22:55, o sea más 
 Sin esos tres intentos, con un 17 % de cumplimiento, Swing perdería días enteros
 de historial a menudo.
 
-⚠️ **La conclusión que esto sugiere, sin medir todavía:** Intradía necesita algo
+⚠️ **La conclusión que esto sugería, sin medir todavía:** Intradía necesita algo
 equivalente —varios intentos por hora con un guardián de «ya corrió esta hora»—
-o aceptar por escrito que su historial tiene agujeros. No se construye sin
-decidirlo.
+o aceptar por escrito que su historial tiene agujeros.
+
+✅ **RESUELTO el mismo día, y por un camino distinto del que yo propuse ahí.**
+Al medir la CAUSA apareció que el freno de GitHub es **por entrada de cron**, no
+por workflow, así que el arreglo no son «varios intentos con guardián» sino
+**24 entradas DIARIAS en vez de una horaria** — y entonces el guardián sobra.
+Ver la sección «El freno de GitHub es POR ENTRADA de cron» más abajo.
+
+📌 Y conviene ver que mi propuesta de aquí no era mala, era **más caja que la
+necesaria**: habría metido código (un `yaCorrioEstaHora` nuevo, con sus
+pruebas) para arreglar algo que se arregla cambiando la forma del cron. Medir la
+causa antes de diseñar el remedio ahorró un guardián entero.
 
 ## ⚠️⚠️ Y un número de ESTA memoria que estaba mal por un factor de 6
 
@@ -8417,10 +8435,17 @@ disparan. Con la cadencia real:
 
 | | supuesto | real |
 |---|---:|---:|
-| publicador (7 créditos/corrida) | 336 | **53** |
-| vigía (7/corrida) | 168 | **29** |
+| publicador (7 créditos/corrida) | 336 | **71** |
+| vigía (7/corrida) | 168 | **35** |
 | reporte | 7 | 7 |
-| **total de 800** | **511** | **≈ 89** |
+| **total de 800** | **511** | **≈ 113** |
+
+⚠️ **Y ESE «≈ 89» QUE DIJE PRIMERO TAMBIÉN ESTABA MAL**, por la misma ventana
+mal alineada. El real medido es **≈ 113**. Dos números equivocados seguidos
+sobre la misma cuenta, el mismo día, y los dos en la dirección cómoda (hacia
+«hay más holgura de la que hay»). Lo que lo arregló no fue más cuidado: fue
+volver a contar fijando los 22 días hábiles exactos en vez de dejar que la
+ventana los eligiera.
 
 Swing gasta 36 (14 vigía + 7 reporte + 15 oro).
 
@@ -8509,3 +8534,214 @@ después de coste** (1,34), porque 1,9 pips de spread son el 16 % de su rango
 horario. La misma idea vía GBP/USD da 1,72 con 1,2 pips. **El par con mejor
 señal no es el par que conviene operar**, y eso solo se ve con el spread real
 delante — la tabla estimada no lo habría dicho.
+
+---
+
+# El freno de GitHub es POR ENTRADA de cron (2026-10-06). Y por eso tiene arreglo
+
+Néstor: **«quiero que busques una solución definitiva para ese problema de
+GitHub que no dispara los crones que le toca, me parece que de alguna manera
+afecta la calidad de la información y en consecuencia el criterio para tomar
+decisiones»**. Tenía razón en las dos mitades.
+
+El síntoma llevaba desde el 2026-08-09 anotado aquí como «el reloj se salta
+horas». Lo nuevo es que **se midió la CAUSA**, y la causa se arregla cambiando
+la forma del cron.
+
+## La tabla que lo decide
+
+Mismo periodo para los ocho workflows programados de las dos apps (22 días
+hábiles, 2026-09-04 a 2026-10-05):
+
+| lo que dispara cada ENTRADA de cron | % que de verdad dispara | quién |
+|---|---:|---|
+| 1 vez al día | **100 %** | COT y tasas de Swing (22 de 22) |
+| 1 vez al día × 3 entradas | **94 %** | vigía de Swing (62 de 66) |
+| 6 veces al día (cada 4 h) | **70 %** | los dos calendarios (93 de 132) |
+| 24 veces al día (cada hora) | **21 %** | vigía de Intradía (110 de 528) |
+| 24 veces al día × 2 entradas | **21 %** | publicador de Intradía (222 de 1.056) |
+
+📌 **La última fila es la que descarta la otra explicación posible**, y sin ella
+esto no sería una conclusión. Si el freno fuera por disparos TOTALES del
+workflow, el publicador (48 al día) tendría que ir **peor** que el vigía (24).
+Va **igual de mal por entrada y justo el DOBLE en total** — 10,1 corridas al
+día contra 5,0. O sea que GitHub no mira el workflow: mira cada entrada, y
+**cuanto más a menudo dispara una entrada, menos veces dispara.**
+
+## El arreglo, y por qué no es el que yo había propuesto
+
+`20 * * * 1-5` pasa a ser **24 entradas diarias**, `20 0 * * 1-5` …
+`20 23 * * 1-5`. El publicador igual, al minuto 5 (una por hora, no dos). **No
+hay código nuevo: es la forma del cron.** Está en el PR #80 de Intradía.
+
+⚠️ **Y así NO hace falta ningún guardián.** Unas horas antes yo había escrito
+aquí mismo que Intradía necesitaba «varios intentos por hora con un guardián de
+ya corrió esta hora». Eso habría metido un `yaCorrioEstaHora` nuevo con sus
+pruebas para arreglar algo que se arregla cambiando una línea de YAML. **Medir
+la causa antes de diseñar el remedio ahorró un guardián entero.**
+
+⚠️ **ES UNA PREDICCIÓN, NO UN HECHO.** Lo medido es la tabla. Lo que NO está
+medido es que 24 entradas diarias se porten como las 3 de Swing. Si GitHub
+frena por algo más, queda como estaba (5 corridas al día) y no se pierde nada.
+**Se comprueba contando corridas dentro de una semana:**
+
+```
+gh api "repos/Nestor-forex/Nestor-forex-intradia/actions/workflows/vigia.yml/runs?per_page=100" \
+  --jq '.workflow_runs[] | [.created_at,.event] | @tsv'
+```
+
+## ⚠️ El guardián de Swing SÍ se queda, y no es incoherencia
+
+En Swing el vigía trabaja **una vez al día**, así que los tres intentos
+necesitan `yaCorrioHoy` o harían el trabajo tres veces (42 créditos en vez de
+14). En Intradía el trabajo ES por hora, y ahí los dos errores no valen igual:
+
+| equivocarse hacia… | en Intradía cuesta |
+|---|---|
+| **correr de más** | 7 créditos de 800 — y `compararConAnterior` descarta las señales que ya estaban, así que **no anota nada dos veces** |
+| **saltarse una hora** | una hora de historial que no vuelve |
+
+Misma asimetría de siempre (`esSombra`, `yaCorrioHoy`, `pearson` devolviendo
+`null`), resuelta hacia el otro lado porque aquí lo barato es repetir.
+
+## ⚠️⚠️ CÓMO AFECTABA A LA CALIDAD: es un SESGO CON DIRECCIÓN, no ruido
+
+Esto es lo que contesta de verdad la pregunta de Néstor, y es peor que «hay
+menos datos»:
+
+> Una señal que dura **una hora** solo queda anotada si el vigía mira justo esa
+> hora — **21 % de probabilidad**. Una que dura **seis horas** queda anotada
+> casi siempre.
+
+O sea que el historial de Intradía **sobre-representa las señales lentas y
+sub-representa las rápidas**, en una app cuyo horizonte entero es de horas. Las
+74 señales de 58 días son las que sobrevivieron a ese filtro.
+
+⚠️ **Y encima EMPEORANDO**, así que las dos mitades del propio historial no son
+comparables entre sí. Horas vistas al día por semana: 12,4 (W34) · 10,8 · 5,4 ·
+5,6 · 5,4 · 5,2 · **4,0 (W40)**.
+
+⚠️ **Lo perdido NO se rellena.** El registro vale porque anota lo que la app
+dijo ESA hora; reconstruirlo sería meter filas calculadas en lo único limpio
+que tiene el proyecto. Lo único que se puede hacer es que de aquí en adelante
+no se pierda.
+
+📌 **Lo que esto NO estropea, y hay que decirlo igual de claro:** los números
+medidos de Intradía **no cambian**. Los −0,13 por 1R, las 8.000 operaciones, el
+RSI en 70, el ADX en 10 — todo eso sale del **banco de pruebas**, que se baja
+las velas él mismo y no depende del reloj ni de ninguna corrida del vigía. El
+reloj estropea el **registro hacia adelante**, no la medición histórica.
+
+## El gasto real de créditos de Intradía, por fin medido
+
+| | corridas/día medidas | créditos |
+|---|---:|---:|
+| publicador | 10,1 | 71 |
+| vigía | 5,0 | 35 |
+| reporte diario | 1,0 | 7 |
+| **real HOY, de los 800** | | **≈ 113** |
+
+Y el **techo** si la predicción se cumple: 168 + 168 + 7 = **343 de 800**, con
+~457 libres (cabe el banco de pruebas, 28, o incluso el M15, 112).
+
+⚠️ **La holgura de hoy es holgura mientras el reloj falle.** Arreglar la
+cadencia **triplica** el gasto, a propósito, y ésa es la cuenta que hay que
+hacer ANTES de añadir una fuente nueva, no después.
+
+Swing gasta 39 (2,8 × 14 del vigía + 7 del reporte + 15 del oro… el techo es
+14 + 7 + 15 = 36 porque `yaCorrioHoy` deja trabajar a uno solo de los tres).
+
+## La rejilla en Intradía: NO, y medido
+
+Néstor pidió **«quita sábados y funde domingo con lunes»**. En Swing eso es el
+PR #106, ya fusionado y corriendo. **En Intradía la respuesta medida es NO**, y
+el botón se pulsó el mismo día (`rejilla.yml`, 7 créditos):
+
+```
+VEREDICTO: 7 de 7 → noSeMueve
+% de velas AFECTADAS: EUR 13,0 · GBP 12,7 · JPY 17,8 · CHF 15,7 · AUD 8,8 · NZD 14,4 · CAD 11,2
+umbral: 7 % de cambio en el ATR en al menos el 15 % de las velas · mayoría 5 de 7 → pasan 2
+stop final: JPY 0.19601 → 0.19402 (−1 %), el resto igual hasta el cuarto decimal
+```
+
+⚠️ **Y NO es una contradicción con Swing, con el mecanismo medido:** aquí
+`atrWilder` tiene una **ventana DURA de 60 velas**, así que solo cambian las
+velas con horas cerradas dentro de su ventana — el **46,7 % es el techo
+estructural** de velas que PUEDEN cambiar. En Swing `atrWilder` recorre **la
+serie ENTERA**, así que quitar velas mueve todos los valores. **El mismo
+estadístico no significa lo mismo en las dos apps**, que es la regla de siempre
+de este proyecto con una cara nueva.
+
+📌 Y de paso cierra lo que quedaba del preregistro de la rejilla de Intradía:
+el paso 3 (la medición completa, 28 créditos) **no se hace**, y el umbral de
+1,50× **no se toca**. Para eso se escribió antes.
+
+---
+
+# La sonda del contexto que las apps no ven (2026-10-06)
+
+Néstor: **«quiero darle solución a esto»**, sobre las cuatro cosas que los
+analistas dicen y las apps no ven. Va por el mismo camino que el calendario,
+las tasas, el COT, el sentimiento y el oro: **sonda primero, lector después.**
+
+```
+app/scripts/sonda-contexto.mjs          pide, cuenta y enseña. No interpreta
+.github/workflows/sonda-contexto.yml    solo a mano, permiso de LECTURA
+```
+
+| lo que el analista dice | lo que se podría leer | ¿es lo mismo? |
+|---|---|---|
+| el ataque en Arabia Saudí mueve el refugio y el crudo | **el precio del crudo** | NO: es un proxy |
+| la probabilidad de subida de la Fed cayó del 71 % al 24 % | **el Tesoro a 2 años** | NO: es un proxy |
+| la prima francesa está en 160 pb | **OAT − Bund a 10 años** | **sí, es el dato** |
+| entre 159 y 160 sube el riesgo de intervención | registros del MoF japonés | NO: eso es un juicio |
+
+## ⚠️ Lo que queda escrito ANTES de ver un solo número, a propósito
+
+1. **Dos de los cuatro son PROXIES del juicio del analista, no el juicio.** El
+   analista lee la noticia; nosotros leeríamos un precio. Hay que rotularlo así
+   o se convierte en «la app sabe de geopolítica».
+2. **«La probabilidad de subida» NO se puede tener.** Sale de los futuros de
+   fondos federales (CME FedWatch) y no se publica gratis como API. Decir «el
+   mercado da un 24 %» con el 2 años en la mano sería **inventar un número**.
+3. **Nadie publica una probabilidad de intervención.** Lo que existe es el
+   registro de las que ya ocurrieron. Con eso se podría enseñar un hecho —«el
+   yen está a X pips del nivel donde Japón intervino la última vez», con fecha
+   y fuente—; «va a intervenir» sería una predicción y no se hace.
+4. **NINGUNA sería un FILTRO.** No apagarían ni una señal. Un filtro («no
+   operar dos horas antes de la Fed») va al banco de pruebas con su listón
+   escrito antes — van **siete familias medidas y siete fallando**.
+
+## Las decisiones de la sonda que no hay que ablandar
+
+⚠️ **NINGÚN CANDIDATO PASA POR RESPONDER 200.** Cada uno tiene que traer un
+número DENTRO de su rango plausible (crudo 20-200 $, bono 10 años −1 a 12 %) y
+la sonda imprime la fila cruda. Es la trampa del oro otra vez: el 2026-09-29
+`GOLD` y `CL` contestaron 200 con cinco velas válidas **de acciones de Nueva
+York** (42,85 y 86,52) y `WTI` resultó ser «W&T Offshore Inc.».
+
+⚠️ **SOLO FUENTES SIN LLAVE en esta primera vuelta, y es una decisión.** Alpha
+Vantage da crudo y Tesoro gratis con una llave, y no se usa: una llave más es un
+secreto más que mantener en los DOS repositorios, y el día que caduque la app se
+rompe sin que nadie haya tocado nada. Si no hay fuente sin llave, la sonda lo
+dirá y **entonces** se discute la llave — con el dato delante.
+
+⚠️ **SIN PÁGINAS LEÍDAS NO HAY VEREDICTO.** El veredicto lo calcula el guion y
+devuelve «NO SE PUDO MIRAR» —no «no existe»— cuando no leyó nada. Es la
+asimetría que ya mordió el 2026-09-14, cuando mi propio informe escribió «no la
+publican» habiendo leído CERO páginas. ✅ Comprobado en la corrida local: desde
+estas sesiones los hosts están bloqueados y los cuatro bloques salen «NO SE PUDO
+MIRAR», que es exactamente lo que tiene que decir.
+
+⚠️ **El User-Agent es HONESTO.** Un 403 a un programa es una respuesta y se
+respeta. Es la línea que no se cruzó con Myfxbook, Dukascopy ni AvaTrade.
+
+⚠️ **Y se mira el `robots.txt` del único sitio comercial de la lista** (Stooq).
+Los organismos públicos —Tesoro de EE. UU., BCE, MoF japonés— publican para que
+se lea. `robots.txt` sirve para **DESCARTAR, nunca para aprobar**.
+
+## Lo siguiente
+
+**Actions → «Sonda del contexto que no vemos» → Run workflow.** No gasta ni un
+crédito de Twelve Data y no escribe nada. Con la forma real delante se escribe
+el lector; nunca al revés.
