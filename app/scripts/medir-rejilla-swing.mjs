@@ -87,7 +87,12 @@ console.log('')
 
 const llave = leerLlave()
 console.log(`Bajando ${VELAS} velas diarias de los ${PARES.length} pares (dos tandas, 65 s de pausa)…`)
-const sucia = await obtenerVelas(llave, { velas: VELAS })
+// ⚠️ `rejilla: 'cruda'` NO es un detalle: desde que `obtenerVelas` limpia por
+// defecto, pedirla cruda es lo ÚNICO que permite que este guion vea las DOS
+// rejillas y pueda compararlas. Sin esto compararía la limpia contra la
+// limpia, daría diferencia cero y el informe diría «no cambia nada» — una
+// medición que se autoconfirma y no comprueba nada.
+const sucia = await obtenerVelas(llave, { velas: VELAS, rejilla: 'cruda' })
 console.log(`  ${sucia.fechas.length} días con dato en los catorce`)
 console.log(`  de ${sucia.fechas[0]} a ${sucia.fechas[sucia.fechas.length - 1]}`)
 console.log('')

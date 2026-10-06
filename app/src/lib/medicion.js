@@ -27,10 +27,17 @@
 
 export const MEDICION = {
   // Cuándo se corrió el banco de pruebas que dio estos números.
-  fecha: '2026-09-05',
-  desde: '2021-06-24',
-  hasta: '2026-09-05',
-  dias: 1436,
+  fecha: '2026-10-06',
+  desde: '2021-08-09',
+  hasta: '2026-10-06',
+  // ⚠️ BAJA DE 1.436 A 1.343 Y NO SE PERDIÓ NINGÚN DÍA DE MERCADO.
+  //
+  // El 2026-10-06 la app pasó a limpiar la rejilla: el sábado se quita (no
+  // tiene mercado ninguno) y el domingo se funde con el lunes (tiene ~2 horas).
+  // El periodo de calendario es el MISMO; lo que baja es el número de velas,
+  // porque antes se contaban como días completos unas que traían el 27 % del
+  // recorrido normal de su par.
+  dias: 1343,
 
   // ⚠️ ACTUALIZADOS EL 2026-09-05, y esta es la razón exacta por la que estos
   // números llevan fecha dentro.
@@ -45,22 +52,30 @@ export const MEDICION = {
   // volver a correr el banco de pruebas y actualizar este archivo. No es
   // opcional — es la mitad del cambio.
   //
+  // ⚠️ Y SE VOLVIERON A ACTUALIZAR EL 2026-10-06, por la misma regla: ese día
+  // la app pasó a limpiar la rejilla (`rejilla-limpia.mjs`), o sea que cambió
+  // el DATO con el que calcula. No es un filtro encima de la entrada: cambia
+  // EMA20, EMA50, RSI, ATR y los soportes a la vez, así que las señales NO son
+  // las mismas. Los números de antes eran de OTRA app.
+  //
   // La app tal cual, con SU geometría de stop y objetivo, spread por par
   // descontado. Es lo que Néstor ve en pantalla, medido de verdad.
+  // (fila «tendencia media» de la tabla de geometría real: 2095 · 56% · −0.04)
   app: {
-    operaciones: 2320,
+    operaciones: 2095,
     acierto: 56,
-    porRiesgo: -0.03,
+    porRiesgo: -0.04,
   },
 
   // La misma app medida con la vara NEUTRA (stop y objetivo a la misma
   // distancia). Sirve para separar «acierta la dirección» de «gana dinero»:
   // con el objetivo más cerca que el stop se puede acertar mucho y perder
   // igual, y esta fila es la que lo desnuda.
+  // (fila «la app tal cual (vara neutra)»: 2103 · 49% · −0.04)
   neutra: {
-    operaciones: 2331,
-    acierto: 48,
-    porRiesgo: -0.05,
+    operaciones: 2103,
+    acierto: 49,
+    porRiesgo: -0.04,
   },
 
   // La regla de reversión: comprar lo que se cayó en vez de lo que sube. Es lo
@@ -69,10 +84,27 @@ export const MEDICION = {
   // ⚠️ DESDE EL 2026-09-05 YA NO CORRE EN LA SOMBRA: se enseña en el tablero,
   // en su propia sección y marcada como experimento. Lo que cambió no es la
   // medición sino la realidad, que dejó de contradecirla (ver abajo).
+  //
+  // ⚠️⚠️ ESTE `porRiesgo` CAMBIÓ DE SIGNIFICADO EL 2026-10-06, y el parecido de
+  // los números lo esconde. Antes era 0.051 y ahora 0.05, así que de un vistazo
+  // parece «casi no se movió». No es eso:
+  //
+  //   · 0.051 era la fila PAGANDO 0,5 pips de swap por noche
+  //   · 0.05  es la fila de SOLO SPREAD, sin swap
+  //
+  // Se cambió para que esta fila y las dos de arriba midan lo MISMO: la app se
+  // enseña con spread y sin swap, así que enseñar la reversión con swap encima
+  // la castigaba a ella sola y hacía la comparación injusta en la dirección
+  // cómoda. Las tres filas llevan ahora el MISMO peaje: spread por par y nada
+  // de swap. (Lo que sigue siendo distinto, y a propósito, es la vara: `app` va
+  // con la geometría real porque es lo que Néstor ve; `neutra` y `reversion`
+  // van con la vara 1:1 porque es la que compara direcciones.)
+  //
+  // (fila «la reversión M2 (lo mejor medido)»: 870 · 54% · +0.05)
   reversion: {
-    operaciones: 872,
-    acierto: 55,
-    porRiesgo: 0.051,
+    operaciones: 870,
+    acierto: 54,
+    porRiesgo: 0.05,
   },
 }
 

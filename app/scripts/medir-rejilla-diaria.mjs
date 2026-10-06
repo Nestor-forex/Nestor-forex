@@ -73,7 +73,11 @@ console.log('')
 const llave = leerLlave()
 
 console.log(`Bajando 300 velas diarias de los ${PARES.length} pares (dos tandas, 65 s de pausa)…`)
-const { fechas, rangosPar, rates } = await obtenerVelas(llave, { velas: 300, minBarras: 100 })
+// ⚠️ `rejilla: 'cruda'` a propósito: este guion ES el diagnóstico de la
+// rejilla sucia — su trabajo entero es mirar las velas de fin de semana y
+// decir qué día son. Con la rejilla limpia no habría ninguna que mirar y el
+// informe saldría vacío sin dar error.
+const { fechas, rangosPar, rates } = await obtenerVelas(llave, { velas: 300, minBarras: 100, rejilla: 'cruda' })
 console.log(`  ${fechas.length} días con dato en los catorce`)
 console.log(`  de ${fechas[0]} a ${fechas[fechas.length - 1]}`)
 console.log('')

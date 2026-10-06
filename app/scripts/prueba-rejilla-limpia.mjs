@@ -15,6 +15,9 @@
 //   · y un veredicto que dice «igual» cuando lo que pasó es que no se pudo
 //     mirar.
 
+import { readFileSync, readdirSync } from 'node:fs'
+
+import { nochesEntre } from './lib/rejilla-diaria.mjs'
 import {
   DOMINGO,
   SABADO,
@@ -253,6 +256,142 @@ bien(
   juzgar({ ...bueno, aporteMaximoDeUnPar: null }).criterios[4].pasa === false,
   'un aporte que no se pudo medir tampoco pasa'
 )
+
+console.log('')
+console.log('11. ⚠️⚠️ QUIÉN PIDE LA REJILLA LIMPIA Y QUIÉN LA CRUDA (el manifiesto)')
+// Desde el arreglo, `obtenerVelas` limpia POR DEFECTO y `rejilla: 'cruda'` es
+// la salida de emergencia para los guiones que estudian la rejilla misma.
+//
+// ⚠️ Esto NO es una lista decorativa. Vigila los dos fallos silenciosos:
+//
+//   · un guion NUEVO que llame a `obtenerVelas` sin que nadie haya decidido
+//     qué rejilla le toca — si se le olvida, se lleva la limpia (que es lo
+//     seguro), pero nadie lo habrá pensado y puede ser justo el que necesitaba
+//     la cruda;
+//   · y que alguien le dé la vuelta al valor por defecto, que apagaría el
+//     arreglo entero en las DOS rejillas sin romper ni una prueba.
+//
+// Es el mismo patrón que GEMELOS/PRIMOS: la lista va A MANO, porque una que se
+// calcule sola («los que hoy piden cruda») se adapta a lo que encuentre y deja
+// de comprobar nada.
+const fuente = readFileSync(new URL('./lib/velas.mjs', import.meta.url), 'utf8')
+bien(
+  /rejilla = 'limpia'/.test(fuente),
+  "el valor por defecto de `obtenerVelas` es la rejilla LIMPIA"
+)
+bien(
+  /rejilla !== 'limpia' && rejilla !== 'cruda'/.test(fuente),
+  'un valor de `rejilla` que no existe revienta en vez de pasar por limpio'
+)
+bien(
+  fuente.includes('limpiar(cruda)'),
+  '`obtenerVelas` llama de verdad a `limpiar`, no solo acepta la opción'
+)
+bien(
+  fuente.indexOf('salida.fechas.length < minBarras') > fuente.indexOf('limpiar(cruda)'),
+  'el mínimo de barras se comprueba DESPUÉS de limpiar (días de mercado, no de calendario)'
+)
+
+// Los que tienen que ver las DOS rejillas, con el motivo escrito.
+const CRUDA = {
+  'scripts/medir-rejilla-diaria.mjs':
+    'ES el diagnóstico de la rejilla sucia: su trabajo es mirar las velas de fin de semana',
+  'scripts/medir-rejilla-swing.mjs':
+    'compara la app en las dos rejillas; con la limpia compararía lo mismo contra lo mismo',
+}
+// Los que alimentan la app o la miden, y van en limpia SIN decir nada.
+const LIMPIA = [
+  'scripts/vigia.mjs',
+  'scripts/reporte-diario.mjs',
+  'scripts/publicar-oro.mjs',
+  'scripts/backtest.mjs',
+  'scripts/medir-cot.mjs',
+  'scripts/comparar-fuente.mjs',
+]
+
+const llaman = readdirSync(new URL('./', import.meta.url))
+  .filter((f) => f.endsWith('.mjs') && !f.startsWith('prueba-'))
+  .map((f) => `scripts/${f}`)
+  .filter((f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8').includes('obtenerVelas('))
+
+bien(llaman.length >= 6, `se encontraron los guiones que llaman a obtenerVelas (${llaman.length})`)
+
+const sinDecidir = llaman.filter((f) => !(f in CRUDA) && !LIMPIA.includes(f))
+bien(
+  sinDecidir.length === 0,
+  sinDecidir.length
+    ? `GUIONES SIN DECIDIR su rejilla: ${sinDecidir.join(', ')} — añádelos a CRUDA (con motivo) o a LIMPIA`
+    : 'todos los que piden velas tienen su rejilla decidida a mano'
+)
+
+// ⚠️ SE MIRA DENTRO DE LA LLAMADA, no en el archivo entero — y esto no es
+// pulcritud: la primera versión buscaba `rejilla: 'cruda'` en todo el texto y
+// el COMENTARIO que explica la opción ya la satisfacía. Al quitarle el opt-out
+// de verdad a `medir-rejilla-swing`, la prueba siguió en verde. Es «contar
+// apariciones no es leer», otra vez.
+const pideCruda = (txt) =>
+  (txt.match(/obtenerVelas\([^)]*\)/g) ?? []).some((c) => /rejilla:\s*'cruda'/.test(c))
+
+for (const [f, motivo] of Object.entries(CRUDA)) {
+  const txt = readFileSync(new URL(`../${f}`, import.meta.url), 'utf8')
+  bien(pideCruda(txt), `${f} pide la rejilla cruda EN LA LLAMADA (${motivo.slice(0, 38)}…)`)
+}
+for (const f of LIMPIA) {
+  const txt = readFileSync(new URL(`../${f}`, import.meta.url), 'utf8')
+  bien(!pideCruda(txt), `${f} NO pide la cruda: se lleva la limpia`)
+}
+
+console.log('')
+console.log('12. ⚠️ LAS NOCHES SE CUENTAN POR CALENDARIO, NO POR VELAS')
+// El swap se paga por noche real. Con la rejilla limpia un viernes→lunes es
+// UNA vela y TRES noches: contar velas cobraría menos swap del real y haría
+// que todas las reglas parecieran mejores.
+bien(nochesEntre('2026-10-02', '2026-10-05') === 3, 'viernes a lunes son 3 noches (1 sola vela limpia)')
+bien(nochesEntre('2026-10-05', '2026-10-06') === 1, 'lunes a martes, 1 noche')
+bien(nochesEntre('2026-10-05', '2026-10-05') === 0, 'el mismo día, 0 noches')
+bien(nochesEntre('2026-10-06', '2026-10-05') === 0, 'al revés no da negativo')
+bien(nochesEntre(null, '2026-10-05') === null, 'una fecha que falta devuelve null, no 0')
+bien(nochesEntre('no es fecha', '2026-10-05') === null, 'una fecha ilegible devuelve null, no 0')
+bien(
+  nochesEntre('2026-10-02', '2026-10-05') > 1,
+  'y la cuenta vieja (1 vela) habría cobrado menos: es el error que esto cierra'
+)
+
+// ⚠️ Y que el banco de pruebas las USE. Sin esto, `nochesEntre` podría estar
+// perfecta y el swap seguir cobrándose por velas sin que nada fallara.
+{
+  const nucleo = readFileSync(new URL('./lib/backtest-nucleo.mjs', import.meta.url), 'utf8')
+  const usos = nucleo.match(/r\.noches \?\? r\.diasTardados/g) ?? []
+  bien(usos.length === 2, `el banco lee \`noches\` antes que \`diasTardados\` en los dos sitios (${usos.length})`)
+  bien(
+    !/costeEnPips\(s\.par,\s*r\.diasTardados/.test(nucleo),
+    'el coste NO se calcula con las velas a secas'
+  )
+  const res = readFileSync(new URL('./lib/resolver.mjs', import.meta.url), 'utf8')
+  bien(/noches: nochesEntre\(/.test(res), 'el resolver escribe `noches` en cada resultado')
+  bien(/diasTardados:/.test(res), 'y `diasTardados` se queda: es lo que dice su nombre y está en el historial')
+}
+
+console.log('')
+console.log('13. LA VELA FUNDIDA CONSERVA LA MISMA FORMA QUE LAS DEMÁS')
+// Desde que esto corre en producción, una fila con menos campos que sus
+// vecinas es una trampa: alguien leería `c` y le saldría `undefined` un lunes
+// de cada siete, sin error.
+{
+  const f = ['2026-01-04', '2026-01-05'] // domingo, lunes
+  const r = limpiar({
+    fechas: f,
+    rates: { '2026-01-04': { EUR: 1 }, '2026-01-05': { EUR: 2 } },
+    rangosPar: {
+      '2026-01-04': { 'EUR/USD': { h: 9, l: 1, c: 5 } },
+      '2026-01-05': { 'EUR/USD': { h: 7, l: 3, c: 6 } },
+    },
+  })
+  const v = r.rangosPar['2026-01-05']['EUR/USD']
+  bien(v.h === 9 && v.l === 1, 'máximo y mínimo de los dos días')
+  bien(v.c === 6, 'el cierre es el del LUNES, nunca el del domingo')
+  bien('c' in v, 'la vela fundida trae `c` igual que una sin fundir')
+}
 
 console.log('')
 console.log(`${ok} bien · ${mal} MAL`)

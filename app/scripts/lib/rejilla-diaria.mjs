@@ -71,6 +71,34 @@ export function diaDe(fecha) {
 
 export const nombreDia = (d) => (d == null ? '—' : DIAS[d])
 
+/**
+ * ⚠️⚠️ CUÁNTAS NOCHES HAY ENTRE DOS FECHAS, POR CALENDARIO Y NO POR VELAS.
+ *
+ * Existe por el arreglo de la rejilla, y cerrarlo era obligatorio: el swap se
+ * paga por NOCHE REAL, no por vela de la serie.
+ *
+ * Con la rejilla sucia las dos cuentas coincidían por casualidad —había una
+ * vela por cada día de calendario, fin de semana incluido—, así que contar
+ * velas contaba noches sin querer. Al quitar sábados y fundir domingos, un
+ * viernes→lunes pasa a ser UN paso de la serie y siguen siendo TRES noches.
+ *
+ * Dejarlo en velas habría hecho que el banco de pruebas cobrara un 28 % menos
+ * de swap del real, o sea que **todas las reglas parecerían mejores de lo que
+ * son** — justo la dirección del error que este proyecto lleva meses cerrando
+ * (el spread único por par, el swap a cero). Un arreglo de honestidad del dato
+ * que introdujera una exageración nueva no sería un arreglo.
+ *
+ * Devuelve `null` si alguna fecha no se entiende, nunca 0: un 0 diría «no
+ * pagó noches», que es una afirmación, y haría que el swap desapareciera en
+ * silencio de esa operación.
+ */
+export function nochesEntre(desde, hasta) {
+  const a = typeof desde === 'string' ? Date.parse(desde.slice(0, 10) + 'T00:00:00Z') : NaN
+  const b = typeof hasta === 'string' ? Date.parse(hasta.slice(0, 10) + 'T00:00:00Z') : NaN
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return null
+  return Math.max(0, Math.round((b - a) / 86400000))
+}
+
 export function mediana(xs) {
   const v = (xs ?? []).filter(Number.isFinite).sort((a, b) => a - b)
   if (!v.length) return null

@@ -22,6 +22,8 @@ export const EMPATE_CUENTA_COMO = 'perdida'
 // La clave de una señal concreta. No basta el `id` (par|lado|tipo) porque la
 // misma combinación reaparece con el tiempo: cada aparición es una operación
 // distinta y hay que juzgarla por separado.
+import { nochesEntre } from './rejilla-diaria.mjs'
+
 export const claveDe = (s) => `${s.id}@${s.vistoEl}`
 
 /**
@@ -173,6 +175,32 @@ export function resolver(senales, data, resueltas = new Set()) {
       // resolverse en la vela siguiente es 1 día, y así sale igual tanto si la
       // vela de la señal seguía en la serie como si desapareció.
       diasTardados: data.fechas.indexOf(velaFinal) - primeraPosterior + 1,
+      // ⚠️ LAS NOCHES VAN APARTE DE LAS VELAS, y desde el arreglo de la
+      // rejilla no son lo mismo.
+      //
+      // `diasTardados` cuenta VELAS de la serie y se queda como estaba: es lo
+      // que dice su nombre y es lo que está escrito en el historial de meses
+      // atrás. `noches` cuenta DÍAS DE CALENDARIO, que es lo que cobra el
+      // bróker: con sábados fuera y domingos fundidos, un viernes→lunes es
+      // UNA vela y TRES noches.
+      //
+      // Se añade en vez de cambiar `diasTardados` para que las líneas viejas
+      // del historial —que no lo traen— sigan leyéndose igual: quien lo usa
+      // hace `noches ?? diasTardados`, que en la rejilla vieja daba el mismo
+      // número.
+      //
+      // ⚠️ SE CUENTA DESDE `dia`, EL DÍA DE LA SEÑAL, no desde la primera vela
+      // que se miró — al contrario que `diasTardados`, y a propósito.
+      //
+      // La entrada es al CIERRE del día de la señal, así que esa misma noche ya
+      // se paga. La primera versión de esto contaba desde `primeraPosterior` y
+      // daba CERO noches en una operación que entró el domingo y se resolvió el
+      // lunes: una noche pagada que desaparecía. Lo cazó el humo de punta a
+      // punta, no el lint.
+      //
+      // `dia` puede no estar en la serie (es justo el caso del domingo que se
+      // funde); da igual, esto son dos cadenas de fecha y una resta.
+      noches: nochesEntre(dia, velaFinal),
       // Lo que se habría ganado o perdido, en pips, según los niveles que la
       // app dio en su momento.
       pips: veredicto === 'ganada' ? s.pipBeneficio : -s.pipRiesgo,
