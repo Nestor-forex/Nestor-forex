@@ -8074,3 +8074,250 @@ su verificación en navegador como todo lo demás de este repositorio.
 ⚠️ **El paso 3 de Intradía del preregistro anterior sigue sin hacerse**, y eso
 no cambia: el derrumbe del lunes midió 1,28× contra el 1,50 pedido y **el
 umbral no se vuelve a tocar**. Para eso se escribió antes.
+
+---
+
+# La rejilla limpia YA CORRE EN LA APP (2026-10-06). Solo Swing
+
+Néstor lo aprobó con el argumento escrito, y conviene citarlo porque es el que
+manda sobre todo lo demás:
+
+> «sí vale la pena cambiarlo, **pero no por el resultado — por honestidad del
+> dato**, y porque es la clase de arreglo que si no se hace ahora se queda ahí
+> para siempre. Y hay un segundo motivo que no es de opinión: la vela de
+> domingo ya se comió 8 señales reales del historial, que es lo único
+> irrecuperable del proyecto.»
+
+```
+app/scripts/lib/velas.mjs          limpia POR DEFECTO · rejilla: 'limpia' | 'cruda'
+app/scripts/lib/rejilla-diaria.mjs `nochesEntre` — noches de CALENDARIO
+app/scripts/lib/resolver.mjs       escribe `noches` al lado de `diasTardados`
+app/scripts/lib/backtest-nucleo.mjs  cobra el swap por `noches ?? diasTardados`
+app/scripts/lib/rejilla-limpia.mjs la vela fundida conserva `c`
+app/scripts/prueba-rejilla-limpia.mjs  101 comprobaciones (eran 73)
+```
+
+## ⚠️⚠️ SE ENCENDIÓ CON EL VEREDICTO EN CONTRA, Y ESO ES LO IMPORTANTE
+
+La medición del 2026-10-02 dijo **`igual`**: −0,035 con la rejilla sucia contra
+−0,040 con la limpia, dentro del ruido de 0,024, y **cuatro de los cinco
+criterios fallaron**. O sea que la app **no mide mejor** así.
+
+Se cambió igual, y la razón estaba escrita en el listón ANTES de medir: *que la
+app mida peor con datos honestos NO autoriza quedarse con los datos sucios*.
+Que la rejilla de hoy mide el ATR de menos es **aritmética, no opinión** — y un
+sistema que solo «funciona» con un dato mal medido no funciona: funciona el
+error.
+
+📌 Es la primera vez en este proyecto que se cambia algo de la app **sin que el
+número lo premie**. Y es justo por eso que el listón se escribe antes: si el
+criterio hubiera sido «solo si mejora», este arreglo no se habría hecho nunca.
+
+## Se limpia EN UN SOLO SITIO y por defecto
+
+`obtenerVelas(llave, { rejilla })` limpia de serie. Un guion nuevo que se
+escriba mañana se lleva el dato bueno sin que nadie se acuerde de nada.
+
+⚠️ **La asimetría de siempre:** olvidarse de limpiar le da a alguien un stop
+calculado con días que no existieron; pedir `'cruda'` sin querer compara lo
+mismo contra lo mismo y **se ve**. Los dos errores no cuestan igual, así que el
+seguro va de serie.
+
+⚠️ **El mínimo de barras se comprueba DESPUÉS de limpiar.** «Suficientes días
+para calcular los indicadores» son días de MERCADO: un sábado no aporta nada a
+una EMA20, y comprobarlo antes dejaría pasar una serie que parece de 60 días y
+trae 43 útiles.
+
+**Cruda solo dos guiones**, los que estudian la rejilla misma:
+`medir-rejilla-diaria` (su trabajo ES mirar las velas de fin de semana) y
+`medir-rejilla-swing` (compara las dos). El manifiesto va **a mano** en el
+bloque 11 de la prueba, por el mismo motivo que GEMELOS/PRIMOS, y **falla si
+aparece un guion nuevo sin decidir**.
+
+## ⚠️ EL HISTORIAL NO CORRÍA RIESGO, y se comprobó antes de tocarlo
+
+Las dos mitades, verificadas y no supuestas:
+
+- **El resolver ya buscaba la primera vela POSTERIOR** cuando falta la exacta
+  (se arregló el 2026-09-15 por este mismo fallo). Humo de punta a punta: una
+  señal fechada en domingo y otra en sábado, con sus fechas ya fuera de la
+  serie, dieron **caducadas 0** y se resolvieron las dos.
+- **La ventana sigue cubriendo los MISMOS días de calendario.** Se quitan
+  velas, no se acorta el periodo: `fechas[0]` sigue a ~300 días. Si se hubiera
+  acortado, señales de hace meses habrían caducado de golpe.
+
+## ⚠️⚠️ LAS NOCHES PASAN A CONTARSE POR CALENDARIO, y cerrarlo era OBLIGATORIO
+
+Con la rejilla sucia, contar velas contaba noches **por casualidad**: había una
+vela por cada día del calendario, fin de semana incluido. Al quitarlas, un
+**viernes→lunes es UNA vela y TRES noches** — y el bróker cobra las tres.
+
+Dejarlo en velas habría cobrado **~28 % menos de swap del real**, o sea que
+**todas las reglas parecerían mejores de lo que son**: exactamente la dirección
+del error que este proyecto lleva meses cerrando (el spread único por par, el
+swap a cero). **Un arreglo de honestidad del dato que introduce una exageración
+nueva no es un arreglo.**
+
+`diasTardados` **se queda** —es lo que dice su nombre y está escrito en el
+historial de meses atrás— y `noches` se añade al lado. Quien lo usa hace
+`noches ?? diasTardados`, que en la rejilla vieja daba el mismo número: ni un
+resultado antiguo cambia.
+
+## Dos errores míos, y los dos los cazó algo que no era el lint
+
+📌 **Mi propia comprobación tenía un agujero.** Buscaba `rejilla: 'cruda'` en
+el archivo entero, y **el COMENTARIO que explica la opción ya la satisfacía**:
+al quitarle el opt-out de verdad a `medir-rejilla-swing`, la prueba siguió en
+verde. Acotada a la llamada (`obtenerVelas(...)`). Es **«contar apariciones no
+es leer»**, la lección de la sonda de FX Blue, otra vez.
+
+Y conviene ver cómo se destapó: el `grep` con el que verifiqué el daño dijo
+«queda 1 ocurrencia» y **esa 1 era el comentario**. Sin mirar las dos líneas no
+habría sabido si el daño se aplicó o si la prueba no muerde — que es la razón
+exacta por la que la regla dice **comprobar el daño en el archivo**.
+
+📌 **Y un error real en el código, cazado solo por el humo de punta a punta:**
+`noches` se contaba desde la primera vela mirada y daba **CERO** en una
+operación que entró el domingo y se resolvió el lunes. Una noche pagada que
+desaparecía. La entrada es al **cierre del día de la señal**, así que se cuenta
+desde ahí.
+
+## Cómo se verificó
+
+101 comprobaciones sin internet (eran 73), lint, build, las **31 pruebas** y
+los **59 gemelos** idénticos. **Comprobado que las nuevas MUERDEN**, con el
+daño verificado en el archivo antes de darlo por bueno: dar la vuelta al valor
+por defecto tumba 1 · quitar el opt-out tumba 1 · **un guion nuevo sin decidir
+su rejilla tumba 1** · cobrar el swap por velas tumba 2.
+
+Y de punta a punta con un mercado inventado que trae fines de semana flojos (el
+5 % del recorrido): 400 velas → 286, **solo lunes a viernes** (57/57/58/57/57),
+los setups siguen saliendo, el ATR sube un 34 % y el stop entre el 9 y el 38 %.
+
+⚠️ Ese +34 % es de un mercado inventado más extremo que el real a propósito; el
+número MEDIDO sobre producción es **+18,5 % de mediana**. No confundirlos.
+
+## ⚠️ `medicion.js` y el banco de pruebas
+
+Su propia cabecera dice que re-correr el banco al cambiar el cálculo **«no es
+opcional — es la mitad del cambio»**, y cambiar la rejilla es más que cambiar
+un umbral. Se lanzó en la misma rama y los números se actualizaron antes de
+fusionar.
+
+📌 **Y hay un motivo nuevo para re-correrlo que no existía antes:** el swap
+ahora se cobra por noches de calendario, así que las filas que lo barren
+cambian **aunque la rejilla no hubiera cambiado**. Dos razones distintas, el
+mismo botón.
+
+---
+
+# La rejilla, cerrada para suscriptores (2026-10-06). La DÉCIMA de la serie
+
+Néstor pidió guardar la explicación con las otras nueve —el volumen,
+TradingView, la correlación, el swap, la actividad, el margen de error,
+Historial contra Diario, las apps contra el mercado y el oro—.
+
+⚠️ **Esta NO sustituye a «La rejilla de velas, explicada para suscriptores» del
+2026-09-30: la CIERRA.** Aquélla se publicó con la pregunta abierta y con una
+promesa escrita dentro — *«se está midiendo, y si sale que no importa, se lo
+contamos igual»*. Esto es la promesa cumplida, y la respuesta resultó ser la
+incómoda. **Hay que publicar las dos juntas, en ese orden**, porque el valor
+está en que se vea la una contestando a la otra.
+
+## El texto
+
+> **Lo prometido: medimos la rejilla, y les contamos el resultado aunque no nos
+> favorezca.**
+>
+> El 30 de septiembre les contamos que habíamos encontrado algo raro en los
+> datos y que todavía no sabíamos si importaba. Esto es la respuesta.
+>
+> **Lo que encontramos.** Nuestro proveedor de precios emite velas «diarias»
+> de sábado y domingo, y el mercado de Forex esos días está cerrado — abre el
+> domingo a las 5 de la tarde (hora de Colombia) y nada más. Esas velas traen
+> el **27 %** del recorrido normal de su par. De cada 300 velas, **51 eran
+> así, y 44 de esas 51 caían en fin de semana**. Cero en lunes y cero en
+> viernes.
+>
+> **Por qué importaba.** La app calcula su stop con aritmética, no con
+> opinión: mide cuánto se mueve el par y pone el stop a esa distancia. Meta
+> velas de fin de semana en esa medida y el par parece moverse menos de lo que
+> se mueve. Y había un segundo efecto que no habíamos previsto: cuando la app
+> dice «el mínimo de los últimos 10 días», con sábados y domingos contando
+> como días **esos 10 días eran en realidad unos 14**.
+>
+> Medido: la medida del movimiento salía **un 18,5 % por debajo** de lo real, y
+> en 12 de los 14 pares eso movía el stop.
+>
+> ### ⚠️ Y ahora la parte que casi nadie les va a contar: lo arreglamos aunque medía PEOR
+>
+> Pusimos las dos versiones de la app a competir sobre cinco años de mercado
+> real, con los costes descontados. El resultado:
+>
+> | | con las velas de fin de semana | sin ellas |
+> |---|---:|---:|
+> | por cada dólar arriesgado | −0,035 | **−0,040** |
+>
+> **La versión arreglada midió un poco PEOR.** La diferencia está dentro del
+> margen de ruido, así que lo honesto es decir que miden igual — pero desde
+> luego no mejoró.
+>
+> **Y la cambiamos igual.** Por dos razones:
+>
+> **1. Que el dato estaba mal medido no es una opinión, es una resta.** Un
+> sábado sin mercado no es un día de mercado. Un sistema que solo «funciona»
+> con un número mal calculado no funciona: funciona el error. Y el día que
+> deje de funcionar, nadie va a saber por qué.
+>
+> **2. Esto ya nos costó algo que no se puede recuperar.** El 9 de agosto de
+> 2026 la app anotó 6 señales, y las anotó con fecha de **domingo**, porque esa
+> vela existía. Días después esa vela desapareció de la serie y el programa que
+> juzga las señales no supo dónde buscarlas. **Se perdieron 8 señales reales de
+> 18 que había.** Casi la mitad del registro de ese día, y no por un error de
+> mercado: por un detalle del calendario de nuestro proveedor. Eso ya está
+> arreglado por dos caminos distintos, y este es el segundo.
+>
+> ### Lo que esto significa para usted, en concreto
+>
+> **Los stops van a salir un poco más anchos que antes.** No es un error, es la
+> corrección: antes estaban estrechos porque la medida venía corta. Y con un
+> stop más ancho, **el lote baja para arriesgar lo mismo** — la calculadora de
+> la app lo hace sola, pero los números se van a ver distintos.
+>
+> Ya pasó una vez, en agosto de 2026, y por la misma familia de problema: los
+> stops salían de **12 pips en un par que se mueve 40 en un día tranquilo**. Se
+> midió, se arregló, y se duplicaron. Esto es más pequeño, pero es lo mismo.
+>
+> ### Lo que esto NO hace, y hay que decirlo
+>
+> **No hace que la app gane.** Sigue midiendo unos 3 o 4 centavos de pérdida
+> por cada dólar arriesgado, y ese número está en la pantalla de mediciones,
+> dentro de la app. Arreglar la rejilla no lo mueve — eso es justo lo que la
+> medición nos dijo.
+>
+> Lo que hace es que **cuando la app le diga «arriesgue 30 pips», esos 30 pips
+> signifiquen 30 pips.**
+>
+> ### Y por qué este es el mensaje que más les dice sobre nosotros
+>
+> Cualquiera publica un hallazgo cuando el número le sale bien. Nosotros les
+> dijimos en septiembre que estábamos midiendo algo, les prometimos el
+> resultado fuera cual fuera, el resultado salió **en contra del cambio**, y lo
+> hicimos de todas formas y se lo estamos contando.
+>
+> Si algún día les decimos que algo de esta app funciona, esta es la razón para
+> creerlo.
+
+## Por qué esta vale más que las nueve anteriores
+
+📌 Las otras explican una decisión ya tomada, o una pregunta abierta. **Esta es
+la única que cierra un círculo entero delante del lector**: promesa escrita con
+fecha → medición → resultado desfavorable → decisión → consecuencia visible en
+su pantalla (el lote). No hay forma de fingir eso después.
+
+📌 Y el ancla sigue siendo el precedente de los **12 pips** de agosto: un caso
+con fecha, número y una consecuencia que Néstor vio en su propia app.
+
+⚠️ **Lo que NO se puede hacer con este texto:** presentarlo como una mejora del
+rendimiento. Dice lo contrario, y ahí está su fuerza. Si alguien lo reescribe
+en plan «hemos mejorado la app», se cae el único argumento que tiene.
