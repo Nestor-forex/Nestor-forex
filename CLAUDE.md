@@ -8590,6 +8590,45 @@ gh api "repos/Nestor-forex/Nestor-forex-intradia/actions/workflows/vigia.yml/run
   --jq '.workflow_runs[] | [.created_at,.event] | @tsv'
 ```
 
+## ⚠️⚠️ EL PEAJE MEDIDO QUE VA CON EL ARREGLO
+
+Las entradas diarias disparan casi siempre **y llegan muy tarde**. Se vio hoy
+mismo con el vigía de Swing, que ya las usa: sus tres crones de las 15:50,
+16:20 y 16:50 UTC dispararon a las **20:34, 21:02 y 21:15** — entre 4 h 25 min
+y 4 h 44 min tarde. Ayer, más de seis horas.
+
+| vigía de Swing, 84 corridas programadas | |
+|---|---:|
+| con **más de 2 horas** de retraso | **74 de 84** |
+| retraso mediano | **~3 h 20 min** |
+| máximo | **6 h 24 min** |
+
+Las entradas horarias de Intradía llegaban con **29 minutos** de mediana. O sea
+que el arreglo cambia **«pocas y puntuales» por «casi todas y muy tarde»**.
+
+📌 **Para el HISTORIAL da igual, y el motivo es concreto:** lo que cuenta es
+cuántas HORAS DISTINTAS se miran al día, no qué entrada causó cada mirada. Una
+corrida que llega con 5 horas de retraso mira la vela cerrada de ESE momento,
+así que 24 llegadas repartidas siguen cubriendo ~23 horas distintas.
+
+⚠️ **Para los AVISOS AL CELULAR sí importa**, y no se arregla cambiando el
+cron: un aviso de una señal de hace cinco horas vale poco. Conviene saberlo
+antes de prometerle a nadie que los avisos son inmediatos.
+
+⚠️ **Y en SWING esto explica algo que hay que tener presente:** el vigía está
+programado a las 15:50 UTC (10:50 en Colombia) y de verdad corre hacia las
+20:30 UTC (15:30 en Colombia). **Por eso la rutina diaria que lo lanza a mano
+no es un adorno**: sin ella, el barrido del día no aparecería en la app hasta
+media tarde. Hoy se lanzó a mano a las 17:41 y los tres crones, al llegar
+cuatro horas después, se saltaron solos gracias a `yaCorrioHoy` — que es
+exactamente para lo que está.
+
+⚠️ **El riesgo que la medición de la semana tiene que mirar DE VERDAD:** si los
+retrasos amontonan varias entradas en la misma hora, `concurrency` las pone en
+cola y GitHub cancela la pendiente cuando llega otra, así que la cobertura
+podría quedar por debajo de 23. **Lo que hay que contar no es «cuántas corridas
+hubo» sino «cuántas horas distintas se miraron».**
+
 ## ⚠️ El guardián de Swing SÍ se queda, y no es incoherencia
 
 En Swing el vigía trabaja **una vez al día**, así que los tres intentos
