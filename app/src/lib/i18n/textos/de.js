@@ -462,6 +462,7 @@ export default {
   },
 
   frescura: {
+    coste: (v) => `${v.pct} von 100 Signalen von vor ${v.horas} Std. sind nicht mehr nutzbar`,
     generadoMin: (v) => `Erstellt vor ${v.n} Min.`,
     generadoH: (v) => `Erstellt vor ${v.n} Std.`,
     generadoDias: (v) => `Erstellt vor ${v.n} ${v.n === 1 ? 'Tag' : 'Tagen'}`,

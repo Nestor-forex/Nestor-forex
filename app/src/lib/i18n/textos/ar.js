@@ -458,6 +458,7 @@ export default {
   },
 
   frescura: {
+    coste: (v) => `من كل 100 إشارة عمرها ${v.horas} ساعة، ${v.pct} لم تعد صالحة`,
     generadoMin: (v) => `حُسِب قبل ${v.n} دقيقة`,
     generadoH: (v) => `حُسِب قبل ${v.n} ساعة`,
     generadoDias: (v) => `حُسِب قبل ${v.n} يومًا`,

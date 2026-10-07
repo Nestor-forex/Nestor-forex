@@ -462,6 +462,7 @@ export default {
   },
 
   frescura: {
+    coste: (v) => `${v.pct} de cada 100 sinais de há ${v.horas} h já não podem ser usados`,
     generadoMin: (v) => `Gerado há ${v.n} min`,
     generadoH: (v) => `Gerado há ${v.n} h`,
     generadoDias: (v) => `Gerado há ${v.n} ${v.n === 1 ? 'dia' : 'dias'}`,

@@ -462,6 +462,7 @@ export default {
   },
 
   frescura: {
+    coste: (v) => `${v.pct} signaux sur 100 d’il y a ${v.horas} h ne sont plus praticables`,
     generadoMin: (v) => `Généré il y a ${v.n} min`,
     generadoH: (v) => `Généré il y a ${v.n} h`,
     generadoDias: (v) => `Généré il y a ${v.n} ${v.n === 1 ? 'jour' : 'jours'}`,

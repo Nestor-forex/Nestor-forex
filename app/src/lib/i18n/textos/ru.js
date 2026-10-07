@@ -458,6 +458,7 @@ export default {
   },
 
   frescura: {
+    coste: (v) => `из 100 сигналов ${v.horas}-часовой давности ${v.pct} уже нельзя взять`,
     generadoMin: (v) => `Рассчитано ${v.n} мин. назад`,
     generadoH: (v) => `Рассчитано ${v.n} ч. назад`,
     generadoDias: (v) => `Рассчитано ${v.n} дн. назад`,

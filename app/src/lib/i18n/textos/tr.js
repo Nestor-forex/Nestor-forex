@@ -457,6 +457,7 @@ export default {
   },
 
   frescura: {
+    coste: (v) => `${v.horas} saat önceki her 100 sinyalden ${v.pct} tanesi artık alınamaz`,
     generadoMin: (v) => `${v.n} dk önce hesaplandı`,
     generadoH: (v) => `${v.n} sa önce hesaplandı`,
     generadoDias: (v) => `${v.n} gün önce hesaplandı`,

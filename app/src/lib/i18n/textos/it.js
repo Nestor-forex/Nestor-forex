@@ -458,6 +458,7 @@ export default {
   },
 
   frescura: {
+    coste: (v) => `${v.pct} segnali su 100 di ${v.horas} h fa non sono più utilizzabili`,
     generadoMin: (v) => `Generato ${v.n} min fa`,
     generadoH: (v) => `Generato ${v.n} h fa`,
     generadoDias: (v) => `Generato ${v.n} ${v.n === 1 ? 'giorno' : 'giorni'} fa`,

@@ -457,6 +457,7 @@ export default {
   },
 
   frescura: {
+    coste: (v) => `${v.horas} घंटे पुराने हर 100 संकेतों में से ${v.pct} अब नहीं लिए जा सकते`,
     generadoMin: (v) => `${v.n} मिनट पहले बनाया गया`,
     generadoH: (v) => `${v.n} घंटे पहले बनाया गया`,
     generadoDias: (v) => `${v.n} दिन पहले बनाया गया`,
