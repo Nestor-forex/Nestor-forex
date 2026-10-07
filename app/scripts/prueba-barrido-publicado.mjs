@@ -34,7 +34,7 @@
 // sacaría con los datos completos.
 
 import { computarBarrido, derivarVista } from '../src/lib/marketCalc.js'
-import { armarBarrido, SERIES_LARGAS } from './lib/barrido-publicado.mjs'
+import { anchoDeLaVelaEnCurso, armarBarrido, SERIES_LARGAS } from './lib/barrido-publicado.mjs'
 
 let fallos = 0
 const comprobar = (bien, que) => {
@@ -254,6 +254,85 @@ console.log('\n5. Los extremos de 20 días viajan y cuadran con los cierres')
   comprobar(
     JSON.stringify(s0.bajos20) !== JSON.stringify(s0.serie20),
     'los mínimos NO son los cierres repetidos'
+  )
+}
+
+console.log('')
+console.log('⚠️ El ancho de la vela EN CURSO, que el publicador imprime en su log')
+// ────────────────────────────────────────────────────────────────────────
+// Desde el 2026-10-07 el barrido se publica también a las 11:20 y 19:20 UTC,
+// o sea con la vela del día A MEDIAS (la vela diaria va de 22:00 a 22:00). De
+// esa vela sale parte del ATR y del ATR el stop, así que cuánto trae de verdad
+// a esa hora es una pregunta abierta — y se contesta midiendo en cada corrida,
+// no con un comentario.
+//
+// ⚠️ NO DECIDE NADA: solo se imprime. Si algún día se usara para decidir sería
+// un FILTRO, y eso va al banco de pruebas con su listón escrito antes.
+{
+  // Una vela entera mide 10; la de hoy, 5 → la mitad.
+  const aMedias = {
+    pares: [{ name: 'EUR/USD', altos20: [10, 10, 10, 10, 5], bajos20: [0, 0, 0, 0, 0] }],
+  }
+  comprobar(anchoDeLaVelaEnCurso(aMedias) === 0.5, 'una vela a la mitad del recorrido da 0,5')
+
+  const entera = {
+    pares: [{ name: 'EUR/USD', altos20: [10, 10, 10, 10, 10], bajos20: [0, 0, 0, 0, 0] }],
+  }
+  comprobar(anchoDeLaVelaEnCurso(entera) === 1, 'una vela entera da 1')
+
+  // ⚠️ MEDIANA Y NO MEDIA, y esto es lo que de verdad se comprueba aquí: basta
+  // un día de noticias entre las previas para que la media no describa a
+  // ninguna. Con [10,10,10,100] la mediana es 10 y la media 32,5.
+  const conUnDiaRaro = {
+    pares: [{ name: 'EUR/USD', altos20: [10, 10, 10, 100, 10], bajos20: [0, 0, 0, 0, 0] }],
+  }
+  comprobar(
+    anchoDeLaVelaEnCurso(conUnDiaRaro) === 1,
+    'un día de noticias entre las previas NO arrastra el resultado (mediana, no media)'
+  )
+
+  // Y entre pares, lo mismo.
+  const variosPares = {
+    pares: [
+      { name: 'A', altos20: [10, 10, 10, 5], bajos20: [0, 0, 0, 0] },
+      { name: 'B', altos20: [10, 10, 10, 10], bajos20: [0, 0, 0, 0] },
+      { name: 'C', altos20: [10, 10, 10, 20], bajos20: [0, 0, 0, 0] },
+    ],
+  }
+  comprobar(anchoDeLaVelaEnCurso(variosPares) === 1, 'entre pares también se toma la mediana')
+
+  // ⚠️ ANTE LA DUDA, `null` — nunca 1 ni 0. Un 1 diría «la vela está completa»
+  // y un 0 diría «está vacía»; las dos son afirmaciones, y aquí lo cierto es
+  // que no se sabe. Misma asimetría que `pearson` y `edadEnMinutos`.
+  comprobar(anchoDeLaVelaEnCurso(null) === null, 'sin barrido → null, no 1')
+  comprobar(anchoDeLaVelaEnCurso({ pares: [] }) === null, 'sin pares → null')
+  comprobar(
+    anchoDeLaVelaEnCurso({ pares: [{ name: 'A' }] }) === null,
+    'un barrido viejo SIN extremos publicados → null, no 1'
+  )
+  comprobar(
+    anchoDeLaVelaEnCurso({ pares: [{ name: 'A', altos20: [10], bajos20: [0] }] }) === null,
+    'con una sola vela no hay con qué comparar → null'
+  )
+  comprobar(
+    anchoDeLaVelaEnCurso({ pares: [{ name: 'A', altos20: [10, 10, 5], bajos20: [0, 0] }] }) === null,
+    'listas de largos distintos → null'
+  )
+  comprobar(
+    anchoDeLaVelaEnCurso({ pares: [{ name: 'A', altos20: [10, NaN, 5], bajos20: [0, 0, 0] }] }) === null,
+    'con un NaN dentro → null (el fallo que ya mordió en el gráfico del detalle)'
+  )
+  comprobar(
+    anchoDeLaVelaEnCurso({ pares: [{ name: 'A', altos20: [5, 5, 5], bajos20: [5, 5, 0] }] }) === null,
+    'si las previas no se movieron (mediana 0) → null, no una división entre cero'
+  )
+
+  // Y que el barrido que este mismo guion acaba de armar se pueda medir: si
+  // dejaran de publicarse los extremos, esto lo canta.
+  const medido = anchoDeLaVelaEnCurso(publicado)
+  comprobar(
+    medido !== null && Number.isFinite(medido) && medido > 0,
+    `el barrido recién armado SÍ se puede medir (sale ${medido === null ? 'null' : medido.toFixed(2)})`
   )
 }
 

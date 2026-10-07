@@ -1,0 +1,123 @@
+name: Publicar el barrido para la app
+
+# Baja las velas, calcula el barrido y lo deja en `estado/barrido.json` de la
+# rama `datos`, que es lo que se baja la app. NO anota señales, NO las juzga y
+# NO manda avisos: de eso se encarga el vigía, una vez al día.
+#
+# ⚠️ POR QUÉ NO ES «EL VIGÍA DOS VECES», que era lo que se pidió primero: aquí
+# una señal se identifica por `id@vistoEl` con `vistoEl` a DÍA, así que dos
+# corridas del vigía el mismo día anotarían señales que la primera no vio y el
+# historial pasaría a mezclar «lo que la app dijo por la mañana» con «lo que
+# dijo por la tarde». El historial es lo único irrecuperable del proyecto. El
+# porqué entero está en la cabecera de `app/scripts/publicar-barrido.mjs`.
+#
+# CUOTA: cada corrida gasta 14 créditos de Twelve Data (los 14 pares se piden
+# DIRECTOS, no se derivan los cruces — ver `velas.mjs`).
+#
+#   este workflow ....  2 corridas × 14 = 28
+#   el vigía .........  1 corrida  × 14 = 14   (uno solo de sus tres intentos)
+#   reporte diario ...  1 corrida  ×  7 =  7
+#   oro ..............  1 corrida  × 15 = 15
+#   ──────────────────────────────────────────
+#   total ..........................    64  de los 800 diarios
+#
+# POR QUÉ A ESTAS HORAS, que es lo único que no vino pedido:
+#
+#   11:20 UTC = 6:20 am en Colombia — antes de la mañana de trading de Néstor,
+#               que era justo su queja: el barrido del día tiene que estar
+#               puesto cuando abre la app, no a media tarde.
+#   19:20 UTC = 2:20 pm en Colombia — ya con Nueva York dentro y después del
+#               vigía, para que la tarde no se quede con el dato de la mañana.
+
+on:
+  schedule:
+    # ⚠️ DOS ENTRADAS DE HORA FIJA, no una horaria, y la forma importa más que
+    # el número. Medido sobre 22 días hábiles (2026-10-06): una entrada que
+    # dispara UNA VEZ AL DÍA acierta el 95-100 %; una que dispara cada hora,
+    # el 21 %. El freno de GitHub es por ENTRADA de cron, no por workflow — la
+    # tabla completa está en la cabecera de `vigia.yml`.
+    #
+    # ⚠️ Y aun así llegan tarde: lo que las hace puntuales es el reloj de fuera
+    # (`reloj-externo/worker.js`), que pulsa el botón por `workflow_dispatch`.
+    # Estas dos entradas son la red de seguridad por si ese reloj se cae.
+    - cron: '20 11 * * 1-5'
+    - cron: '20 19 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      forzar:
+        description: 'Publicar aunque esta hora ya se haya publicado (el guardián de la hora)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  # Comparte grupo con el vigía A PROPÓSITO: los dos escriben el mismo archivo
+  # en la misma rama, así que no pueden correr a la vez.
+  group: vigia
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    # Lo normal es poco más de un minuto: los 14 pares van en dos tandas de 7
+    # con una pausa de 65 s en medio, porque el plan gratuito da 8 créditos por
+    # minuto. El tope es la red de seguridad para cualquier cuelgue: sin él
+    # GitHub deja correr un trabajo hasta 6 horas, y como `concurrency` no
+    # cancela el anterior, uno atascado bloquearía también al vigía.
+    timeout-minutes: 10
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - name: Traer los datos
+        uses: actions/checkout@v4
+        with:
+          ref: datos
+          path: datos
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # No hace falta `npm ci`: este guion no usa ningún paquete (los avisos al
+      # celular, que son los que necesitan `web-push`, los manda el vigía).
+
+      - name: Publicar
+        working-directory: app
+        env:
+          VIGIA_DATOS: ${{ github.workspace }}/datos
+          # ⚠️ SIN ESTO EL GUION FALLA. Es el aviso del 2026-09-03: cualquier
+          # workflow nuevo que llame a los guiones de velas necesita el secreto.
+          TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
+          # ⚠️ EL GUARDIÁN DE LA HORA. Hay DOS relojes pulsando este botón (los
+          # crones de GitHub y el reloj de fuera en Cloudflare), así que sin
+          # esto cada publicación costaría 14 créditos dos veces: 56 al día en
+          # vez de 28.
+          #
+          # `'0' || '1'` y no `'' || '1'`: una cadena vacía es FALSA en las
+          # expresiones de GitHub, así que con `''` marcar «forzar» no forzaría
+          # nada, en silencio.
+          SOLO_SI_FALTA_LA_HORA: ${{ inputs.forzar && '0' || '1' }}
+        run: node scripts/publicar-barrido.mjs
+
+      - name: Guardar
+        working-directory: datos
+        run: |
+          git config user.name 'Vigía Nestor Forex'
+          git config user.email 'noreply@anthropic.com'
+          git add estado
+          if git diff --cached --quiet; then
+            echo 'Sin cambios que guardar.'
+            exit 0
+          fi
+          git commit -m "Barrido $(date -u +'%Y-%m-%d %H:%M UTC')"
+          # Si el vigía escribió mientras tanto, se reintenta encima de lo suyo
+          # en vez de pisarlo.
+          for i in 1 2 3; do
+            git pull --rebase origin datos && git push origin HEAD:datos && exit 0
+            sleep $((i * 5))
+          done
+          echo 'No se pudo guardar tras 3 intentos.'
+          exit 1

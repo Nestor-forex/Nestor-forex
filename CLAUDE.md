@@ -9430,3 +9430,159 @@ pidió verla, y desde el 2026-09-21 tiene su bloque en el Historial con su aviso
 de que está en observación. **Que algo esté escrito en la memoria no quiere
 decir que siga siendo verdad** — es la hermana de la lección del 2026-09-04
 («que esté en la memoria no quiere decir que exista»).
+
+---
+
+# El barrido se publica DOS VECES AL DÍA, sin tocar al vigía (2026-10-07)
+
+Néstor: el barrido le salía con la fecha de **ayer** cuando abría la app por la
+mañana. No era un fallo: el vigía está programado a las 15:50 UTC y, con el
+retraso medido del reloj de GitHub, corre de verdad hacia las **20:30 UTC**
+(15:30 en Colombia). Hasta esa hora, la app enseña lo que se calculó el día
+anterior.
+
+```
+app/scripts/publicar-barrido.mjs      solo baja, calcula y escribe   PRIMO
+app/scripts/lib/vigia-nucleo.mjs      + `yaCorrioEstaHora`           PRIMO
+app/scripts/lib/barrido-publicado.mjs + `anchoDeLaVelaEnCurso`       PRIMO
+.github/workflows/publicar-barrido.yml   11:20 y 19:20 UTC, lun-vie
+reloj-externo/worker.js               las dos horas, en la lista
+```
+
+## ⚠️⚠️ LA DECISIÓN DE FONDO: NO es «que el vigía corra dos veces»
+
+Él eligió «dos veces al día» y la primera idea era correr el vigía dos veces.
+**No se hizo, y el motivo es propio de Swing**: aquí una señal se identifica por
+`id@vistoEl` con **`vistoEl` a DÍA**. Dos corridas del mismo día, con el precio
+movido entre medias, anotarían señales que la primera no vio — y el historial
+pasaría a mezclar «lo que la app dijo a las 6 de la mañana» con «lo que dijo a
+las 3 de la tarde».
+
+📌 Eso no es más historial: es un historial que **deja de describir una cosa
+sola**, y sus dos mitades dejan de ser comparables entre sí. Es exactamente el
+sesgo que el 2026-10-06 se midió en Intradía por culpa del reloj, pero
+provocado por nosotros. Y el historial es lo ÚNICO del proyecto que no se puede
+volver a fabricar.
+
+El vigía se queda EXACTAMENTE igual: una vez al día, sus tres intentos y su
+`yaCorrioHoy`. El publicador no toca el historial, no manda avisos y no escribe
+`estado/vigia.json`.
+
+⚠️ **Y el motivo NO es el mismo que en Intradía**, aunque el archivo se llame
+igual. Allá es no duplicar avisos ni señales dentro de la misma hora; aquí es la
+partición del historial. Por eso `publicar-barrido.mjs` es **PRIMO**.
+
+## Las horas, que es lo único que no vino pedido
+
+| | | por qué |
+|---|---|---|
+| **11:20 UTC** | 6:20 am Colombia | antes de su mañana de trading — era la queja |
+| **19:20 UTC** | 2:20 pm Colombia | con Nueva York dentro, y después del vigía |
+
+28 créditos al día. Swing pasa de **36 a 64 de los 800**.
+
+⚠️ **DOS ENTRADAS DE HORA FIJA, no una horaria.** Medido el 2026-10-06: una
+entrada que dispara una vez al día acierta el 95-100 %; una que dispara cada
+hora, el 21 %. Y aun así llegan tarde — lo que las hace puntuales es el reloj de
+fuera, que las pulsa por `workflow_dispatch`. Los crones son el suelo.
+
+## ⚠️ LA VELA DE HOY VA A MEDIAS, Y AQUÍ SÍ ES UNA PREGUNTA
+
+En Intradía este guion publica velas de una hora **ya cerradas**, que no se
+mueven. Aquí cada vela es un DÍA, y la de hoy está a medias: va de 22:00 a 22:00
+UTC, así que a las 11:20 lleva **13 horas de 24**. De esa vela sale parte del
+ATR, y del ATR el stop — la misma familia del problema de la rejilla sucia que
+se acababa de arreglar. Había que mirarlo ANTES de construirlo.
+
+**Lo que dice la aritmética, con números ya medidos aquí:** en Wilder la vela más
+nueva pesa 1/14 = 7,1 %, y el cojín de ATR es el 16,6 % del stop (mediana de 46
+señales reales). Una vela al 75 % movería el ATR un 1,8 % y **el stop un 0,3 %**.
+Despreciable — y por eso esto se construye.
+
+**Lo medido, sobre el `barrido.json` REAL de producción del 2026-10-06:** a las
+17:42 UTC el rango de la vela en curso era el **104,5 %** de la mediana de las
+otras 19. O sea ya una vela entera.
+
+⚠️ **Y LO QUE NO ESTÁ MEDIDO, por eso no se afirma:** cuánto trae la vela a las
+**11:20**. Un día y una hora no son una medición. Así que cada corrida
+**IMPRIME ese cociente en su log** (`anchoDeLaVelaEnCurso`). En unas semanas la
+pregunta se contesta con datos en vez de con este párrafo, que es como se hace
+todo lo demás aquí.
+
+📌 La medición **no decide nada**: no apaga, no cambia y no filtra ninguna
+señal. Si algún día se usara para decidir sería un FILTRO, y eso va al banco de
+pruebas con su listón escrito antes — van siete familias medidas y siete
+fallando.
+
+⚠️ Devuelve `null` —nunca 1 ni 0— cuando no se puede medir: sin extremos
+publicados, con una sola vela, con un `NaN` dentro o con la mediana en cero. Un
+1 diría «la vela está completa» y un 0 «está vacía»; las dos son afirmaciones.
+Misma asimetría que `pearson` y `edadEnMinutos`. Y compara contra la **mediana**
+y no la media: basta un día de noticias para que la media no describa a ninguna.
+
+## `yaCorrioEstaHora` en Swing, y por qué no basta `yaCorrioHoy`
+
+Son dos preguntas distintas y hacen falta las dos:
+
+| | quién | por qué |
+|---|---|---|
+| `yaCorrioHoy` | el **vigía** | trabaja una vez al día: el segundo intento no debe hacer nada |
+| `yaCorrioEstaHora` | el **publicador** | trabaja dos veces al día, así que «hoy» le diría que no publique la segunda |
+
+Lo que el publicador no puede es repetir la MISMA hora, y eso pasa porque hay
+**dos relojes** pulsando el botón. Sin el guardián, cada publicación costaría 14
+créditos dos veces: 56 al día en vez de 28.
+
+⚠️ Misma asimetría de siempre, hacia el mismo lado: ante cualquier duda
+**PUBLICA**. Publicar de más cuesta 14 créditos de los 800 y reescribe el mismo
+archivo; saltarse de más deja la app con el barrido viejo, que es justo lo que
+esto viene a arreglar.
+
+## 📌 Los dos guardianes del repositorio mordieron SOLOS, sin que nadie los llamara
+
+Al correr las pruebas después de escribir el guion:
+
+- **`prueba-rejilla-limpia` (bloque 11)**: «GUIONES SIN DECIDIR su rejilla:
+  `publicar-barrido.mjs`». Es el manifiesto del 2026-10-06 — un guion nuevo no
+  puede pedir velas sin decir si las quiere limpias o crudas.
+- **`prueba-gemelos`**: «1 archivo existe en las DOS apps y no está en ninguna
+  lista». Es el detector de duplicados sin clasificar del 2026-09-21.
+
+Los dos se escribieron para cazar exactamente esto, y lo cazaron el mismo día en
+que apareció el caso. **Es la primera vez que los dos saltan a la vez sobre un
+archivo nuevo**, y conviene dejarlo escrito: cuando una comprobación de este
+repositorio se pone roja al añadir algo, lo normal es que esté haciendo su
+trabajo y no que estorbe.
+
+## Comprobado que las pruebas MUERDEN
+
+Con el daño verificado en el archivo antes de darlo por bueno:
+
+| daño | caen |
+|---|---:|
+| mirar el guardián DESPUÉS de pedir precios | 1 |
+| que el guardián resuelva la duda SALTÁNDOSE | 3 |
+| media en vez de mediana en el ancho de la vela | 1 |
+| que la hora de la lista no coincida con el cron | 2 |
+| que el workflow exista y no esté en la lista del reloj | 1 |
+
+## Cómo se verificó
+
+Lint, build y las **36 pruebas** sin internet (solo falla `prueba-aviso-real`,
+que pide el secreto VAPID). Los **64 gemelos** idénticos.
+
+Y de punta a punta **sin gastar un crédito y sin llave**, los tres caminos del
+guardián:
+
+| caso | qué hizo |
+|---|---|
+| ya se publicó esta hora + automático | se saltó, salida 0, **sin tocar la red** |
+| se publicó la hora pasada + automático | llegó a pedir velas (o sea, NO se saltó) |
+| misma hora pero lanzado a mano («forzar») | llegó a pedir velas |
+
+## ⚠️ Y de paso, el gasto que acababa de quedarse viejo
+
+Swing pasa de 36 a 64 créditos al día, y ese número estaba escrito a mano en
+**tres sitios** (`oro.yml`, `publicar-oro.mjs` ×2). Corregidos los tres. Es
+«al cambiar algo, mirar también quién lo NOMBRA» aplicado en el mismo commit
+que lo cambia, en vez de dentro de un mes.

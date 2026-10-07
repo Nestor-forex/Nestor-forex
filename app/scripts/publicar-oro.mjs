@@ -14,7 +14,8 @@
 // par e invita a que cada uno se invente la relación. Ver la cabecera de
 // `src/lib/oro.js`.
 //
-// Gasto total de Swing al día: 14 (vigía) + 7 (reporte) + 15 (esto) = 36 de
+// Gasto total de Swing al día: 14 (vigía) + 28 (publicar el barrido, dos
+// corridas desde el 2026-10-07) + 7 (reporte) + 15 (esto) = 64 de
 // 800. Queda sitio de sobra, y el banco de pruebas se lanza a mano.
 //
 // ─────────────────────────────────────────────────────────────────────────
@@ -26,7 +27,7 @@
 //
 // Los dos errores no cuestan lo mismo:
 //
-//   · gastar 14 créditos de más → 36 de 800 en vez de 22. No cuesta nada.
+//   · gastar 14 créditos de más → 64 de 800 en vez de 50. No cuesta nada.
 //   · un fallo dentro del vigía → un día de historial que no vuelve.
 //
 // Así que la elección no es ajustada. Y de paso, este guion puede fallar,
