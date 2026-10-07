@@ -1,0 +1,39 @@
+name: Medir si mover el stop a breakeven ayuda
+
+# SOLO A MANO. Mide si mover el stop al precio de entrada, una vez la operación
+# va a favor, mejora el resultado. No toca ni un archivo de la app.
+#
+# El listón está en `app/scripts/lib/preregistro-breakeven.mjs`, escrito antes
+# de la primera corrida, y el veredicto lo CALCULA `juzgar()`.
+#
+# ⚠️ GASTA 14 CRÉDITOS de Twelve Data (las velas de los 14 pares).
+#
+# ⚠️ `contents: read` a propósito: una medición no escribe nada. Ni el
+# historial, ni la rama `datos`, ni la app.
+
+on:
+  workflow_dispatch:
+    inputs:
+      velas:
+        description: 'Cuántas velas diarias bajar (por defecto 1500)'
+        type: string
+        default: '1500'
+
+permissions:
+  contents: read
+
+jobs:
+  medir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Medir
+        working-directory: app
+        env:
+          TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
+          VELAS: ${{ inputs.velas }}
+        run: node scripts/medir-breakeven.mjs
