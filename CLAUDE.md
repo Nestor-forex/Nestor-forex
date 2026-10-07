@@ -9586,3 +9586,28 @@ Swing pasa de 36 a 64 créditos al día, y ese número estaba escrito a mano en
 **tres sitios** (`oro.yml`, `publicar-oro.mjs` ×2). Corregidos los tres. Es
 «al cambiar algo, mirar también quién lo NOMBRA» aplicado en el mismo commit
 que lo cambia, en vez de dentro de un mes.
+
+## ✅ La pregunta que decidía si el publicador sirve de algo, cerrada con datos
+
+Al construirlo quedó una duda que **no era menor**: ¿emite Twelve Data la vela
+del día EN CURSO a las 11:20 UTC? Si no la emitiera, el publicador refrescaría
+`generadoEl` pero `ultima` seguiría diciendo **ayer** — o sea que no arreglaría
+la queja de Néstor, que era justo esa fecha.
+
+Contestada **sin gastar un crédito**, mirando la salida de OTRO workflow: el
+publicador del oro escribe `estado/oro.json` con `interval=1day` del mismo
+proveedor, y en el historial de la rama `datos` hay una corrida suya del
+2026-10-07 **a las 07:23 UTC** cuya vela más reciente ya es `2026-10-07`.
+
+**A las 07:23 UTC (2:23 am en Colombia) el proveedor ya emite la vela del día.**
+A las 11:20 la emite con más razón.
+
+📌 La lección práctica: la duda era real y se podía haber contestado
+«razonando» (el bar abre a las 22:00 UTC, luego a las 11:20 lleva 13 horas de
+ticks). **Ese razonamiento es correcto y no es evidencia.** El dato estaba en
+el repositorio, en el archivo de otro guion, y costó dos consultas a la API de
+GitHub.
+
+⚠️ Lo que sigue SIN medir es distinto y no hay que confundirlo: **cuánto
+RECORRIDO trae esa vela a las 11:20** (lo medido es el 104,5 % a las 17:42). Eso
+lo contesta el log del propio publicador en unas semanas.
