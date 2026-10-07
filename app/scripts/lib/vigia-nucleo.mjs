@@ -116,6 +116,39 @@ export function yaCorrioHoy(estado, ahora) {
   return d.toISOString().slice(0, 10) === ahora.toISOString().slice(0, 10)
 }
 
+// ────────────────────────────────────────────────────────────────────────
+// Y EL MISMO GUARDIÁN, PERO POR HORA (desde el 2026-10-07)
+//
+// Lo usa `publicar-barrido.mjs`, que corre DOS VECES AL DÍA y no una. Hacen
+// falta los dos porque son dos preguntas distintas:
+//
+//   · `yaCorrioHoy`    → el VIGÍA. Trabaja una vez al día: el segundo intento
+//                        del mismo día no debe hacer nada.
+//   · `yaCorrioEstaHora` → el PUBLICADOR. Trabaja dos veces al día, así que
+//                        «hoy» le sobraría la segunda. Lo que no puede es
+//                        repetir la MISMA hora, y eso pasa porque hay DOS
+//                        relojes pulsando el botón (los crones de GitHub y el
+//                        reloj de fuera en Cloudflare).
+//
+// Sin esto, cada publicación costaría 14 créditos dos veces: 56 al día en vez
+// de 28.
+//
+// ⚠️ La marca de tiempo NO sale de un archivo de estado —el publicador no
+// tiene— sino del `generadoEl` que el propio barrido lleva dentro. Por eso
+// recibe un TEXTO y no un objeto de estado, al revés que `yaCorrioHoy`.
+//
+// ⚠️ Misma asimetría, resuelta hacia el mismo lado: ante cualquier duda
+// devuelve `false`, o sea PUBLICA. Publicar de más cuesta 14 créditos de los
+// 800 y reescribe el mismo archivo; saltarse de más deja la app con el barrido
+// viejo, que es justo lo que esto viene a arreglar.
+export function yaCorrioEstaHora(marcaISO, ahora) {
+  if (typeof marcaISO !== 'string') return false
+  const d = new Date(marcaISO)
+  if (Number.isNaN(d.getTime())) return false
+  // Hasta la HORA (`slice(0, 13)` deja `2026-10-07T11`), no hasta el día.
+  return d.toISOString().slice(0, 13) === ahora.toISOString().slice(0, 13)
+}
+
 // Devuelve { actuales, nuevas } con los setups de esta revisión y cuáles no
 // estaban en la anterior.
 export function compararConAnterior(setups, estadoPrevio) {

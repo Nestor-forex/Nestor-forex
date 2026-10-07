@@ -77,3 +77,67 @@ export function armarBarrido(data, ahora = new Date()) {
     correl: data.correl,
   }
 }
+
+/**
+ * Qué parte de una vela diaria normal trae la vela de HOY, que va a medias.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * PARA QUÉ: EL PUBLICADOR CORRE A MEDIO DÍA (2026-10-07)
+ * ─────────────────────────────────────────────────────────────────────────
+ * El vigía corre una vez y tarde; `publicar-barrido.mjs` corre a las 11:20 y
+ * las 19:20 UTC. La vela diaria va de 22:00 a 22:00 UTC, así que a las 11:20
+ * lleva 13 horas de 24 — y de esa vela sale parte del ATR, y del ATR el stop.
+ *
+ * La aritmética dice que el efecto es despreciable (la vela más nueva pesa
+ * 1/14 en Wilder y el cojín de ATR es el 16,6 % del stop, así que una vela al
+ * 75 % mueve el stop un 0,3 %). Lo que NO está medido es a cuánto llega de
+ * verdad esa vela a esa hora. Esto lo mide en cada corrida para que la
+ * pregunta se conteste con datos en vez de con un comentario.
+ *
+ * ⚠️ NO DECIDE NADA. No apaga, no cambia y no filtra ninguna señal: solo
+ * imprime un número en el log. Si algún día se quisiera usar para decidir,
+ * eso sería un FILTRO y va al banco de pruebas con su listón escrito antes,
+ * como todo lo demás — van siete familias medidas y siete fallando.
+ *
+ * Se compara contra la MEDIANA de las otras velas y no contra la media: basta
+ * un día de noticias para que la media no describa a ninguna.
+ *
+ * ⚠️ Devuelve `null` —no 1, ni 0— cuando no se puede medir: sin extremos
+ * publicados, con menos de dos velas, o si la mediana sale cero o no finita.
+ * Un 1 diría «la vela está completa» y un 0 diría «está vacía»; las dos son
+ * afirmaciones, y aquí lo cierto es que no se sabe. Misma asimetría que
+ * `pearson` y que `edadEnMinutos`.
+ *
+ * @param barrido lo que devuelve `armarBarrido`
+ * @returns {number|null} 1 = una vela entera; 0,5 = la mitad del recorrido
+ */
+export function anchoDeLaVelaEnCurso(barrido) {
+  const cocientes = []
+
+  for (const p of barrido?.pares || []) {
+    const altos = p.altos20
+    const bajos = p.bajos20
+    if (!Array.isArray(altos) || !Array.isArray(bajos)) continue
+    if (altos.length !== bajos.length || altos.length < 2) continue
+
+    const rangos = altos.map((a, i) => a - bajos[i])
+    if (!rangos.every(Number.isFinite)) continue
+
+    const ultima = rangos[rangos.length - 1]
+    const previas = rangos.slice(0, -1).sort((a, b) => a - b)
+    const m = previas.length % 2
+      ? previas[(previas.length - 1) / 2]
+      : (previas[previas.length / 2 - 1] + previas[previas.length / 2]) / 2
+
+    if (!(m > 0)) continue
+    cocientes.push(ultima / m)
+  }
+
+  if (!cocientes.length) return null
+
+  // La mediana de los 14 pares, por el mismo motivo que dentro de cada par.
+  cocientes.sort((a, b) => a - b)
+  return cocientes.length % 2
+    ? cocientes[(cocientes.length - 1) / 2]
+    : (cocientes[cocientes.length / 2 - 1] + cocientes[cocientes.length / 2]) / 2
+}

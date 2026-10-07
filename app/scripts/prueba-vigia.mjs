@@ -10,6 +10,7 @@
 
 import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
+import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import {
   compararConAnterior,
@@ -18,6 +19,7 @@ import {
   idDe,
   leerEstado,
   separarSombra,
+  yaCorrioEstaHora,
   yaCorrioHoy,
 } from './lib/vigia-nucleo.mjs'
 
@@ -333,6 +335,83 @@ console.log('\n13. Lo que una regla apunta ADEMÁS de los niveles llega al histo
     'y la regla de sombra lo sigue poniendo en `crudo`',
     /huboSweep: ultima\.huboSweep/.test(sombra)
   )
+}
+
+console.log('\n14. ⚠️ El guardián POR HORA, que usa el publicador del barrido')
+// ────────────────────────────────────────────────────────────────────────
+// `publicar-barrido.mjs` corre DOS VECES AL DÍA (11:20 y 19:20 UTC), así que
+// `yaCorrioHoy` le sobraría la segunda: le diría que no publique. Lo que no
+// puede es repetir la MISMA hora, y eso pasa porque hay dos relojes pulsando
+// el botón — los crones de GitHub y el reloj de fuera en Cloudflare. Sin esto,
+// cada publicación costaría 14 créditos dos veces: 56 al día en vez de 28.
+{
+  const ahora = new Date('2026-10-07T11:22:00.000Z')
+
+  comprobar(
+    'misma hora → NO publica (es el caso que ahorra los créditos)',
+    yaCorrioEstaHora('2026-10-07T11:20:04.000Z', ahora) === true
+  )
+  comprobar(
+    'la hora anterior → SÍ publica',
+    yaCorrioEstaHora('2026-10-07T10:59:59.000Z', ahora) === false
+  )
+  comprobar(
+    'la SEGUNDA publicación del día es otra hora → SÍ publica',
+    yaCorrioEstaHora('2026-10-07T11:20:04.000Z', new Date('2026-10-07T19:20:00.000Z')) === false
+  )
+  comprobar(
+    'ayer a la misma hora → SÍ publica',
+    yaCorrioEstaHora('2026-10-06T11:20:04.000Z', ahora) === false
+  )
+
+  // ⚠️ LA ASIMETRÍA, que es la misma de `yaCorrioHoy` y `esSombra` y se
+  // resuelve hacia el mismo lado: ante cualquier duda PUBLICA. Publicar de más
+  // cuesta 14 créditos de los 800 y reescribe el mismo archivo; saltarse de más
+  // deja la app con el barrido viejo, que es justo lo que esto viene a
+  // arreglar.
+  comprobar('sin marca (primera vez) → publica', yaCorrioEstaHora(null, ahora) === false)
+  comprobar('marca indefinida → publica', yaCorrioEstaHora(undefined, ahora) === false)
+  comprobar('marca que no es texto → publica', yaCorrioEstaHora(1760000000000, ahora) === false)
+  comprobar('fecha ilegible → publica', yaCorrioEstaHora('ayer por la tarde', ahora) === false)
+  comprobar('texto vacío → publica', yaCorrioEstaHora('', ahora) === false)
+
+  // Y que NO sea `yaCorrioHoy` con otro nombre: el mismo dato tiene que dar
+  // respuestas distintas en las dos, o el publicador solo publicaría una vez.
+  const tarde = new Date('2026-10-07T19:20:00.000Z')
+  comprobar(
+    'a las 19:20, `yaCorrioHoy` diría que no y `yaCorrioEstaHora` que sí',
+    yaCorrioHoy({ actualizadoEl: '2026-10-07T11:20:04.000Z' }, tarde) === true &&
+      yaCorrioEstaHora('2026-10-07T11:20:04.000Z', tarde) === false
+  )
+}
+
+console.log('\n14b. ⚠️ El publicador mira el guardián ANTES de pedir precios')
+// Si lo mirara después, el ahorro sería cero: los 14 créditos ya estarían
+// gastados. Se lee el guion como texto, que es la única forma de comprobar el
+// ORDEN sin arrancarlo con red y llave.
+{
+  const guion = readFileSync(fileURLToPath(new URL('./publicar-barrido.mjs', import.meta.url)), 'utf8')
+  const guarda = guion.indexOf('yaCorrioEstaHora(')
+  const pide = guion.indexOf('await obtenerVelas(')
+
+  comprobar('el publicador usa el guardián', guarda !== -1)
+  comprobar('…y pide velas', pide !== -1)
+  comprobar('el guardián va ANTES de gastar créditos', guarda !== -1 && pide !== -1 && guarda < pide)
+
+  // ⚠️ El `'0' || '1'` del workflow: una cadena vacía es FALSA en las
+  // expresiones de GitHub, así que con `''` marcar «forzar» no forzaría nada y
+  // nadie se enteraría.
+  const wf = readFileSync(fileURLToPath(new URL('../../.github/workflows/publicar-barrido.yml', import.meta.url)), 'utf8')
+  comprobar(
+    "el workflow pasa `inputs.forzar && '0' || '1'`, no `''`",
+    /SOLO_SI_FALTA_LA_HORA:\s*\$\{\{\s*inputs\.forzar\s*&&\s*'0'\s*\|\|\s*'1'\s*\}\}/.test(wf)
+  )
+  // Y que lleve la llave, que es el aviso del 2026-09-03: un workflow nuevo que
+  // llame a los guiones de velas sin el secreto falla sin explicación.
+  comprobar('el workflow le pasa TWELVEDATA_KEY', /TWELVEDATA_KEY:\s*\$\{\{\s*secrets\.TWELVEDATA_KEY\s*\}\}/.test(wf))
+  // ⚠️ Y que comparta `concurrency` con el vigía: los dos escriben el MISMO
+  // archivo en la misma rama.
+  comprobar('comparte el grupo de concurrencia `vigia`', /group:\s*vigia\b/.test(wf))
 }
 
 console.log(fallos === 0 ? '\nTodas las comprobaciones pasaron.\n' : `\n${fallos} comprobación(es) fallaron.\n`)

@@ -302,6 +302,7 @@ const CRUDA = {
 // Los que alimentan la app o la miden, y van en limpia SIN decir nada.
 const LIMPIA = [
   'scripts/vigia.mjs',
+  'scripts/publicar-barrido.mjs',
   'scripts/reporte-diario.mjs',
   'scripts/publicar-oro.mjs',
   'scripts/backtest.mjs',

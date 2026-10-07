@@ -129,6 +129,23 @@ export const PROGRAMAS = [
   },
   {
     repo: 'Nestor-forex',
+    wf: 'publicar-barrido.yml',
+    nombre: 'Swing · publicar el barrido',
+    programado: ['11:20', '19:20'],
+    dias: HABILES,
+    mide: 'retraso',
+    // ⚠️ SÍ se pulsa, y cumple la regla de arriba: correrlo dos veces en la
+    // misma hora es INOFENSIVO — reescribe el mismo archivo y no toca el
+    // historial ni manda avisos. Y aun así lleva `yaCorrioEstaHora`, porque
+    // repetir cuesta 14 créditos y aquí no son gratis como en Intradía.
+    //
+    // Las dos horas son las que arreglan la queja de Néstor del 2026-10-07: el
+    // barrido tiene que estar puesto a las 6:20 am de Colombia, cuando él abre
+    // la app, y refrescarse otra vez por la tarde.
+    pulsar: ['11:20', '19:20'],
+  },
+  {
+    repo: 'Nestor-forex',
     wf: 'reporte-diario.yml',
     nombre: 'Swing · reporte diario',
     // 10:30 a. m. en Colombia. ⚠️ Aquí decía 15:55 y era FALSO: lo cazó la

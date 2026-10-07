@@ -10,7 +10,8 @@ name: Oro (XAU/USD y su correlación con los pares)
 #
 # ⚠️⚠️ ESTO SÍ GASTA CRÉDITOS DE TWELVE DATA: **15 de los 800 del día** — 1 el
 # oro y 14 los pares de la correlación. Gasto total de Swing al día:
-# 14 (vigía) + 7 (reporte) + 15 (esto) = 36 de 800.
+# 14 (vigía) + 28 (publicar el barrido, 2 corridas) + 7 (reporte) + 15
+# (esto) = 64 de 800.
 #
 # ⚠️ Y POR ESO NECESITA EL SECRETO. Sin el `env` de abajo, `leerLlave` no
 # encuentra la llave y el guion falla — la llave se sacó de `.env.production` el
