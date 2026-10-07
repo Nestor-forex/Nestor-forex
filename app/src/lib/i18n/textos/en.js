@@ -461,6 +461,12 @@ export default {
     caducada: 'No data',
   },
 
+  frescura: {
+    generadoMin: (v) => `Generated ${v.n} min ago`,
+    generadoH: (v) => `Generated ${v.n} h ago`,
+    generadoDias: (v) => `Generated ${v.n} ${v.n === 1 ? 'day' : 'days'} ago`,
+  },
+
   tasas: {
     paraQue: 'Traders check them when a trade will stay open overnight: they tell you in which pairs the interest works in your favour night after night and in which it works against you. It is not the exact figure your broker will charge.',
     titulo: 'Interest rates and swap',

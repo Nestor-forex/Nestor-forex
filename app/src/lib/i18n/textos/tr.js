@@ -456,6 +456,12 @@ export default {
     caducada: 'Veri yok',
   },
 
+  frescura: {
+    generadoMin: (v) => `${v.n} dk önce hesaplandı`,
+    generadoH: (v) => `${v.n} sa önce hesaplandı`,
+    generadoDias: (v) => `${v.n} gün önce hesaplandı`,
+  },
+
   tasas: {
     paraQue: 'Bir işlem gecelemek üzereyse yatırımcılar buna bakar: hangi paritelerde faizin her gece lehinize, hangilerinde aleyhinize çalıştığını gösterir. Aracı kurumunuzun keseceği kesin tutar değildir.',
     titulo: 'Faiz oranları ve Swap',

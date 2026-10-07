@@ -457,6 +457,12 @@ export default {
     caducada: 'Senza dati',
   },
 
+  frescura: {
+    generadoMin: (v) => `Generato ${v.n} min fa`,
+    generadoH: (v) => `Generato ${v.n} h fa`,
+    generadoDias: (v) => `Generato ${v.n} ${v.n === 1 ? 'giorno' : 'giorni'} fa`,
+  },
+
   tasas: {
     paraQue: 'I trader le guardano quando un\'operazione resterà aperta da un giorno all\'altro: dicono in quali coppie l\'interesse gioca a tuo favore notte dopo notte e in quali contro. Non è la cifra esatta che ti addebiterà il broker.',
     titulo: 'Tassi di interesse e swap',

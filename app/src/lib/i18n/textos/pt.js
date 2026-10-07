@@ -461,6 +461,12 @@ export default {
     caducada: 'Sem dados',
   },
 
+  frescura: {
+    generadoMin: (v) => `Gerado há ${v.n} min`,
+    generadoH: (v) => `Gerado há ${v.n} h`,
+    generadoDias: (v) => `Gerado há ${v.n} ${v.n === 1 ? 'dia' : 'dias'}`,
+  },
+
   tasas: {
     paraQue: 'Os traders olham quando uma operação vai ficar aberta de um dia para o outro: dizem em que pares os juros jogam a teu favor noite após noite e em quais jogam contra. Não é o valor exato que o teu bróker vai cobrar.',
     titulo: 'Taxas de juro e swap',

@@ -10,6 +10,7 @@ import { generarReporteMd, descargarMd } from '../lib/reporte'
 import BarraFuerza from './BarraFuerza'
 import Sparkline from './Sparkline'
 import Glosario from './Glosario'
+import Frescura from './Frescura'
 import ClimaMercado from './ClimaMercado'
 import Correlacion from './Correlacion'
 import RiesgoSenales from './RiesgoSenales'
@@ -117,7 +118,7 @@ function RazonList({ items, emptyText }) {
   )
 }
 
-export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], correlaciones = [], riesgoSenales = [], corte }) {
+export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], correlaciones = [], riesgoSenales = [], corte, generadoEl, horasViejo }) {
   const { t, locale } = useIdioma()
   // Cómo le va de verdad a la regla de reversión, contado en vivo. Ver el
   // porqué en `useResumenReal`: este número estuvo escrito a mano y se quedó
@@ -162,6 +163,8 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
               {t('tablero.sesionActiva')} <span style={{ color: 'var(--text)' }}>{sesion}</span>
             </div>
             <div>{loading ? '…' : corte}</div>
+            {/* Cuándo se CALCULÓ, que no es la fecha de la vela. Ver `Frescura`. */}
+            <Frescura generadoEl={generadoEl} horasViejo={horasViejo} style={{ fontSize: 12.5 }} />
           </div>
         </section>
 

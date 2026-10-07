@@ -508,6 +508,15 @@ export default {
     pie: (v) => `Spread en pips, en ámbar si pasa de 3. Tomado el ${v.hora}.`,
   },
 
+  // De cuándo es el barrido que estás viendo. Es INFORMACIÓN, no una alarma:
+  // no apaga ni cambia ninguna señal. Van como FUNCIONES porque llevan el
+  // número dentro y cada idioma ordena la frase distinto.
+  frescura: {
+    generadoMin: (v) => `Generado hace ${v.n} min`,
+    generadoH: (v) => `Generado hace ${v.n} h`,
+    generadoDias: (v) => `Generado hace ${v.n} ${v.n === 1 ? 'día' : 'días'}`,
+  },
+
   tasas: {
     paraQue: 'Los traders las miran cuando una operación va a quedar abierta de un día para otro: dicen en qué pares el interés juega a tu favor noche tras noche y en cuáles en tu contra. No es la cifra exacta que te cobrará el bróker.',
     titulo: 'Tasas de interés y swap',

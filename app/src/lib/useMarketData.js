@@ -22,6 +22,21 @@ const URL_BARRIDO =
 const CACHE_KEY = 'nf_market_cache_v2'
 const LIMITE_MS = 15_000
 
+// A partir de cuántas horas el barrido se enseña en ámbar («esto ya está
+// viejo»). Ver `frescura.js` para por qué el número NO vive allí.
+//
+// DERIVADO, no copiado de la app hermana: aquí el vigía corre UNA VEZ AL DÍA
+// (15:50 UTC, con tres intentos) y las velas diarias cambian una vez al día,
+// así que un barrido de hace 20 horas es perfectamente normal y marcarlo en
+// ámbar sería una alarma que suena siempre. Lo anormal es que pase un día
+// entero sin publicarse: 24 h + 2 de holgura para el retraso del reloj de
+// GitHub (medido: hasta 6 h 24 min antes del reloj externo).
+//
+// ⚠️ En Intradía el mismo número es 2, porque allí el vigía corre cada hora.
+// Un dato de 3 horas es viejo allí y normal aquí — hay una comprobación
+// dedicada a eso en `prueba-frescura.mjs`.
+const HORAS_VIEJO = 26
+
 function leerCache() {
   try {
     const cache = JSON.parse(localStorage.getItem(CACHE_KEY))
@@ -113,6 +128,12 @@ export function useMarketData({ thr = 0.5, topN = 3 } = {}) {
     error,
     stale,
     guardadoEl,
+    // Cuándo CALCULÓ el vigía este barrido. ⚠️ No es lo mismo que `ultima`,
+    // que es la fecha de la VELA, ni que `guardadoEl`, que es cuándo lo bajó
+    // este teléfono (o sea «hoy» casi siempre). Ver `frescura.js` para por qué
+    // hacía falta un tercer dato y no bastaba con los dos que ya había.
+    generadoEl: data?.generadoEl ?? null,
+    horasViejo: HORAS_VIEJO,
     ultima: data?.ultima ?? null,
     ratesUSD: data?.ratesUSD ?? null,
     monedas: vista?.monedas ?? [],
@@ -122,6 +143,13 @@ export function useMarketData({ thr = 0.5, topN = 3 } = {}) {
     vigilancia: vista?.vigilancia ?? [],
     setups: vista?.setups ?? [],
     setupsReversion: vista?.setupsReversion ?? [],
+    // ⚠️ ESTAS DOS FALTABAN, y por eso sus tarjetas NO SE VEÍAN en la app
+    // publicada (encontrado el 2026-10-07). `derivarVista` las calculaba,
+    // `App.jsx` las pasaba y `TableroCompleto` las recibía con `= []` por
+    // defecto, así que `Correlacion` y `RiesgoSenales` devolvían `null` sin que
+    // nada fallara. Lo vigila ahora `scripts/prueba-cableado.mjs`.
+    correlaciones: vista?.correlaciones ?? [],
+    riesgoSenales: vista?.riesgoSenales ?? [],
     corte: vista?.corte ?? '…',
   }
 }

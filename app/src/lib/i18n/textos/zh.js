@@ -451,6 +451,12 @@ export default {
     caducada: '无数据',
   },
 
+  frescura: {
+    generadoMin: (v) => `${v.n} 分钟前生成`,
+    generadoH: (v) => `${v.n} 小时前生成`,
+    generadoDias: (v) => `${v.n} 天前生成`,
+  },
+
   tasas: {
     paraQue: '当一笔交易要隔夜持有时，交易者会看这个：它说明在哪些货币对上利息每晚站在你这边，在哪些站在你的对面。这不是你的经纪商会收取的确切金额。',
     titulo: '利率与 Swap',
