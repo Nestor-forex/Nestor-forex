@@ -86,3 +86,18 @@ jobs:
         run: |
           echo "App hermana: ${{ steps.rama.outputs.ref }}"
           node scripts/prueba-gemelos.mjs "${{ github.workspace }}/otra/app"
+
+      # ⚠️ EL RELOJ DE FUERA SE COMPRUEBA AQUÍ porque es el ÚNICO trabajo que
+      # tiene los DOS repositorios clonados, y su lista de programas habla de
+      # los dos. Corre en cada push, en cada pull request y una vez al día, que
+      # es exactamente lo que hace falta: la divergencia puede nacer de un
+      # cambio en el OTRO repositorio.
+      #
+      # Qué caza: que un workflow renombrado deje al reloj pulsando un nombre
+      # que ya no existe (GitHub devuelve 404 y el programa deja de dispararse
+      # EN SILENCIO), que una hora de la lista no sea la del cron de verdad, y
+      # que un programa nuevo con `schedule:` se quede fuera de la lista sin que
+      # nadie lo haya decidido.
+      - name: Comprobar el reloj de fuera contra los crones de verdad
+        working-directory: esta/app
+        run: node scripts/prueba-reloj-externo.mjs "${{ github.workspace }}/otra"
