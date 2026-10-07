@@ -34,7 +34,10 @@
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { PROGRAMAS, toca } from '../../reloj-externo/worker.js'
+import { PROGRAMAS, toca, tocaEnEsteMinuto } from '../../reloj-externo/worker.js'
+
+// Para los casos inventados del bloque 7e.
+const TODOS_DIAS = [0, 1, 2, 3, 4, 5, 6]
 
 let fallos = 0
 const comprobar = (que, cond) => {
@@ -296,6 +299,127 @@ let maximo = 0
 for (let d = 0; d <= 6; d++) for (let h = 0; h < 24; h++) maximo = Math.max(maximo, toca(PROGRAMAS, h, d).length)
 console.log(`       como mucho se pulsan ${maximo} programas en una misma hora`)
 comprobar('no pasa de 6 en ninguna hora', maximo <= 6)
+
+// ────────────────────────────────────────────────────────────────────────
+console.log('\n7. ⚠️⚠️ Los programas que PIDEN PRECIOS no pueden pulsarse en el mismo minuto')
+// ────────────────────────────────────────────────────────────────────────
+// Este bloque existe por un fallo real, con fecha y log. El 2026-10-07, con el
+// reloj recién puesto y funcionando, cuatro programas se pulsaron en 5
+// segundos:
+//
+//   15:20:51  Intradía · vigía .......  7 créditos  ✓
+//   15:20:53  Intradía · publicador ..  7 créditos  ✓
+//   15:20:54  Swing · vigía .......... 14 créditos  ✗ HTTP 429
+//   15:20:56  Swing · reporte ........  7 créditos  ✓
+//
+// Las DOS apps comparten la misma llave de Twelve Data, así que comparten el
+// límite de 8 consultas por minuto. 35 en 5 segundos. El que murió fue el
+// vigía de Swing, que escribe lo único irrecuperable del proyecto.
+//
+// 📌 Y el fallo lo causó el arreglo al FUNCIONAR: antes el reloj de GitHub era
+// tan errático que nunca coincidían.
+
+// Cuántos créditos de Twelve Data gasta cada programa, escrito a mano en la
+// lista del reloj. ⚠️ Y comprobado contra los `.yml`: un workflow que lleva
+// `TWELVEDATA_KEY` pide precios, y si no está declarado aquí, un día volverá a
+// chocar sin que nadie lo haya decidido.
+for (const p of PROGRAMAS) {
+  const texto = readFileSync(`${RAICES[p.repo]}.github/workflows/${p.wf}`, 'utf8')
+  // ⚠️ SE BUSCA LA ASIGNACIÓN DE VERDAD, no la palabra. La primera versión usaba
+  // `/TWELVEDATA_KEY/` y cazaba los COMENTARIOS de `tasas.yml` y `cot.yml`, que
+  // dicen literalmente «este workflow NO lleva `env` con TWELVEDATA_KEY» — o
+  // sea que marcaba como gastadores de créditos justo a los que dicen que no lo
+  // son. Es «contar apariciones no es leer», que en este repositorio ya mordió
+  // con la sonda de FX Blue y con el comentario de `rejilla: 'cruda'`.
+  const pidePrecios = /^\s*TWELVEDATA_KEY:\s*\$\{\{/m.test(texto)
+  const declarado = typeof p.creditos === 'number' && p.creditos > 0
+  if (!p.pulsar) continue // los que no se pulsan no pueden chocar con nadie
+  comprobar(
+    `${p.nombre}: ${pidePrecios ? 'pide precios → declara créditos' : 'no pide precios → sin créditos'}`,
+    pidePrecios === declarado
+  )
+}
+
+console.log('\n7b. Todo lo que se pulsa tiene su minuto escrito')
+// Sin esto se caería al respaldo del minuto 20, que es seguro pero deshace el
+// arreglo en silencio.
+for (const p of PROGRAMAS.filter((x) => x.pulsar)) {
+  comprobar(
+    `${p.nombre}: minutoPulso = ${p.minutoPulso}`,
+    typeof p.minutoPulso === 'number' && p.minutoPulso >= 0 && p.minutoPulso < 60
+  )
+}
+
+console.log('\n7c. ⚠️ En ninguna hora de la semana coinciden dos que pidan precios')
+// La comprobación que de verdad caza el 429. Recorre las 168 horas de la
+// semana y mira, hora por hora, los que piden precios.
+const SEPARACION_MIN = 3 // cada guion pide 7 de golpe y su 2ª tanda cae ~1,1 min después
+let peorHora = null
+let minSeparacion = 99
+for (let d = 0; d <= 6; d++) {
+  for (let h = 0; h < 24; h++) {
+    const conCreditos = toca(PROGRAMAS, h, d).filter((p) => p.creditos)
+    const minutos = conCreditos.map((p) => p.minutoPulso ?? 20).sort((a, b) => a - b)
+    for (let i = 1; i < minutos.length; i++) {
+      const sep = minutos[i] - minutos[i - 1]
+      if (sep < minSeparacion) {
+        minSeparacion = sep
+        peorHora = { d, h, nombres: conCreditos.map((p) => `${p.nombre}:${p.minutoPulso}`) }
+      }
+    }
+  }
+}
+if (peorHora) {
+  console.log(
+    `       la hora más apretada es el día ${peorHora.d} a las ${peorHora.h}:00 UTC ` +
+      `→ ${peorHora.nombres.join(' · ')}`
+  )
+}
+comprobar(
+  `la separación mínima entre dos que piden precios es ${minSeparacion} min (hace falta ${SEPARACION_MIN})`,
+  minSeparacion >= SEPARACION_MIN
+)
+
+console.log('\n7d. ⚠️ El vigía de Swing se queda con el minuto 20, y el motivo no es estético')
+// Es el único minuto que seguro se invoca: es el cron que ya existía en
+// Cloudflare antes de este arreglo. Si Néstor no cambia el cron a `* * * * *`,
+// lo que se pulsa es exactamente lo del minuto 20 — así que ahí va el programa
+// que escribe el historial y el que murió con el 429. Degradar hacia «el más
+// importante sí se pulsa» en vez de hacia «no se pulsa nada».
+{
+  const v = PROGRAMAS.find((p) => p.repo === 'Nestor-forex' && p.wf === 'vigia.yml')
+  comprobar('el vigía de Swing se pulsa en el minuto 20', v.minutoPulso === 20)
+  const otrosEn20 = PROGRAMAS.filter((p) => p.pulsar && p.creditos && p.minutoPulso === 20)
+  comprobar(
+    `y es el ÚNICO que pide precios en el minuto 20 (son ${otrosEn20.length})`,
+    otrosEn20.length === 1
+  )
+}
+
+console.log('\n7e. ⚠️ Un programa sin minuto NO se descarta: cae al 20')
+// La asimetría de siempre, escrita por el lado seguro. Caerse al minuto 20 lo
+// deja como estaba antes de este arreglo, que funcionaba con el choque;
+// descartarlo lo dejaría SIN PULSAR en silencio, que es justo lo que este
+// reloj existe para evitar.
+{
+  const falso = [
+    { repo: 'X', wf: 'a.yml', nombre: 'sin minuto', dias: TODOS_DIAS, pulsar: 'cada' },
+    { repo: 'X', wf: 'b.yml', nombre: 'con minuto', dias: TODOS_DIAS, pulsar: 'cada', minutoPulso: 44 },
+  ]
+  comprobar('en el minuto 20 sale el que no tiene minuto', tocaEnEsteMinuto(falso, 10, 20, 3).length === 1)
+  comprobar('en el minuto 44 sale el otro', tocaEnEsteMinuto(falso, 10, 44, 3)[0]?.wf === 'b.yml')
+  comprobar('en un minuto cualquiera no sale ninguno', tocaEnEsteMinuto(falso, 10, 7, 3).length === 0)
+}
+
+console.log('\n7f. En la gran mayoría de los minutos el reloj no hace nada')
+// Con el cron cada minuto, lo normal tiene que ser no pedirle nada a GitHub.
+// Si esto bajara mucho, alguien habría puesto todo al mismo minuto otra vez.
+{
+  let vacios = 0
+  for (let m = 0; m < 60; m++) if (tocaEnEsteMinuto(PROGRAMAS, 15, m, 3).length === 0) vacios++
+  console.log(`       de los 60 minutos de las 15:00 UTC de un miércoles, ${vacios} no hacen nada`)
+  comprobar('al menos 50 de los 60 minutos están vacíos', vacios >= 50)
+}
 
 console.log(fallos === 0 ? '\n✓ todo bien.\n' : `\n✗ ${fallos} comprobación(es) fallaron.\n`)
 process.exit(fallos === 0 ? 0 : 1)

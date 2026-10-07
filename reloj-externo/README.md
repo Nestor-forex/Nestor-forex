@@ -163,38 +163,47 @@ de Twelve Data o apague el vigía. Malo, acotado, y **se ve enseguida**.
 
     - **`Schedule`** es un constructor simplificado que solo acepta un número y
       construye **«cada N minutos»**. Si escribes 20 ahí, el reloj dispararía
-      **cada 20 minutos** — 72 veces al día en vez de 24.
+      **cada N minutos**, y lo que hace falta es otra cosa.
     - Clic en **`Cron expression`**.
 
-17. ⚠️ **Al cambiar de pestaña, Cloudflare arrastra lo anterior y escribe
-    `*/20 * * * *`.** Esos dos caracteres del principio lo cambian todo:
-
-    | | significa |
-    |---|---|
-    | `*/20 * * * *` | **cada** 20 minutos |
-    | `20 * * * *` | **al minuto 20** de cada hora ← esto queremos |
+17. ⚠️ **Al cambiar de pestaña, Cloudflare arrastra lo anterior** y escribe
+    algo como `*/20 * * * *`, que significa «cada 20 minutos». Hay que
+    borrarlo entero.
 
     Clic dentro de la casilla, **`Ctrl+A`** para seleccionar todo, y escribe
-    encima (empieza por el **2**, sin asterisco ni barra delante, y son
-    **cuatro** asteriscos):
+    encima **cinco asteriscos separados por espacios**:
 
     ```
-    20 * * * *
+    * * * * *
     ```
 
     **Un solo horario, no hace falta más**: el programita ya sabe por dentro
-    qué le toca a cada hora.
+    qué le toca a cada hora **y en qué minuto**.
+
+    ⚠️⚠️ **CAMBIÓ EL 2026-10-07, y antes aquí decía `20 * * * *`.** El motivo
+    es un fallo real: con todo en el minuto 20, cuatro programas se pulsaban en
+    el mismo segundo y las dos apps se peleaban por el límite de 8 consultas
+    por minuto de Twelve Data — **35 consultas en 5 segundos**. El vigía de
+    Swing, que es el que escribe el historial, murió con un `HTTP 429` tres
+    días seguidos de intentarlo. Ahora cada programa tiene su propio minuto, y
+    para eso el reloj tiene que despertarse cada minuto.
+
+    📌 **No es derroche.** En 56 de los 60 minutos no hace absolutamente nada:
+    se despierta, mira que no le toca y se vuelve a dormir sin pedirle nada a
+    GitHub. Son 1.440 despertares al día de los 100.000 que da el plan
+    gratuito.
 
 18. ⚠️ **ANTES de darle a Add, lee la lista azul** de *Estimated upcoming
-    events*. Tiene que quedar **una por hora, todas terminadas en `:20`**:
+    events*. Tiene que quedar **una por MINUTO**, seguidas:
 
     ```
     Wed, 07 Oct 2026 02:20:00
-    Wed, 07 Oct 2026 03:20:00
-    Wed, 07 Oct 2026 04:20:00
+    Wed, 07 Oct 2026 02:21:00
+    Wed, 07 Oct 2026 02:22:00
     ```
 
-    Si ves `02:00` · `02:20` · `02:40`, sigues en «cada 20 minutos» y está mal.
+    Si ves una por hora (`02:20` · `03:20` · `04:20`), te quedó el horario
+    viejo y solo se pulsará lo del minuto 20.
 
 19. Clic en **Add**.
 
@@ -205,13 +214,35 @@ de Twelve Data o apague el vigía. Malo, acotado, y **se ve enseguida**.
 
     ```
     Cron triggers
-      Runs: At 20 minutes past the hour     Next: <fecha> 02:20:00
+      Runs: Every minute     Next: <fecha> 02:21:00
     ```
 
     Si sigue diciendo **«No cron triggers»**, el Add no llegó a guardarse y hay
     que repetir desde el paso 15.
 
-**Listo.** A partir del siguiente minuto 20 empieza a pulsar.
+    Si dice **«At 20 minutes past the hour»**, te quedó el horario viejo: el
+    reloj funcionará, pero solo pulsará lo del minuto 20 (el vigía de Swing,
+    los calendarios, las tasas y el COT). Lo demás lo seguiría pulsando GitHub
+    con sus horas de retraso, y la medición de puntualidad del día siguiente lo
+    diría nombrando uno por uno.
+
+**Listo.** A partir del siguiente minuto empieza a pulsar.
+
+---
+
+## ⚠️ SI YA TENÍAS EL RELOJ PUESTO: hay que volver a pegar el programita
+
+El código del Worker **vive pegado en tu cuenta de Cloudflare**, no en el
+repositorio. Así que cuando aquí se cambia `worker.js`, **Cloudflare no se
+entera**. Cada vez que este archivo cambie hay que repetir dos pasos:
+
+1. **Pegar el `worker.js` nuevo** (Workers & Pages → tu Worker → **Edit code**
+   → `Ctrl+A` dentro del editor → pegar encima → **Deploy**).
+2. **Cambiar el horario** a `* * * * *` como dice el paso 17.
+
+📌 Cómo saber si tu Worker está al día: abre su dirección `.workers.dev` en
+Chrome. Si la lista que sale **no** enseña un minuto delante de cada programa
+(`:20`, `:23`, `:26`…), tienes la versión vieja pegada.
 
 ### 📌 Por qué el paso 16 es el que más importa
 

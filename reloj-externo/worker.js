@@ -79,8 +79,58 @@
 // ⚠️ LA REGLA PARA DECIDIR SI SE PULSA: solo se pulsa lo que es INOFENSIVO
 // CORRER DOS VECES EN LA MISMA HORA, porque GitHub sigue pulsando también. Lo
 // que no cumpla eso se queda fuera aunque llegue tarde.
+//
+// ─────────────────────────────────────────────────────────────────────────
+// ⚠️⚠️ `minutoPulso`: POR QUÉ CADA PROGRAMA TIENE SU MINUTO (desde 2026-10-07)
+// ─────────────────────────────────────────────────────────────────────────
+// La primera versión de este reloj tenía UN SOLO cron (`20 * * * *`) y pulsaba
+// todo lo de la hora en serie, o sea en el mismo segundo. Funcionó, y por eso
+// mismo rompió algo:
+//
+//   15:20:51  Intradía · vigía .............  7 créditos  ✓
+//   15:20:53  Intradía · publicador ........  7 créditos  ✓
+//   15:20:54  Swing · vigía ................ 14 créditos  ✗ HTTP 429
+//   15:20:56  Swing · reporte ..............  7 créditos  ✓
+//
+// **35 consultas en 5 segundos contra un límite de 8 por minuto.** Las DOS apps
+// comparten la misma llave de Twelve Data, así que comparten el límite. El que
+// murió fue el vigía de Swing, que es justo el que escribe el historial — lo
+// único irrecuperable del proyecto. Reintentó tres veces con 65 s de espera y
+// las tres le dijeron no.
+//
+// 📌 Antes no pasaba porque el reloj de GitHub era tan errático que nunca
+// coincidían. **Al llegar puntuales, coinciden por diseño.** El arreglo de una
+// cosa destapó un fallo que la avería anterior tapaba.
+//
+// Así que el cron de Cloudflare pasa a ser `* * * * *` (cada minuto) y cada
+// programa dice en qué minuto se pulsa. Los que piden precios van separados
+// 3 minutos, que es de sobra: cada guion pide 7 de golpe y espera 65 s antes de
+// la siguiente tanda, así que su segunda tanda cae ~1,1 min después.
+//
+// ⚠️ SI EL CRON DE CLOUDFLARE SE QUEDA EN `20 * * * *` esto NO se rompe en
+// silencio, y es a propósito: en el minuto 20 va el **vigía de Swing** —el más
+// importante y el que falló— más todos los que no gastan créditos. O sea que
+// sin tocar nada el fallo reportado ya queda arreglado, y lo que se perdería
+// son los otros pulsos, que `puntualidad.yml` canta al día siguiente nombrando
+// uno por uno. Los crones de GitHub siguen puestos como suelo.
 const HABILES = [1, 2, 3, 4, 5]
 const TODOS = [0, 1, 2, 3, 4, 5, 6]
+
+// Los minutos de los programas que PIDEN PRECIOS, separados 3 minutos. El 20
+// es el primero a propósito (ver arriba: es el único minuto que seguro se
+// invoca, porque es el cron que ya existía).
+const M_VIGIA_SWING = 20
+const M_VIGIA_INTRADIA = 23
+const M_PUBLICADOR_INTRADIA = 26
+const M_PUBLICADOR_SWING = 29
+const M_REPORTE_SWING = 32
+const M_REPORTE_INTRADIA = 35
+const M_ORO_SWING = 38
+
+// Y el minuto de todo lo que NO gasta créditos de Twelve Data: calendarios
+// (ForexFactory), tasas (BIS) y COT (CFTC). Pueden ir todos juntos porque no
+// comparten ninguna cuota con nadie.
+const M_SIN_CREDITOS = 20
 
 export const PROGRAMAS = [
   // ───────────────────────────────────────────────────────────────────────
@@ -98,6 +148,8 @@ export const PROGRAMAS = [
     mide: 'cobertura',
     cadaHoras: 1,
     pulsar: 'cada',
+    creditos: 7,
+    minutoPulso: M_VIGIA_INTRADIA,
   },
   {
     repo: 'Nestor-forex-intradia',
@@ -109,6 +161,8 @@ export const PROGRAMAS = [
     mide: 'cobertura',
     cadaHoras: 1,
     pulsar: 'cada',
+    creditos: 7,
+    minutoPulso: M_PUBLICADOR_INTRADIA,
   },
 
   // ───────────────────────────────────────────────────────────────────────
@@ -126,6 +180,11 @@ export const PROGRAMAS = [
     // fallara, los tres de GitHub siguen puestos como suelo. `yaCorrioHoy` se
     // encarga de que el que llegue segundo no gaste un crédito.
     pulsar: ['15:50'],
+    creditos: 14,
+    // ⚠️ EL MINUTO 20 ES SUYO A PROPÓSITO. Es el que murió con el 429 del
+    // 2026-10-07 y el que escribe el historial, así que se queda con el único
+    // minuto que seguro se invoca aunque nadie toque el cron de Cloudflare.
+    minutoPulso: M_VIGIA_SWING,
   },
   {
     repo: 'Nestor-forex',
@@ -143,6 +202,8 @@ export const PROGRAMAS = [
     // barrido tiene que estar puesto a las 6:20 am de Colombia, cuando él abre
     // la app, y refrescarse otra vez por la tarde.
     pulsar: ['11:20', '19:20'],
+    creditos: 14,
+    minutoPulso: M_PUBLICADOR_SWING,
   },
   {
     repo: 'Nestor-forex',
@@ -154,6 +215,8 @@ export const PROGRAMAS = [
     dias: HABILES,
     mide: 'retraso',
     pulsar: ['15:30'],
+    creditos: 7,
+    minutoPulso: M_REPORTE_SWING,
   },
 
   // ───────────────────────────────────────────────────────────────────────
@@ -167,6 +230,8 @@ export const PROGRAMAS = [
     dias: TODOS,
     mide: 'retraso',
     pulsar: ['06:20'],
+    // Lee el BIS, no Twelve Data: no gasta créditos.
+    minutoPulso: M_SIN_CREDITOS,
   },
   {
     repo: 'Nestor-forex',
@@ -176,6 +241,8 @@ export const PROGRAMAS = [
     dias: TODOS,
     mide: 'retraso',
     pulsar: ['07:20'],
+    // Lee la CFTC: no gasta créditos.
+    minutoPulso: M_SIN_CREDITOS,
   },
   {
     repo: 'Nestor-forex',
@@ -185,6 +252,10 @@ export const PROGRAMAS = [
     dias: HABILES,
     mide: 'retraso',
     pulsar: ['07:50'],
+    // 1 el oro + 14 los 14 pares de la correlación. Es el que más gasta y el
+    // que más tarda (tres tandas), así que va ÚLTIMO.
+    creditos: 15,
+    minutoPulso: M_ORO_SWING,
   },
   {
     repo: 'Nestor-forex-intradia',
@@ -194,6 +265,8 @@ export const PROGRAMAS = [
     dias: HABILES,
     mide: 'retraso',
     pulsar: ['13:00'],
+    creditos: 7,
+    minutoPulso: M_REPORTE_INTRADIA,
   },
   {
     repo: 'Nestor-forex-intradia',
@@ -203,6 +276,7 @@ export const PROGRAMAS = [
     dias: TODOS,
     mide: 'retraso',
     pulsar: ['06:20'],
+    minutoPulso: M_SIN_CREDITOS,
   },
 
   // ───────────────────────────────────────────────────────────────────────
@@ -218,6 +292,8 @@ export const PROGRAMAS = [
     mide: 'cobertura',
     cadaHoras: 4,
     pulsar: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+    // Lee ForexFactory: no gasta créditos.
+    minutoPulso: M_SIN_CREDITOS,
   },
   {
     repo: 'Nestor-forex-intradia',
@@ -228,6 +304,8 @@ export const PROGRAMAS = [
     mide: 'cobertura',
     cadaHoras: 4,
     pulsar: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+    // Lee ForexFactory: no gasta créditos.
+    minutoPulso: M_SIN_CREDITOS,
   },
 
   // ───────────────────────────────────────────────────────────────────────
@@ -311,8 +389,9 @@ export const PROGRAMAS = [
   },
 ]
 
-// Decide qué toca en esta hora. Separado del `scheduled` para que se pueda
-// probar sin red ni Cloudflare: `prueba-reloj-externo.mjs` lo importa.
+// Decide qué toca en esta HORA, sin mirar el minuto. Separado del `scheduled`
+// para que se pueda probar sin red ni Cloudflare:
+// `prueba-reloj-externo.mjs` lo importa.
 //
 // ⚠️ `diaSemana` es 0=domingo … 6=sábado, como `getUTCDay`.
 export function toca(programas, hora, diaSemana) {
@@ -322,6 +401,24 @@ export function toca(programas, hora, diaSemana) {
     if (p.pulsar === 'cada') return true
     return p.pulsar.some((hhmm) => Number(hhmm.slice(0, 2)) === hora)
   })
+}
+
+// Y lo que toca en ESTE MINUTO, que es lo que el reloj pulsa de verdad.
+//
+// ⚠️⚠️ ESTA FUNCIÓN ES EL ARREGLO DEL 429 del 2026-10-07. Sin ella, todo lo de
+// la hora se pulsaba en el mismo segundo y las dos apps se peleaban por los 8
+// créditos por minuto de la llave que COMPARTEN. El porqué entero está arriba,
+// donde se definen los minutos.
+//
+// ⚠️ Un programa que se pulsa y NO tiene `minutoPulso` se trata como si fuera
+// del minuto 20, no se descarta. Los dos errores no cuestan lo mismo: caerse al
+// minuto 20 lo deja como estaba antes de este arreglo —que funcionaba, con el
+// choque— mientras que descartarlo lo dejaría SIN PULSAR en silencio, que es
+// justo lo que este reloj existe para evitar. Y hay una comprobación en
+// `prueba-reloj-externo.mjs` que falla si alguno se queda sin minuto, para que
+// este respaldo no se use nunca de verdad.
+export function tocaEnEsteMinuto(programas, hora, minuto, diaSemana) {
+  return toca(programas, hora, diaSemana).filter((p) => (p.minutoPulso ?? 20) === minuto)
 }
 
 async function pulsar(p, token) {
@@ -348,10 +445,20 @@ async function pulsar(p, token) {
 }
 
 export default {
+  // ⚠️ EL CRON DE CLOUDFLARE ES `* * * * *` (cada minuto). No es derroche: la
+  // invocación de un minuto en el que no toca nada no hace ni una petición, y
+  // 1.440 invocaciones al día caben de sobra en las 100.000 del plan gratuito.
+  // Lo que compra es que cada programa pueda tener su propio minuto, que es el
+  // arreglo del 429 — ver arriba.
   async scheduled(evento, env) {
     const t = new Date(evento.scheduledTime)
     const hora = t.getUTCHours()
-    const pendientes = toca(PROGRAMAS, hora, t.getUTCDay())
+    const minuto = t.getUTCMinutes()
+    const pendientes = tocaEnEsteMinuto(PROGRAMAS, hora, minuto, t.getUTCDay())
+
+    // El caso normal: en 52 de cada 60 minutos no toca nada. Se sale sin
+    // pedirle nada a GitHub y sin mirar el token.
+    if (!pendientes.length) return
 
     if (!env.NF_ACTIONS_TOKEN) {
       // ⚠️ Sin token no se pulsa nada, y hay que GRITARLO. Un Worker que no
@@ -370,7 +477,10 @@ export default {
     for (const r of resultados) {
       console.log(r.ok ? `  ✓ ${r.repo} · ${r.wf}` : `  ✗ ${r.repo} · ${r.wf} → HTTP ${r.estado} ${r.detalle}`)
     }
-    console.log(`${hora}:00 UTC · pulsados ${resultados.length - malos.length} de ${resultados.length}`)
+    console.log(
+      `${String(hora).padStart(2, '0')}:${String(minuto).padStart(2, '0')} UTC · ` +
+        `pulsados ${resultados.length - malos.length} de ${resultados.length}`
+    )
 
     // ⚠️ Se LANZA el error cuando alguno falla. En Cloudflare eso marca la
     // invocación como fallida y aparece en su panel; sin esto, un token
@@ -390,8 +500,12 @@ export default {
     return new Response(
       `reloj externo de Nestor Forex\n` +
         `ahora: ${t.toISOString()}\n` +
-        `en esta hora tocarían ${pendientes.length}:\n` +
-        pendientes.map((p) => `  ${p.repo} · ${p.wf}`).join('\n') +
+        `en esta hora tocarían ${pendientes.length}, cada uno en su minuto:\n` +
+        pendientes
+          .slice()
+          .sort((a, b) => (a.minutoPulso ?? 20) - (b.minutoPulso ?? 20))
+          .map((p) => `  :${String(p.minutoPulso ?? 20).padStart(2, '0')}  ${p.repo} · ${p.wf}`)
+          .join('\n') +
         `\n\nEsta página NO pulsa nada. Para saber si el reloj funciona de verdad:\n` +
         `Actions → «¿Llegan a su hora los programas?» en Nestor-forex.\n`,
       { headers: { 'Content-Type': 'text/plain; charset=utf-8' } }
