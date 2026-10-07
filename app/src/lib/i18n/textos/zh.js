@@ -420,11 +420,18 @@ export default {
     cerrar: '收起',
   },
 
+  sombra: {
+    aviso: ({ ops, meta }) =>
+      `它还不能当作信号：它有 ${ops} 笔真实交易，需要 ${meta} 笔才能相信它，无论数字是正是负。`,
+    margen: ({ ops, m }) =>
+      `只有 ${ops} 笔交易时，那个百分比仅凭偶然就可能移动 ±${m} 个点。`,
+  },
+
   historial: {
     esRuptura: '结构突破',
     rupturaTitulo: '「结构突破」的历史记录',
     rupturaIntro:
-      '第四条规则：当价格突破它最近形成的高点或低点时入场。⚠️ 它处于观察中且未经验证：交易次数很少，它的数字目前还没有任何意义。这不是建议 — 展示它是为了可以跟踪，而不是为了交易。',
+      '第四条规则：当价格突破它最近形成的高点或低点时入场。⚠️ 它处于观察中且未经验证。这不是建议 — 展示它是为了可以跟踪，而不是为了交易。',
     esReversion: '反向',
     esCaida: "买入下跌",
     caidaTitulo: "「买入下跌」的历史记录",
@@ -452,6 +459,7 @@ export default {
   },
 
   frescura: {
+    coste: (v) => `${v.horas} 小时前的信号中，每 100 个已有 ${v.pct} 个无法再执行`,
     generadoMin: (v) => `${v.n} 分钟前生成`,
     generadoH: (v) => `${v.n} 小时前生成`,
     generadoDias: (v) => `${v.n} 天前生成`,

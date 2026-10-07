@@ -426,11 +426,18 @@ export default {
     cerrar: 'Chiudi',
   },
 
+  sombra: {
+    aviso: ({ ops, meta }) =>
+      `NON può ancora essere presa come segnale: ha ${ops} operazioni reali sulle ${meta} che servono per crederci, qualunque sia il numero.`,
+    margen: ({ ops, m }) =>
+      `Con ${ops} operazioni quella percentuale può muoversi di ±${m} punti solo per caso.`,
+  },
+
   historial: {
     esRuptura: 'ROTTURA DI STRUTTURA',
     rupturaTitulo: 'Storico di «rottura di struttura»',
     rupturaIntro:
-      'La quarta regola, che entra quando il prezzo rompe l\'ultimo massimo o minimo segnato. ⚠️ È IN OSSERVAZIONE e non validata: ha pochissime operazioni e il suo numero non significa ancora nulla. Non è una raccomandazione — viene mostrata per poterla seguire, non per operarla.',
+      'La quarta regola, che entra quando il prezzo rompe l\'ultimo massimo o minimo segnato. ⚠️ È IN OSSERVAZIONE e non validata. Non è una raccomandazione — viene mostrata per poterla seguire, non per operarla.',
     esReversion: 'INVERSIONE',
     esCaida: "COMPRARE IL RIBASSO",
     caidaTitulo: "Storico di «comprare il ribasso»",
@@ -458,6 +465,7 @@ export default {
   },
 
   frescura: {
+    coste: (v) => `${v.pct} segnali su 100 di ${v.horas} h fa non sono più utilizzabili`,
     generadoMin: (v) => `Generato ${v.n} min fa`,
     generadoH: (v) => `Generato ${v.n} h fa`,
     generadoDias: (v) => `Generato ${v.n} ${v.n === 1 ? 'giorno' : 'giorni'} fa`,

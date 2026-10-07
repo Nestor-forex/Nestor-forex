@@ -177,6 +177,7 @@ export default function App() {
                     guardadoEl={mercado.guardadoEl}
                     generadoEl={mercado.generadoEl}
                     horasViejo={mercado.horasViejo}
+                    costePorAntiguedad={mercado.costePorAntiguedad}
                     monedas={mercado.monedas}
                     pares={mercado.pares}
                     corte={mercado.corte}
@@ -275,6 +276,7 @@ export default function App() {
             guardadoEl={mercado.guardadoEl}
             generadoEl={mercado.generadoEl}
             horasViejo={mercado.horasViejo}
+            costePorAntiguedad={mercado.costePorAntiguedad}
             monedas={mercado.monedas}
             pares={mercado.pares}
             compras={mercado.compras}

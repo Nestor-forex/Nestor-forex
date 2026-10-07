@@ -6003,6 +6003,11 @@ del peor caso es ±27 puntos y un 40 % y un 70 % son el mismo número.
 
 ### Las decisiones que no hay que ablandar
 
+📌 **YA NO ES VERDAD (desde el PR #93, 2026-09-21).** Néstor cambió de idea y
+pidió verla; hoy tiene su bloque en el Historial, con su aviso de que está en
+observación y, desde el 2026-10-07, con cuántas operaciones lleva de las 150.
+Lo de abajo se deja porque explica por qué nació escondida.
+
 ⚠️ **NO SE ENSEÑA EN NINGUNA PANTALLA**, tampoco «solo para mirar». Lo pidió
 Néstor y es lo correcto: su estado es «en observación», y una regla sin validar
 puesta en una pantalla se lee como validada por el hecho de estar ahí. **Sí
@@ -9291,3 +9296,137 @@ revés**: `06-10-2026`. No es de este cambio y resulta inofensivo por casualidad
 —invertir año-mes-día da día-mes-año, que es el mismo día y además el orden
 normal en árabe—. Si algún día se toca, el arreglo es sacar la fecha de la
 frase y aislarla, no forzarle `ltr` al renglón.
+
+---
+
+# El número de la sombra ya dice por qué no se puede creer (2026-10-07)
+
+Néstor lo pidió con estas palabras, y son las que mandaron todo lo demás:
+
+> son operaciones en positivo pero que no se pueden tomar como señales porque
+> no tienen operaciones reales suficientes para creerles
+
+```
+app/src/lib/sombra.js             las cuentas (puras)            GEMELO
+app/src/components/AvisoSombra.jsx  el renglón                   GEMELO
+app/scripts/prueba-sombra.mjs     38 comprobaciones, sin internet  PRIMO
+```
+
+En las DOS apps. Son **64 gemelos** ahora (eran 62).
+
+## El problema, que estaba a la vista
+
+El Historial ya enseñaba los porcentajes de las tres reglas de sombra de Swing
+(reversión, «comprar la caída», ruptura de estructura) y el del retroceso en
+Intradía. Lo que **no** decía —salvo en la ruptura, y sin cifras— es que
+todavía no significan nada. **Un número en pantalla, sin nada al lado, se lee
+como una recomendación por el hecho de estar ahí.**
+
+Ahora cada uno lleva debajo cuántas operaciones reales lleva, cuántas faltan de
+las 150 y cuánto puede moverse ese porcentaje solo por casualidad. Es el mismo
+argumento que el `±` del Diario (2026-09-14), aplicado al otro extremo de la
+app: allí sobre las operaciones de Néstor, aquí sobre las de las reglas en
+pruebas.
+
+⚠️ **NO DICE «NO TE LO CREAS»: DICE UN NÚMERO.** Un aviso sin cifras no dice
+cuándo SÍ se podrá creer, y entonces no es información — es un encogimiento de
+hombros.
+
+⚠️ **DESAPARECE SOLO al llegar al listón.** Que hubiera que quitarlo a mano
+sería la forma más fácil de que se quedara ahí para siempre, o de que se fuera
+antes de tiempo.
+
+## ⚠️⚠️ EL AVISO NO AFIRMA EL SIGNO, Y ESO SALIÓ MIRANDO LA CAPTURA
+
+La primera versión decía, con las palabras de Néstor, **«Mide en positivo, pero
+todavía NO se puede tomar como señal»**. Con el historial REAL justo encima:
+
+| regla | acierto | pips |
+|---|---:|---:|
+| reversión | 32 % | **−519** |
+| comprar la caída | 10 % | **−757** |
+
+**La frase era FALSA en pantalla.** Néstor tenía razón sobre el **banco de
+pruebas** —ahí la reversión mide +0,05 sobre cinco años— y el **registro real
+hacia adelante va en contra**. Eso no es un fallo: es exactamente el motivo por
+el que estas reglas corren en la sombra y no se proponen.
+
+Dice ahora lo único cierto en los dos casos: que todavía no se le puede creer,
+**salga el número como salga**. Hay una comprobación que falla si alguien
+vuelve a meterle el signo.
+
+📌 **La lección es la de siempre con una cara nueva:** la frase no la inventé
+yo, la dijo el usuario, y era verdad **de otra cosa** (del backtest, no del
+historial). Repetir una afirmación correcta sobre una fuente al lado de los
+números de OTRA fuente la vuelve falsa. Y el build, el lint y las 36 pruebas la
+dejaban pasar enteras — lo único que la cazó fue **mirar la captura**.
+
+## Una frase que se habría quedado vieja sola
+
+`rupturaIntro` decía a mano «lleva muy pocas operaciones y su número todavía no
+significa nada», **en los 13 idiomas**. Verdad hoy, y una frase escrita a mano
+sobre un número que cambia todos los días: el día que la regla llegue a 150
+seguiría diciéndolo y nadie vendría a quitarla. Quitada — ese dato lo dice ahora
+algo que lo **LEE**. Lo que sí se queda es «está EN OBSERVACIÓN y sin validar»,
+que no es un número y no envejece.
+
+Es `medicion.queSignifica` otra vez, que dijo «55 %» durante meses.
+
+## ⚠️ El 150 es el MISMO en las dos apps, y es la excepción que confirma la regla
+
+Todo lo medido en una app no vale en la otra. **Esto no está medido:** sale de
+`margen(n)`, que es aritmética. Con 150 operaciones el margen del peor caso baja
+de ±10 puntos con velas diarias y con velas de una hora igual; lo único que
+cambia entre apps es **cuánto se tarda en llegar**. Por eso `sombra.js` es
+GEMELO y lleva ese razonamiento escrito dentro, para que nadie meta ahí un
+número de trading.
+
+La PRUEBA es PRIMA: mira la pantalla de cada app (aquí tres reglas de sombra,
+allá una) y solo la de Swing puede comparar el 150 contra `preregistro-lss.mjs`,
+que allá existe y acá no. Como `sombra.js` es gemelo, esa comprobación cubre a
+las dos.
+
+## La comprobación que de verdad protege esto
+
+El bloque 7 **no lee una lista escrita a mano**: saca las reglas de la propia
+pantalla (`resumen.<regla>.total > 0`) y exige que cada una tenga su
+`<AvisoSombra>`. Así una regla de sombra que se añada mañana —y van cuatro— no
+puede aparecer en positivo sin el aviso al lado. Con la guarda de siempre para
+que no pase en verde si el recorrido se rompe.
+
+**Comprobado que muerde**, con el daño verificado antes de darlo por bueno:
+quitarle el aviso a «comprar la caída» tumba 1 · separar el 150 del listón tumba
+1 · dejar el coreano sin los textos tumba 1.
+
+## 📌 Mi banco de navegador salió burdo por sexta vez
+
+Buscaba los avisos **por su color** (comparando el calculado contra
+`var(--amber)`) y cazó CUATRO párrafos en español, tres de ellos explicaciones
+normales: cuatro comprobaciones fallando sobre una app que estaba bien.
+
+Ahora se buscan **por su contenido** —lo que los identifica es justo lo que los
+hace útiles: llevan el listón (150) y el margen (±)— y el color se comprueba
+aparte, contra una etiqueta que YA usa el ámbar. **Antes de creerse que la app
+está rota, comprobar que el banco mide lo que dice medir.**
+
+## Cómo se verificó
+
+Lint, build y **todas** las pruebas sin internet en los dos repos (36 y 29; solo
+falla `prueba-aviso-real`, que pide el secreto VAPID y manda un aviso de
+verdad). Los 64 gemelos idénticos.
+
+Y en **Chromium a 390 px**, español y árabe, con el historial REAL de producción
+y **PASANDO POR EL HOOK** —la regla nueva de este mismo día—: tres avisos, cada
+uno con SU número (31 · 29 · 2), en ámbar, debajo del bloque de porcentajes y
+encima de la explicación; `rtl` heredado en árabe (es una frase traducida con
+enteros dentro, no un dato: forzarle `ltr` sería el fallo del calendario); cero
+hojas de datos en `rtl`; cero desplazamiento lateral; cero errores de consola.
+
+## 📌 Y una corrección a esta misma memoria
+
+Aquí estaba escrito, del 2026-09-20, que la ruptura de estructura **«NO SE
+ENSEÑA EN NINGUNA PANTALLA»**. Es falso desde el PR #93: Néstor cambió de idea y
+pidió verla, y desde el 2026-09-21 tiene su bloque en el Historial con su aviso
+de que está en observación. **Que algo esté escrito en la memoria no quiere
+decir que siga siendo verdad** — es la hermana de la lección del 2026-09-04
+(«que esté en la memoria no quiere decir que exista»).

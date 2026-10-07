@@ -37,6 +37,23 @@ const LIMITE_MS = 15_000
 // dedicada a eso en `prueba-frescura.mjs`.
 const HORAS_VIEJO = 26
 
+// ⚠️ AQUÍ NO HAY TABLA, Y ES UNA DECISIÓN, NO UN OLVIDO.
+//
+// En Intradía está MEDIDO cuántas señales dejan de poder tomarse cuando el
+// barrido envejece (19.899 velas de una hora, el 2026-10-07). Aquí NO se ha
+// medido: una vela es un día, el retraso equivalente es «el barrido de ayer» y
+// eso es otra pregunta con otro umbral.
+//
+// Copiar el número de la hermana sería inventar un dato sobre esta app, que es
+// exactamente lo que esta app dice no hacer — y la lección de `barridoSwap` y
+// la del ATR. Con `null`, `costeDeLaAntiguedad` devuelve `null` y la pantalla
+// no afirma nada.
+//
+// Si algún día se mide aquí, el guion equivalente sería el de Intradía con los
+// retrasos en DÍAS y el umbral derivado del spread de Swing (1,3 % del stop, o
+// sea 0,02), no copiado.
+const COSTE_POR_ANTIGUEDAD = null
+
 function leerCache() {
   try {
     const cache = JSON.parse(localStorage.getItem(CACHE_KEY))
@@ -134,6 +151,7 @@ export function useMarketData({ thr = 0.5, topN = 3 } = {}) {
     // hacía falta un tercer dato y no bastaba con los dos que ya había.
     generadoEl: data?.generadoEl ?? null,
     horasViejo: HORAS_VIEJO,
+    costePorAntiguedad: COSTE_POR_ANTIGUEDAD,
     ultima: data?.ultima ?? null,
     ratesUSD: data?.ratesUSD ?? null,
     monedas: vista?.monedas ?? [],

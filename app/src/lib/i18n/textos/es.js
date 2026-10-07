@@ -457,11 +457,18 @@ export default {
     cerrar: 'Cerrar',
   },
 
+  sombra: {
+    aviso: ({ ops, meta }) =>
+      `Todavía NO se puede tomar como señal: lleva ${ops} operaciones reales de las ${meta} que hacen falta para creerle, salga el número como salga.`,
+    margen: ({ ops, m }) =>
+      `Con ${ops} operaciones ese porcentaje puede moverse ±${m} puntos solo por casualidad.`,
+  },
+
   historial: {
     esRuptura: 'RUPTURA DE ESTRUCTURA',
     rupturaTitulo: 'Historial de «ruptura de estructura»',
     rupturaIntro:
-      'La cuarta regla, que entra cuando el precio rompe el último máximo o mínimo que marcó. ⚠️ Está EN OBSERVACIÓN y sin validar: lleva muy pocas operaciones y su número todavía no significa nada. No es una recomendación — se enseña para que se pueda seguir, no para operarla.',
+      'La cuarta regla, que entra cuando el precio rompe el último máximo o mínimo que marcó. ⚠️ Está EN OBSERVACIÓN y sin validar. No es una recomendación — se enseña para que se pueda seguir, no para operarla.',
     esReversion: 'REVERSIÓN',
     esCaida: "COMPRAR LA CAÍDA",
     caidaTitulo: "Historial de «comprar la caída»",
@@ -512,6 +519,10 @@ export default {
   // no apaga ni cambia ninguna señal. Van como FUNCIONES porque llevan el
   // número dentro y cada idioma ordena la frase distinto.
   frescura: {
+    // Lo MEDIDO, y solo donde se midió. Dice que esa parte de las señales ya
+    // no se puede tomar —el precio se pasó del stop o ya llegó al objetivo—,
+    // NO que la app acierte menos: el acierto no se movió en toda la tabla.
+    coste: (v) => `${v.pct} de cada 100 señales de hace ${v.horas} h ya no se pueden tomar`,
     generadoMin: (v) => `Generado hace ${v.n} min`,
     generadoH: (v) => `Generado hace ${v.n} h`,
     generadoDias: (v) => `Generado hace ${v.n} ${v.n === 1 ? 'día' : 'días'}`,

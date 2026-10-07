@@ -118,7 +118,7 @@ function RazonList({ items, emptyText }) {
   )
 }
 
-export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], correlaciones = [], riesgoSenales = [], corte, generadoEl, horasViejo }) {
+export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], correlaciones = [], riesgoSenales = [], corte, generadoEl, horasViejo, costePorAntiguedad }) {
   const { t, locale } = useIdioma()
   // Cómo le va de verdad a la regla de reversión, contado en vivo. Ver el
   // porqué en `useResumenReal`: este número estuvo escrito a mano y se quedó
@@ -164,7 +164,7 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
             </div>
             <div>{loading ? '…' : corte}</div>
             {/* Cuándo se CALCULÓ, que no es la fecha de la vela. Ver `Frescura`. */}
-            <Frescura generadoEl={generadoEl} horasViejo={horasViejo} style={{ fontSize: 12.5 }} />
+            <Frescura generadoEl={generadoEl} horasViejo={horasViejo} costePorAntiguedad={costePorAntiguedad} style={{ fontSize: 12.5 }} />
           </div>
         </section>
 

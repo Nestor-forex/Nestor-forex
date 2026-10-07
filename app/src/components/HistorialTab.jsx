@@ -1,4 +1,5 @@
 import { useIdioma } from '../lib/i18n'
+import AvisoSombra from './AvisoSombra'
 import TarjetaPlegable from './TarjetaPlegable'
 import { useHistorial } from '../lib/useHistorial'
 import { MEDICION } from '../lib/medicion'
@@ -65,6 +66,7 @@ export default function HistorialTab() {
                 <Etiqueta>{t('historial.esReversion')}</Etiqueta>
               </div>
               <Resumen resumen={{ todas: resumen.reversion }} t={t} />
+              <AvisoSombra ops={resumen.reversion.total} />
               <p style={{ ...TEXTO, margin: 0 }}>{t('historial.reversionIntro')}</p>
             </div>
           )}
@@ -81,6 +83,7 @@ export default function HistorialTab() {
                 <Etiqueta>{t('historial.esCaida')}</Etiqueta>
               </div>
               <Resumen resumen={{ todas: resumen.caida }} t={t} />
+              <AvisoSombra ops={resumen.caida.total} />
               <p style={{ ...TEXTO, margin: 0 }}>{t('historial.caidaIntro')}</p>
             </div>
           )}
@@ -99,6 +102,7 @@ export default function HistorialTab() {
                 <Etiqueta>{t('historial.esRuptura')}</Etiqueta>
               </div>
               <Resumen resumen={{ todas: resumen.ruptura }} t={t} />
+              <AvisoSombra ops={resumen.ruptura.total} />
               <p style={{ ...TEXTO, margin: 0 }}>{t('historial.rupturaIntro')}</p>
             </div>
           )}
