@@ -6003,6 +6003,11 @@ del peor caso es ±27 puntos y un 40 % y un 70 % son el mismo número.
 
 ### Las decisiones que no hay que ablandar
 
+📌 **YA NO ES VERDAD (desde el PR #93, 2026-09-21).** Néstor cambió de idea y
+pidió verla; hoy tiene su bloque en el Historial, con su aviso de que está en
+observación y, desde el 2026-10-07, con cuántas operaciones lleva de las 150.
+Lo de abajo se deja porque explica por qué nació escondida.
+
 ⚠️ **NO SE ENSEÑA EN NINGUNA PANTALLA**, tampoco «solo para mirar». Lo pidió
 Néstor y es lo correcto: su estado es «en observación», y una regla sin validar
 puesta en una pantalla se lee como validada por el hecho de estar ahí. **Sí
