@@ -461,6 +461,12 @@ export default {
     caducada: 'Sans données',
   },
 
+  frescura: {
+    generadoMin: (v) => `Généré il y a ${v.n} min`,
+    generadoH: (v) => `Généré il y a ${v.n} h`,
+    generadoDias: (v) => `Généré il y a ${v.n} ${v.n === 1 ? 'jour' : 'jours'}`,
+  },
+
   tasas: {
     paraQue: 'Les traders les regardent quand une position va rester ouverte d\'un jour à l\'autre : elles indiquent dans quelles paires l\'intérêt joue en ta faveur nuit après nuit et dans lesquelles il joue contre toi. Ce n\'est pas le montant exact que ton broker te facturera.',
     titulo: "Taux d'intérêt et swap",

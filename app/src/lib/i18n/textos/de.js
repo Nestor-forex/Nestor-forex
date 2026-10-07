@@ -461,6 +461,12 @@ export default {
     caducada: 'Keine Daten',
   },
 
+  frescura: {
+    generadoMin: (v) => `Erstellt vor ${v.n} Min.`,
+    generadoH: (v) => `Erstellt vor ${v.n} Std.`,
+    generadoDias: (v) => `Erstellt vor ${v.n} ${v.n === 1 ? 'Tag' : 'Tagen'}`,
+  },
+
   tasas: {
     paraQue: 'Trader schauen darauf, wenn eine Position über Nacht offen bleibt: Sie zeigen, in welchen Paaren der Zins Nacht für Nacht für dich arbeitet und in welchen gegen dich. Es ist nicht der genaue Betrag, den dein Broker berechnet.',
     titulo: 'Zinssätze und Swap',

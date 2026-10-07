@@ -455,6 +455,12 @@ export default {
     caducada: 'データなし',
   },
 
+  frescura: {
+    generadoMin: (v) => `${v.n} 分前に生成`,
+    generadoH: (v) => `${v.n} 時間前に生成`,
+    generadoDias: (v) => `${v.n} 日前に生成`,
+  },
+
   tasas: {
     paraQue: '取引を日をまたいで持ち越すときに見るものです。どの通貨ペアで金利が毎晩味方になり、どのペアで敵になるかが分かります。ブローカーが実際に請求する正確な金額ではありません。',
     titulo: '金利と Swap',

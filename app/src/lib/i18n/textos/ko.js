@@ -455,6 +455,12 @@ export default {
     caducada: '데이터 없음',
   },
 
+  frescura: {
+    generadoMin: (v) => `${v.n}분 전 생성`,
+    generadoH: (v) => `${v.n}시간 전 생성`,
+    generadoDias: (v) => `${v.n}일 전 생성`,
+  },
+
   tasas: {
     paraQue: '거래를 하루 넘겨 들고 갈 때 보는 것입니다. 어느 통화쌍에서 이자가 매일 밤 내 편이고 어느 쪽에서 반대편인지 알려줍니다. 브로커가 실제로 청구할 정확한 금액은 아닙니다.',
     titulo: '금리와 Swap',

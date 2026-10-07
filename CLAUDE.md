@@ -9134,3 +9134,160 @@ Swing, 24 en Intradía) y los **59 gemelos** idénticos.
    lee** — comprobado: `useMarketData` solo usa `ultima` y `guardadoEl`, así que
    un barrido de hace siete horas se ve idéntico a uno de hace diez minutos. Son
    13 idiomas × 2 apps.
+
+---
+
+# Dos tarjetas llevaban MESES sin verse, y la prueba de navegador no podía cazarlo (2026-10-07)
+
+Salió de camino, al cablear la línea de frescura. No se estaba buscando.
+
+## El fallo
+
+`Correlacion` y `RiesgoSenales` **NO SE PINTABAN en la app publicada de Swing**.
+Las dos están bien escritas, tienen pruebas y se verificaron en navegador. La
+cadena era ésta, y se rompía en un solo sitio:
+
+```
+derivarVista        calcula `correlaciones` y `riesgoSenales`   ✅
+useMarketData       NO LAS DEVOLVÍA                             ❌
+App.jsx             pasa `mercado.correlaciones` → undefined
+TableroCompleto     las recibe con `= []` por defecto
+Correlacion         `if (!correlaciones.length) return null`
+```
+
+⚠️ **NO FALLABA NADA.** Ni el build, ni el linter, ni las 35 pruebas. Y una
+tarjeta que no se pinta se ve **exactamente igual** que una tarjeta a la que hoy
+no le salieron datos — que es el estado NORMAL de `RiesgoSenales`, por diseño.
+
+`useMarketData.js` no se tocaba desde el PR #45, o sea desde antes de que
+existieran la correlación (2026-09-08) y el cruce de riesgo (2026-09-15).
+
+## 📌 Y LO QUE MÁS IMPORTA: EL BANCO DE NAVEGADOR NO PODÍA VERLO
+
+Las dos se verificaron en Chromium y pasaron. El banco aislado **monta el
+componente a mano y le ENTREGA los datos**, así que por construcción **nunca
+puede cazar un dato que no llega**. Medía bien el componente y la app estaba
+rota por encima de él.
+
+⚠️ **Desde hoy, un banco de navegador que compruebe una tarjeta nueva tiene que
+pasar POR EL HOOK**, interceptando la descarga con Playwright en vez de
+inventarse las props. Cuesta lo mismo y mira la cadena entera. El de este
+cambio lo hace, y por eso se vio que la correlación ya aparece.
+
+## El guardián: `scripts/prueba-cableado.mjs` (PRIMO, en las dos apps)
+
+Lee `App.jsx`, `useMarketData.js` y `marketCalc.js` **como texto** —importarlos
+pediría React, DOM y Firebase— y exige dos cosas:
+
+1. **Todo lo que `App.jsx` le pide al hook, el hook lo devuelve.** Es el síntoma.
+2. **Todo lo que `derivarVista` calcula, o llega a la pantalla, o está en
+   `NO_SE_PASAN` con el motivo escrito.** Es la raíz, y es la que habría cazado
+   esto el primer día.
+
+⚠️ **`NO_SE_PASAN` va A MANO, como PRIMOS.** No vale exigir que se pase todo:
+en Swing queda fuera `setupsCaida` y en Intradía `retrocesos`, que son **reglas
+de la SOMBRA** — pasarlas al hook las encendería de hecho, que es el fallo grave
+del 2026-09-07. Y una excusa que ya no corresponde a nada también falla, para
+que la lista no se vuelva un cajón de nombres muertos.
+
+📌 **El lector de claves tuvo que rehacerse a media tarea, y el guardián lo
+cantó:** la primera versión buscaba líneas indentadas, y el `return` de
+Intradía cabe en UNA sola línea → leyó **cero claves**. Si no hubiera llevado la
+comprobación de «se encontraron al menos 8», habría pasado en verde sin mirar
+nada. **Una prueba que se adapta a lo que encuentra no comprueba nada**, otra vez.
+
+**Comprobado que muerde**, con el daño verificado en el archivo antes de darlo
+por bueno: quitar las dos claves del hook tumba 3 y las nombra; vaciar
+`NO_SE_PASAN` tumba 1 en cada app y nombra la regla de sombra.
+
+---
+
+# «Generado hace 3 h»: la app dice cuándo se hizo la cuenta (2026-10-07)
+
+En las DOS apps. Lo pidió Néstor después del arreglo del reloj.
+
+```
+app/src/lib/frescura.js            las cuentas puras          GEMELO
+app/src/components/Frescura.jsx    el renglón                 GEMELO
+app/scripts/prueba-frescura.mjs    29 comprobaciones          GEMELO
+app/scripts/prueba-cableado.mjs    el guardián de arriba      PRIMO
+```
+
+Son **62 gemelos** ahora (eran 59).
+
+## El motivo bueno es de Néstor, y queda citado
+
+`barrido.json` lleva `generadoEl` desde siempre y **la app no lo leía**:
+enseñaba la fecha de la VELA, que es verdad, pero no cuándo se hizo la cuenta.
+Yo lo presenté como «sirve para saber si la app está atascada». Él señaló algo
+mayor:
+
+> sirve para saber si estás decidiendo con el mercado de AHORA o con el de hace
+> tres horas.
+
+Y no era teórico: medidos los huecos entre publicación y publicación del barrido
+de Intradía en las dos semanas anteriores al reloj externo — **1,7 h de mediana,
+5,8 el p90, 8,3 el mayor, y el 38 % por encima de 3 horas**. Con ventanas de
+fuerza de 1, 4 y 24 horas, en tres horas la de 1 h se renovó tres veces.
+
+📌 El dato para cazarlo **ya estaba en pantalla** (la hora de la vela), pero
+obligaba a hacer la resta mental. **Un dato correcto que exige esa resta es mal
+diseño, no un descuido de quien mira.**
+
+## Las decisiones que no hay que ablandar
+
+⚠️ **ES INFORMACIÓN, NO UNA ALARMA.** No apaga ni cambia ninguna señal.
+
+⚠️ **ANTE LA DUDA NO SE PINTA NADA.** Sin `generadoEl`, con basura dentro o con
+el reloj del teléfono más de 5 minutos adelantado, `edadEnMinutos` devuelve
+`null` y no sale ni un renglón. **Nunca un «hace 0 h» inventado**, que afirmaría
+que el dato está fresco justo cuando no se sabe. Misma asimetría que `pearson`.
+
+⚠️ **El `typeof` no es paranoia:** `new Date(null)` NO es una fecha inválida en
+JavaScript, es el 1 de enero de 1970. Sin él, un archivo sin el campo pintaría
+«hace 29 millones de minutos». Ya mordió en `minutosDesde` de `useMT5Quotes`, y
+tiene comprobación propia.
+
+⚠️ **Por debajo de un minuto se dice «hace 1 min», no «hace 0».** Redondear
+hacia ARRIBA hace que el dato parezca algo más VIEJO de lo que es, nunca más
+fresco.
+
+⚠️⚠️ **EL UMBRAL DEL ÁMBAR NO VIVE EN `frescura.js`, QUE ES GEMELO.** Vive en
+`useMarketData.js`, que es PRIMO, porque las dos apps publican con cadencias
+distintas:
+
+| | vigía | `HORAS_VIEJO` | de dónde sale |
+|---|---|---:|---|
+| Swing | 1 vez al día | **26** | 24 h + 2 de holgura por el retraso del reloj |
+| Intradía | 1 vez por hora | **2** | 1 h de cadencia + 1 de holgura |
+
+**El MISMO dato de 3 horas es viejo en Intradía y normal en Swing**, y hay una
+comprobación dedicada solo a eso. Copiar el número de la hermana sería traerse
+una suposición que aquí es falsa — la lección de `barridoSwap`.
+
+⚠️ **NO lleva `dir="ltr"`.** Es una frase TRADUCIDA con un entero dentro, y un
+entero suelto dentro de texto árabe se lee bien solo. Forzarle `ltr` al renglón
+entero es el fallo del calendario, que partía «24.5K» en dos. Comprobado con el
+CSS calculado: en árabe hereda `rtl` y el número sale en su sitio.
+
+## Cómo se verificó
+
+Lint, build y **todas** las pruebas sin internet en los dos repos (35 y 26).
+Chromium a **390 px**, banco **a través del hook**, con el `barrido.json` REAL
+de producción interceptado, en nueve cargas: español y árabe · 3 h (gris) ·
+40 h (ámbar) · 36 min · sin el campo · con basura dentro · y el tablero completo
+en los dos idiomas. Cero errores de consola, cero desplazamiento lateral.
+
+📌 **Dos tropiezos míos, los dos en la comprobación y no en la app**, que van ya
+por la séptima u octava vez: una comprobación exigía «40 h → dice 1 día» cuando
+los días empiezan a las 48, o sea que pedía lo contrario de lo que el código
+hace bien; y el tablero daba un error de certificado porque el banco salía a
+internet de verdad a por el historial — se intercepta también.
+
+## 📌 Un hallazgo menor, ANTERIOR a este cambio y sin tocar
+
+En árabe, la fecha ISO del renglón de arriba (`2026-10-06`) se **dibuja al
+revés**: `06-10-2026`. No es de este cambio y resulta inofensivo por casualidad
+—invertir año-mes-día da día-mes-año, que es el mismo día y además el orden
+normal en árabe—. Si algún día se toca, el arreglo es sacar la fecha de la
+frase y aislarla, no forzarle `ltr` al renglón.
