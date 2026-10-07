@@ -9021,6 +9021,10 @@ cumple se queda fuera aunque llegue tarde:
 
 ## ⚠️ UN SOLO CRON EN CLOUDFLARE: `20 * * * *`
 
+📌 **YA NO ES VERDAD desde el 2026-10-07: el cron es `* * * * *`.** Lo de abajo
+se deja porque explica por qué se eligió el minuto 20, que sigue en pie — ver
+«El reloj funcionó, y por eso rompió algo» al final de este archivo.
+
 El Worker sabe por dentro qué le toca a cada hora, así que basta una entrada. Se
 eligió el minuto **20** y no el 0 por un motivo concreto: es el minuto del vigía
 de Intradía, y a las en punto la vela de la hora que acaba de cerrar **todavía
@@ -9611,3 +9615,113 @@ GitHub.
 ⚠️ Lo que sigue SIN medir es distinto y no hay que confundirlo: **cuánto
 RECORRIDO trae esa vela a las 11:20** (lo medido es el 104,5 % a las 17:42). Eso
 lo contesta el log del propio publicador en unas semanas.
+
+---
+
+# El reloj funcionó, y por eso rompió algo (2026-10-07)
+
+Néstor preguntó si el reloj de Cloudflare no se había hecho ya. **Sí se hizo, sí
+funciona, y yo le había dicho que no.** La corrección y el hallazgo que salió de
+comprobarla son lo que vale de este bloque.
+
+## 1. Mi respuesta anterior era falsa, y la evidencia estaba a mano
+
+Le dije que faltaba crear la llave y el Worker. Las corridas reales dicen lo
+contrario — el patrón de los segundos es la prueba, porque es mecánico:
+
+| programa | pedido | el reloj pulsó |
+|---|---|---|
+| tasas | 06:20 | 06:20:54 |
+| COT | 07:20 | 07:20:54 |
+| oro | 07:50 | 07:20:56 |
+| calendario | cada 4 h | 04:20:54 · 08:20:54 · 12:20:54 |
+| reporte Swing | 15:30 | 15:20:56 |
+
+📌 **Un `workflow_dispatch` a `:20:54` todos los días no lo hace una persona.**
+Bastaba `gh api .../runs --jq '[.created_at,.event]'` para verlo, y no lo miré
+antes de afirmar. Es la lección de siempre, esta vez sobre el estado del propio
+proyecto.
+
+## 2. ⚠️⚠️ EL FALLO: `HTTP 429`, y lo causó el arreglo AL FUNCIONAR
+
+El vigía de Swing falló el 2026-10-07. Del log:
+
+```
+Error: HTTP 429 (límite de consultas por minuto)
+    at pedir (velas.mjs:124:20)
+```
+
+Cuatro programas, los dos repos, **en 5 segundos**:
+
+| hora | app | programa | pide |
+|---|---|---|---:|
+| 15:20:51 | Intradía | vigía | 7 |
+| 15:20:53 | Intradía | publicador | 7 |
+| **15:20:54** | **Swing** | **vigía** | **14** ← murió |
+| 15:20:56 | Swing | reporte | 7 |
+
+**35 consultas en 5 segundos contra un límite de 8 por minuto.** Las dos apps
+comparten la misma llave de Twelve Data, así que comparten el límite. `pedir`
+reintentó dos veces esperando 65 s y las tres recibió 429 (2 min 33 s de
+corrida). El que perdió fue **el que escribe el historial**.
+
+📌 **Antes no pasaba porque el reloj de GitHub era tan errático que nunca
+coincidían. Al llegar puntuales, coinciden por diseño.** El error de diseño es
+mío: un solo cron (`20 * * * *`) para todo.
+
+⚠️ **Y la lección general, que vale para cualquier arreglo de este proyecto:**
+una avería puede estar tapando otra. Al arreglar la primera, la segunda aparece
+de golpe — y se lee como «el arreglo rompió algo», cuando lo que hizo fue
+destapar lo que ya estaba.
+
+## El arreglo: cada programa con su minuto
+
+Cron de Cloudflare a `* * * * *`, y cada programa lleva `minutoPulso`. Los que
+piden precios van separados **3 minutos** (cada guion pide 7 de golpe y su
+segunda tanda cae ~1,1 min después): vigía Swing 20 · vigía Intradía 23 ·
+publicador Intradía 26 · publicador Swing 29 · reporte Swing 32 · reporte
+Intradía 35 · oro 38. Los que no gastan créditos (calendarios, tasas, COT) van
+todos al 20, porque no comparten cuota con nadie.
+
+⚠️ **No es derroche:** en 56 de los 60 minutos el Worker se despierta, ve que no
+le toca y se va sin pedir nada. 1.440 despertares al día de los 100.000 del plan
+gratuito.
+
+⚠️⚠️ **EL MINUTO 20 ES DEL VIGÍA DE SWING A PROPÓSITO, y es la pieza que hace
+esto seguro.** El 20 es el único minuto que seguro se invoca, porque es el cron
+que ya estaba puesto en Cloudflare. Si Néstor no cambia el cron, lo que se pulsa
+es exactamente lo del minuto 20 — así que **el fallo reportado queda arreglado
+sin que él toque nada**, y lo que se pierde son los otros pulsos, que
+`puntualidad.yml` canta al día siguiente nombrándolos. Degradar hacia «el más
+importante sí se pulsa», nunca hacia «no se pulsa nada».
+
+⚠️ Y `tocaEnEsteMinuto` trata un programa **sin** `minutoPulso` como del minuto
+20 en vez de descartarlo. Misma asimetría: caer al 20 lo deja como estaba antes
+del arreglo (que funcionaba, con el choque); descartarlo lo dejaría sin pulsar
+**en silencio**, que es lo que este reloj existe para evitar.
+
+## ⚠️ EL WORKER VIVE PEGADO EN CLOUDFLARE: cambiarlo aquí NO lo cambia allí
+
+Es la consecuencia práctica que más se olvida. El `publicar-barrido.yml` que se
+fusionó ese mismo día **tampoco estaba en su Worker**, porque él lo pegó antes.
+Cada cambio de `worker.js` son dos pasos suyos: volver a pegarlo y revisar el
+cron. Está escrito en `reloj-externo/README.md` con los clics, y la forma de
+saber si tiene la versión vieja es abrir su `.workers.dev`: si la lista no
+enseña un minuto delante de cada programa, está desactualizada.
+
+## 📌 Y la comprobación nueva cazó un error MÍO al estrenarse
+
+El bloque 7 de `prueba-reloj-externo.mjs` exige que un workflow que lleve
+`TWELVEDATA_KEY` declare sus `creditos` en la lista del reloj, y al revés. La
+primera versión buscaba `/TWELVEDATA_KEY/` y **marcó como gastadores de créditos
+a `tasas.yml` y `cot.yml` de las dos apps** — porque sus comentarios dicen
+literalmente «este workflow **NO** lleva `env` con `TWELVEDATA_KEY`».
+
+Cazaba la palabra dentro de la frase que la niega. Ahora busca la asignación
+(`/^\s*TWELVEDATA_KEY:\s*\$\{\{/m`). Es **«contar apariciones no es leer»**, que
+en este repositorio ya mordió con la sonda de FX Blue y con el comentario de
+`rejilla: 'cruda'`. Van tres.
+
+**Comprobado que muerden**, con el daño verificado en el archivo antes de darlo
+por bueno: dos que piden precios en el mismo minuto tumba 1 · quitarle los
+créditos al oro tumba 1 · mover el vigía de Swing fuera del minuto 20 tumba 2.
