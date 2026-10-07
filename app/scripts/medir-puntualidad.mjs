@@ -23,7 +23,20 @@
 // avisar en cuanto alguien añadiera un programa nuevo — saldría solo de la
 // lista y la medición seguiría «bien». Una medición que se adapta a lo que
 // encuentra no mide nada.
+//
+// ⚠️⚠️ PERO LA LISTA NO ES DE ESTE ARCHIVO: es la del reloj de fuera, y se
+// importa de allí. El motivo es un error real. La primera versión tenía su
+// propia copia y decía que el reporte de Swing era a las **15:55** cuando su
+// cron dice **15:30**, así que midió 25 minutos MENOS de retraso del que había
+// — un número bien calculado describiendo otra cosa, que es la familia de fallo
+// que este proyecto lleva meses coleccionando. Dos copias de la misma lista se
+// separan en silencio; una sola, comprobada contra los `.yml` por
+// `prueba-reloj-externo.mjs`, no puede.
+//
+// El reloj de fuera es el dueño de la lista porque es el único archivo que NO
+// puede importar nada: se pega entero en el panel de Cloudflare.
 
+import { PROGRAMAS } from '../../reloj-externo/worker.js'
 import { horasCubiertas, juzgar, resumir, retrasoEnMinutos } from './lib/puntualidad.mjs'
 
 // ⚠️⚠️ NO SE MANDA NINGÚN TOKEN, Y ES UNA DECISIÓN, NO UN OLVIDO.
@@ -44,22 +57,6 @@ import { horasCubiertas, juzgar, resumir, retrasoEnMinutos } from './lib/puntual
 // ⚠️ El límite de la API sin credencial son 60 peticiones por hora por IP. Esto
 // gasta una por programa y página (≤ 20), y corre una vez al día.
 const DIAS = Number(process.env.PUNTUALIDAD_DIAS || 30)
-
-// Qué programa pide qué hora. `cada` marca los que deberían mirar todas las
-// horas: en ésos lo que importa no es el retraso sino cuántas horas distintas
-// se cubren al día.
-const PROGRAMAS = [
-  { repo: 'Nestor-forex', wf: 'vigia.yml', nombre: 'Swing · vigía', horas: ['15:50', '16:20', '16:50'] },
-  { repo: 'Nestor-forex', wf: 'reporte-diario.yml', nombre: 'Swing · reporte diario', horas: ['15:55'] },
-  { repo: 'Nestor-forex', wf: 'tasas.yml', nombre: 'Swing · tasas', horas: ['06:20'] },
-  { repo: 'Nestor-forex', wf: 'cot.yml', nombre: 'Swing · COT', horas: ['07:20'] },
-  { repo: 'Nestor-forex', wf: 'oro.yml', nombre: 'Swing · oro', horas: ['07:50'] },
-  { repo: 'Nestor-forex', wf: 'calendario.yml', nombre: 'Swing · calendario', cada: 4 },
-  { repo: 'Nestor-forex-intradia', wf: 'vigia.yml', nombre: 'Intradía · vigía', cada: 1 },
-  { repo: 'Nestor-forex-intradia', wf: 'publicar-barrido.yml', nombre: 'Intradía · publicador', cada: 1 },
-  { repo: 'Nestor-forex-intradia', wf: 'reporte-diario.yml', nombre: 'Intradía · reporte diario', horas: ['13:00'] },
-  { repo: 'Nestor-forex-intradia', wf: 'calendario.yml', nombre: 'Intradía · calendario', cada: 4 },
-]
 
 async function corridas(repo, wf) {
   const salida = []
@@ -98,54 +95,87 @@ console.log(`
 const desde = hace(DIAS)
 const veredictos = []
 
-for (const p of PROGRAMAS) {
-  const { corridas: cs, error } = await corridas(p.repo, p.wf)
-  if (error) {
-    console.log(`\n  ${p.nombre}\n    ⚠️ no se pudo mirar: ${error}`)
-    veredictos.push({ nombre: p.nombre, veredicto: 'noSePudoMirar' })
-    continue
-  }
-  const prog = cs.filter((c) => c.event === 'schedule' && c.created_at >= desde)
-
-  console.log(`\n  ${p.nombre}`)
-
-  if (!prog.length) {
-    console.log('    ⚠️ ninguna corrida programada en la ventana — no se puede juzgar')
-    veredictos.push({ nombre: p.nombre, veredicto: 'noSePudoMirar' })
-    continue
-  }
-
-  if (p.cada) {
-    // Los de cada hora (o cada 4): lo que decide es la COBERTURA.
-    const cob = horasCubiertas(prog.map((c) => c.created_at))
-    const deberia = 24 / p.cada
-    console.log(`    pedido: cada ${p.cada} h → ${deberia} veces al día`)
-    console.log(`    corridas en ${cob.dias} días: ${prog.length}  (${(prog.length / cob.dias).toFixed(1)} al día)`)
-    console.log(`    HORAS DISTINTAS cubiertas al día: ${cob.mediaHorasPorDia.toFixed(1)} de ${deberia}` +
-      `   ·  el peor día: ${cob.peorDia}`)
+// ⚠️⚠️ SE MIDEN DOS COSAS, Y LA SEGUNDA ES LA QUE DECIDE.
+//
+//   · `solo schedule` — el reloj de GitHub a secas. Es el DIAGNÓSTICO: de aquí
+//     salió el «cero de 162 a tiempo».
+//   · `todas` — las corridas por cualquier vía, incluidas las que pulsa el
+//     reloj de fuera. Es lo que de verdad le pasa al dato que Néstor abre, así
+//     que es la que manda el veredicto.
+//
+// Sin la segunda esta herramienta NO PODRÍA ver si el arreglo funcionó: el
+// reloj de fuera dispara por `workflow_dispatch`, así que mirando solo
+// `schedule` el número seguiría siendo igual de malo para siempre, con la app
+// ya arreglada. Es el agujero de «una medición que no mide lo que dice medir»,
+// y aquí habría salido justo en el momento de comprobar el arreglo.
+//
+// ⚠️ `todas` incluye los lanzamientos A MANO. Mientras el reloj de fuera no
+// esté puesto, ese número puede estar halagado por las pruebas de una sesión.
+const esquemaDe = (p, corridasUsadas, etiqueta) => {
+  if (p.mide === 'cobertura') {
+    const cob = horasCubiertas(corridasUsadas.map((c) => c.created_at))
+    if (!cob) return null
+    const deberia = 24 / p.cadaHoras
     const pct = (100 * cob.mediaHorasPorDia) / deberia
-    const v = pct >= 85 ? 'aTiempo' : pct >= 50 ? 'tarde' : 'inservible'
-    console.log(`    → ${v.toUpperCase()}  (cubre el ${pct.toFixed(0)} % de lo que debería)`)
-    veredictos.push({ nombre: p.nombre, veredicto: v, detalle: `${pct.toFixed(0)} % de cobertura` })
-    continue
+    console.log(
+      `    ${etiqueta.padEnd(16)} ${corridasUsadas.length} corridas en ${cob.dias} días · ` +
+        `HORAS DISTINTAS al día ${cob.mediaHorasPorDia.toFixed(1)} de ${deberia} ` +
+        `(${pct.toFixed(0)} %) · peor día ${cob.peorDia}`
+    )
+    return { veredicto: pct >= 85 ? 'aTiempo' : pct >= 50 ? 'tarde' : 'inservible', porque: `${pct.toFixed(0)} % de cobertura` }
   }
 
   // Los de hora fija: lo que decide es el RETRASO. Con varias entradas se
   // mide cada corrida contra la entrada MÁS CERCANA por debajo, que es la que
   // la disparó.
-  const retrasos = prog.map((c) => {
-    const ds = p.horas.map((h) => retrasoEnMinutos(h, c.created_at)).filter((d) => d !== null)
-    return ds.length ? Math.min(...ds) : null
-  })
-  const res = resumir(retrasos)
-  const j = juzgar(res)
-  if (res) {
-    console.log(`    pedido a las ${p.horas.join(', ')} UTC  ·  ${res.n} corridas`)
-    console.log(`    retraso: mediana ${res.mediana} min  ·  p90 ${res.p90} min  ·  máximo ${res.max} min`)
-    console.log(`    a tiempo (≤15 min): ${res.aTiempo} de ${res.n}  ·  más de 2 h: ${res.masDeDosHoras} de ${res.n}`)
+  const res = resumir(
+    corridasUsadas.map((c) => {
+      const ds = p.programado.map((h) => retrasoEnMinutos(h, c.created_at)).filter((d) => d !== null)
+      return ds.length ? Math.min(...ds) : null
+    })
+  )
+  if (!res) return null
+  console.log(
+    `    ${etiqueta.padEnd(16)} ${res.n} corridas · retraso mediana ${res.mediana} min · p90 ${res.p90} · ` +
+      `máx ${res.max} · a tiempo ${res.aTiempo} de ${res.n}`
+  )
+  return juzgar(res)
+}
+
+for (const p of PROGRAMAS) {
+  const { corridas: cs, error } = await corridas(p.repo, p.wf)
+  const pedido = p.programado === 'cada' ? `cada hora al minuto ${p.minuto}` : `${p.programado.join(', ')} UTC`
+  const sello = p.pulsar ? 'lo pulsa el reloj de fuera' : 'NO lo pulsa el reloj'
+
+  console.log(`\n  ${p.nombre}   [${sello}]`)
+  console.log(`    pedido: ${pedido}`)
+
+  if (error) {
+    console.log(`    ⚠️ no se pudo mirar: ${error}`)
+    veredictos.push({ nombre: p.nombre, veredicto: 'noSePudoMirar', pulsa: !!p.pulsar })
+    continue
   }
-  console.log(`    → ${j.veredicto.toUpperCase()}  (${j.porque})`)
-  veredictos.push({ nombre: p.nombre, veredicto: j.veredicto, detalle: j.porque })
+
+  // ⚠️ SOLO `schedule` Y `workflow_dispatch`, no todas las corridas. Un
+  // workflow que además corre en cada push o en cada pull request —`gemelos`,
+  // por ejemplo— tiene decenas de corridas que no tienen nada que ver con su
+  // reloj, y meterlas daba una «mediana de 13 horas de retraso» que no
+  // describía nada. Lo que sustituye al cron es el pulso de fuera, y ése llega
+  // como `workflow_dispatch`.
+  const enVentana = cs.filter((c) => c.created_at >= desde && (c.event === 'schedule' || c.event === 'workflow_dispatch'))
+  const soloCron = enVentana.filter((c) => c.event === 'schedule')
+
+  esquemaDe(p, soloCron, 'solo schedule:')
+  const jTodas = esquemaDe(p, enVentana, 'TODAS:')
+
+  if (!jTodas) {
+    console.log('    ⚠️ ninguna corrida en la ventana — no se puede juzgar')
+    veredictos.push({ nombre: p.nombre, veredicto: 'noSePudoMirar', pulsa: !!p.pulsar })
+    continue
+  }
+  console.log(`    → ${jTodas.veredicto.toUpperCase()}  (${jTodas.porque})`)
+  if (!p.pulsar) console.log(`    · a propósito: ${p.noPulsaPorque}`)
+  veredictos.push({ nombre: p.nombre, veredicto: jTodas.veredicto, detalle: jTodas.porque, pulsa: !!p.pulsar })
 }
 
 console.log(`
@@ -156,7 +186,7 @@ console.log(`
 `)
 const cuenta = {}
 for (const v of veredictos) cuenta[v.veredicto] = (cuenta[v.veredicto] || 0) + 1
-for (const v of veredictos) console.log(`  ${v.veredicto.padEnd(14)} ${v.nombre}`)
+for (const v of veredictos) console.log(`  ${v.veredicto.padEnd(14)} ${v.pulsa ? '·pulsado· ' : '          '}${v.nombre}`)
 console.log(`\n  ${Object.entries(cuenta).map(([k, n]) => `${k}: ${n}`).join(' · ')}`)
 
 console.log(`
@@ -190,13 +220,31 @@ if (sinMirar.length === veredictos.length) {
 
 // Y después, el rojo por lo que de verdad se vino a medir.
 //
-// ⚠️ Un `noSePudoMirar` SUELTO no pone en rojo, a propósito: un programa recién
-// añadido sin corridas todavía no es un fallo, y hacer fallar la medición por
-// eso enseñaría a ignorarla. Lo que no puede pasar es que fallen TODOS en
-// silencio, y eso es lo que acaba de cerrarse arriba.
-const malos = veredictos.filter((v) => v.veredicto === 'inservible')
+// ⚠️ SOLO PONEN EN ROJO LOS QUE EL RELOJ DE FUERA PULSA, y no es una rebaja.
+// Los otros seis llegan tarde A PROPÓSITO: cada uno tiene escrito en
+// `worker.js` por qué no se le añade un segundo disparador (el respaldo
+// compararía su copia contra sí misma, el de vencimientos escribe en Firestore,
+// los gemelos y la puntualidad no les afecta su propio retraso). Hacerlos rojos
+// dejaría esta medición en rojo para siempre, y una alarma que siempre suena
+// enseña a ignorarla — que es peor que no tenerla.
+//
+// ⚠️ Un `noSePudoMirar` SUELTO tampoco pone en rojo: un programa recién añadido
+// sin corridas todavía no es un fallo. Lo que no puede pasar es que fallen
+// TODOS en silencio, y eso es lo que acaba de cerrarse arriba.
+const malos = veredictos.filter((v) => v.pulsa && v.veredicto === 'inservible')
 if (malos.length) {
-  console.log(`  ✗ ${malos.length} programa(s) INSERVIBLE(S) por retraso: ${malos.map((v) => v.nombre).join(', ')}\n`)
+  console.log(`  ✗ ${malos.length} programa(s) que el reloj PULSA siguen INSERVIBLE(S): ${malos.map((v) => v.nombre).join(', ')}`)
+  console.log('')
+  console.log('    📌 SI EL RELOJ DE FUERA TODAVÍA NO ESTÁ PUESTO, ESTE ROJO ES LO ESPERADO:')
+  console.log('       es verdad que llegan tarde, y se apaga solo en cuanto el reloj funcione.')
+  console.log('       Los pasos están en `reloj-externo/README.md`.')
+  console.log('')
+  console.log('    Si YA estaba puesto: o su token caducó, o dejó de pulsar.')
+  console.log('    Comprobar en Cloudflare → Workers → el worker → Logs.\n')
   process.exit(1)
 }
-console.log(`  ✓ ninguno está inservible (${sinMirar.length} sin poder mirar).\n`)
+const aPropositoTarde = veredictos.filter((v) => !v.pulsa && v.veredicto === 'inservible').length
+console.log(
+  `  ✓ ninguno de los que el reloj pulsa está inservible ` +
+    `(${sinMirar.length} sin poder mirar · ${aPropositoTarde} tarde a propósito).\n`
+)

@@ -8807,7 +8807,7 @@ tiempo.** Ni una.
 | programa | pedido (UTC) | retraso mediano | a tiempo (≤15 min) |
 |---|---|---:|---:|
 | Swing · vigía | 15:50 / 16:20 / 16:50 | **183 min** | **0 de 64** |
-| Swing · reporte diario | 15:55 | 209 min | 0 de 22 |
+| Swing · reporte diario | 15:30 | 234 min | 0 de 22 |
 | Swing · tasas | 06:20 | **329 min** | 0 de 27 |
 | Swing · COT | 07:20 | 329 min | 0 de 23 |
 | Swing · oro | 07:50 | **418 min** | 0 de 4 |
@@ -8950,3 +8950,187 @@ proxy y no se necesita.
 2. **Que la app enseñe cuándo se generó el barrido** («generado hace 3 h»), que
    es el agujero real del punto 4. No arregla el retraso: lo hace visible en vez
    de invisible. Son 13 idiomas × 2 apps, así que no se hace sin su OK.
+
+---
+
+# El reloj de fuera, construido (2026-10-07). Y otra hora mía que era falsa
+
+Néstor: **«dame las instrucciones paso paso y arregla lo del reloj»**. Eligió
+Cloudflare por `AskUserQuestion`, y que la frescura del barrido en pantalla se
+haga **después** del reloj.
+
+```
+reloj-externo/worker.js                 el programita (Cloudflare) · la LISTA
+reloj-externo/README.md                 los clics, uno por uno, para Néstor
+app/scripts/prueba-reloj-externo.mjs    compara la lista con los .yml de verdad
+app/scripts/medir-puntualidad.mjs       ahora importa la lista, no tiene copia
+.github/workflows/gemelos.yml           ahí corre la prueba (tiene los 2 repos)
+```
+
+En **Intradía** (PR aparte, misma rama):
+
+```
+app/scripts/lib/vigia-nucleo.mjs        `yaCorrioEstaHora` + leerEstado arreglado
+app/scripts/vigia.mjs                   el guardián, ANTES de pedir precios
+app/scripts/publicar-barrido.mjs        ídem, leyendo `generadoEl` del barrido
+.github/workflows/{vigia,publicar-barrido}.yml   casilla «forzar»
+app/scripts/prueba-vigia.mjs            bloques 14 y 14b, 31 comprobaciones
+```
+
+## ⚠️⚠️ OTRA HORA ESCRITA A MANO QUE ERA FALSA, Y YA LA HABÍA PUBLICADO
+
+La tabla de ayer decía que el reporte diario de Swing se pide a las **15:55**.
+Su cron dice **`30 15 * * 1-5`**, o sea **15:30**. Así que la medición entendía
+**25 minutos MENOS de retraso del real**: 209 contra 234. Y los dos calendarios
+figuraban al minuto 10 cuando su cron es `0 */4 * * *`, minuto 0.
+
+Es la familia de siempre —**un número bien calculado describiendo otra cosa de
+la que dice describir**— y van ya cinco en tres semanas (la etiqueta «(hoy)», el
+«+13,302», las «señales al mes», las 6 fechas de domingo, y esto).
+
+📌 **Pero el arreglo no es «tener más cuidado»: es que no haya dos listas.** La
+lista vive SOLO en `worker.js` —el único archivo que no puede importar nada,
+porque se pega entero en el panel de Cloudflare— y `medir-puntualidad.mjs` la
+importa de ahí. Más `prueba-reloj-externo.mjs`, que la compara con los `.yml`
+reales de los dos repositorios en cada push. **Esa prueba cazó los dos errores
+al estrenarse**, que es exactamente para lo que se escribió.
+
+## La lista tiene los 17 programas, también los que NO se pulsan
+
+11 se pulsan y 6 no, cada uno con el motivo dentro. Esa segunda mitad es
+documentación pura y vale tanto como la primera, igual que PRIMOS: sin ella un
+programa nuevo se quedaría fuera por olvido y parecería una decisión. Hay una
+comprobación que **falla si aparece un workflow con `schedule:` que no esté en la
+lista**.
+
+⚠️ **La regla para decidir si se pulsa: solo lo que es INOFENSIVO CORRER DOS
+VECES EN LA MISMA HORA**, porque GitHub sigue pulsando también. Lo que no la
+cumple se queda fuera aunque llegue tarde:
+
+| no se pulsa | por qué |
+|---|---|
+| respaldo del historial (×2) | compara la copia de hoy con la de la semana pasada; dos veces el mismo día la dejaría comparándose consigo misma, y esa alarma vigila lo ÚNICO irrecuperable |
+| cerrar vencidos | lleva un día de gracia, y es el único que ESCRIBE en Firestore |
+| gemelos (×2) | es una comprobación: su retraso no cuesta nada |
+| puntualidad | mide 30 días hacia atrás; su propio retraso no le afecta |
+
+## ⚠️ UN SOLO CRON EN CLOUDFLARE: `20 * * * *`
+
+El Worker sabe por dentro qué le toca a cada hora, así que basta una entrada. Se
+eligió el minuto **20** y no el 0 por un motivo concreto: es el minuto del vigía
+de Intradía, y a las en punto la vela de la hora que acaba de cerrar **todavía
+puede no estar publicada**. Consecuencia: algún programa se pulsa hasta 30
+minutos antes de su hora nominal (el oro, el vigía de Swing) o 20 después (los
+calendarios). No cambia nada — lo que importa es la hora, no el minuto — y
+`retrasoEnMinutos` ya cuenta un adelanto como puntual.
+
+## ⚠️⚠️ EL GUARDIÁN DE LA HORA EN INTRADÍA: ES OBLIGATORIO ANTES DE ENCENDER
+
+Con dos relojes pulsando el mismo botón, el vigía correría hasta **47 veces al
+día** (24 de Cloudflare + 23 de GitHub) = **329 créditos de los 800** en vez de
+168, y el publicador otros tantos: ~665 de 800. Con el guardián, los dos relojes
+cuestan lo mismo que uno y se queda en el techo ya documentado: **343**.
+
+📌 **Es un cambio de opinión mío, y queda escrito.** Al poner las 24 entradas de
+cron escribí que un guardián aquí SOBRABA, y era cierto **con un solo reloj**
+—repetir cuesta 7 créditos y `compararConAnterior` no duplica nada—. Con dos, la
+cuenta cambia. La premisa cambió; la conclusión tenía que cambiar con ella.
+
+⚠️ **Y se compara la hora de RELOJ, no «hace menos de 60 minutos».** Lo que vale
+para el historial es cuántas horas DISTINTAS se miran al día, que es exactamente
+lo que mide `medir-puntualidad.mjs`.
+
+⚠️ **La asimetría de siempre, otra vez:** ante cualquier duda —sin marca, fecha
+ilegible, archivo roto, no es texto— devuelve `false`, o sea **CORRE**. Correr de
+más cuesta 7 créditos de 800; saltarse de más cuesta una hora de historial que no
+vuelve.
+
+⚠️ **`leerEstado` TIRABA `actualizadoEl`.** Sin ese campo el guardián nunca se
+habría activado y los dos relojes harían el trabajo dos veces **en silencio**. Es
+el mismo descuido que Swing ya tuvo, anotado aquí con fecha del 2026-09-07 — y
+que en Swing también hubo que arreglar antes de que `yaCorrioHoy` sirviera para
+algo. **Los PRIMOS otra vez.**
+
+⚠️ **La casilla «forzar» y el `'0' || '1'`.** El guardián se aplica a los dos
+relojes (Cloudflare pulsa por `workflow_dispatch`, igual que el botón), así que
+hace falta una forma de decir «corre igual»: una casilla en el botón de lanzar a
+mano. Y la expresión es `${{ inputs.forzar && '0' || '1' }}` **y no con `''`**:
+una cadena vacía es FALSA en las expresiones de GitHub, así que con `''` el `||`
+se dispararía igual, el guardián quedaría puesto siempre y **marcar «forzar» no
+forzaría nada, en silencio**. Tiene comprobación propia.
+
+## El publicador pierde sus «dos oportunidades por hora», y está bien
+
+Aquellas dos existían para cubrir los saltos del reloj de GitHub. Lo que cubre
+un salto ahora es que haya **dos relojes independientes**, y lo que de verdad
+hacía falta —una publicación por hora, puntual— es lo que queda.
+
+## La medición ahora mira DOS cosas, y sin eso no habría servido
+
+`medir-puntualidad.mjs` imprime `solo schedule` (el reloj de GitHub, el
+diagnóstico) y `TODAS` (schedule + `workflow_dispatch`, que es lo que de verdad
+le pasa al dato), y **juzga con la segunda**.
+
+📌 **Sin esa segunda la herramienta NO habría podido ver su propio arreglo:** el
+reloj de fuera dispara por `workflow_dispatch`, así que mirando solo `schedule`
+el número seguiría siendo igual de malo para siempre con la app ya arreglada.
+Habría sido «una medición que no mide lo que dice medir» justo en el momento de
+comprobar el arreglo.
+
+⚠️ `TODAS` deja fuera `push` y `pull_request` a propósito: `gemelos` corre en
+cada PR y meter esas corridas daba una «mediana de 13 horas» que no describía
+nada. Y **`TODAS` incluye los lanzamientos a mano**, así que mientras el reloj no
+esté puesto ese número puede estar halagado por las pruebas de una sesión.
+
+⚠️ **Solo ponen en rojo los programas que el reloj PULSA.** Los otros seis llegan
+tarde a propósito; hacerlos rojos dejaría la medición en rojo para siempre, y una
+alarma que siempre suena enseña a ignorarla.
+
+📌 **Y hoy ese workflow sale en ROJO con razón**: es verdad que llegan tarde. Se
+pone verde solo cuando el reloj lleve unos días funcionando. El propio informe lo
+dice con esas palabras, para que un rojo esperado no se lea como un fallo nuevo.
+
+## 📌 Mi detección de repositorios se equivocó de app, y me lo dijo la prueba
+
+La primera versión de `prueba-reloj-externo.mjs` decidía cuál era Swing y cuál
+Intradía buscando la palabra «intradía» dentro de `vigia.yml`. **El vigía de
+Swing nombra a su hermana en un comentario**, así que las intercambió: salieron
+16 fallos y ninguno era de la lista — decía que `cot.yml` faltaba en Intradía
+(donde no existe) y que el reporte de Intradía era a las 15:30 (que es el de
+Swing). Ahora se decide por `APP` de `src/lib/identidad.js`, que es el archivo
+cuyo trabajo es justo ése.
+
+**Antes de creerse que algo está mal, comprobar que la herramienta está mirando
+lo que dice mirar.** Van unas siete veces.
+
+## Comprobado que las pruebas MUERDEN
+
+Con el daño verificado en el archivo antes de darlo por bueno, las dos mitades:
+
+| daño | caen |
+|---|---:|
+| poner otra vez la hora falsa (15:55) | 2 |
+| renombrar un workflow de la lista | 2 (el que no existe **y** el que se quedó fuera) |
+| borrar un programa de la lista | 1 |
+| pulsar el vigía de Swing tres veces | 1 |
+| que `leerEstado` vuelva a tirar `actualizadoEl` | 3 |
+| resolver la duda SALTÁNDOSE en vez de corriendo | 5 |
+| el `''` en vez del `'0'` del workflow | 1 |
+| mirar el guardián DESPUÉS de pedir precios | 1 |
+
+Más lint, build y **todas** las pruebas sin internet en los dos repos (33 en
+Swing, 24 en Intradía) y los **59 gemelos** idénticos.
+
+## Lo que falta, y es de Néstor
+
+1. **Crear la llave de GitHub y el Worker**, con `reloj-externo/README.md`
+   delante. ⚠️ **La llave no se pega en ningún chat** y **caduca**: el día que
+   caduque el reloj deja de pulsar en silencio, y lo único que lo canta es el
+   workflow de puntualidad volviendo a rojo.
+2. **Comprobar a los pocos días** con «¿Llegan a su hora los programas?»,
+   contando **horas distintas cubiertas, no corridas**.
+3. **Después del reloj** (lo eligió él): que la app enseñe cuándo se generó el
+   barrido. `barrido.json` lleva `generadoEl` desde siempre y **la app no lo
+   lee** — comprobado: `useMarketData` solo usa `ultima` y `guardadoEl`, así que
+   un barrido de hace siete horas se ve idéntico a uno de hace diez minutos. Son
+   13 idiomas × 2 apps.
