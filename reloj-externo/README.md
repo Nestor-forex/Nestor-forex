@@ -89,13 +89,18 @@ de Twelve Data o apague el vigía. Malo, acotado, y **se ve enseguida**.
    créala con tu correo (es gratis y no pide tarjeta).
 2. En el menú de la izquierda busca **Workers & Pages** (o **Compute**, según
    cómo te lo enseñe ese día) y entra.
-3. Botón **Create** → pestaña **Workers** → **Start with Hello World!** (o
-   «Hello World», el ejemplo más simple).
-4. **Name**: escribe `reloj-nestor-forex`. Clic en **Deploy**.
-   Te dirá que está publicado y te dará una dirección que acaba en
-   `.workers.dev`. **Apúntala**, sirve para comprobar más adelante.
-5. Clic en **Edit code** (o **Continuar con el código**). Se abre un editor con
-   un ejemplo dentro.
+3. Botón azul **Create application**, arriba a la derecha (no se llama solo
+   «Create»). Luego, si te salen pestañas, la de **Workers** —no «Pages»— y la
+   tarjeta **Hello World**.
+4. ⚠️ **Cloudflare lo crea y lo publica solo, con un nombre al azar** del tipo
+   `solitary-bush-6d45`. No te va a preguntar cómo quieres llamarlo.
+   - **Déjalo con ese nombre.** Es solo una etiqueta y funciona igual;
+     renombrarlo obligaría a borrarlo y rehacerlo todo para nada.
+   - **Apunta la dirección** que te da, que lleva ese nombre dentro:
+     `<el-nombre-al-azar>.<tu-cuenta>.workers.dev`. Sirve para comprobar más
+     adelante.
+5. Clic en **`</> Edit code`**, arriba a la derecha. Se abre un editor con un
+   ejemplo dentro.
 6. **Borra TODO lo que hay en ese editor** (clic dentro, `Ctrl+A`, `Supr`).
 7. Abre el archivo `reloj-externo/worker.js` de este repositorio, **cópialo
    entero** y **pégalo** en el editor de Cloudflare.
@@ -108,36 +113,113 @@ de Twelve Data o apague el vigía. Malo, acotado, y **se ve enseguida**.
 
 ### Ahora la llave, como secreto
 
-9. Vuelve a la pantalla del Worker (si estás en el editor, clic en la flecha de
-   atrás o en el nombre `reloj-nestor-forex`).
-10. Pestaña **Settings** (Configuración).
-11. Busca la sección **Variables and Secrets** (o **Variables y secretos**).
-    Clic en **Add** (Añadir).
-12. Rellena así:
-    - **Type**: elige **Secret** (NO «Text»). Esto es importante: un secreto se
-      guarda cifrado y **ni tú ni nadie lo puede volver a leer** desde el
-      panel. Si eligieras «Text» quedaría a la vista.
-    - **Variable name**: escribe exactamente `NF_ACTIONS_TOKEN`
-      (en mayúsculas, con los guiones bajos, sin espacios).
-    - **Value**: pega la llave de la Parte 1 (la que empieza por `github_pat_`).
-13. Clic en **Deploy** / **Save**.
+9. Vuelve a la pantalla del Worker: clic en su nombre, arriba, al lado de
+   «Workers & Pages».
+10. Pestaña **Settings** — es la última de la fila de arriba, a la derecha de
+    «Access».
+11. Baja hasta **Runtime variables and secrets** y clic en **Add variable**.
+12. Se abre un cuadro que dice **Add environment variable**. ⚠️ Aquí **no hay
+    ningún menú «Type»**: lo que hay es un **interruptor `Secret`** a la derecha
+    de la casilla *Value*. Hazlo en este orden:
+    - **Select environment**: deja **Production** marcado ✓ y **Previews**
+      apagado.
+    - **Key**: escribe exactamente `NF_ACTIONS_TOKEN` (en mayúsculas, con los
+      guiones bajos, sin espacios).
+    - ⚠️ **AHORA activa el interruptor `Secret`**, ANTES de pegar nada. Así la
+      llave sale tapada con puntitos y no queda a la vista en la pantalla — lo
+      que importa si alguien mira por encima del hombro o si estás mandando
+      fotos de la pantalla. Y, sobre todo, un secreto se guarda cifrado y **ni
+      tú ni nadie lo puede volver a leer**; como texto normal quedaría a la
+      vista para siempre.
+    - **Value**: ahora sí, pega la llave de la Parte 1 (la que empieza por
+      `github_pat_`).
+    - **No toques `+ Add`**: ése es para añadir una segunda variable, y solo
+      hace falta una.
+13. Clic en **Add variable and deploy**.
+
+    ✅ Tiene que quedar una fila así, y las tres columnas importan:
+
+    ```
+    Type     Name                Value
+    Secret   NF_ACTIONS_TOKEN    Value encrypted
+    ```
+
+    Si en *Type* pone «Text» en vez de «Secret», o si en *Value* se lee la
+    llave en vez de «Value encrypted», bórrala con la papelera y repite el
+    paso 12 activando el interruptor.
 
 ### Y el reloj
 
-14. Seguimos en **Settings**. Busca la sección de **Trigger Events** /
-    **Triggers** / **Cron Triggers** (el nombre cambia cada tanto).
-15. Clic en **Add** → **Cron Trigger**.
-16. En el campo del horario escribe exactamente:
+14. Seguimos en **Settings**. En la **columna de la derecha** hay una lista de
+    secciones; clic en **Trigger events**.
+15. En **Cron triggers**, clic en **+ Add**.
+16. ⚠️⚠️ **EL CUADRO TIENE DOS PESTAÑAS, Y LA QUE SALE POR DEFECTO ES LA
+    EQUIVOCADA.**
+
+    ```
+    [ Schedule ]  [ Cron expression ]
+                         ↑ ésta
+    ```
+
+    - **`Schedule`** es un constructor simplificado que solo acepta un número y
+      construye **«cada N minutos»**. Si escribes 20 ahí, el reloj dispararía
+      **cada 20 minutos** — 72 veces al día en vez de 24.
+    - Clic en **`Cron expression`**.
+
+17. ⚠️ **Al cambiar de pestaña, Cloudflare arrastra lo anterior y escribe
+    `*/20 * * * *`.** Esos dos caracteres del principio lo cambian todo:
+
+    | | significa |
+    |---|---|
+    | `*/20 * * * *` | **cada** 20 minutos |
+    | `20 * * * *` | **al minuto 20** de cada hora ← esto queremos |
+
+    Clic dentro de la casilla, **`Ctrl+A`** para seleccionar todo, y escribe
+    encima (empieza por el **2**, sin asterisco ni barra delante, y son
+    **cuatro** asteriscos):
 
     ```
     20 * * * *
     ```
 
-    Eso significa «cada hora, al minuto 20». **Un solo horario, no hace falta
-    más**: el programita ya sabe por dentro qué le toca a cada hora.
-17. Clic en **Add** / **Deploy**.
+    **Un solo horario, no hace falta más**: el programita ya sabe por dentro
+    qué le toca a cada hora.
+
+18. ⚠️ **ANTES de darle a Add, lee la lista azul** de *Estimated upcoming
+    events*. Tiene que quedar **una por hora, todas terminadas en `:20`**:
+
+    ```
+    Wed, 07 Oct 2026 02:20:00
+    Wed, 07 Oct 2026 03:20:00
+    Wed, 07 Oct 2026 04:20:00
+    ```
+
+    Si ves `02:00` · `02:20` · `02:40`, sigues en «cada 20 minutos» y está mal.
+
+19. Clic en **Add**.
+
+20. Si abajo aparece una barra **«Unsaved changes»**, dale a **`Save`**.
+    ⚠️ **Nunca a `Discard`**: podría tirar el horario que acabas de poner.
+
+21. Comprueba que quedó guardado. En **Trigger events** tiene que leerse:
+
+    ```
+    Cron triggers
+      Runs: At 20 minutes past the hour     Next: <fecha> 02:20:00
+    ```
+
+    Si sigue diciendo **«No cron triggers»**, el Add no llegó a guardarse y hay
+    que repetir desde el paso 15.
 
 **Listo.** A partir del siguiente minuto 20 empieza a pulsar.
+
+### 📌 Por qué el paso 16 es el que más importa
+
+Con «cada 20 minutos», a las 6 de la mañana UTC el reloj pulsaría **tres
+veces** los programas de Swing en esa hora. Los vigías tienen su guardián y se
+saltarían solos, pero **el oro y el reporte no lo tienen**: el del oro cuesta
+15 créditos de Twelve Data cada vez, o sea **45 en vez de 15**. No es una
+catástrofe y es tonto pagarla.
 
 ---
 
@@ -148,14 +230,34 @@ el paso 4. Te enseña la hora y qué programas le tocarían en esta hora. Si eso
 se ve, el programita está vivo.
 ⚠️ Esa página **no pulsa nada** y **no** dice si la llave sirve.
 
-**En la siguiente hora en punto** — Cloudflare → tu Worker → pestaña **Logs**
-(o **Observability** → **Logs**). Tienen que salir líneas con `✓` y el nombre
-de cada programa. Si sale `✗ ... HTTP 404`, casi siempre es que a la llave le
-falta el permiso **Actions: Read and write** (paso 9 de la Parte 1).
+**En el siguiente minuto 20** — Cloudflare → tu Worker → pestaña **Logs** (o
+**Observability** → **Logs**). Tienen que salir líneas con `✓` y el nombre de
+cada programa:
+
+| lo que diga el log | qué significa |
+|---|---|
+| `✓ Nestor-forex-intradia · vigia.yml` | funcionó |
+| `✗ … HTTP 404` | a la llave le falta **Actions: Read and write**, o solo se le marcó UNO de los dos repositorios (pasos 8 y 9 de la Parte 1) |
+| `FALTA EL SECRETO NF_ACTIONS_TOKEN` | el nombre del secreto quedó distinto (paso 12) |
+
+⚠️ Cloudflare no dispara en el segundo exacto: lo medido es **unos 51 segundos
+después** del minuto 20. Eso es normal — compáralo con el reloj de GitHub, que
+llegaba entre 3 y 7 **horas** tarde.
 
 **El mismo día** — GitHub → el repositorio → pestaña **Actions**. Las corridas
-nuevas dirán que las lanzó alguien a mano (*manually triggered*) en vez de
-*scheduled*. Eso es el reloj de fuera.
+nuevas dirán que las lanzó alguien a mano (*manually triggered*, o sea
+`workflow_dispatch`) en vez de *scheduled*. Eso es el reloj de fuera.
+
+⚠️ **Y una corrida que termina sin hacer nada NO es un fallo: es el guardián de
+la hora.** Si el cron de GitHub llega tarde a una hora que el reloj de fuera ya
+cubrió, el vigía se salta solo y no gasta ni un crédito. **Que se salte es
+buena señal**, significa que los dos relojes no se pisan.
+
+📌 **Para distinguir un pulso de verdad de uno que se saltó, NO mires cuánto
+tardó.** Las dos cosas tardan casi lo mismo (bajar el código e instalar se paga
+igual: se midieron 38 s el que trabajó contra 31 s el que se saltó). Lo que
+distingue es **quién escribió**: mira los commits de la rama `datos` y cuenta
+que haya uno de «Vigía» por hora, no dos.
 
 **A los pocos días, y es la prueba de verdad** — GitHub → `Nestor-forex` →
 **Actions** → en la izquierda **«¿Llegan a su hora los programas?»** → botón
@@ -196,3 +298,15 @@ públicos: sería el mismo agujero que tuvimos con la llave de Twelve Data.
 Los paneles de GitHub y de Cloudflare **cambian de nombre cada tanto**. Si un
 botón no se llama como aquí, **manda una captura de pantalla** y te digo dónde
 hacer clic. No adivines ni actives nada que no esté en esta lista.
+
+📌 **Estos pasos se corrigieron el 2026-10-07 contra el panel de verdad**,
+siguiendo a Néstor pantalla por pantalla mientras lo montaba. La primera
+versión los tenía escritos de memoria y **tres estaban mal**: el botón se llama
+«Create application» y no «Create», el secreto es un interruptor y no un menú
+«Type», y el horario sale por defecto en una pestaña que construye «cada 20
+minutos» en vez de «al minuto 20».
+
+⚠️ **Si vuelven a cambiar, corrige este archivo en vez de explicarlo por chat.**
+Un procedimiento que solo vive en una conversación se pierde; y el error del
+horario —el único que costaba créditos— lo cazó Néstor preguntando «¿debo
+colocar los asteriscos?», no una comprobación.
