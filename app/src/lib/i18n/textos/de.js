@@ -430,11 +430,18 @@ export default {
     cerrar: 'Schließen',
   },
 
+  sombra: {
+    aviso: ({ ops, meta }) =>
+      `Sie kann noch NICHT als Signal genommen werden: sie hat ${ops} echte Trades von den ${meta}, die nötig sind, um ihr zu glauben — egal wie die Zahl ausfällt.`,
+    margen: ({ ops, m }) =>
+      `Mit ${ops} Trades kann sich dieser Prozentsatz allein durch Zufall um ±${m} Punkte bewegen.`,
+  },
+
   historial: {
     esRuptura: 'STRUKTURBRUCH',
     rupturaTitulo: 'Verlauf von „Strukturbruch“',
     rupturaIntro:
-      'Die vierte Regel: Sie steigt ein, wenn der Preis das zuletzt markierte Hoch oder Tief bricht. ⚠️ Sie steht UNTER BEOBACHTUNG und ist nicht validiert: Sie hat sehr wenige Trades und ihre Zahl bedeutet noch nichts. Keine Empfehlung — sie wird gezeigt, damit man sie verfolgen kann, nicht um sie zu handeln.',
+      'Die vierte Regel: Sie steigt ein, wenn der Preis das zuletzt markierte Hoch oder Tief bricht. ⚠️ Sie steht UNTER BEOBACHTUNG und ist nicht validiert. Keine Empfehlung — sie wird gezeigt, damit man sie verfolgen kann, nicht um sie zu handeln.',
     esReversion: 'UMKEHR',
     esCaida: "DEN EINBRUCH KAUFEN",
     caidaTitulo: "Verlauf von „den Einbruch kaufen“",

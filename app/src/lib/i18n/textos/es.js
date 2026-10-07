@@ -457,11 +457,18 @@ export default {
     cerrar: 'Cerrar',
   },
 
+  sombra: {
+    aviso: ({ ops, meta }) =>
+      `Todavía NO se puede tomar como señal: lleva ${ops} operaciones reales de las ${meta} que hacen falta para creerle, salga el número como salga.`,
+    margen: ({ ops, m }) =>
+      `Con ${ops} operaciones ese porcentaje puede moverse ±${m} puntos solo por casualidad.`,
+  },
+
   historial: {
     esRuptura: 'RUPTURA DE ESTRUCTURA',
     rupturaTitulo: 'Historial de «ruptura de estructura»',
     rupturaIntro:
-      'La cuarta regla, que entra cuando el precio rompe el último máximo o mínimo que marcó. ⚠️ Está EN OBSERVACIÓN y sin validar: lleva muy pocas operaciones y su número todavía no significa nada. No es una recomendación — se enseña para que se pueda seguir, no para operarla.',
+      'La cuarta regla, que entra cuando el precio rompe el último máximo o mínimo que marcó. ⚠️ Está EN OBSERVACIÓN y sin validar. No es una recomendación — se enseña para que se pueda seguir, no para operarla.',
     esReversion: 'REVERSIÓN',
     esCaida: "COMPRAR LA CAÍDA",
     caidaTitulo: "Historial de «comprar la caída»",
