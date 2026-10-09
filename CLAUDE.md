@@ -9725,3 +9725,98 @@ en este repositorio ya mordió con la sonda de FX Blue y con el comentario de
 **Comprobado que muerden**, con el daño verificado en el archivo antes de darlo
 por bueno: dos que piden precios en el mismo minuto tumba 1 · quitarle los
 créditos al oro tumba 1 · mover el vigía de Swing fuera del minuto 20 tumba 2.
+
+---
+
+# Mover el stop a breakeven NO ayuda (2026-10-07). Y lo que lo tumbó fue el humo
+
+Néstor lo pidió dentro de la auditoría de su forma de operar. La respuesta de
+ese momento fue **«no se puede saber con el historial»**, y era verdad: el
+registro real anota ganada o perdida y **no anota cuánto a favor llegó una
+operación antes de irse al stop**. Sin ese dato, cualquier número sobre
+breakeven sería inventado. El banco de pruebas sí tiene las velas.
+
+```
+app/scripts/lib/preregistro-breakeven.mjs   el listón, fecha 2026-10-07 dentro
+app/scripts/lib/breakeven.mjs               la resolución con BE (pura)
+app/scripts/medir-breakeven.mjs             la medición, 14 créditos
+app/scripts/prueba-breakeven.mjs            47 comprobaciones, sin internet
+.github/workflows/breakeven.yml             solo a mano, permiso de LECTURA
+```
+
+**Cero archivos de `src/` tocados.** Nada se encendió.
+
+## El resultado, con la vara neutra 1:1 y costes
+
+1.343 días (2021-08-10 a 2026-10-07), corte en 2024-05-02. Se mide sobre las
+**2.507 operaciones que TODOS los métodos saben juzgar** (ver abajo por qué).
+
+| armado | ops | acierto | ganadas | en BE | perdidas | por 1R | 1ª mit | 2ª mit | con swap |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **SIN BE** | 2.507 | 49 % | 1.219 | 0 | 1.288 | **−0,046** | −0,070 | −0,020 | −0,089 |
+| **0,25×** | 2.507 | **22 %** | 557 | 1.364 | 586 | **−0,030** | −0,048 | −0,011 | **−0,051** |
+| 0,5× | 2.507 | 32 % | 811 | 803 | 893 | −0,051 | −0,082 | −0,018 | −0,082 |
+| 0,75× | 2.507 | 41 % | 1.037 | 352 | 1.118 | −0,051 | −0,075 | −0,024 | −0,089 |
+| 1× | 2.507 | 49 % | 1.219 | 0 | 1.288 | −0,046 | −0,070 | −0,020 | −0,089 |
+| 1,5× | 2.507 | 49 % | 1.219 | 0 | 1.288 | −0,046 | −0,070 | −0,020 | −0,089 |
+
+**❌ NO PASA EL LISTÓN**, y falla tres de los seis criterios:
+
+- la mejor mejora es **+0,016** y hace falta **+0,02**;
+- **0 de 5 niveles** mejoran y hacen falta 3;
+- **un solo par aporta el 57 %** de la mejora (máximo 40 %).
+
+La geometría real coincide (no pasa), así que no hubo que elegir vara.
+
+## ⚠️ Lo que hay que entender antes de leer esa tabla
+
+**Breakeven convierte en nada las GANADORAS también, no solo las perdedoras.**
+Con el armado en 0,25× el acierto se desploma del **49 % al 22 %**: 1.364 de
+2.507 operaciones acaban en cero. Eso es lo que la frase de siempre —«al menos
+no pierdes»— no dice.
+
+⚠️ **Y sale a cero de PRECIO, no de dinero.** El spread ya está pagado al
+entrar, así que una operación «a breakeven» en realidad pierde el spread. La
+tabla lo descuenta.
+
+📌 **Casi todo lo que mejora es swap, no dirección.** Con solo spread la mejora
+es +0,016; pagando 0,5 pips de swap por noche sube a **+0,038**. O sea que más
+de la mitad del beneficio es **dejar de pagar noches**, porque breakeven cierra
+antes — no acertar más. Un bróker que cobre poco swap se queda sin casi nada.
+
+## ⚠️⚠️ EL FALLO QUE DESTAPÓ EL HUMO, Y HABRÍA VETADO BE POR UNA RAZÓN MECÁNICA
+
+Antes de gastar un crédito se corrió todo sobre un mercado inventado, y salió
+que **breakeven resuelve operaciones que sin él siguen abiertas** (112 contra
+113): si el precio llega al nivel de armado y vuelve, con BE la operación
+CIERRA y sin BE sigue viva hasta el final de la serie.
+
+O sea que las columnas comparaban **conjuntos distintos de operaciones**, y mi
+criterio nº 3 («mismas operaciones») habría tumbado breakeven por eso y no por
+su resultado.
+
+📌 **Se arregló LA MEDICIÓN, no el criterio**, y la diferencia importa: se
+cruzan las claves que todos los métodos saben juzgar (`clavesComunes`) y se
+mide solo sobre ésas, diciendo en el informe cuántas quedaron fuera (9 con la
+vara neutra, 16 con la real). Eso **no** es aflojar un umbral — es hacer que la
+comparación compare lo mismo. Aflojar el criterio habría sido ocultar el fallo.
+
+## 📌 Y un fallo mío, cazado por la misma vía
+
+`data.pares?.[s.par]` — `data.pares` es un **ARRAY**, no un objeto indexado por
+nombre. Con eso, **todas** las señales habrían vuelto sin juzgar y la tabla
+habría salido vacía. Arreglado con un mapa por nombre.
+
+**Antes de creerse un resultado, comprobar que el banco mide lo que dice
+medir.** Van siete u ocho veces, y esta vez el humo pagó dos veces en la misma
+tarde.
+
+## Lo que esto cierra, y lo que no
+
+**Cierra «mover a breakeven» para Swing**, con el listón escrito antes y el
+veredicto calculado. ⚠️ **La respuesta no es bajar el umbral a 0,015 para que
+el 0,25× pase**: para ese momento exacto se escribe el listón antes.
+
+⚠️ Y **no cierra** la gestión de la operación en general: lo medido es mover el
+stop a la entrada, no un trailing ni salidas parciales. Cualquiera de esas dos
+es una medición propia, con su propio listón.
