@@ -9709,6 +9709,42 @@ cron. Está escrito en `reloj-externo/README.md` con los clics, y la forma de
 saber si tiene la versión vieja es abrir su `.workers.dev`: si la lista no
 enseña un minuto delante de cada programa, está desactualizada.
 
+### ✅ Néstor lo pegó y cambió el cron el 2026-10-10
+
+Los dos pasos hechos, comprobados en capturas de su panel: el Worker despliega
+la versión con `minutoPulso` (la página de prueba respondió «tocarían 0» a las
+02:22 UTC de un sábado, que es lo correcto) y **Cron Triggers tiene una sola
+fila, «Every minute»**.
+
+⚠️ **PUESTO NO ES COMPROBADO, y el sábado no puede comprobarlo.** Los únicos
+programas que corren en sábado —calendarios, tasas y COT— tienen los TRES
+`minutoPulso: 20`, o sea el minuto que ya funcionaba con el cron viejo. **El
+reparto solo se ve el lunes**, cuando vuelven los que piden precios: :20 vigía
+Swing · :23 vigía Intradía · :26 publicador Intradía · :29 publicador Swing ·
+:32 reporte Swing · :35 reporte Intradía · :38 oro. Si el lunes salen todos en
+el :20, el cron no se guardó.
+
+### 📌 Tres cosas de la UI de Cloudflare que mis instrucciones decían mal
+
+Las tres costaron una foto suya cada una, y están aquí para no repetirlas:
+
+| le dije | lo que su panel enseña de verdad |
+|---|---|
+| «verás `20 * * * *`» | lo traduce a palabras: **«At 20 minutes past the hour»** |
+| «dale al lapicito (Edit)» | **no hay lapicito**: solo `+ Add` y una papelera roja |
+| «pega `* * * * *`» | la pestaña **Schedule** solo acepta NÚMEROS — se escribe **`1`** con el desplegable en `Minute(s)`; los asteriscos van en la otra pestaña, **Cron expression** |
+
+Y una cuarta que no es de la UI sino del orden: **añadir el nuevo ANTES de
+borrar el viejo**, para no dejar ni un minuto sin reloj. Tener los dos puestos
+un rato es inofensivo — `yaCorrioHoy` y `yaCorrioEstaHora` impiden el trabajo
+doble. Además Cloudflare no guarda al pulsar `Add`: sale una barra negra de
+«Unsaved changes» y hay que darle a **Save**, una vez por cada cambio.
+
+📌 La lección de siempre con otra cara: **las instrucciones con clics hay que
+escribirlas desde la pantalla que la persona tiene delante, no desde la que uno
+imagina.** Es hermana de «comprobar el artefacto que la persona va a recibir»
+del `.bat` del 2026-09-09.
+
 ## 📌 Y la comprobación nueva cazó un error MÍO al estrenarse
 
 El bloque 7 de `prueba-reloj-externo.mjs` exige que un workflow que lleve
