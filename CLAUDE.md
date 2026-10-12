@@ -10132,3 +10132,191 @@ y confundir las dos cosas es justo lo que este proyecto no hace.
 Lo que mejora son dos cosas distintas: que un reporte vacío **deje de ser un
 hueco** (hoy «el mercado está plano» y «la app está atascada» se leen igual), y
 que el criterio con el que decide **no pueda separarse de sí mismo en silencio**.
+
+---
+
+# Los números del Historial son REALES, y revisarlos destapó un defecto (2026-10-12)
+
+Néstor vio la pantalla de Historial con las dos reglas de la sombra en negativo
+mientras yo le citaba números positivos, y preguntó —preocupado y molesto— si
+**la app no se está actualizando**. La respuesta tiene tres partes y solo una es
+tranquilizadora.
+
+## 1. ✅ NADA ESTÁ CONGELADO. Comprobado sobre el historial de producción
+
+Bajados los cuatro archivos de la rama `datos` y reproducidas las cuentas con la
+lógica de `historialCalc.js` (`esDeLaApp = !r.tipo || r.tipo === 'tendencia'`,
+cubos por `tipo`, respetando `sombra`):
+
+| | Swing | Intradía |
+|---|---|---|
+| señales anotadas | 135, en **37 días distintos** | 90, en 28 días |
+| última señal anotada | **2026-10-12 15:20** (hoy) | **2026-10-12 08:23** (hoy) |
+| resuelto hasta vela | 2026-10-09 | 2026-10-10 16:00 |
+| claves únicas juzgadas | 101 de 101 | 89 de 89 |
+
+**Los números reproducen sus capturas exactamente**: Swing app 65 % · 26 · −23 ·
+reversión 31 % · 32 · −598 · caída 10 % · 29 · −757. Intradía 37 % · 79 · −632 ·
+tendencia 20 % · 40 · −985 · rango 54 % · 39 · +353 · retroceso 60 % · 10 · +91.
+
+📌 Y **cero caducadas**: las 8 que el domingo 2026-08-09 dejó colgadas se
+resolvieron solas cuando el resolver aprendió a buscar la primera vela
+POSTERIOR. El arreglo de la rejilla limpia funcionó.
+
+## 2. ⚠️⚠️ EL DEFECTO: «comprar la caída» se anota con OTRA geometría que la que se aprobó
+
+`mkSetup` decide los niveles así:
+
+```js
+const esReversion = tipo === 'reversion'
+const { sl, tp } = esReversion ? nivelesReversion(p, compra) : { /* la de la APP */ }
+```
+
+O sea **por descarte**: todo lo que no sea reversión se lleva la geometría de la
+app. Y «comprar la caída» no es reversión, así que cae ahí dentro **en
+silencio**.
+
+| regla | se midió con | se ANOTA con | ¿cuadra? |
+|---|---|---|---|
+| reversión | vara 1:1 (1,5 ATR cada lado) | **1:1.00** · 70/70 pips | ✅ |
+| ruptura (lss) | objetivo fijo 1:1 | **1:1.00** · 145/145 pips | ✅ |
+| **comprar la caída** | **vara 1:1 (`simetrica`)** | **1:6.70** · 37/237 pips | ❌ |
+
+**Son dos estrategias distintas con el mismo nombre.** El listón se escribió
+para la primera; el registro real mide la segunda.
+
+### 📌 Y el propio repositorio tenía el diagnóstico escrito, para esta regla
+
+`lib/geometrias.mjs`, en el comentario de `simetrica`, palabra por palabra:
+
+> «Existe por una razón concreta: al comprar un par que viene cayendo, **el
+> mínimo reciente queda pegado al precio y el máximo de 20 días lejísimos**, así
+> que la geometría de la app **infla sola el resultado**.»
+
+Es literalmente la regla de la que hablamos: comprar el par que hace mínimo de
+10 días. El mínimo de 10 días **ES el de hoy por definición de la regla**, así
+que el stop sale a `lo10 − 0,5 × ATR` = **medio ATR** del precio. Y el mismo
+archivo mide ese caso: *«el stop sale a menos de un ATR y lo tumba el movimiento
+normal de un día cualquiera… acertaron el 15 %»*. **El real es 10 %.**
+
+### Las dos consecuencias, y la segunda es la mala
+
+1. **El equilibrio cambia de sitio.** Con 1:6.70 basta acertar el **13 %** para
+   empatar, y va al 10 % ±18. Con la vara 1:1 haría falta el 50 %. **El −757 no
+   dice lo que parece decir**: no es «la regla falla por 40 puntos», es una
+   geometría de lotería midiéndose contra el listón de otra.
+2. ⚠️ **Las 29 operaciones no sirven ni para confirmar ni para desmentir el
+   listón.** Hay que arreglar la geometría, y el contador de esa regla **vuelve
+   a cero**: del 2026-09-07 al 2026-10-12 se perdió midiendo lo que no era.
+
+⚠️ **El arreglo NO es «ponerle la vara 1:1 y seguir contando».** Es
+`tipo === 'caida'` también en `nivelesReversion`, un PR con su prueba, y la
+nota de que el registro arranca de nuevo. **No se toca sin que Néstor lo
+confirme** — mover la geometría de una regla que lleva anotando dos meses no se
+hace de pasada.
+
+📌 **Es la QUINTA o SEXTA vez que una condición escrita por descarte se traga en
+silencio lo que vino después** (`esSombra`, `ventasPausadas`, `esDeLaApp`,
+`filasOtras`, la regla de Firestore, y ahora la geometría). Y es la primera que
+muerde en los NIVELES, o sea en el número que decide si una operación gana.
+
+## 3. La reversión SÍ se anota bien, y su registro real CONTRADICE su backtest
+
+Aquí no hay defecto, y por eso la discrepancia vale.
+
+| | ops | acierto | equilibrio | |
+|---|---:|---:|---:|---|
+| backtest, 1.436 días, vara 1:1 | 870 | **54 %** | 50 % | gana |
+| **registro real** | **32** | **31 % ±17** | 50 % | pierde |
+
+**z = −2,58 · p = 0,0098.** O sea: si el backtest tuviera razón, un resultado
+así de malo sobre 32 operaciones pasa **una vez de cada cien**. No es ruido.
+
+⚠️ **Y eso NO significa que yo le diera números falsos.** Los dos están medidos:
+uno sobre cinco años de velas, el otro sobre dos meses de registro limpio hacia
+adelante. **Lo que significa es que no se han puesto de acuerdo** — que es
+exactamente la razón por la que esa regla corre en la sombra y no se propone, y
+está escrito en este archivo desde el 2026-10-07 («EL AVISO NO AFIRMA EL
+SIGNO»).
+
+📌 **La app de Swing, en cambio, NO tiene discrepancia:** 65 % real contra 56 %
+del backtest, z = +0,96, perfectamente compatible. Y con **−23 pips** teniendo
+el 65 % de acierto — porque su geometría exige el **60 %** para empatar. Es el
+mejor ejemplo real que ha dado el proyecto de que el acierto sin el tamaño al
+lado no dice nada.
+
+## 4. ⚠️ SU PROPUESTA ESTÁ INVERTIDA, y el registro real lo dice solo
+
+Pidió cambiar las señales de la app por las dos de la sombra. En el registro
+real, contra el punto de equilibrio que cada geometría exige:
+
+| regla de Swing | real | hace falta | |
+|---|---:|---:|---|
+| **la app** | **65 %** | 60 % | ✅ **la única por encima** |
+| reversión | 31 % | 50 % | ❌ |
+| comprar la caída | 10 % | 13 % | ❌ (y midiendo otra cosa) |
+
+**Cambiar una por otras sería cambiar la única que va por encima de su listón
+por las dos que van por debajo.** Con 26 operaciones (±19) tampoco es para
+celebrar — pero la dirección de la propuesta es la contraria a lo que dicen los
+datos de hoy.
+
+## 5. ✅ EL HALLAZGO QUE SÍ VALE, y está en Intradía: rango contra tendencia
+
+| modo | ops | acierto | equilibrio | pips | contra el backtest (38 %) |
+|---|---:|---:|---:|---:|---|
+| **rango** | 39 | **54 % ±16** | 40 % | **+353** | z = +2,04 · **mejor**, p = 0,042 |
+| **tendencia** | 40 | **20 % ±15** | 37 % | **−985** | z = −2,35 · **peor**, p = 0,019 |
+
+**Diferencia 34 puntos · z = +3,32 · p = 0,0009** — una vez de cada 1.100 por
+azar. Los márgenes **no se solapan**, que es lo primero que hay que mirar en
+este proyecto.
+
+📌 **Y NO es troceo a posteriori**, que es lo que lo hace distinto de los
+controles que se rechazaron (confluencia, barrido de liquidez): `tipo` lo escribe
+el vigía **en el momento de la señal**, es una distinción de diseño de la app de
+hace meses, no una partición que yo buscara después de ver la tabla.
+
+⚠️ **Lo que sigue en pie antes de tocar nada:** son 79 operaciones, dos
+comparaciones, y el promedio de los dos modos (37 %) **esconde los dos
+comportamientos** — exactamente la razón por la que el 2026-09-16 se separaron en
+pantalla. Apagar el modo tendencia cambiaría las señales de la app, así que va al
+banco de pruebas con su listón escrito antes, como todo lo demás. **Van ocho
+familias de filtros medidas y ocho fallando**, y esto no es un filtro: es apagar
+media app.
+
+## 6. Sí, hay pruebas con 3-5 años de velas de la idea contraria. Están todas
+
+Para no volver a buscarlo:
+
+| medición | cuándo | días | resultado |
+|---|---|---:|---|
+| Reversión M2 (comprar lo débil + RSI estirado) | 2026-09-03 | 1.436 | **+0,085** con spread · aguanta 1 pip de swap |
+| «Comprar la caída» C10, preregistrada | 2026-09-07 | 1.436 | **+0,087** · pasó los 6 criterios |
+| …con rejilla limpia y swap por noches | 2026-10-06 | 1.343 | **+0,041** · **falla el swap** (−0,003) |
+| Barrido de liquidez, 5 tamaños | 2026-09-04 | 1.436 | los cinco pierden |
+| Rejilla de stop y objetivo, 12 combinaciones | 2026-08-25 | 1.436 | las doce pierden |
+| NFX-LSS en D1 / H1 / M15 / H4 | 2026-09-18 al 29 | — | −0,08 / −0,14 / −0,16 / −0,03 |
+| Breakeven, 5 niveles de armado | 2026-10-07 | 1.343 | 0 de 5 mejoran |
+
+## 7. Para los suscriptores — guardado tal cual lo pidió
+
+Va con las diez de la serie (el volumen, TradingView, la correlación, el swap,
+la actividad, el margen de error, Historial contra Diario, las apps contra el
+mercado, el oro y la rejilla):
+
+> **Y la salida fácil es la trampa: bajar el umbral de 1:1.5 haría sonar el
+> celular, y lo haría sonar con setups medidos perdiendo. Un celular que suena
+> más no es una app mejor. Que esté callado ES la información.**
+
+📌 **Por qué esto vende, igual que las otras diez:** todo el sector vende
+«señales todos los días», y la cantidad es justo lo que no se puede prometer sin
+mentir. Aquí el silencio tiene un número detrás — el 2026-09-21 se contó: de 25
+señales registradas, **22 tenían el objetivo más cerca que el stop y solo 1
+llegó a 1:1.5**. Y bajar el umbral para que suene más es la única forma segura
+de empeorar el producto mientras parece mejorarlo.
+
+⚠️ Y el matiz que lo vuelve honesto en vez de una excusa: **esto no dice que el
+silencio sea bueno.** Dice que el filtro está contando la verdad sobre un sistema
+que mide −0,03. Lo que hay que resolver no es el umbral: es encontrar una regla
+de ENTRADA con ventaja, que es para lo que corren las tres de la sombra.
