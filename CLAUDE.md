@@ -9856,3 +9856,141 @@ el 0,25× pase**: para ese momento exacto se escribe el listón antes.
 ⚠️ Y **no cierra** la gestión de la operación en general: lo medido es mover el
 stop a la entrada, no un trailing ni salidas parciales. Cualquiera de esas dos
 es una medición propia, con su propio listón.
+
+---
+
+# El reloj de fuera, COMPROBADO (2026-10-12). Los siete en su minuto
+
+Quedaba escrito como pendiente: *«PUESTO NO ES COMPROBADO, y el sábado no puede
+comprobarlo… el reparto solo se ve el lunes»*. Ya se vio. **Los siete programas
+que piden precios pulsaron hoy en su minuto, sin una sola coincidencia.**
+
+| programa | minuto que le toca | pulso real del 2026-10-12 (UTC) |
+|---|---:|---|
+| vigía de Swing | :20 | **15:20:21** ✅ |
+| vigía de Intradía | :23 | **00:23:20** ✅ |
+| publicador de Intradía | :26 | **00:26:20** ✅ |
+| publicador de Swing | :29 | **11:29:21** ✅ |
+| reporte de Swing | :32 | **15:32:20** ✅ |
+| reporte de Intradía | :35 | **13:35:20** ✅ |
+| oro de Swing | :38 | **07:38:20** ✅ |
+
+Más los dos que no gastan créditos y van los dos al :20 a propósito: tasas de
+Swing **06:20:20** y COT **07:20:20** (ése del 2026-10-11).
+
+📌 **Y la comparación que lo convierte en prueba y no en casualidad.** Los
+últimos pulsos antes de que Néstor pegara el Worker nuevo —el viernes 9— salieron
+así:
+
+```
+viernes  23:20:50   vigía de Intradía        ← juntos, al :20
+viernes  23:20:52   publicador de Intradía
+viernes  15:20:55   reporte de Swing         ← también al :20
+```
+
+Tres programas en el mismo minuto, que es exactamente lo que provocó el **429**
+del 2026-10-07 (35 consultas en 5 segundos contra un límite de 8 por minuto, y
+el que murió fue el vigía de Swing, el que escribe el historial). Hoy esos
+mismos tres salen a :23, :26 y :32.
+
+⚠️ **El segundo del pulso también cambió, y conviene saber por qué:** antes era
+`:20:5x` y ahora es `:xx:2x`. El cron pasó de `20 * * * *` a `* * * * *`, así que
+el Worker se despierta al principio de cada minuto en vez de al minuto 20 de la
+hora. **Si algún día los pulsos vuelven al segundo 5x, es que el cron volvió al
+viejo** — es un indicio gratis de qué versión está puesta, sin tener que abrir
+Cloudflare.
+
+**Lo que sigue sin comprobarse, y no es esto:** que el token no caduque. El día
+que caduque, todo vuelve a llegar con horas de retraso **en silencio**, y lo
+único que lo canta es `puntualidad.yml` volviéndose rojo.
+
+---
+
+# ⚠️⚠️ La escala 0-10 de la fuerza NO mide cuánta diferencia hay. Me engañó a mí
+
+Salió el mismo día, leyendo el reporte de Intradía con Néstor delante. **Es un
+error mío, dicho con seguridad en el chat, y de los que este archivo lleva meses
+coleccionando.** Vale para las DOS apps.
+
+## Lo que dije, y es falso
+
+Tres reportes seguidos de Intradía salieron **sin una sola señal** (apertura de
+Asia, apertura de Londres y el diario de las 8). En el tercero la fuerza salía
+así:
+
+```
+CAD 10.0 · USD 6.6 · AUD 6.3 · GBP 6.1 · JPY 5.0 · NZD 2.9 · EUR 2.0 · CHF 0.0
+```
+
+Y le escribí: *«hay diferencia de fuerza de sobra — 10.0 contra 0.0 es el hueco
+máximo posible»*, y que lo que faltaba era que el precio **retrocediera hasta su
+media rápida**.
+
+**Las dos mitades eran falsas.**
+
+## 1. El 10 y el 0 están SIEMPRE, por construcción
+
+```js
+esc[c] = ((raw[c] - mn) / (mx - mn)) * 10
+```
+
+Es una normalización de mínimo a máximo: **la divisa más débil del día vale 0 y
+la más fuerte vale 10, siempre, por pequeña que sea la diferencia real.** Un
+«10.0 contra 0.0» no dice que haya mucha diferencia — dice que una es la primera
+y otra la última, que es verdad todos los días del año.
+
+Los números crudos del barrido de las 15:23 de ese día lo enseñan:
+
+| | |
+|---|---:|
+| mayor diferencia cruda de todos los pares (USD/CHF) | **0,31** |
+| umbral que hay que pasar a esa hora (`thr` 0,5 × factor 1,19) | **0,59** |
+
+O sea que el par con más divergencia del día estaba **a la mitad** de lo que se
+pide. Con `USD` en 10,0 y `CHF` en 0,0 en pantalla.
+
+## 2. Y el retroceso a la media rápida NO es la regla de la app
+
+Es `clasificarRetroceso`, que es **la regla de la SOMBRA** (el experimento del
+retroceso, el que corre sin proponerse). La regla viva es `clasificar`, y no pide
+ningún retroceso.
+
+📌 **El motivo de fondo de mi error es el de siempre con otra cara:** confundí
+la regla del experimento con la de la app, dos funciones del mismo archivo. Es
+hermano de haberle repetido a Néstor una frase cierta **del banco de pruebas**
+al lado de los números **del historial** (2026-10-07), que la volvía falsa.
+
+## La explicación verdadera, que además es más interesante
+
+La regla viva tiene esta línea al final:
+
+```js
+if (Math.abs(p.dif) > thr) return 'VIGILAR'
+```
+
+Así que **si hubiera divergencia suficiente y faltara cualquier otra condición,
+el par saldría al menos como «En vigilancia»**. El reporte decía «En vigilancia:
+ninguno». Eso solo puede significar una cosa: **ningún par pasó el umbral de
+fuerza.** No es que falte una segunda condición — es que falla la primera.
+
+⚠️ **Y el umbral SUBE en el solape de Londres con Nueva York** (factor 1,19 a
+las 15 UTC), a propósito: a esa hora todo se mueve más, así que se exige más
+divergencia para creerla. La hora de más actividad es la que pide más.
+
+## Lo que esto deja escrito para la próxima vez
+
+⚠️ **Antes de decir «hay diferencia de fuerza», mirar `dif`, no la escala.** La
+escala es un **orden**, no una magnitud. Está en el reporte y en la app de las
+dos apps, y es la cara que ve Néstor.
+
+📌 **Y la pregunta que esto abre, sin construir nada:** el reporte enseña la
+escala 0-10 y **no enseña en ningún sitio si algún par llegó al umbral**. Si a mí
+me engañó teniendo el código delante, a un suscriptor le va a engañar seguro. La
+salida natural sería una línea del tipo «hoy el par con más divergencia iba a
+0,31 y hacía falta 0,59», que convierte «no hay señales» en información en vez de
+en un hueco. **No se hace sin que Néstor lo pida** — son 13 idiomas × 2 apps, y
+es cambiar lo que la gente lee.
+
+⚠️ Lo que NO es: un fallo de la app. Tres reportes sin señales con el umbral sin
+pasar es el filtro diciendo la verdad, igual que el silencio del celular en Swing
+cuando ninguna señal llega a 1:1.5. **Un reporte vacío no es un reporte roto.**
