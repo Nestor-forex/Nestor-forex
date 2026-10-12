@@ -22,7 +22,7 @@
 // historial del código no quede sepultado bajo un commit diario.
 
 import { fileURLToPath } from 'node:url'
-import { computarBarrido, derivarVista } from '../src/lib/marketCalc.js'
+import { computarBarrido, derivarVista, usaVaraSimetrica } from '../src/lib/marketCalc.js'
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
 import {
   compararConAnterior,
@@ -197,6 +197,24 @@ for (const { id, s } of nuevas) {
       // rango, así que sus setups no traen `tipo` y sin esto quedaría `null`
       // en el historial para siempre.
       tipo: s.tipo || 'tendencia',
+      // ⚠️⚠️ CON QUÉ VARA se pusieron el stop y el objetivo (2026-10-12).
+      //
+      // Existe por un fallo real: «comprar la caída» se APROBÓ midiéndola con
+      // la vara simétrica (1,5 ATR a cada lado, R/B 1:1) y el vigía la ANOTÓ
+      // dos meses con la geometría de la app (R/B 1:6,70, stop a medio ATR).
+      // Dos estrategias distintas con el mismo nombre, y nada falló.
+      //
+      // Con esto el historial dice de sí mismo con qué vara se midió cada
+      // línea, así que el día que una geometría cambie, las de antes y las de
+      // después NO se pueden promediar sin darse cuenta. Es la alternativa a
+      // una fecha escrita a mano: una fecha depende de cuándo se fusionó el
+      // cambio, y esto depende del dato.
+      //
+      // Mismo patrón condicional que `sombra` y `huboSweep`: solo se escribe
+      // cuando es verdad, así que las 135 líneas ya escritas se siguen leyendo
+      // igual y no hay que reescribir nada. Su ausencia en una línea de
+      // `caida` es justo lo que la marca como de la geometría vieja.
+      ...(usaVaraSimetrica(s.tipo) ? { vara: 'simetrica' } : {}),
       // Solo va cuando es verdad: así las líneas ya escritas del historial se
       // siguen leyendo igual (sin el campo = no es de sombra) y no hay que
       // reescribir nada.
@@ -395,6 +413,12 @@ linea('Reversión en paralelo (la regla contraria a la app)', resumen.reversion)
 // nadie: la regla se habría anotado durante meses sin aparecer en el log de
 // ninguna corrida. Es el mismo descuido que ya se cazó en `filasTodas`.
 linea('«Comprar la caída» en paralelo (también en la sombra)', resumen.caida)
+// ⚠️ El cubo de la geometría VIEJA. Se imprime por el mismo motivo que el de
+// arriba: desde el 2026-10-12 las de antes del arreglo no suman al porcentaje
+// de «comprar la caída», y un cubo que no se imprime en ningún sitio es un
+// cubo que nadie mira. Baja a cero operaciones nuevas solo porque el contador
+// se reinició, no porque la regla dejara de anotarse.
+linea('  …con la geometría vieja (NO suman: otra vara)', resumen.caidaVieja)
 // ⚠️ Y ésta, desde el 2026-09-20. Se imprime aquí porque NO se enseña en
 // ninguna pantalla de la app —lo pidió Néstor y es lo correcto: su estado es
 // «en observación»—, y una regla que no se puede ver en ningún sitio se pasa

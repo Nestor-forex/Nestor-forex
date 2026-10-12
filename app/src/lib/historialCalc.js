@@ -86,8 +86,30 @@ export function resumir(resultados) {
   // queda del indicador del concurso cuando se le quitan sus tres señas de
   // identidad— se anota en paralelo con `tipo: 'lss'`.
   const deReversion = todasJuzgadas.filter((r) => r.tipo === 'reversion')
-  const deCaida = todasJuzgadas.filter((r) => r.tipo === 'caida')
   const deRuptura = todasJuzgadas.filter((r) => r.tipo === 'lss')
+
+  // ⚠️⚠️ «COMPRAR LA CAÍDA» SE PARTE EN DOS, Y NO ES UN CAPRICHO (2026-10-12).
+  //
+  // Esa regla se APROBÓ midiéndola con la vara simétrica (stop y objetivo a
+  // 1,5 ATR, R/B 1:1) y el vigía la ANOTÓ desde el 2026-09-07 con la geometría
+  // de la app: R/B 1:6,70 de mediana, stop a medio ATR y objetivo a 237 pips.
+  // `mkSetup` decidía la vara POR DESCARTE («todo lo que no sea reversión») y
+  // la regla nueva cayó ahí dentro sin que nada fallara.
+  //
+  // Son DOS estrategias con el mismo nombre, y promediarlas es exactamente lo
+  // que este archivo lleva meses prohibiendo: con 1:6,70 basta acertar el 13 %
+  // para empatar y con 1:1 hace falta el 50 %, así que un porcentaje que las
+  // mezcle no responde ninguna de las dos preguntas.
+  //
+  // Se separan por el campo `vara` que escribe el vigía, NO por una fecha: una
+  // fecha dependería de cuándo se fusionó el arreglo y esto depende del dato.
+  // Las líneas viejas no lo traen, y esa ausencia es justo lo que las marca.
+  //
+  // ⚠️ Y las viejas NO desaparecen: van en su propio cubo y la pantalla las
+  // nombra. Es la lección del cajón `otros` — lo que no encaja en ningún sitio
+  // se anota durante meses y nadie lo ve.
+  const deCaida = todasJuzgadas.filter((r) => r.tipo === 'caida' && r.vara === 'simetrica')
+  const deCaidaVieja = todasJuzgadas.filter((r) => r.tipo === 'caida' && r.vara !== 'simetrica')
   const esDeLaApp = (r) => !r.tipo || r.tipo === 'tendencia'
   const ventasPausadas = todasJuzgadas.filter((r) => r.sombra && esDeLaApp(r))
 
@@ -113,6 +135,9 @@ export function resumir(resultados) {
     todas: cuenta(juzgadas),
     reversion: cuenta(deReversion),
     caida: cuenta(deCaida),
+    // Las de la geometría que no era la aprobada. No suman a `caida` ni a
+    // nada: existen para que se vea que existieron. Ver la nota de arriba.
+    caidaVieja: cuenta(deCaidaVieja),
     ruptura: cuenta(deRuptura),
     otros: cuenta(otros),
     ventasPausadas: cuenta(ventasPausadas),

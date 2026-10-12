@@ -23,7 +23,7 @@
 // anterior a estos números. Sin eso, cualquier número se lee como una
 // confirmación de algo.
 
-import { atrWilder } from '../../src/lib/marketCalc.js'
+import { atrWilder, ATR_REVERSION } from '../../src/lib/marketCalc.js'
 
 // El mismo ATR que usa la app: Wilder de 14.
 //
@@ -40,7 +40,12 @@ export const COJIN_ATR = 0.5
 // Cuántas velas mira ese nivel estructural.
 export const VELAS_LO10 = 10
 // La reversión de la sombra: `sl = c ∓ 1,5 × ATR`, o sea el ATR ES el stop.
-export const ATR_REVERSION = 1.5
+//
+// ⚠️ Se REEXPORTA desde `marketCalc.js` en vez de tener aquí su propio 1.5.
+// Hasta el 2026-10-12 eran dos copias, y dos copias de un número que decide
+// una geometría se separan sin que falle nada — es el fallo que el umbral de
+// fuerza tenía en nueve sitios. Quien lo necesite lo importa de un solo sitio.
+export { ATR_REVERSION }
 
 // Cuándo se considera que una vela es «estrecha»: por debajo de esta fracción
 // del rango MEDIANO de su propio par.

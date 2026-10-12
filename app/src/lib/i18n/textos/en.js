@@ -444,6 +444,7 @@ export default {
       'The fourth rule, which enters when price breaks the last high or low it made. ⚠️ It is UNDER OBSERVATION and unvalidated. It is not a recommendation — it is shown so it can be followed, not traded.',
     esReversion: 'REVERSION',
     esCaida: "BUY THE DIP",
+    caidaVieja: ({ n, acierto, pips }) => `Before this, ${n} trades were logged with a stop and target that were not the ones measured when the rule was approved. They do NOT count, and this rule's record starts again from zero (those gave ${acierto} % and ${pips} pips). They stay visible because they really happened.`,
     caidaTitulo: "History of “buy the dip”",
     caidaIntro:
       "The third rule: it buys a pair on the day it hits its 10-day low. Kept separate on purpose — it is a different experiment, and mixing it with the others would answer none of the three questions.",

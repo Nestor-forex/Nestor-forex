@@ -113,12 +113,43 @@ console.log('\n7. ⚠️ NINGUNA regla de la sombra se enseña sin su aviso')
   // la lista vacía y esta comprobación pasaría en verde sin mirar nada.
   comprobar(`se encontraron las reglas de la sombra de la pantalla (${reglas.join(', ')})`, reglas.length >= 3)
 
+  // ⚠️⚠️ LOS CUBOS QUE NO LLEVAN AVISO, CON EL MOTIVO ESCRITO.
+  //
+  // La lista va A MANO, igual que PRIMOS en `gemelos.mjs` y que `NO_SE_PASAN`
+  // en `prueba-cableado.mjs`, y por la misma razón: lo que no esté en ninguna
+  // de las dos listas es un descuido y tiene que fallar. Si se excluyera «todo
+  // lo que no tenga aviso», un experimento nuevo al que se le olvidara el
+  // aviso saldría en positivo sin nada al lado — que es justo lo que este
+  // archivo entero existe para impedir.
+  const SIN_AVISO = {
+    caidaVieja:
+      'NO es un experimento vivo: son las operaciones que «comprar la caída» anotó hasta el 2026-10-12 con una geometría que no era la aprobada. Su número no va camino de 150 porque ese registro está cerrado, así que un aviso de «faltan N» sería falso. Lo que necesita es la frase que dice por qué no cuentan, y la tiene.',
+  }
+
   for (const r of reglas) {
+    if (r in SIN_AVISO) continue
     comprobar(
       `\`${r}\` enseña su número CON el aviso`,
       PANTALLA.includes(`<AvisoSombra ops={resumen.${r}.total} />`)
     )
   }
+
+  // Y al revés: una excusa que ya no corresponde a nada tiene que irse, o la
+  // lista acabaría siendo un cajón de nombres muertos que no protegen nada.
+  const excusasMuertas = Object.keys(SIN_AVISO).filter((k) => !reglas.includes(k))
+  comprobar(
+    excusasMuertas.length === 0 ? 'ningún motivo escrito sobra' : `motivos de algo que ya no se pinta: ${excusasMuertas.join(', ')}`,
+    excusasMuertas.length === 0
+  )
+  for (const [k, porque] of Object.entries(SIN_AVISO)) console.log(`       sin aviso a propósito · ${k}: ${porque.slice(0, 70)}…`)
+
+  // ⚠️ Pero SÍ tiene que decir por qué no cuentan, y en los 13 idiomas. Sin
+  // esa frase, 29 operaciones aparecerían en pantalla sin que nada explicara
+  // que no suman — peor que esconderlas, porque se leerían como que sí.
+  comprobar(
+    'la pantalla pinta el texto que explica la geometría vieja',
+    /t\('historial\.caidaVieja'/.test(PANTALLA)
+  )
 }
 
 console.log('\n8. ⚠️ Los textos de cada regla ya NO escriben el conteo a mano')

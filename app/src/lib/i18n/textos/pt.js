@@ -444,6 +444,7 @@ export default {
       'A quarta regra, que entra quando o preço rompe a última máxima ou mínima que marcou. ⚠️ Está EM OBSERVAÇÃO e sem validar. Não é uma recomendação — é mostrada para poder ser acompanhada, não para ser operada.',
     esReversion: 'REVERSÃO',
     esCaida: "COMPRAR A QUEDA",
+    caidaVieja: ({ n, acierto, pips }) => `Antes disto foram registadas ${n} operações com um stop e um objetivo que não eram os medidos ao aprovar a regra. NÃO contam, e o histórico desta regra recomeça do zero (aquelas davam ${acierto} % e ${pips} pips). Ficam à vista porque aconteceram de verdade.`,
     caidaTitulo: "Histórico de «comprar a queda»",
     caidaIntro:
       "A terceira regra: compra o par no dia em que atinge a mínima de 10 dias. Vai à parte de propósito — é outra experiência, e misturá-la não responderia a nenhuma das três perguntas.",

@@ -527,18 +527,47 @@ const razonReversion = (p, esc, t) =>
 // más ambicioso, lo que el vigía anote en la sombra ya no sería comparable con
 // lo medido, y la espera no serviría para nada — estaríamos midiendo otra cosa
 // y creyendo que confirmamos esta.
-const ATR_REVERSION = 1.5
-const nivelesReversion = (p, compra) => ({
+// ⚠️ Se exporta porque `scripts/lib/rejilla-diaria.mjs` tenía su propia copia
+// del 1.5 escrita a mano. Es el mismo fallo que el umbral de fuerza tenía en
+// nueve sitios (2026-10-12): dos copias del número que decide una geometría se
+// separan sin que falle nada. Un solo sitio, y quien lo necesite lo importa.
+export const ATR_REVERSION = 1.5
+const nivelesSimetricos = (p, compra) => ({
   sl: compra ? p.c - ATR_REVERSION * p.atrAbs : p.c + ATR_REVERSION * p.atrAbs,
   tp: compra ? p.c + ATR_REVERSION * p.atrAbs : p.c - ATR_REVERSION * p.atrAbs,
 })
 
+// ⚠️⚠️ QUÉ REGLAS LLEVAN LA VARA SIMÉTRICA, ESCRITO POR LO QUE SON.
+//
+// Hasta el 2026-10-12 esto era `tipo === 'reversion'` dentro de `mkSetup`, o
+// sea que **todo lo demás se llevaba la geometría de la app por descarte**. Y
+// «comprar la caída» no es reversión, así que cayó ahí dentro EN SILENCIO
+// durante dos meses: se aprobó midiéndola con la vara simétrica (+0,041 por 1R)
+// y el vigía la anotaba con R/B 1:6.70 — stop a medio ATR, objetivo a 237 pips.
+// Dos estrategias distintas con el mismo nombre, y el listón escrito para una
+// juzgando a la otra.
+//
+// 📌 Y el propio repositorio tenía el diagnóstico escrito para ESTA regla, en
+// el comentario de `simetrica` en `scripts/lib/geometrias.mjs`: «al comprar un
+// par que viene cayendo, el mínimo reciente queda pegado al precio y el máximo
+// de 20 días lejísimos, así que la geometría de la app infla sola el
+// resultado». El mínimo de 10 días ES el de hoy por definición de la regla.
+//
+// ⚠️ La lista va ENUMERADA a propósito, no por descarte, y es el sexto caso de
+// esa familia en este proyecto (`esSombra`, `ventasPausadas`, `esDeLaApp`,
+// `filasOtras`, la regla de Firestore). Una regla de sombra NUEVA nace con la
+// geometría de la app, que es la que la app sabe medir — y si su listón pide
+// otra, hay que venir aquí a mano. Eso es el lado seguro: equivocarse hacia
+// «mide la geometría de la app» se VE en el R/B del historial; equivocarse
+// hacia «se la cambié sin querer» rompe la comparación con lo medido.
+export const usaVaraSimetrica = (tipo) => tipo === 'reversion' || tipo === 'caida'
+
 const mkSetup = (p, lado, esc = {}, t, tipo = 'tendencia') => {
   const d = p.dec
   const compra = lado === 'COMPRA'
-  const esReversion = tipo === 'reversion'
-  const { sl, tp } = esReversion
-    ? nivelesReversion(p, compra)
+  const simetrica = usaVaraSimetrica(tipo)
+  const { sl, tp } = simetrica
+    ? nivelesSimetricos(p, compra)
     : {
         sl: compra ? p.lo10 - 0.5 * p.atrAbs : p.hi10 + 0.5 * p.atrAbs,
         tp: compra ? Math.max(p.hi20, p.c + 2 * p.atrAbs) : Math.min(p.lo20, p.c - 2 * p.atrAbs),
@@ -594,10 +623,9 @@ const mkSetup = (p, lado, esc = {}, t, tipo = 'tendencia') => {
     entrada: t('calc_barrido.entrada', { precio: p.c.toFixed(d), ema: p.e20.toFixed(d) }),
     sl: sl.toFixed(d) + (compra ? t('calc_barrido.slCompra') : t('calc_barrido.slVenta')),
     tp: tp.toFixed(d),
-    // ⚠️ EL AVISO DE «R/B BAJO» NO SE LE PONE A LA REVERSIÓN, y no es un
-    // capricho: su 1:1 es DELIBERADO. Es la geometría exacta con la que se
-    // midió la regla (stop y objetivo a 1,5 ATR de cada lado), y con la que el
-    // vigía la lleva anotando desde el 2026-08-18. Cambiarla rompería la
+    // ⚠️ EL AVISO DE «R/B BAJO» NO SE LE PONE A LAS REGLAS DE VARA SIMÉTRICA, y
+    // no es un capricho: su 1:1 es DELIBERADO. Es la geometría exacta con la
+    // que se midieron, y con la que el vigía las anota. Cambiarla rompería la
     // comparación con lo medido.
     //
     // Salió al mirar la pantalla en un navegador, y el build jamás lo habría
@@ -607,8 +635,8 @@ const mkSetup = (p, lado, esc = {}, t, tipo = 'tendencia') => {
     //
     // El umbral de 1,5 sigue mandando en las señales de la app, que sí buscan
     // un objetivo más lejos que el stop.
-    rr: '1:' + rr.toFixed(1) + (rr < 1.5 && !esReversion ? t('calc_barrido.rbBajo') : ''),
-    rrOk: esReversion || rr >= 1.5,
+    rr: '1:' + rr.toFixed(1) + (rr < 1.5 && !simetrica ? t('calc_barrido.rbBajo') : ''),
+    rrOk: simetrica || rr >= 1.5,
     inval: compra
       ? t('calc_barrido.invalCompra', { sl: sl.toFixed(d), b: p.b })
       : t('calc_barrido.invalVenta', { sl: sl.toFixed(d), q: p.q }),

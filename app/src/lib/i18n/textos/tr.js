@@ -439,6 +439,7 @@ export default {
       'Dördüncü kural: fiyat işaretlediği son tepe ya da dibi kırdığında girer. ⚠️ GÖZLEM ALTINDA ve doğrulanmamış. Bir öneri değil — işlem yapmak için değil, takip edilebilsin diye gösteriliyor.',
     esReversion: 'TERS',
     esCaida: "DÜŞÜŞÜ SATIN AL",
+    caidaVieja: ({ n, acierto, pips }) => `Bundan önce ${n} işlem, kural onaylanırken ölçülenlerden farklı bir zarar durdur ve hedefle kaydedildi. SAYILMAZLAR ve bu kuralın geçmişi sıfırdan yeniden başlar (onlar ${acierto} % ve ${pips} pips verdi). Gerçekten olduğu için görünür kalıyorlar.`,
     caidaTitulo: "«Düşüşü satın al» geçmişi",
     caidaIntro:
       "Üçüncü kural: pariteyi 10 günlük dibine değdiği gün satın alır. Bilerek ayrı tutuluyor — farklı bir deney ve karıştırmak üç sorudan hiçbirini yanıtlamaz.",

@@ -444,6 +444,7 @@ export default {
       'La quatrième règle, qui entre quand le prix casse le dernier sommet ou creux qu\'il a marqué. ⚠️ Elle est EN OBSERVATION et non validée. Ce n\'est pas une recommandation — elle est affichée pour pouvoir être suivie, pas pour être tradée.',
     esReversion: 'INVERSION',
     esCaida: "ACHETER LA BAISSE",
+    caidaVieja: ({ n, acierto, pips }) => `Avant cela, ${n} opérations ont été enregistrées avec un stop et un objectif qui n'étaient pas ceux mesurés lors de la validation de la règle. Elles ne comptent PAS, et l'historique de cette règle repart de zéro (elles donnaient ${acierto} % et ${pips} pips). Elles restent visibles car elles ont réellement eu lieu.`,
     caidaTitulo: "Historique de « acheter la baisse »",
     caidaIntro:
       "La troisième règle : elle achète une paire le jour où elle touche son plus bas de 10 jours. Séparée à dessein — c'est une autre expérience, et tout mélanger ne répondrait à aucune des trois questions.",

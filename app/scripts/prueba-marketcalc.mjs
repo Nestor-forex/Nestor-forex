@@ -7,7 +7,7 @@
 // cambio dejó de ser aditivo y estaría alterando la app en casos donde no
 // debía.
 
-import { computarBarrido, derivarVista } from '../src/lib/marketCalc.js'
+import { computarBarrido, derivarVista, usaVaraSimetrica, ATR_REVERSION } from '../src/lib/marketCalc.js'
 
 let fallos = 0
 const comprobar = (bien, que) => {
@@ -210,6 +210,107 @@ console.log('\n6. La reversión está apagada y no se pisa con las señales de s
     revs.every((s) => (s.lado === 'COMPRA' ? s.crudo.sl < s.crudo.precio : s.crudo.sl > s.crudo.precio)),
     'y el stop cae del lado que le toca'
   )
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// ⚠️⚠️ «COMPRAR LA CAÍDA» LLEVA LA VARA CON LA QUE SE MIDIÓ (2026-10-12)
+// ─────────────────────────────────────────────────────────────────────────
+// EL FALLO QUE ESTO FIJA, y es el peor de su familia hasta hoy:
+//
+// La regla se APROBÓ midiéndola con la vara simétrica de `geometrias.mjs`
+// (`simetrica`: stop y objetivo a 1,5 ATR a cada lado, R/B 1:1). El vigía la
+// ANOTÓ dos meses con la geometría de la app: R/B 1:6,70 de mediana, stop a
+// medio ATR del precio y objetivo a 237 pips. Dos estrategias distintas con el
+// mismo nombre, y el listón de una juzgando a la otra.
+//
+// La causa: `mkSetup` elegía la vara con `tipo === 'reversion'`, o sea POR
+// DESCARTE. «comprar la caída» no es reversión, así que se llevó la de la app
+// sin que nada fallara. Es el sexto caso de esa familia en el proyecto.
+//
+// 📌 Y el propio repositorio tenía el diagnóstico escrito PARA ESTA REGLA, en
+// el comentario de `simetrica`: «al comprar un par que viene cayendo, el
+// mínimo reciente queda pegado al precio y el máximo de 20 días lejísimos, así
+// que la geometría de la app infla sola el resultado». El mínimo de 10 días ES
+// el de hoy por definición de la regla, así que el stop salía a medio ATR —
+// que el mismo archivo mide acertando el 15 %. El real fue el 10 %.
+console.log('\n7. ⚠️ «Comprar la caída» usa la vara simétrica, no la de la app')
+{
+  // ⚠️ MERCADO PROPIO, Y FORZADO A PROPÓSITO. Con el mercado de arriba salen
+  // CERO setups de caída —comprobado— y la prueba habría pasado comparando dos
+  // listas vacías, que es el agujero que este repo ya documentó dos veces. Así
+  // que la última vela hunde el EUR de golpe: eso hace mínimo nuevo de 10 días
+  // Y deja el cierre por debajo del suelo, que es lo que la regla pide.
+  const M = 80
+  const fs = Array.from({ length: M }, (_, i) => `2026-02-${String(i + 1).padStart(3, '0')}`)
+  const rs = {}
+  fs.forEach((d, i) => {
+    rs[d] = {
+      EUR: 0.92 + Math.sin(i / 6) * 0.004 - (i === M - 1 ? 0.05 : 0),
+      GBP: 0.78 + Math.sin(i / 4) * 0.002,
+      JPY: 150 + Math.sin(i / 5) * 0.8,
+      CHF: 0.88 + Math.sin(i / 7) * 0.003,
+      CAD: 1.36 + Math.sin(i / 9) * 0.004,
+      AUD: 1.52 + Math.sin(i / 5) * 0.005,
+      NZD: 1.66 + Math.sin(i / 8) * 0.005,
+    }
+  })
+  const b0 = computarBarrido(fs, rs)
+  const rp = {}
+  fs.forEach((d) => {
+    const fila = {}
+    for (const nombre of b0.pares.map((x) => x.name)) {
+      const [bb, qq] = nombre.split('/')
+      const c = (qq === 'USD' ? 1 : rs[d][qq]) / (bb === 'USD' ? 1 : rs[d][bb])
+      fila[nombre] = { c, h: c * 1.004, l: c * 0.996 }
+    }
+    rp[d] = fila
+  })
+  const datos = computarBarrido(fs, rs, rp)
+  const vista = derivarVista(datos, { thr: 0, incluirCaida: true, incluirVentas: true, incluirReversion: true })
+
+  // La guarda de siempre: sin esto, un mercado que no produjera señales dejaría
+  // todo lo de abajo pasando en verde sin mirar nada.
+  comprobar(vista.setupsCaida.length > 0, `el mercado forzado produce setups de caída (${vista.setupsCaida.length})`)
+
+  const todos1a1 = vista.setupsCaida.every((s) => {
+    const c = s.crudo
+    return Math.abs(Math.abs(c.tp - c.precio) - Math.abs(c.precio - c.sl)) < 1e-9
+  })
+  comprobar(todos1a1, 'sus niveles son 1:1, la vara con la que se aprobó la regla')
+
+  // Y el tamaño exacto, no solo la simetría: 1,5 ATR, que es lo que pide
+  // `simetrica` en `geometrias.mjs`. Sin esto, un 1:1 a cualquier distancia
+  // pasaría — y la distancia es justo lo que decide cuántas veces se toca.
+  const atrExacto = vista.setupsCaida.every((s) => {
+    const c = s.crudo
+    return Math.abs(Math.abs(c.precio - c.sl) - ATR_REVERSION * c.atrAbs) < 1e-9
+  })
+  comprobar(atrExacto, `el riesgo es exactamente ${ATR_REVERSION} × ATR`)
+
+  // ⚠️ LA QUE DE VERDAD MUERDE: con la geometría de la app el stop saldría del
+  // mínimo de 10 días —que en esta regla es el de HOY— así que a medio ATR, y
+  // el objetivo lejísimos. Si alguien devuelve el descarte, esto salta.
+  const comoLaApp = vista.setupsCaida.filter((s) => {
+    const c = s.crudo
+    return Math.abs(Math.abs(c.precio - c.sl) - 0.5 * c.atrAbs) < 1e-6 || c.rr > 1.5
+  })
+  comprobar(comoLaApp.length === 0, `ninguna lleva ya la geometría de la app (${comoLaApp.length} la llevan)`)
+
+  // El aviso de «R/B bajo» tampoco se le pone: su 1:1 es deliberado, igual que
+  // en la reversión. Marcarlo en ámbar diría que está mal lo que hace a
+  // propósito — el fallo que ya se cazó en navegador con las reversiones.
+  comprobar(
+    vista.setupsCaida.every((s) => s.rrOk === true),
+    'y no se le marca el R/B como bajo: su 1:1 es deliberado'
+  )
+
+  // La frontera, por si alguien amplía la lista sin pensar: la regla de la app
+  // NO lleva vara simétrica, y una regla que nadie ha inventado tampoco.
+  comprobar(
+    !usaVaraSimetrica('tendencia') && usaVaraSimetrica('reversion') && usaVaraSimetrica('caida'),
+    'la lista de reglas con vara simétrica está enumerada, no por descarte'
+  )
+  comprobar(!usaVaraSimetrica('loQueVengaManana'), '⚠️ y un tipo que nadie ha inventado NACE con la geometría de la app')
 }
 
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')

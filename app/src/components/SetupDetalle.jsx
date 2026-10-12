@@ -38,6 +38,7 @@
 
 import { useId, useState } from 'react'
 import { useT } from '../lib/i18n'
+import { usaVaraSimetrica } from '../lib/marketCalc'
 
 // Geometría del lienzo. El canal de la derecha queda libre para las pastillas.
 const W = 380
@@ -119,12 +120,17 @@ export default function SetupDetalle({ setup, corte, onVolver, onAnotar }) {
     bajos20.every(Number.isFinite)
   const f = (v) => v.toFixed(dec)
   const colorLado = compra ? 'var(--green)' : 'var(--red)'
-  // ⚠️ La reversión queda fuera del aviso de «R/B bajo»: su 1:1 es deliberado
-  // —es la geometría con la que se midió— y marcarlo en ámbar diría que está
-  // mal justo lo que hace a propósito. Mismo criterio que en `marketCalc.js`;
-  // este archivo tiene su propio cálculo, así que hay que arreglarlo en los
-  // dos o la tarjeta y el detalle dirían cosas distintas del mismo setup.
-  const rrOk = setup.tipo === 'reversion' || rr >= 1.5
+  // ⚠️ Las reglas de vara simétrica quedan fuera del aviso de «R/B bajo»: su
+  // 1:1 es deliberado —es la geometría con la que se midieron— y marcarlo en
+  // ámbar diría que está mal justo lo que hacen a propósito.
+  //
+  // 📌 Hasta el 2026-10-12 esta línea tenía su PROPIA copia de la condición
+  // (`setup.tipo === 'reversion'`), y su comentario avisaba de que había que
+  // arreglarla en los dos sitios o la tarjeta y el detalle dirían cosas
+  // distintas del mismo setup. Esa advertencia no bastó: al añadir «comprar la
+  // caída» se quedaron las dos iguales y las dos mal. Ahora la condición viene
+  // de `marketCalc.js`, que es quien decide la geometría — un solo sitio.
+  const rrOk = usaVaraSimetrica(setup.tipo) || rr >= 1.5
 
   // Dominio vertical: la serie más los niveles, para que ninguno quede fuera.
   // ⚠️ Con rango entran también los extremos: si no, las mechas se saldrían del

@@ -10320,3 +10320,118 @@ de empeorar el producto mientras parece mejorarlo.
 silencio sea bueno.** Dice que el filtro está contando la verdad sobre un sistema
 que mide −0,03. Lo que hay que resolver no es el umbral: es encontrar una regla
 de ENTRADA con ventaja, que es para lo que corren las tres de la sombra.
+
+---
+
+# La geometría de «comprar la caída», ARREGLADA (2026-10-12). Solo Swing
+
+Néstor: **«arregla la geometría de comprar la caída… pero no quiero que quede
+peor las apps»**. Se arregló, y lo primero que hay que decir es lo que NO hace:
+
+⚠️ **ESTE CAMBIO NO TOCA NI UNA SEÑAL DE LA APP.** «Comprar la caída» corre en
+la sombra: no se propone, no despierta el celular y no sale en el tablero. Lo
+único que cambia es **con qué stop y qué objetivo se anota en el historial**.
+Swing sigue en −0,03/−0,04 por unidad de riesgo antes y después.
+
+## Qué estaba mal
+
+`mkSetup` elegía la vara con `tipo === 'reversion'`, o sea **por descarte**: todo
+lo demás se llevaba la geometría de la app. Y la regla se había **aprobado**
+midiéndola con la vara simétrica de `geometrias.mjs`.
+
+| | se midió con | se anotaba con |
+|---|---|---|
+| reversión | 1,5 ATR a cada lado (1:1) | ✅ igual |
+| ruptura (lss) | objetivo fijo 1:1 | ✅ igual |
+| **comprar la caída** | **1,5 ATR a cada lado (1:1)** | ❌ **R/B 1:6,70 · stop 37 pips · objetivo 237** |
+
+📌 **Y el diagnóstico estaba escrito en el repositorio, para ESTA regla**, en el
+comentario de `simetrica`: *«al comprar un par que viene cayendo, el mínimo
+reciente queda pegado al precio y el máximo de 20 días lejísimos, así que la
+geometría de la app infla sola el resultado»*. El mínimo de 10 días **ES el de
+hoy por definición de la regla**, así que el stop salía a medio ATR — el caso
+que el mismo archivo mide acertando el 15 %. El real fue el 10 %.
+
+**Sexto caso de la familia** (`esSombra`, `ventasPausadas`, `esDeLaApp`,
+`filasOtras`, la regla de Firestore) y **el primero que muerde en los NIVELES**,
+o sea en el número que decide si una operación gana.
+
+## El arreglo, en cuatro piezas
+
+```
+src/lib/marketCalc.js      `usaVaraSimetrica(tipo)` — ENUMERADA, exportada
+src/components/SetupDetalle.jsx  importa el helper en vez de tener su copia
+scripts/vigia.mjs          escribe `vara: 'simetrica'` en la señal
+scripts/lib/resolver.mjs   lo arrastra al resultado
+src/lib/historialCalc.js   `caida` y `caidaVieja`, separados por `vara`
+```
+
+⚠️ **La lista va ENUMERADA, y una regla nueva NACE con la geometría de la app.**
+Es el lado seguro: equivocarse hacia «mide la geometría de la app» se VE en el
+R/B del historial; equivocarse hacia «se la cambié sin querer» rompe en silencio
+la comparación con lo medido. Hay comprobación de que un `tipo` inventado no
+entra solo.
+
+⚠️ **Se separa por el campo `vara`, NO por una fecha.** Una fecha dependería de
+cuándo se fusionó el arreglo; esto depende del dato. Las 135 líneas ya escritas
+no lo traen y esa ausencia es justo lo que las marca, con el mismo patrón
+condicional que `sombra` y `huboSweep` — no hubo que reescribir nada.
+
+⚠️ **Y `ATR_REVERSION` dejó de estar en dos sitios.** `rejilla-diaria.mjs` tenía
+su propia copia del 1.5 escrita a mano. Es el fallo del umbral de fuerza del
+2026-10-12 en pequeño; ahora se importa.
+
+## ⚠️⚠️ LO QUE ESTO CUESTA, Y HAY QUE DECIRLO ANTES QUE LO QUE GANA
+
+**El contador de «comprar la caída» vuelve a CERO.** Las 29 operaciones del
+2026-09-07 al 2026-10-12 midieron otra estrategia y no pueden confirmar ni
+desmentir su listón. Dos meses de registro perdidos para esa regla.
+
+**Y NO desaparecen de la pantalla.** Van en su propio cubo con una frase que
+dice qué son — esconderlas sería el fallo del cajón `otros`. Lo que no se puede
+es promediarlas: con 1:6,70 basta acertar el 13 % para empatar y con 1:1 hace
+falta el 50 %, así que un número que mezcle las dos no contesta ninguna de las
+dos preguntas.
+
+## En qué mejora, dicho sin inflarlo
+
+| | antes | ahora |
+|---|---|---|
+| señales que la app propone | las mismas | **las mismas** |
+| acierto de la app | 65 % real · −0,04 medido | **igual** |
+| lo que mide el experimento | una estrategia que nadie aprobó | **la que se aprobó** |
+| cuándo se sabrá si sirve | **nunca**: medía otra cosa | ~5 meses desde cero |
+
+📌 O sea que **la mejora no es de rendimiento: es que el experimento vuelva a
+poder contestar su pregunta.** Antes iba camino de 150 operaciones que, al
+llegar, no habrían dicho nada sobre la regla aprobada.
+
+## Cómo se verificó
+
+Lint, build, las **38 pruebas** (solo falla `prueba-aviso-real`, que pide el
+secreto VAPID) y los **65 gemelos** idénticos — todo lo tocado es PRIMO, así que
+no hay cambio emparejado.
+
+**Comprobado que las pruebas MUERDEN**, con el daño verificado en el archivo
+antes de darlo por bueno: devolver el descarte en `usaVaraSimetrica` tumba 5 en
+`prueba-marketcalc` · juntar otra vez los dos cubos tumba 4 en
+`prueba-resolver` · quitar el texto que explica la geometría vieja tumba 1 en
+`prueba-sombra`.
+
+Y en **Chromium a 390 px**, banco **a través del hook** (interceptando la
+descarga, no inventando las props — la regla del 2026-10-07), con el historial
+REAL de producción en tres cargas: el caso de hoy (29 viejas, 0 nuevas), el
+mismo en árabe, y uno mixto con dos de la vara nueva. Cero errores de consola,
+cero desplazamiento lateral, cero hojas de datos en `rtl`.
+
+### 📌 Dos cosas que solo salieron del navegador
+
+1. **Mi banco cazaba una fila de la lista, no el bloque.** Buscaba por la
+   etiqueta «COMPRAR LA CAÍDA», que sale también en cada fila de abajo. Medía
+   bien y no medía lo que decía medir — van ocho o nueve veces. Acotado al
+   título.
+2. ⚠️ **La frase decía «no cuentan en el porcentaje de arriba» y AHORA NO HAY
+   ningún porcentaje arriba** (el contador está en cero). Remitía a algo que no
+   existe. Reescrita en los 13 idiomas para que valga en los dos estados: «NO
+   cuentan, y el historial de esta regla vuelve a empezar desde cero». Ni el
+   build, ni el lint, ni las 38 pruebas lo veían.

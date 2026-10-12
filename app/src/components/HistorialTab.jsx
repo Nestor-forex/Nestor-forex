@@ -76,15 +76,39 @@ export default function HistorialTab() {
               mismo estatus, y darle a uno más presencia que al otro sería
               sugerir que uno vale más antes de que ninguno haya demostrado
               nada. Aparece solo cuando tiene algo resuelto que enseñar. */}
-          {resumen.caida.total > 0 && (
+          {/* ⚠️ La condición mira los DOS cubos. Si mirara solo `caida`, el día
+              que se arregló la geometría (2026-10-12) el contador volvió a 0 y
+              las 29 operaciones de la vara vieja habrían desaparecido de la
+              pantalla sin que nada lo dijera — el fallo del cajón `otros`,
+              otra vez. Aparecen, y la línea de abajo dice qué son. */}
+          {(resumen.caida.total > 0 || resumen.caidaVieja.total > 0) && (
             <div style={{ ...BLOQUE_EXPERIMENTO }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 12.5, fontWeight: 600 }}>{t('historial.caidaTitulo')}</span>
                 <Etiqueta>{t('historial.esCaida')}</Etiqueta>
               </div>
-              <Resumen resumen={{ todas: resumen.caida }} t={t} />
-              <AvisoSombra ops={resumen.caida.total} />
+              {resumen.caida.total > 0 && (
+                <>
+                  <Resumen resumen={{ todas: resumen.caida }} t={t} />
+                  <AvisoSombra ops={resumen.caida.total} />
+                </>
+              )}
               <p style={{ ...TEXTO, margin: 0 }}>{t('historial.caidaIntro')}</p>
+              {/* ⚠️⚠️ Lo que NO se puede ablandar: estas operaciones no entran
+                  en el porcentaje de arriba y la frase dice por qué. Con la
+                  geometría vieja basta acertar el 13 % para empatar y con la
+                  aprobada hace falta el 50 %, así que un promedio de las dos
+                  no contesta ninguna de las dos preguntas. Pero esconderlas
+                  sería peor: se anotaron de verdad y tienen que verse. */}
+              {resumen.caidaVieja.total > 0 && (
+                <p style={{ ...TEXTO, margin: 0, color: 'var(--text-muted)' }}>
+                  {t('historial.caidaVieja', {
+                    n: resumen.caidaVieja.total,
+                    acierto: resumen.caidaVieja.acierto,
+                    pips: resumen.caidaVieja.pips,
+                  })}
+                </p>
+              )}
             </div>
           )}
 
