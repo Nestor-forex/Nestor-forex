@@ -56,12 +56,14 @@ import { limpiar, reparto } from './lib/rejilla-limpia.mjs'
 import { nombreDia } from './lib/rejilla-diaria.mjs'
 import { resolver } from './lib/resolver.mjs'
 import { PARES, leerLlave, obtenerVelas } from './lib/velas.mjs'
-import { computarBarrido } from '../src/lib/marketCalc.js'
+import { computarBarrido, UMBRAL_FUERZA } from '../src/lib/marketCalc.js'
 
 // Los mismos ajustes que el banco de pruebas y que el vigía, para que esto
 // mida la app de verdad y no una prima lejana suya.
 const CALENTAMIENTO = 80
-const THR = 0.5
+// ⚠️ NO se escribe el número: lo importa. Tres copias a mano del umbral que
+// decide todas las señales eran tres formas de medir otra app (2026-10-12).
+const THR = UMBRAL_FUERZA
 const TOP_N = 3
 const VELAS = Number(process.env.VELAS || 1500)
 

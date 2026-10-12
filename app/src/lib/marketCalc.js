@@ -344,6 +344,25 @@ export const RSI_MAX = null
 // las malas", es "la app con otras señales".
 export const CONFLUENCIA_MIN = null
 
+// CUÁNTA DIFERENCIA DE FUERZA SE EXIGE. Es la PRIMERA puerta y la única que
+// ninguna señal se salta: `clasificar` no devuelve ni 'VIGILAR' sin pasarla.
+//
+// ⚠️ ESTABA ESCRITO A MANO EN NUEVE SITIOS (2026-10-12), y eso es un fallo
+// esperando a ocurrir, no una molestia de estilo: el vigía, el reporte diario
+// y el banco de pruebas llevaban cada uno su propio `0.5`. El día que alguien
+// cambiara uno, la app diría una cosa, el reporte otra y el banco mediría una
+// tercera — **y nada fallaría**. Es la familia de las etiquetas «(hoy)» que
+// envejecieron solas el 2026-09-05, y el arreglo es el mismo: un solo sitio
+// donde vive el número, y quien lo necesite lo IMPORTA.
+//
+// Hay una comprobación que falla si vuelve a aparecer escrito a mano.
+//
+// ⚠️ EN INTRADÍA ESTE MISMO NOMBRE NO VALE LO MISMO. Allí se multiplica por el
+// factor de la hora (en el solape de Londres con Nueva York sube ~19 %, porque
+// a esa hora todo se separa más y una divergencia pequeña significa menos).
+// Aquí cada vela es un DÍA y no hay horas: el umbral efectivo ES este número.
+export const UMBRAL_FUERZA = 0.5
+
 // CUÁNTA TENDENCIA SE EXIGE PARA DEJAR PASAR UNA SEÑAL.
 //
 // Néstor investigó por su cuenta y trajo una observación que vale la pena
@@ -681,7 +700,7 @@ const clasificarCaida = (p) => {
 export function derivarVista(
   data,
   {
-    thr = 0.5,
+    thr = UMBRAL_FUERZA,
     topN = 3,
     t = crearT(IDIOMA_BASE),
     locale,
@@ -822,6 +841,30 @@ export function derivarVista(
   // que cruzarlas hablaría de operaciones que nadie va a abrir.
   const riesgoSenales = riesgoEntreSenales(data.correl, setups)
 
+  // HASTA DÓNDE LLEGÓ LA DIVERGENCIA DE HOY, Y CUÁNTO HACÍA FALTA.
+  //
+  // ⚠️ No decide nada. Es INFORMACIÓN, y existe porque sin ella un reporte sin
+  // señales es un HUECO: «el mercado está plano» y «la app está atascada» se
+  // ven exactamente igual en pantalla («Ninguno hoy»). Con los dos números al
+  // lado, un `0,31 de 0,59` dice «mido bien y hoy no da».
+  //
+  // ⚠️⚠️ Y HACE FALTA PORQUE LA ESCALA 0-10 NO SIRVE PARA ESTO, que es el error
+  // que me engañó a mí el 2026-10-12 teniendo el código delante: `esc` es una
+  // normalización de mínimo a máximo, así que **la divisa más débil vale 0 y la
+  // más fuerte 10 SIEMPRE**, por pequeña que sea la diferencia real. Un «10,0
+  // contra 0,0» no dice que haya divergencia: dice cuál es la primera y cuál la
+  // última, y eso es verdad todos los días del año. El número que decide es
+  // `dif`, y no se enseñaba en ninguna parte.
+  //
+  // Sale del `dif` CRUDO de los pares, no de la escala, y ya está en la mano:
+  // no cuesta un crédito ni una consulta más.
+  const difs = paresRaw.map((p) => Math.abs(p.dif)).filter((d) => Number.isFinite(d))
+  // ⚠️ `null` y NUNCA 0 cuando no se puede medir (barrido vacío, `dif` con
+  // basura dentro). Un 0 diría «hoy no hubo ninguna divergencia», que es una
+  // AFIRMACIÓN sobre el mercado; `null` dice «no lo sé» y quien lo pinte no
+  // pinta nada. Misma asimetría que `pearson` y que `edadEnMinutos`.
+  const difMax = difs.length ? Math.max(...difs) : null
+
   return {
     monedas,
     pares,
@@ -835,5 +878,9 @@ export function derivarVista(
     correlaciones,
     riesgoSenales,
     corte,
+    // El umbral EFECTIVO con el que se acaba de clasificar, no la constante:
+    // si alguien llama con otro `thr`, esto dice el que se usó de verdad.
+    umbral: thr,
+    difMax,
   }
 }

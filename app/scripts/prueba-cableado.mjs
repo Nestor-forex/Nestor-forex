@@ -175,6 +175,9 @@ const NO_SE_PASAN = {
   reversiones: 'lista intermedia; lo que se enseña es `setupsReversion`',
   setupsCaida:
     '⚠️ REGLA EN LA SOMBRA («comprar la caída»). No se enseña en ninguna pantalla hasta que pase su listón: pasarla al hook la encendería de hecho.',
+  umbral:
+    'solo para el REPORTE diario (2026-10-12): dice con qué umbral de fuerza se clasificó. Llevarlo a la pantalla serían 13 idiomas y no lo ha pedido nadie.',
+  difMax: 'ídem — hasta dónde llegó la divergencia de hoy. Va junto a `umbral` en el reporte, no en la app.',
 }
 
 const calculados = clavesDelReturn(leer('../src/lib/marketCalc.js'))

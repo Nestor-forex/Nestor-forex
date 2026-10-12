@@ -96,7 +96,11 @@ const data = computarBarrido(fechas, rates, rangosPar)
 // `incluirReversion` para ver correr en paralelo la regla contraria. Las dos
 // se anotan en la sombra: no se enseñan, no se avisan, solo acumulan.
 const vista = derivarVista(data, {
-  thr: 0.5,
+  // ⚠️ El umbral de fuerza NO se escribe aquí. Hasta el 2026-10-12 este guion
+  // llevaba su propio `0.5`, igual que el reporte y el banco de pruebas: tres
+  // copias del número que decide TODAS las señales. Cambiar una habría dejado
+  // al vigía anotando el historial con un criterio distinto del que la app
+  // enseña — y el historial es lo único irrecuperable del proyecto.
   topN: 3,
   incluirVentas: true,
   incluirReversion: true,
