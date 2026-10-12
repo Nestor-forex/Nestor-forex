@@ -33,7 +33,7 @@
 // dónde SALE la operación — o sea que toca la geometría directamente.
 
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
-import { computarBarrido } from '../src/lib/marketCalc.js'
+import { computarBarrido, UMBRAL_FUERZA } from '../src/lib/marketCalc.js'
 import { generarSenales } from './lib/backtest-nucleo.mjs'
 import { actual, simetrica } from './lib/geometrias.mjs'
 import { medirConBreakeven, concentracionDeLaMejora, clavesComunes } from './lib/breakeven.mjs'
@@ -48,7 +48,9 @@ import {
 } from './lib/preregistro-breakeven.mjs'
 
 const CALENTAMIENTO = 80
-const THR = 0.5
+// ⚠️ NO se escribe el número: lo importa. Tres copias a mano del umbral que
+// decide todas las señales eran tres formas de medir otra app (2026-10-12).
+const THR = UMBRAL_FUERZA
 const TOP_N = 5
 const VELAS = Number(process.env.VELAS || 1500)
 

@@ -43,7 +43,7 @@
 // relleno antes de encender nada. Eso queda dicho aquí para que nadie lo
 // confunda con un aprobado.
 
-import { computarBarrido } from '../src/lib/marketCalc.js'
+import { computarBarrido, UMBRAL_FUERZA } from '../src/lib/marketCalc.js'
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
 import { generarSenales, medir } from './lib/backtest-nucleo.mjs'
 import { simetrica, actual } from './lib/geometrias.mjs'
@@ -52,7 +52,9 @@ import { bajarHistoria, diasEntre, indexarHistoria, sesgoDePar } from './lib/cot
 import { FECHA_PREREGISTRO, PREREGISTRO_COT, QUE_SIGNIFICA_APROBAR_COT, juzgarCot } from './lib/preregistro-cot.mjs'
 
 const CALENTAMIENTO = 80
-const THR = 0.5
+// ⚠️ NO se escribe el número: lo importa. Tres copias a mano del umbral que
+// decide todas las señales eran tres formas de medir otra app (2026-10-12).
+const THR = UMBRAL_FUERZA
 const TOP_N = 3
 const VELAS = Number(process.env.VELAS || 1500)
 

@@ -47,7 +47,7 @@ const mediaDe = (t) => (Object.values(t).reduce((a, b) => a + b, 0) / Object.key
 // 📌 Una etiqueta equivocada es un error de medición: los números estaban bien
 // y la conclusión que inducían era falsa. Ya había pasado con «rompimiento» el
 // 2026-09-04. Derivándola del propio valor no puede volver a envejecer sola.
-import { computarBarrido, RSI_MAX, TENDENCIA_MIN, CONFLUENCIA_MIN } from '../src/lib/marketCalc.js'
+import { computarBarrido, RSI_MAX, TENDENCIA_MIN, CONFLUENCIA_MIN, UMBRAL_FUERZA } from '../src/lib/marketCalc.js'
 
 // Le pega «(hoy)» a la fila que de verdad corre en la app.
 const hoySi = (nombre, esLaDeHoy) => (esLaDeHoy ? `${nombre}  (hoy)` : nombre)
@@ -65,7 +65,9 @@ const CALENTAMIENTO = 80
 
 // Los mismos ajustes que usa el vigía, para que esto mida la app de verdad y
 // no una prima lejana suya.
-const THR = 0.5
+// ⚠️ NO se escribe el número: lo importa. Tres copias a mano del umbral que
+// decide todas las señales eran tres formas de medir otra app (2026-10-12).
+const THR = UMBRAL_FUERZA
 const TOP_N = 3
 
 // Cuántos días se miden. Antes eran los 300 de la app (unos 14 meses), y con

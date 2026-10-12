@@ -308,6 +308,13 @@ const LIMPIA = [
   'scripts/backtest.mjs',
   'scripts/medir-cot.mjs',
   'scripts/comparar-fuente.mjs',
+  // ⚠️ Faltaba desde el 2026-10-07, el día que se escribió la medición de
+  // breakeven, y esta comprobación llevaba desde entonces en ROJO en `main`
+  // sin que nadie la mirara. No era un fallo de medición —`obtenerVelas` limpia
+  // por defecto, así que midió con la rejilla buena— sino del manifiesto: nadie
+  // había DECIDIDO su rejilla por escrito, que es justo lo que este bloque
+  // existe para exigir. Se encontró el 2026-10-12 al correr todas las pruebas.
+  'scripts/medir-breakeven.mjs',
 ]
 
 const llaman = readdirSync(new URL('./', import.meta.url))
