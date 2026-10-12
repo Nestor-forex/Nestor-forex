@@ -9994,3 +9994,141 @@ es cambiar lo que la gente lee.
 ⚠️ Lo que NO es: un fallo de la app. Tres reportes sin señales con el umbral sin
 pasar es el filtro diciendo la verdad, igual que el silencio del celular en Swing
 cuando ninguna señal llega a 1:1.5. **Un reporte vacío no es un reporte roto.**
+
+---
+
+# El reporte dice cuánto faltó, y el umbral dejó de estar en nueve sitios (2026-10-12)
+
+Néstor pidió la línea que yo había propuesto esa mañana: que el reporte diga
+hasta dónde llegó la divergencia y cuánto hacía falta. **La línea era lo
+pequeño.** Al ir a escribirla apareció lo otro.
+
+En las DOS apps: PR #118 aquí, #91 en Intradía, fusionados seguidos.
+**No cambia ni una señal.**
+
+## La línea
+
+```
+_Ningún par llegó al umbral de fuerza: el más separado iba a 0.31 y hacía falta 0.59. Por eso no hay señales._
+_Divergencia: el par más separado iba a 1.77 y el umbral era 0.50._
+```
+
+⚠️ **Se enseña SIEMPRE, también los días con señales.** Si apareciera solo los
+días vacíos, **su aparición sería el mensaje** y nadie leería los números — se
+volvería «la línea de los días malos». Con señales también dice algo: 1,77
+sobre 0,50 es 3,5 veces lo que se pedía.
+
+⚠️ **Ante la duda no escribe nada.** `difMax` es `null` —y nunca 0— cuando no
+se puede medir, y la línea se calla. Un 0 diría «hoy no hubo ninguna
+divergencia», que es una afirmación sobre el mercado. Misma asimetría que
+`pearson` y `edadEnMinutos`.
+
+## ⚠️⚠️ Lo que destapó: el umbral estaba a mano en NUEVE sitios (trece en Intradía)
+
+El número que decide **todas** las señales —la primera puerta, la única que
+ninguna se salta— tenía una copia propia en el vigía, en el reporte, en
+`comparar-reglas` y en cada guion del banco de pruebas.
+
+**Nada fallaba.** El día que alguien cambiara uno:
+
+| | diría |
+|---|---|
+| la app | una cosa |
+| **el vigía, que escribe el historial** | **otra** |
+| el banco de pruebas | una tercera |
+
+Sin un solo error por ninguna parte. Y la fila del medio es la grave: el
+historial es lo único del proyecto que **no se puede volver a fabricar**, así
+que una contaminación ahí no se arregla después.
+
+📌 **El detalle que lo retrata:** `backtest.mjs` llevaba escrito encima *«los
+mismos ajustes que usa el vigía, para que esto mida la app de verdad y no una
+prima lejana suya»* — y justo debajo copiaba el `0.5` a mano. **Alguien ya sabía
+que esto importaba y se le fue igual**, que es exactamente por qué la defensa no
+puede ser «tener cuidado».
+
+Ahora vive en `UMBRAL_FUERZA` y quien lo necesita lo importa. Es la familia de
+las etiquetas «(hoy)» del 2026-09-05 y el arreglo es el mismo: **el texto lee el
+número, no lo repite.**
+
+## ⚠️ `umbral` y `difMax` no significan lo mismo en las dos apps
+
+| | el umbral efectivo |
+|---|---|
+| **Swing** | **ES** la constante: 0,50 siempre. Cada vela es un día, no hay horas |
+| **Intradía** | la constante **× el factor de la hora** — a las 15 UTC iba en 0,59, un 19 % más alto por el solape de Londres con Nueva York |
+
+La vista devuelve el **EFECTIVO**, nunca la constante. Enseñar la constante en
+Intradía diría «hacía falta 0,50» a una hora en la que se exigía 0,59 — un
+número bien escrito describiendo otra cosa.
+
+📌 **Y la app hacía eso desde hace meses sin decírselo a nadie.** Que a la hora
+de más movimiento se exija más divergencia es una decisión de diseño correcta y
+estaba invisible. Ahora se lee en el reporte.
+
+## 📌 La comprobación de Intradía NO MORDÍA, y por poco se queda así
+
+El bloque que exige el umbral efectivo pasaba igual si alguien devolvía la
+constante: **el mercado inventado cae en una hora cuyo factor es ~1,000**, así
+que `0,5 × 1,000` y `0,5` son el mismo número. Hubo que **forzar el 1,19** para
+que la comprobación distinguiera algo.
+
+Es «una prueba que se adapta a lo que encuentra no comprueba nada» por una cara
+nueva: aquí no se adaptaba a lo que encontraba — **es que lo que encontraba no
+distinguía los dos casos**. Comprobado con el daño puesto.
+
+## El guardián nuevo: `prueba-umbral.mjs` (GEMELO, 65 ahora)
+
+19 comprobaciones. **No lee una lista escrita a mano**: recorre `scripts/`, se
+queda con los que deciden señales y falla si alguno escribe el umbral con un
+número dentro, con la guarda de siempre para no pasar en verde si el recorrido
+se rompe.
+
+⚠️ **Es GEMELO aunque el VALOR difiera**, y el motivo está escrito dentro: lo
+que tiene que ser igual en las dos apps es **la disciplina** (un solo sitio,
+nadie lo escribe a mano, la vista dice el que usó). Lo del factor lo comprueba
+cada app por su cuenta, porque ahí sí son distintas.
+
+**Comprobado que MUERDE**, con el daño verificado en el archivo antes de darlo
+por bueno: devolver `thr: 0.5` al reporte tumba 2 · `difMax` a 0 en vez de
+`null` tumba 2 · quitar la guarda de la línea tumba 1 · publicar la constante en
+vez del umbral efectivo tumba 1 en Intradía.
+
+## 📌 Y un ROJO que llevaba cinco días en `main` sin que nadie lo mirara
+
+`prueba-rejilla-limpia` fallaba **desde el 2026-10-07**: nadie había registrado
+la rejilla de `medir-breakeven.mjs` en el manifiesto. Comprobado con `git stash`
+que era anterior a este cambio.
+
+⚠️ **No afectaba a la medición de breakeven** —`obtenerVelas` limpia por
+defecto, así que midió con la rejilla buena— pero el manifiesto estaba
+incompleto, que es justo lo que ese bloque existe para exigir.
+
+📌 **La lección no es del fallo, es de cómo apareció:** salió de correr **todas**
+las pruebas de los dos repos al terminar, no de buscarlo. Un guardián que nadie
+ejecuta es un guardián apagado, y este repositorio tiene 38 pruebas en Swing —
+demasiadas para mirarlas de una en una. **Al cerrar un cambio, correrlas todas y
+mirar los códigos de salida**, que es lo único que no se puede leer mal.
+
+## Cómo se verificó
+
+Lint, build y **todas** las pruebas sin internet en los dos repos (solo falla
+`prueba-aviso-real`, que pide el secreto VAPID y manda un aviso de verdad). Los
+65 gemelos idénticos. `gemelos` en verde en `main` después de fusionar las dos
+mitades seguidas.
+
+Y **de punta a punta sin gastar un crédito**: se corrió el reporte REAL de cada
+app con un lector de velas falso, reproduciendo el caso de esa mañana —
+`USD 10.0 · CHF 0.0` en pantalla y la línea diciendo 0,31 contra 0,59, con el
+0,59 salido del factor de la hora y no escrito a mano. Y los tres casos: sin
+señales, con señales, y sin datos (donde no escribe nada).
+
+## ⚠️ Lo que esto NO mejora, dicho antes de nada
+
+**Las señales no cambian.** Swing sigue en −0,03/−0,04 por unidad de riesgo e
+Intradía en −0,13. Un cambio que hace la app más clara no la hace más acertada,
+y confundir las dos cosas es justo lo que este proyecto no hace.
+
+Lo que mejora son dos cosas distintas: que un reporte vacío **deje de ser un
+hueco** (hoy «el mercado está plano» y «la app está atascada» se leen igual), y
+que el criterio con el que decide **no pueda separarse de sí mismo en silencio**.
