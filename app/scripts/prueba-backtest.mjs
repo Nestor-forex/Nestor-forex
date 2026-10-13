@@ -452,6 +452,65 @@ console.log('\n12. Se puede probar una forma de entrar distinta a la de la app')
     'y traen stop y objetivo bien puestos'
   )
 
+  // ⚠️ EL ORDEN DE DESEMPATE, añadido el 2026-10-13 para Bollinger.
+  //
+  // `porReglaPropia` se queda con los N mejores por lado y hasta hoy los
+  // ordenaba SIEMPRE por divergencia de fuerza, que es el criterio de la APP.
+  // Una regla que no mira la fuerza quedaba medida como «esa regla,
+  // desempatada por fuerza» — otra regla con el mismo nombre.
+  //
+  // Lo que estas dos comprobaciones garantizan es que el añadido es ADITIVO:
+  // sin pedir nada, no se mueve ni una señal de todo lo ya medido.
+  const sinOrden = generarSenales(fechas, rates, rangosPar, { calentamiento: 80, reglaEntrada: soloSubiendo })
+  const ordenNulo = generarSenales(fechas, rates, rangosPar, {
+    calentamiento: 80,
+    reglaEntrada: soloSubiendo,
+    orden: null,
+  })
+  const huella = (xs) => xs.map((s) => `${s.id}@${s.vistoEl}`).join('|')
+  comprobar(huella(sinOrden) === huella(propias), 'el orden por defecto NO cambia ninguna señal ya medida')
+  comprobar(huella(ordenNulo) === huella(propias), '`orden: null` es exactamente el de siempre')
+
+  // ⚠️ Y QUÉ ES ESE ORDEN POR DEFECTO, dicho de frente.
+  //
+  // Las dos comprobaciones de arriba solas NO bastan: comparan el motor
+  // CONSIGO MISMO, así que si alguien cambiara el criterio por defecto las
+  // tres corridas cambiarían a la vez y seguirían coincidiendo. Se vio al
+  // romperlo a propósito el 2026-10-13 — el daño lo cazó otra comprobación,
+  // no éstas.
+  //
+  // Esto fija la propiedad: por defecto se quedan los de MAYOR divergencia de
+  // fuerza, que es el criterio de la app.
+  {
+    const topN = 2
+    const todos = generarSenales(fechas, rates, rangosPar, {
+      calentamiento: 80,
+      topN,
+      reglaEntrada: () => 'COMPRA', // que califiquen TODOS los pares
+    })
+    const dia = todos.find((s) => s.vistoEl)?.vistoEl
+    const deEseDia = todos.filter((s) => s.vistoEl === dia)
+    const data = computarBarrido(fechas.slice(0, fechas.indexOf(dia) + 1), rates, rangosPar)
+    const esperados = [...data.pares]
+      .sort((a, b) => Math.abs(b.dif) - Math.abs(a.dif))
+      .slice(0, topN)
+      .map((p) => p.name)
+      .sort()
+    comprobar(
+      deEseDia.length === topN && JSON.stringify(deEseDia.map((s) => s.par).sort()) === JSON.stringify(esperados),
+      'el corte por defecto se queda con los de MAYOR divergencia de fuerza'
+    )
+  }
+
+  // Y que cuando se pide, de verdad manda. Con el orden al revés (el par de
+  // MENOR divergencia primero) el corte de los N mejores se queda con otros.
+  const alReves = generarSenales(fechas, rates, rangosPar, {
+    calentamiento: 80,
+    reglaEntrada: soloSubiendo,
+    orden: (p) => -Math.abs(p.dif),
+  })
+  comprobar(huella(alReves) !== huella(propias), 'y un orden propio SÍ cambia a quién se queda el corte')
+
   // Lo importante: la regla propia cambia QUÉ se opera. Si saliera lo mismo
   // que la app, no estaríamos probando nada nuevo.
   const app = generarSenales(fechas, rates, rangosPar, { calentamiento: 80 })
