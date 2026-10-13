@@ -10435,3 +10435,115 @@ cero desplazamiento lateral, cero hojas de datos en `rtl`.
    existe. Reescrita en los 13 idiomas para que valga en los dos estados: «NO
    cuentan, y el historial de esta regla vuelve a empezar desde cero». Ni el
    build, ni el lint, ni las 38 pruebas lo veían.
+
+---
+
+# La investigación de reglas de entrada con ventaja real (2026-10-12)
+
+Néstor: **«busquemos esa regla de entrada con ventaja real. dame ideas, busca
+ejemplos, investiga qué reglas o estrategias han funcionado, busca opiniones o
+traders rentables que nos den alguna pista, también traders institucionales»**.
+
+**El informe completo está en un documento aparte** (única copia; si se pierde
+el enlace se rehace desde esta sección):
+https://claude.ai/artifact/TkJSm9ya6iqRWERRx443qn
+Título: «Buscar una regla de entrada con ventaja real».
+
+## ⚠️⚠️ EL HALLAZGO QUE ENMARCA TODO LO DEMÁS
+
+**Las ocho familias de filtros que este proyecto midió y apagó NO son un fallo
+de las apps: son el resultado publicado.**
+
+| trabajo | qué probó | qué encontró |
+|---|---|---|
+| Hsu, Taylor y Wang (2016), *J. Int. Economics* | **30 divisas, 45 años, +21.000 reglas**, con corrección de sesgo | en DESARROLLADAS, pocas reglas en los ochenta y **ninguna desde 1992-1996** |
+| Coakley, Marzano y Nankervis (2016), *IRFA* | **22 divisas, 1996-2015, 113.148 reglas** | «prácticamente **ninguna regla tradicional es significativa**» en 2006-2015 |
+| Neely, Weller y Ulrich, Fed de San Luis | filtros y medias, fuera de muestra | las ganancias de los 70-80 **eran reales** y **desaparecieron a principios de los 90** |
+
+Y las apps juegan justo donde no queda nada: **los 14 pares de Swing y los 18 de
+Intradía son TODOS desarrollados** (G10). Ni un emergente.
+
+📌 **La corrección de sesgo que esos trabajos aplican es lo que este proyecto ya
+hace sin llamarlo así:** el listón escrito antes, la vara neutra, el troceo en
+mitades, y no ascender un control que se miró después de ver la tabla.
+
+## ⚠️⚠️ Y EL HALLAZGO PROPIO: su mejor regla es la familia que la literatura salva
+
+Coakley y sus coautores separan las reglas «tradicionales» de las modernas y
+dicen que las de **banda de Bollinger y RSI siguen siendo rentables de forma
+robusta en todas las divisas** en el tramo reciente.
+
+La única regla que ha medido positivo en todo este proyecto es **M2 — reversión
+con el RSI estirado** (+0,085 con spread, 870 ops). Y de las cuatro variantes de
+reversión medidas el 2026-09-03, **la única que aguanta el swap es justo la que
+lleva el RSI** (1 pip contra 0 y 0,25 de las otras tres).
+
+**Dos caminos independientes apuntan al mismo sitio.** Es lo más cerca que ha
+estado este proyecto de una confirmación externa.
+
+⚠️ **Y NO contradice que el RSI fallara el 2026-08-25.** Allí se probó como
+FILTRO sobre señales que persiguen lo fuerte; aquí es parte de una regla de
+ENTRADA que compra lo débil. **El RSI estirado no filtra la señal: ES la
+señal.** Es la distinción que este archivo lleva meses escribiendo.
+
+## El carry: lo tienen publicado y nunca lo han medido
+
+`estado/tasas.json` trae las 8 tasas del BIS desde el 2026-09-09, y el banco
+**nunca ha medido si tomar el lado del diferencial sirve**: el swap entra
+siempre como COSTE barrido a cinco niveles, nunca como RETORNO de una dirección.
+
+⚠️ **Pero NO es un candidato para estas apps, y el motivo es el horizonte.** El
+carry se cobra manteniendo: en 5 días son 5/365 del diferencial, o sea **~5 pips**
+con el mayor diferencial de hoy, contra ~2 de spread. Y el carry G10 de 2006-2023
+mide **Sharpe 0,07** con −15,6 % en el quinto más estresado: gana poco y pierde
+de golpe, justo lo contrario del perfil de la app.
+
+Lo que sí cabe, y es gratis: **comprobar** si las señales que van a favor del
+diferencial miden distinto de las que van en contra.
+
+## Las cuatro candidatas, por lo que cuesta probarlas
+
+| | qué es | coste | lo que la frena |
+|---|---|---|---|
+| **A** | barrer el umbral de RSI **sobre la reversión** (nunca se hizo; el barrido de agosto fue sobre las señales de la app) | 14 créditos | son los mismos 1.436 días: sirve para elegir qué anotar, no como confirmación |
+| **B** | **Bollinger** — la otra familia que la literatura salva, y **nunca medida aquí** | 14 créditos + escribirla | hay que decidir ANTES si se opera el toque o la ruptura |
+| **C** | un par **emergente** (USD/MXN, USD/ZAR, USD/TRY) | una sonda | el spread, que en Intradía ya se comió una ventaja entera; y hay un estudio que dice que también se evapora al corregir el sesgo |
+| **D** | horizonte más largo | — | el H4 mejoró **hacia cero, no hacia positivo**, y en semanal manda el swap, el único coste que no se puede conocer |
+
+## ⚠️ Lo que NO hay que volver a intentar
+
+Otro filtro sobre las señales de la app · mover el stop o alargar el objetivo en
+Swing · breakeven · medias, filtros y rupturas de canal (las «tradicionales» que
+los tres trabajos declaran muertas) · buscar mejor bróker para Intradía · otra
+ronda de ajuste sobre 2021-2026.
+
+## ⚠️ Lo que el informe NO dice, y va escrito dentro
+
+**No dice que haya una regla que gane.** Dice dónde tiene sentido buscar, con el
+tamaño de muestra de cada afirmación al lado. Las apps siguen midiendo −0,03/
+−0,04 en Swing y −0,13 en Intradía.
+
+📌 **Y dos cosas que NO se encontraron, dichas en vez de calladas:** no hay
+ningún estudio que mida la caída del momento de divisas en los años 2020 (lo más
+cercano termina antes de 2020), y no hay ninguna prueba fuera de muestra de
+2023-2024 sobre flujo de órdenes ni posicionamiento en G10.
+
+## 📌 Un error MÍO de redacción que Néstor cazó, y hay que anotarlo
+
+Le escribí una lista así: *«Reversión (+0,085), comprar la caída (+0,087, luego
++0,041), barrido de liquidez (5 tamaños, los cinco pierden), rejilla (las doce
+pierden)…»* y preguntó, con toda la razón: **«no se supone que esas son
+cantidades positivas? pero me dices que pierden? no entiendo»**.
+
+**La frase era mía y era ambigua.** El «pierden» solo se aplicaba a las dos
+últimas; las dos primeras son positivas. Pero puse positivos y negativos en una
+sola lista sin rotular cuál era cuál.
+
+⚠️ Y hay una segunda capa, que es la de verdad: **«+0,085» es del BACKTEST y
+«pierde» era del REGISTRO REAL**, dos mediciones distintas que mezclé en una
+frase. Es exactamente el fallo del 2026-10-07 (repetir una frase cierta del
+banco de pruebas al lado de los números del historial) **cinco días después**.
+
+📌 **La regla práctica:** cuando en la misma frase van números del backtest y del
+registro real, **hay que decir de cuál es cada uno o no ponerlos juntos.** Y al
+listar varias mediciones, cada una con su signo rotulado.
