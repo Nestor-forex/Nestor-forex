@@ -10806,3 +10806,206 @@ limpia.
 ⚠️ **Y lo que ninguno autoriza:** encender nada. Swing sigue midiendo
 −0,03/−0,04 por unidad de riesgo, e Intradía −0,13, hasta que algo pase su
 propio registro hacia adelante.
+
+---
+
+# Los tres botones, pulsados (2026-10-13). Y los tres dicen «no»
+
+Néstor: **«lanza las pruebas de bollinger y del carry, haz los tres botones y
+fusiona lo que haya que fusionar»**. Fusionados los PR #119 y #92 —seguidos, que
+es como se fusiona un par— y pulsados los tres. **34 créditos** (14+14+6), así
+que el día cerró en **98 de 800**.
+
+⚠️ **Nada se encendió, nada de `src/` se tocó y ninguna señal de ninguna de las
+dos apps cambió.** Swing sigue en −0,043 por unidad de riesgo con la vara
+neutra.
+
+## 1. Bollinger: NO PASA, 2 de 6 criterios
+
+1.341 días (2021-08-19 a 2026-10-14), 58,1 meses, vara neutra 1:1, spread por
+par. Corte de mitades 2024-05-10.
+
+| regla | ops | señ/mes | acierto | por 1R | 1ª mit | 2ª mit | +swap |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Bollinger, toque de banda (sola) | 1.041 | 17,9 | 52 % | **+0,027** | +0,031 | +0,022 | −0,014 |
+| **+ RSI estirado (35) ← LA JUZGADA** | 548 | 9,4 | 52 % | **+0,018** | +0,071 | **−0,026** | −0,022 |
+| + fuerza relativa | 1.025 | 17,6 | 52 % | +0,024 | +0,030 | +0,017 | −0,016 |
+| CONTROL: el mismo disparo, al revés | 548 | 9,4 | 48 % | **−0,066** | −0,112 | −0,026 | −0,106 |
+| *la reversión M2 (a quien hay que ganar)* | *855* | *14,7* | *53 %* | ***+0,035*** | *+0,058* | *+0,012* | *−0,009* |
+| *la app tal cual, misma vara* | *2.493* | *42,9* | *49 %* | *−0,043* | *−0,059* | *−0,026* | *−0,086* |
+
+| criterio | |
+|---|---|
+| ❌ gana con costes | 0,018 y hace falta ≥ 0,02 |
+| ❌ gana en las DOS mitades | +0,071 y **−0,026** |
+| ❌ aguanta 0,5 de swap | −0,022 |
+| ✅ al menos 8 señales/mes | 9,4 |
+| ❌ **le gana a M2 por ≥ 0,02** | va **−0,016** de ventaja |
+| ✅ ningún par aporta más del 40 % | el mayor, USD/JPY, aporta el 10 % |
+
+### ⚠️⚠️ LA TRAMPA DE ESTA TABLA: la fila «sola» salió mejor que la juzgada
+
+«Bollinger sola» da **+0,027 y gana en las dos mitades**. La juzgada da +0,018 y
+se cae en la segunda. La tentación es quedarse con la primera.
+
+**No se hace, y por dos razones independientes:**
+
+1. **El listón decidió ANTES cuál se juzga** (`VARIANTE_JUZGADA = 'con RSI
+   estirado'`, fecha 2026-10-13 dentro del archivo), y el motivo escrito era que
+   la literatura empareja las dos familias y que de las cuatro reversiones
+   medidas el 2026-09-03 la única que aguanta el swap es la que lleva el RSI.
+   Cambiar de fila después de ver la tabla es el troceo a posteriori que este
+   proyecto rechazó con el control de la confluencia y con el del barrido de
+   liquidez.
+2. **Y además tampoco pasaría:** no le gana a M2 (−0,008 de ventaja) y no
+   aguanta el swap (−0,014). Así que ni aflojando el listón se salva.
+
+### 📌 El solape: 76 %, o sea «M2 con otro sombrero»
+
+**415 de las 548 señales de la variante juzgada son TAMBIÉN de M2.** Ahí se ve
+que el criterio elegido —«le gana a M2», no «es independiente de M2»— era el
+correcto: con un criterio de independencia esta regla se habría tumbado por
+parecerse, sin contestar la pregunta que importaba, que es si **aporta algo**.
+
+### ✅ Lo que sí deja, y es un hallazgo de verdad
+
+**La lectura de reversión gana (+0,018) y la de momento pierde (−0,066) sobre
+los MISMOS días, los MISMOS pares y el MISMO disparo.** 84 milésimas de
+diferencia, con el control cayéndose además en las dos mitades.
+
+Es la confirmación de lo de siempre por un camino nuevo y con el control
+diseñado de antemano: **en Swing, comprar debilidad mide mejor que perseguir
+fuerza.** Eso ya lo decían la reversión, «comprar la caída» y el control de la
+confluencia; ésta es la cuarta vez por una vía distinta.
+
+📌 **Y la literatura no se desmiente, se afina.** Coakley y sus coautores salvan
+dos familias: Bollinger y RSI. **Aquí las dos miden positivo** (Bollinger de
++0,018 a +0,027, M2 +0,035) y la que ya corre en la sombra es la mejor de las
+dos. No es que Bollinger falle: es que no añade nada encima del RSI.
+
+⚠️ **Y no se vuelve a medir sobre este periodo.** Esos 1.341 días ya se usaron
+para elegir; volver a barrer parámetros devuelve el mismo número por
+construcción.
+
+## 2. El carry: ir EN CONTRA del diferencial mide mejor en los DOS conjuntos
+
+Lo pidió Néstor de frente. **Diagnóstico, no filtro.** Tasas del BIS (gratis).
+
+| montón | ops app | acierto | por 1R | ops M2 | acierto | por 1R |
+|---|---:|---:|---:|---:|---:|---:|
+| **A FAVOR del diferencial** | 668 | 44 % ±4 | **−0,140** | 201 | 50 % ±7 | −0,017 |
+| **EN CONTRA** | 618 | 50 % ±4 | **−0,015** | 235 | 56 % ±6 | **+0,095** |
+| indiferente (banda neutra) | 169 | 55 % ±8 | +0,084 | 65 | 54 % ±12 | +0,060 |
+| sin tasa publicada todavía | 1.038 | 50 % ±3 | −0,018 | 354 | 52 % ±5 | +0,019 |
+| **TODAS juntas** | **2.493** | **49 % ±2** | **−0,043** | **855** | **53 % ±3** | **+0,035** |
+
+Diferencia (a favor − en contra): **−0,125** en la app y **−0,112** en M2.
+Misma dirección y magnitud parecida en dos conjuntos de señales distintos.
+
+### ⚠️⚠️ PERO EL PROPIO GUION DICE QUE NO DISTINGUE, Y TIENE RAZÓN
+
+«los márgenes SE SOLAPAN: no distingue nada», en las dos tablas. Eso es sobre el
+**ACIERTO**, que es lo que se puede comparar: 44 % ±4 contra 50 % ±4. La
+diferencia es de 6 puntos y los dos márgenes suman 8.
+
+📌 **Y con la vara neutra 1:1 el «por 1R» SALE del acierto, no es otra cosa.**
+Se comprueba con la aritmética: 2 × 0,44 − 1 = −0,12, más ~0,02 de spread, da
+los −0,140 de la tabla. O sea que esos −0,125 de diferencia **son los mismos 6
+puntos de acierto vistos en otra escala**, no una segunda evidencia. Leerlos
+como dos confirmaciones sería contar el mismo dato dos veces.
+
+⚠️ Está **al borde**: el margen de la propia diferencia es ±5,7 y la diferencia
+es 6. El criterio del guion es el conservador (suma los dos márgenes) y dice que
+no. Se queda con el conservador, que es la costumbre de la casa.
+
+### ⚠️ EL SESGO QUE HAY QUE SABER ANTES DE CITAR ESTA TABLA
+
+**1.038 de 2.493 señales (el 42 %) caen en «sin tasa publicada todavía»**, y no
+es aleatorio. Las series del BIS traen distinto número de observaciones por
+divisa:
+
+```
+AUD 1000 · CHF 1000 · JPY 1000 · USD 1000 · EUR 968 · GBP 967 · CAD 878 · NZD 717
+```
+
+Con `lastNObservations=1000`, **NZD solo alcanza 717 y CAD 878**. Así que el
+montón «sin dato» está concentrado **al principio del periodo Y en los pares con
+NZD y CAD**. La comparación a favor/en contra no cubre ni el periodo ni los pares
+por igual.
+
+📌 **Y se arregla barato: subir `OBSERVACIONES` por encima de 1000.** No cuesta
+un crédito de Twelve Data ni una fuente nueva. **No se hace sin que Néstor lo
+pida** — pero si alguna vez se quiere volver sobre el carry, ése es el primer
+paso y no otra medición.
+
+⚠️ **Lo que esto NO autoriza:** encender nada. Sería un FILTRO, y van **ocho
+familias medidas y ocho fallando**. Y sigue en pie lo escrito en
+`sonda-tasas.mjs` antes de ver ningún dato: **la diferencia de tasas NO es el
+swap**; el margen del bróker no lo publica nadie y es asimétrico.
+
+## 3. La sonda de emergentes: hay datos de sobra, y el rango DESMIENTE la premisa
+
+**6 de 6 responden**, los seis con `type: "Physical Currency"` —ninguna trampa
+del oro— y los seis con **5.000 velas y 18,6 años** (desde 2008). Casi cuatro
+veces el periodo de los mayores: parte en dos mitades con holgura de sobra.
+
+### ⚠️⚠️ Y AQUÍ EL HALLAZGO, QUE VA EN CONTRA DE LO QUE SE BUSCABA
+
+| par | rango diario mediano | contra la mediana de Swing (**0,54 %**) |
+|---|---:|---|
+| USD/HUF | 0,92 % | 1,7× |
+| USD/ZAR | 0,81 % | 1,5× |
+| USD/PLN | 0,57 % | igual |
+| USD/MXN | 0,49 % | **menos** |
+| EUR/PLN | 0,32 % | **menos** |
+| **USD/TRY** | **0,22 %** | **la mitad** |
+
+**Cuatro de los seis NO se mueven más que los pares que las apps ya tienen, y
+dos se mueven MENOS.** La premisa de «los emergentes se mueven más, así que el
+spread pesa relativamente menos» es **falsa para cuatro de los seis**.
+
+📌 **Y el caso extremo es el que tiene más fama:** USD/TRY es **el MENOS móvil
+de la lista** (0,22 %) y a la vez el del spread más caro del mercado minorista
+—decenas de pips—. Peor combinación posible, y es justo el par que suena cuando
+alguien dice «emergentes».
+
+⚠️ **La limitación de esa comparación, dicha:** los emergentes se midieron sobre
+200 velas (lo que pide la sonda) y los mayores sobre 20 (lo único que
+`barrido.json` publica). **No es la misma ventana**, así que la comparación vale
+para los extremos —0,92 contra 0,22 no se explica por la ventana— y no para
+distinguir 0,57 de 0,54.
+
+### Lo que la sonda sigue sin poder contestar, y lo dice ella misma
+
+**El spread**, que es lo que decide. Twelve Data da precios; el puente de MT5
+publica 18 pares y **ninguno es emergente**.
+
+📌 **Pero el rango cambia la prioridad, y eso sí es nuevo:** sin movimiento extra
+que lo compense, el spread emergente no tiene de dónde salir. Así que si algún
+día se retoma, **lo primero no es medir: es que Néstor añada USD/MXN y USD/ZAR a
+la Observación del Mercado de su MT5** —los dos con rango razonable que no son la
+lira— y que el puente los publique unos días. Con el spread real delante se
+decide en un minuto; sin él, cualquier número sería el de siempre sin su peaje.
+
+⚠️ Y sigue en pie lo escrito en la cabecera de la sonda **antes** de verla
+correr: una divisa emergente no es «una más». 18,6 años de USD/TRY están
+dominados por una devaluación de una sola dirección, así que **cualquier regla
+que venda la lira sale bien, y eso no es una ventaja: es haber vivido ese
+periodo.** Si se mide, hay que mirar las dos mitades con eso en la mano.
+
+## El estado en el que queda la investigación
+
+| paso | estado |
+|---|---|
+| A. RSI sobre la reversión | ✅ **ya existía** en `backtest.mjs` desde agosto. Falta re-correr el banco para actualizarlo a la rejilla limpia |
+| B. Bollinger | ❌ **medido y suspendido** (2 de 6) |
+| C. Emergentes | ⏸️ **datos sí, spread no.** Bloqueado en el MT5 de Néstor |
+| El carry | ❌ **diagnóstico hecho:** no distingue con el criterio conservador |
+
+📌 **Y lo que queda escrito de los tres juntos:** la única regla con ventaja
+medida de este proyecto sigue siendo **la reversión con el RSI estirado**, que ya
+corre en la sombra. Tres caminos nuevos la rodearon y ninguno la superó —
+Bollinger se le queda a −0,016, el carry no separa nada, y los emergentes no
+tienen el movimiento que justificaría su peaje. **Lo que falta no es otra
+medición sobre estos cinco años: es que el registro hacia adelante llegue a 150
+operaciones.**
