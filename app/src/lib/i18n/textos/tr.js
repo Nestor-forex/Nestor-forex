@@ -446,10 +446,10 @@ export default {
     caidaVieja: ({ n, acierto, pips }) => `Bundan önce ${n} işlem, kural onaylanırken ölçülenlerden farklı bir zarar durdur ve hedefle kaydedildi. SAYILMAZLAR ve bu kuralın geçmişi sıfırdan yeniden başlar (onlar ${acierto} % ve ${pips} pips verdi). Gerçekten olduğu için görünür kalıyorlar.`,
     caidaTitulo: "«Düşüşü satın al» geçmişi",
     caidaIntro:
-      "Üçüncü kural: pariteyi 10 günlük dibine değdiği gün satın alır. Bilerek ayrı tutuluyor — farklı bir deney ve karıştırmak üç sorudan hiçbirini yanıtlamaz.",
+      "Üçüncü kural: pariteyi 10 günlük dibine değdiği gün satın alır. Bilerek ayrı tutuluyor — farklı bir deney ve karıştırmak soruların hiçbirini yanıtlamaz.",
     reversionTitulo: 'Ters kuralın geçmişi',
     reversionIntro:
-      'Aynı hesap, ama düşeni alan kural için. Bilerek ayrı tutuluyor: bunlar iki farklı deney ve birleştirmek iki soruyu da yanıtlamaz.',
+      'Aynı hesap, ama düşeni alan kural için. Bilerek ayrı tutuluyor: bunlar farklı deneyler ve birleştirmek soruların hiçbirini yanıtlamaz.',
     titulo: 'Sinyal geçmişi',
     intro: 'Uygulamanın önerdiği ve sonrasında olanlar. Deneyler daha aşağıda, her biri kendi hesabıyla.',
     appTitulo: 'Uygulamanın sinyalleri',

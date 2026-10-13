@@ -451,10 +451,10 @@ export default {
     caidaVieja: ({ n, acierto, pips }) => `Avant cela, ${n} opérations ont été enregistrées avec un stop et un objectif qui n'étaient pas ceux mesurés lors de la validation de la règle. Elles ne comptent PAS, et l'historique de cette règle repart de zéro (elles donnaient ${acierto} % et ${pips} pips). Elles restent visibles car elles ont réellement eu lieu.`,
     caidaTitulo: "Historique de « acheter la baisse »",
     caidaIntro:
-      "La troisième règle : elle achète une paire le jour où elle touche son plus bas de 10 jours. Séparée à dessein — c'est une autre expérience, et tout mélanger ne répondrait à aucune des trois questions.",
+      "La troisième règle : elle achète une paire le jour où elle touche son plus bas de 10 jours. Séparée à dessein — c'est une autre expérience, et tout mélanger ne répondrait à aucune des questions.",
     reversionTitulo: "Historique de la règle inverse",
     reversionIntro:
-      "Les mêmes comptes, mais pour la règle qui achète ce qui a chuté. Séparés volontairement : ce sont deux expériences différentes, et les mélanger ne répond à aucune des deux questions.",
+      "Les mêmes comptes, mais pour la règle qui achète ce qui a chuté. Séparés volontairement : ce sont des expériences différentes, et les mélanger ne répond à aucune des questions.",
     titulo: 'Historique des signaux',
     intro: "Ce que l'app a proposé et ce qui a suivi. Les expériences sont plus bas, chacune avec son propre compte.",
     appTitulo: "Les signaux de l'app",
