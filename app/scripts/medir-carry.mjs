@@ -211,6 +211,41 @@ for (const [nombre, regla] of CONJUNTOS) {
     console.log('')
     console.log('  no se puede comparar: uno de los dos montones se quedó sin operaciones juzgadas')
   }
+
+  // ── ⚠️⚠️ ¿ES EL CARRY O ES EL DÓLAR? ──────────────────────────────────
+  //
+  // El hueco que esta parte cierra, escrito el 2026-10-13: 2021-2026 es el
+  // ciclo de subidas de la Fed, y el dólar fue la divisa de tasa alta buena
+  // parte del periodo. Así que «ir en contra del carry» puede ser **vender
+  // dólar disfrazado** — una apuesta direccional de ESTE periodo y no una
+  // regla. Y un cubo de la mitad de la lista no es un filtro fino.
+  //
+  // Sin esta línea, un «en contra» positivo no se puede interpretar: no habría
+  // forma de distinguir un efecto del diferencial de una racha del dólar. Es
+  // la misma familia que «una etiqueta equivocada es un error de medición».
+  console.log('')
+  console.log('  ¿es el diferencial o es el DÓLAR? — reparto del montón EN CONTRA')
+  const enContra = cubos.enContra
+  const conUSD = enContra.filter((s) => monedasDe(s.par)?.includes('USD'))
+  const vendeUSD = conUSD.filter((s) => {
+    const [base] = monedasDe(s.par) || []
+    // Vender el dólar es: venderlo cuando va delante, o comprar el par cuando
+    // va detrás.
+    return base === 'USD' ? s.lado === 'VENTA' : s.lado === 'COMPRA'
+  })
+  const pc = (n) => (enContra.length ? ((n / enContra.length) * 100).toFixed(0) : '—')
+  console.log(`    señales en el montón: ${enContra.length}`)
+  console.log(`    llevan dólar: ${conUSD.length} (${pc(conUSD.length)} %)`)
+  console.log(`    de ésas, VENDEN dólar: ${vendeUSD.length} (${pc(vendeUSD.length)} % del montón)`)
+  // ⚠️ El umbral NO es un listón que decida nada: es solo cuándo hay que
+  // sospechar lo bastante para no citar el número sin mirar esto.
+  if (enContra.length && vendeUSD.length / enContra.length >= 0.5) {
+    console.log('    ⚠️ MÁS DE LA MITAD del montón vende dólar: lo que mide esta fila')
+    console.log('       puede ser el ciclo del dólar y no el diferencial. NO citarla')
+    console.log('       como hallazgo sin medir eso aparte.')
+  } else {
+    console.log('    → el montón no está dominado por un lado del dólar.')
+  }
 }
 
 console.log('')

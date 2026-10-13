@@ -11009,3 +11009,71 @@ Bollinger se le queda a −0,016, el carry no separa nada, y los emergentes no
 tienen el movimiento que justificaría su peaje. **Lo que falta no es otra
 medición sobre estos cinco años: es que el registro hacia adelante llegue a 150
 operaciones.**
+
+---
+
+# El sesgo del carry, cerrado — y con él CAMBIA el veredicto (2026-10-13)
+
+Néstor: **«pide más datos al BIS y arregla eso del sesgo»**. Se arregló, y la
+tabla salió distinta. Esto es lo que más importa de todo el día.
+
+## El arreglo: dos constantes, no una
+
+`OBSERVACIONES_CARRY = 3500` vive en `scripts/lib/carry.mjs` y **no** en
+`src/lib/tasas.js`, que es GEMELO y cuya constante sirve a la PANTALLA — ésta
+solo necesita «al menos un cambio dentro de la ventana» y para eso 1000 está
+medido. El banco necesita otra cosa: **cubrir el periodo entero**.
+
+| | antes (1000) | ahora (3500) |
+|---|---|---|
+| NZD | 717 útiles · desde ~2024 | **2.469 · desde 2017-02-10** |
+| CAD | 878 | **3.151 · desde 2014-08-22** |
+| **señales en «sin tasa»** | **1.038 de 2.493 (42 %)** | **0** |
+
+✓ Las ocho cubren desde antes de 2021-08-19. **El cubo «sin dato» está vacío**,
+así que la comparación ya cubre el periodo y los pares por igual.
+
+⚠️ **El número NO es la defensa.** Lo que cierra el sesgo es que el informe
+IMPRIMA la cobertura de cada divisa y avise nombrando a las que no alcancen.
+Subir la N sin eso volvería a esconder el problema el día que el periodo crezca.
+Y cuando falte, **no se para**: el informe vale para el tramo que sí cubre, y
+pararse dejaría a Néstor sin ninguna tabla. Lo que no se puede es callarlo.
+
+## ⚠️⚠️ Y AHORA SÍ DISTINGUE, con el criterio conservador del propio guion
+
+| señales de la APP | ops | acierto | por 1R |
+|---|---:|---:|---:|
+| A FAVOR del diferencial | 1.054 | 45 % ±3 | **−0,117** |
+| **EN CONTRA** | 1.108 | **52 % ±3** | **+0,011** |
+| indiferente (banda neutra) | 331 | 51 % ±5 | +0,013 |
+| sin tasa | **0** | — | — |
+| TODAS | 2.493 | 49 % ±2 | −0,043 |
+
+**«los márgenes NO se solapan»** — 7 puntos de diferencia con ±3 cada uno. El
+2026-10-13 por la tarde, con el 42 % de las señales fuera, solapaban y la
+conclusión fue «no distingue nada». **Con el periodo cubierto, distingue.**
+
+Y el montón «en contra» mide **+0,011**: positivo, sobre 1.108 operaciones, en
+una app que en total va a −0,043.
+
+En la reversión M2 la dirección es la misma y **sigue sin distinguir**: 50 % ±5
+contra 55 % ±5, cinco puntos contra diez de margen. Su «en contra» da +0,081.
+
+## ⚠️⚠️ LO QUE NO HAY QUE HACER CON ESTO, Y ES LO IMPORTANTE
+
+**NO se enciende.** Sigue siendo un FILTRO y se miró DESPUÉS de ver la tabla, o
+sea el troceo a posteriori que este proyecto rechazó con el control de la
+confluencia y con el del barrido de liquidez. Si se persigue, va al banco con su
+listón escrito antes, como el COT — que se midió y suspendió.
+
+⚠️ **Y hay una hipótesis que lo tumbaría y NO está medida, así que va dicha
+antes de que nadie se entusiasme:** 2021-2026 es el ciclo de subidas de la Fed.
+El dólar fue la divisa de tasa alta buena parte del periodo, así que **«ir en
+contra del carry» puede ser «vender dólar» disfrazado** — una apuesta
+direccional de ESTE periodo, no una regla. Un cubo de 1.108 señales sobre 2.493
+no es un filtro fino: es media lista.
+
+📌 **Lo que haría falta para saberlo** es partir el cubo «en contra» por divisa
+y por lado: si más de la mitad es «vender algo contra el dólar», es el dólar. Eso
+es una línea más en el informe y cero créditos nuevos, y **no se ha hecho**. Sin
+ella, este +0,011 no se puede citar como hallazgo.
