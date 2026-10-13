@@ -10547,3 +10547,262 @@ banco de pruebas al lado de los números del historial) **cinco días después**
 📌 **La regla práctica:** cuando en la misma frase van números del backtest y del
 registro real, **hay que decir de cuál es cada uno o no ponerlos juntos.** Y al
 listar varias mediciones, cada una con su signo rotulado.
+
+---
+
+# Los cuatro pasos de la investigación, construidos (2026-10-13)
+
+Néstor confirmó los cuatro del informe del 2026-10-12: **«en definitiva quiero
+que hagas todo lo de la imagen»**, más dos cosas suyas — combinar mayores con
+emergentes, y **«haz una comprobación de si las señales que van a favor del
+diferencial miden distinto de las que van en contra»** — y un límite:
+**«no quiero que borres lo de las reglas en la sombra»**.
+
+⚠️ **CERO archivos de `src/` tocados. Ninguna señal cambia.** Los tres
+workflows nuevos van con `permissions: contents: read` y solo a mano, y
+**ninguno se ha lanzado**. Las tres reglas de la sombra siguen exactamente
+igual: no se tocó ni una línea de `lss-sombra.mjs`, ni del vigía, ni del
+historial.
+
+## ⚠️⚠️ EL HALLAZGO QUE CAMBIA EL PLAN: la candidata A YA EXISTÍA
+
+Mi informe decía que barrer el umbral de RSI **sobre la reversión** «nunca se
+hizo; el barrido de agosto fue sobre las señales de la app». **Es falso.**
+
+Está en `backtest.mjs` **desde agosto**, líneas 897-917:
+
+```js
+for (const u of [25, 30, 35, 40, 45, 50]) {
+  const regla = (p, esc, thr) =>
+    p.dif < -thr && p.rsiV <= u ? 'COMPRA' : p.dif > thr && p.rsiV >= 100 - u ? 'VENTA' : null
+```
+
+Eso es exactamente la candidata A: el RSI sobre la REVERSIÓN, no sobre la app.
+Con spread y partido en las dos mitades. Y su resultado lleva en este mismo
+archivo desde el 2026-08-25: **«el barrido de umbrales vecinos sale positivo en
+los seis (de +0,15 a +0,01)»**.
+
+📌 **Quinta vez que se diseña algo que ya existía en el repositorio** (tras el
+puente de MT5, el comparador de diccionarios, la prueba del barrido publicado y
+el botón de borrar). La regla del 2026-09-04 sigue siendo la misma y sigue
+costando: **buscarlo primero en el repositorio.** Aquí ni siquiera hacía falta
+leer código — bastaba `grep rsiV backtest.mjs`.
+
+⚠️ **Lo que SÍ falta de la candidata A, y no es poco:** esos números son de
+ANTES de la rejilla limpia (2026-10-06) y del swap por noches de calendario.
+Re-correr el banco los actualiza, y eso ya está construido: es el botón de
+siempre.
+
+## B. Bollinger: el listón y la medición
+
+```
+app/scripts/lib/bollinger.mjs                la matemática + las reglas
+app/scripts/lib/preregistro-bollinger.mjs    el listón, fecha 2026-10-13 dentro
+app/scripts/medir-bollinger.mjs              la medición, 14 créditos
+app/scripts/prueba-bollinger.mjs             80 comprobaciones, sin internet
+.github/workflows/bollinger.yml              solo a mano, permiso de LECTURA
+```
+
+**Por qué esta y no otra:** Coakley, Marzano y Nankervis (2016) midieron
+113.148 reglas sobre 22 divisas y concluyeron que casi ninguna regla
+tradicional sobrevive en 2006-2015 — **salvo dos familias: Bollinger y RSI.**
+El RSI ya está dentro de la única regla que ha medido positivo aquí (la
+reversión M2). Bollinger era la mitad que faltaba.
+
+### ⚠️ Lo que se decide ANTES, y es lo que hace que no sea a posteriori
+
+Una banda de Bollinger se opera de las **dos maneras opuestas con el mismo
+disparo**. Medir las dos y quedarse con la que gane sería elegir después de ver
+la tabla — lo que se rechazó con el control de la confluencia y con el del
+barrido de liquidez. Así que en el preregistro queda escrito:
+
+| | cuál | el motivo, escrito |
+|---|---|---|
+| **candidata** | reversión (salirse por abajo → COMPRAR) | todo lo positivo de este proyecto compra debilidad; todo lo que persigue fuerza ha perdido |
+| **control** | momento (el mismo disparo → VENDER) | — |
+| **variante juzgada** | **con RSI estirado (35)** | la literatura empareja las dos familias; lo pidió Néstor; y de las cuatro reversiones medidas el 2026-09-03 **la única que aguanta el swap es la que lleva el RSI** |
+
+⚠️ **El criterio propio es «le gana a M2 por ≥0,02», no «solapa poco».** Y el
+cambio tiene motivo: Bollinger-abajo y «RSI ≤ 35» son dos formas de decir «el
+precio se cayó mucho», así que es de esperar que se parezcan. Con un criterio
+de independencia, un solape alto tumbaría la regla sin contestar lo que
+importa — **¿aporta algo sobre la regla que YA tenemos?**. El solape se calcula
+y se imprime como información, porque el 2026-09-07 dije «3 %» de memoria y el
+número real era 18 %.
+
+### ⚠️⚠️ EL FALLO DE DISEÑO QUE CAZÓ EL HUMO: el control daba CERO señales
+
+La primera versión condicionaba el RSI **al LADO que se opera**: RSI bajo para
+comprar, alto para vender. Con la lectura de reversión funciona. Con la de
+momento el lado está invertido, así que pedía **RSI alto para vender un precio
+que está en la banda de abajo** — donde el RSI es bajo por construcción. Las
+dos condiciones se contradecían.
+
+**Resultado: el control no producía ni una señal**, y la tabla lo habría
+enseñado como «la lectura de momento sencillamente no da nada» en vez de «mi
+filtro se contradecía solo». Un control que no produce señales no es un
+control: es una fila vacía.
+
+Ahora las condiciones miran el **EVENTO** (dónde está el precio), no el lado,
+así que las dos lecturas ven los mismos días y los mismos pares y lo único que
+cambia es hacia dónde se opera. La señal de que el arreglo es correcto salió
+sola en el humo: **candidata 28 % de acierto y control 72 %, que suman 100.**
+
+### Los otros dos fallos, los dos cazados antes de gastar un crédito
+
+📌 **`posicionDe` leía el último valor de `serie20` en vez de `p.c`.** En
+producción los dos coinciden —`serie20` son los últimos 20 cierres—, así que
+habría ordenado por el sitio correcto **por casualidad**, hasta el día que
+alguien la llamara con otra cosa. Dos formas de preguntar «¿dónde está el
+precio?» que pueden separarse en silencio.
+
+📌 **`par`, no `name`.** El reparto por par imprimía «undefined con el 100 %»,
+que es exactamente el aspecto de un criterio de concentración roto — y habría
+tumbado la regla por el motivo equivocado.
+
+### El `orden` del motor, y por qué no es cosmético
+
+`porReglaPropia` se queda con los N mejores por lado y los ordenaba SIEMPRE por
+divergencia de fuerza, que es el criterio de la APP. Una regla que no mira la
+fuerza quedaba medida como **«esa regla, desempatada por fuerza»** — otra regla
+con el mismo nombre, y aquí está escrito que una etiqueta equivocada es un
+error de medición.
+
+`generarSenales` gana un `orden` opcional, **por defecto `null` = el de
+siempre**, así que no se mueve ni una señal de todo lo ya medido.
+
+📌 **Y la garantía aditiva salió floja al probarla.** Las dos primeras
+comprobaciones comparaban el motor CONSIGO MISMO, así que al romper el orden
+por defecto a propósito el daño lo cazó **otra** comprobación. Se añadió una
+que fija la propiedad de verdad: por defecto se quedan los de mayor divergencia
+de fuerza. Con eso, el mismo daño tumba 2.
+
+## El chequeo del carry, que lo pidió Néstor de frente
+
+```
+app/scripts/lib/carry.mjs        las cuentas puras
+app/scripts/medir-carry.mjs      la medición, 14 créditos (el BIS es gratis)
+app/scripts/prueba-carry.mjs     35 comprobaciones, sin internet
+.github/workflows/carry.yml      solo a mano, permiso de LECTURA
+```
+
+⚠️⚠️ **ES UN DIAGNÓSTICO, NO UNA REGLA NI UN FILTRO.** Parte en dos las señales
+que la app y la reversión YA producen y compara los montones. Si saliera que
+las de un lado miden mejor, **eso no enciende nada**: sería un filtro, y los
+filtros van al banco de pruebas con su listón escrito antes — van **ocho
+familias medidas y ocho fallando**.
+
+Reutiliza `leerSerieCSV` de `tasas.js`, que ya sabe saltar los huecos del BIS
+(283 en Nueva Zelanda de 1000 observaciones). No cuesta una fuente nueva.
+
+### Las decisiones que no hay que ablandar
+
+⚠️ **Lo que no se puede clasificar va a `sinDato`, NUNCA a «en contra».** Si se
+mezclaran, un periodo sin tasas publicadas se leería como un periodo con el
+carry en contra — un dato correcto describiendo otra cosa.
+
+⚠️ **Margen de 2 días antes de dar una tasa por conocida.** No es el retraso de
+publicación del BIS (7-12 días): una tasa la anuncia el banco central el mismo
+día, así que el número es público al instante. El margen está porque los dos
+errores no cuestan igual — usar una tasa un día antes de que exista es mirar el
+futuro; usarla dos días tarde no cambia nada, porque se mueven una vez cada
+varias semanas.
+
+⚠️ **La banda neutra (`UMBRAL_NEUTRO`, 0,25) se reutiliza y no se reinventa.**
+Ya está justificada en `tasas.js`: el margen del bróker está entre 0,5 y 1,5
+puntos anuales, así que una diferencia de dos décimas se la come entera.
+
+⚠️ **El margen de error va pegado a cada porcentaje.** Partir en montones hace
+las muestras chicas, y un porcentaje de un montón chico se lee como un
+diagnóstico cuando no distingue nada. El informe dice con todas las letras si
+los márgenes **se solapan**.
+
+### 📌 Dos fallos, uno de ellos silencioso del todo
+
+**`monedasDe` devuelve un ARRAY `['EUR','USD']`, no un objeto.** La primera
+versión leía `.base` y `.cotizada`, que no existen: habría devuelto `null` en
+**todas** las señales y el informe habría dicho «no hay tasas para ninguna» sin
+que fallara nada. Se vio **abriendo `pairs.js`**, no deduciéndolo.
+
+**Y el `fetch` del BIS no estaba dentro de un `try`.** Desde estas sesiones
+`stats.bis.org` está bloqueado, así que el guion salía con un volcado de pila —
+que se lee como «el guion está roto» cuando lo que pasa es que no hay red.
+
+## C. La sonda de emergentes
+
+```
+app/scripts/sonda-emergentes.mjs           pide, cuenta y enseña
+.github/workflows/sonda-emergentes.yml     solo a mano, permiso de LECTURA
+```
+
+⚠️⚠️ **ESTA SONDA NO PUEDE CONTESTAR LO QUE DECIDE, y va dicho dentro.** De las
+tres preguntas —¿hay datos?, ¿cuántos años?, ¿qué spread real?— contesta las
+dos primeras. **El spread no**: Twelve Data da precios, y el puente de MT5
+publica 18 pares de los que **ninguno es emergente**. Para saberlo, Néstor
+tiene que añadir esos símbolos a su Observación del Mercado.
+
+Y es justo el que decide: en Intradía está MEDIDO que el peaje se come una
+ventaja entera (la mejor regla daba +0,027 sin costes contra 0,063 de peaje).
+Un USD/TRY con 30 pips de spread puede moverse el doble y salir peor.
+
+⚠️ **Dos cosas escritas ANTES de ver un número**, a propósito:
+- el prior no es bueno — la investigación encontró que las reglas técnicas
+  también se evaporan en emergentes al corregir el sesgo de selección;
+- y una divisa emergente **no es «una más»**: se devalúan a saltos, y un
+  backtest de cinco años sobre USD/TRY está dominado por una tendencia de una
+  sola dirección. Cualquier regla que venda la lira sale bien, y eso no es una
+  ventaja: es haber vivido ese periodo.
+
+Mira `type` para no repetir la trampa del oro (`GOLD` devolvió 200 con cinco
+velas válidas **de una acción de Nueva York**), y **sin símbolos leídos no da
+veredicto** — la asimetría de `veredictoBusqueda`.
+
+## 📌 Y los guardianes del repositorio saltaron SOLOS otra vez
+
+`prueba-rejilla-limpia` (bloque 11) se puso roja al añadir los dos guiones
+nuevos: **«GUIONES SIN DECIDIR su rejilla»**. Es el manifiesto del 2026-10-06 —
+un guion nuevo no puede pedir velas sin decir si las quiere limpias o crudas.
+Registrados en LIMPIA, porque miden la app tal como existiría.
+
+Es la **segunda vez** que pasa (la primera fue `publicar-barrido.mjs` el
+2026-10-07), y conviene tenerlo escrito: **cuando una comprobación de este
+repositorio se pone roja al añadir algo, lo normal es que esté haciendo su
+trabajo y no que estorbe.**
+
+## Cómo se verificó
+
+Lint, build y **las 41 pruebas** sin internet (solo falla `prueba-aviso-real`,
+que pide el secreto VAPID y manda un aviso de verdad). Los **65 gemelos**
+siguen idénticos: todo lo tocado es PRIMO o nuevo y solo de Swing, así que no
+hay cambio emparejado.
+
+**Comprobado que las pruebas MUERDEN**, con el daño verificado en el archivo
+antes de darlo por bueno:
+
+| daño | caen |
+|---|---:|
+| volver a condicionar el RSI al LADO (el fallo del control) | 2 |
+| que la posición lea el último de la serie en vez de `p.c` | 5 |
+| que las señales sin tasa caigan en «en contra» | 4 |
+| quitar el margen que impide mirar el futuro | 2 |
+| dar la vuelta al orden por defecto del motor | 2 |
+
+Y **de punta a punta con un mercado inventado**, antes de gastar un crédito:
+las dos mediciones corren enteras, el veredicto de Bollinger se niega a juzgar
+con 135 operaciones (hacen falta 150) y el del carry imprime los cuatro
+montones con sus márgenes.
+
+## Lo siguiente, y son tres botones que NO se han pulsado
+
+| | qué contesta | cuesta |
+|---|---|---|
+| **Actions → «¿Sirven las bandas de Bollinger?»** | la candidata B | 14 créditos |
+| **Actions → «¿Importa ir a favor o en contra del diferencial?»** | lo que pidió Néstor | 14 créditos |
+| **Actions → «Sonda de los pares emergentes»** | la candidata C, menos el spread | ≤8 créditos |
+
+Más re-correr el banco de pruebas, que actualiza la candidata A con la rejilla
+limpia.
+
+⚠️ **Y lo que ninguno autoriza:** encender nada. Swing sigue midiendo
+−0,03/−0,04 por unidad de riesgo, e Intradía −0,13, hasta que algo pase su
+propio registro hacia adelante.
