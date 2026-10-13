@@ -313,5 +313,61 @@ console.log('\n7. ⚠️ «Comprar la caída» usa la vara simétrica, no la de 
   comprobar(!usaVaraSimetrica('loQueVengaManana'), '⚠️ y un tipo que nadie ha inventado NACE con la geometría de la app')
 }
 
+// ── Bollinger a secas: la quinta de sombra (2026-10-13) ──────────────────
+//
+// Lo que esto vigila es el fallo del 2026-10-12 repetido: si la regla se
+// anotara con la geometría de la APP en vez de con la vara simétrica, su
+// listón preregistrado estaría juzgando a otra estrategia y no habría forma de
+// notarlo — salvo mirando el R/B del historial meses después.
+{
+  console.log('\nBollinger, la quinta de sombra')
+
+  comprobar(
+    usaVaraSimetrica('bollinger'),
+    '⚠️⚠️ `bollinger` lleva la VARA SIMÉTRICA, que es con la que se midió'
+  )
+
+  const vista = derivarVista(base, { thr: 0 })
+  comprobar(Array.isArray(vista.setupsBollinger), '`derivarVista` devuelve `setupsBollinger`')
+
+  // ⚠️ No se exige que HAYA señales: con 14 pares dentro de sus bandas, cero
+  // es la respuesta correcta del mercado (pasó el 2026-10-13 en producción).
+  // Lo que se exige es que las que salgan lleven la geometría buena.
+  for (const s of vista.setupsBollinger) {
+    comprobar(s.tipo === 'bollinger', `${s.name} lleva tipo 'bollinger'`)
+    comprobar(casi(s.crudo.rr, 1, 1e-6), `${s.name} tiene R/B 1:1 (vara simétrica), no la de la app`)
+    comprobar(
+      casi(s.crudo.pipRiesgo, s.crudo.pipBeneficio, 1e-6),
+      `${s.name}: el stop y el objetivo están a la misma distancia`
+    )
+  }
+
+  // Y la que de verdad cierra el agujero: forzar un par fuera de banda y exigir
+  // que la señal salga CON la vara simétrica. Sin esto, un mercado inventado
+  // que no dispara ninguna señal dejaría el bloque entero pasando en verde
+  // sobre una lista vacía — el fallo que ya está documentado en
+  // `prueba-barrido-publicado.mjs`.
+  const forzado = JSON.parse(JSON.stringify(base))
+  const victima = forzado.pares[0]
+  const serie = victima.serie20
+  // Un precio muy por debajo de su banda inferior: la lectura de reversión
+  // tiene que decir COMPRA.
+  const minimo = Math.min(...serie)
+  victima.c = minimo * 0.9
+  serie[serie.length - 1] = victima.c
+  const vf = derivarVista(forzado, { thr: 0 })
+  const señal = vf.setupsBollinger.find((x) => x.name === victima.name)
+  comprobar(!!señal, `un par empujado fuera de su banda SÍ da señal (${victima.name})`)
+  if (señal) {
+    comprobar(señal.lado === 'COMPRA', 'por debajo de la banda → COMPRA (lectura de reversión)')
+    comprobar(casi(señal.crudo.rr, 1, 1e-6), '…y con R/B 1:1, la vara con la que se aprobó')
+    const atr = victima.atrAbs
+    comprobar(
+      casi(Math.abs(señal.crudo.precio - señal.crudo.sl), ATR_REVERSION * atr, 1e-9),
+      `…y el stop a ${ATR_REVERSION} × ATR exactos`
+    )
+  }
+}
+
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')
 process.exit(fallos ? 1 : 0)

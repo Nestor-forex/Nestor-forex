@@ -87,6 +87,13 @@ export function resumir(resultados) {
   // identidad— se anota en paralelo con `tipo: 'lss'`.
   const deReversion = todasJuzgadas.filter((r) => r.tipo === 'reversion')
   const deRuptura = todasJuzgadas.filter((r) => r.tipo === 'lss')
+  // ⚠️ Y DESDE EL 2026-10-13 SON CINCO. «El toque de banda solo» —Bollinger a
+  // secas, sin RSI y sin fuerza— se anota con `tipo: 'bollinger'`. Lo pidió
+  // Néstor al leer la tabla del banco, y su listón está en
+  // `scripts/lib/preregistro-bollinger-sombra.mjs` con la honestidad escrita
+  // dentro: esa variante se eligió DESPUÉS de ver los resultados, así que su
+  // veredicto sale solo del registro hacia adelante.
+  const deBollinger = todasJuzgadas.filter((r) => r.tipo === 'bollinger')
 
   // ⚠️⚠️ «COMPRAR LA CAÍDA» SE PARTE EN DOS, Y NO ES UN CAPRICHO (2026-10-12).
   //
@@ -128,7 +135,7 @@ export function resumir(resultados) {
   // Éste es el ÚNICO cubo que se define por descarte, y a propósito: su trabajo
   // es precisamente recoger lo que nadie enumeró. Todos los demás se definen
   // por lo que SON.
-  const CONOCIDOS = new Set(['reversion', 'caida', 'lss'])
+  const CONOCIDOS = new Set(['reversion', 'caida', 'lss', 'bollinger'])
   const otros = todasJuzgadas.filter((r) => r.tipo && !CONOCIDOS.has(r.tipo) && r.tipo !== 'tendencia')
 
   return {
@@ -139,6 +146,7 @@ export function resumir(resultados) {
     // nada: existen para que se vea que existieron. Ver la nota de arriba.
     caidaVieja: cuenta(deCaidaVieja),
     ruptura: cuenta(deRuptura),
+    bollinger: cuenta(deBollinger),
     otros: cuenta(otros),
     ventasPausadas: cuenta(ventasPausadas),
     // Se mantiene el cubo junto para no romper a quien ya lo lee, pero lo

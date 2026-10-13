@@ -27,8 +27,8 @@ import { resolver } from './lib/resolver.mjs'
 import { simetrica } from './lib/geometrias.mjs'
 import { monedasDe } from '../src/lib/pairs.js'
 import { margen } from '../src/lib/diagnostico.js'
-import { leerSerieCSV, OBSERVACIONES, ZONA_DIVISA } from '../src/lib/tasas.js'
-import { DIAS_MARGEN, UMBRAL_NEUTRO, repartir } from './lib/carry.mjs'
+import { leerSerieCSV, ZONA_DIVISA } from '../src/lib/tasas.js'
+import { DIAS_MARGEN, OBSERVACIONES_CARRY, UMBRAL_NEUTRO, cobertura, repartir } from './lib/carry.mjs'
 
 const CALENTAMIENTO = 80
 const THR = UMBRAL_FUERZA
@@ -52,7 +52,7 @@ console.log('')
 const ZONAS = Object.values(ZONA_DIVISA).length ? Object.keys(ZONA_DIVISA).join('+') : ''
 const URL_BIS =
   `https://stats.bis.org/api/v2/data/dataflow/BIS/WS_CBPOL/1.0/D.${ZONAS}` +
-  `?lastNObservations=${OBSERVACIONES}&format=csv`
+  `?lastNObservations=${OBSERVACIONES_CARRY}&format=csv`
 
 console.log('Bajando las tasas del BIS…')
 // ⚠️ Con `try`. Un `fetch` que no llega REVIENTA con un volcado de pila, y eso
@@ -94,6 +94,45 @@ console.log(`  banda neutra: |diferencial| < ${UMBRAL_NEUTRO} puntos no se repar
 const { fechas, rates, rangosPar } = await obtenerVelas(leerLlave(), { velas: VELAS })
 const completo = computarBarrido(fechas, rates, rangosPar)
 console.log(`Días de mercado: ${fechas.length} · de ${fechas[0]} a ${fechas.at(-1)}\n`)
+
+// ── ⚠️⚠️ LA COBERTURA, ANTES DE NINGÚN MONTÓN ────────────────────────────
+//
+// Esto es la mitad que faltaba el 2026-10-13. El informe repartía las señales
+// en cuatro cubos y NO decía que «sin dato» no era aleatorio: con
+// `OBSERVACIONES = 1000`, NZD solo alcanzaba 717 observaciones útiles y CAD
+// 878, así que ese cubo se concentraba al principio del periodo y en los pares
+// con esas dos divisas — el 42 % de las señales. La tabla se leía como si
+// cubriera el periodo entero y no lo cubría.
+//
+// Va ANTES de los montones a propósito, igual que el aviso del COT y el de las
+// tasas van antes de ningún número: lo primero que se lee es lo que se
+// recuerda, y aquí lo caro es leer la tabla creyendo que está completa.
+const cob = cobertura(series, fechas[0])
+console.log('COBERTURA DE LAS TASAS (¿alcanzan para todo el periodo?)')
+console.log('')
+console.log('divisa   desde        hasta        obs   ¿cubre?')
+console.log('─'.repeat(56))
+for (const d of cob.divisas) {
+  console.log(
+    `${d.divisa.padEnd(8)} ${String(d.desde ?? '—').padEnd(12)} ${String(d.hasta ?? '—').padEnd(12)} ` +
+      `${String(d.n).padStart(4)}   ${d.cubre ? 'sí' : '⚠️ NO'}`
+  )
+}
+console.log('─'.repeat(56))
+if (cob.faltan.length) {
+  // ⚠️ NO se para: el informe sigue valiendo para el tramo que sí cubre, y
+  // pararse dejaría a Néstor sin ninguna tabla. Lo que no se puede es callarlo.
+  console.log('')
+  console.log(`⚠️⚠️ ${cob.faltan.length} divisa(s) NO cubren el periodo: ${cob.faltan.map((d) => d.divisa).join(', ')}`)
+  console.log('     Sus señales más antiguas caen en «sin tasa» POR FALTA DE VENTANA,')
+  console.log('     no por nada del mercado — y eso sesga el reparto hacia los pares')
+  console.log(`     de esas divisas. Se arregla subiendo OBSERVACIONES_CARRY (hoy ${OBSERVACIONES_CARRY}).`)
+  console.log(`     El tramo que TODAS cubren empieza el ${cob.desdeElMasTarde}.`)
+} else {
+  console.log(`✓ Las 8 divisas cubren desde antes de ${fechas[0]}: el cubo «sin dato»`)
+  console.log('  ya no viene de la ventana. El sesgo del 2026-10-13 está cerrado.')
+}
+console.log('')
 
 // Todo con la vara NEUTRA 1:1. Con objetivos variables, un corte puede
 // seleccionar operaciones con buena proporción objetivo/riesgo sin acertar ni
@@ -171,6 +210,41 @@ for (const [nombre, regla] of CONJUNTOS) {
   } else {
     console.log('')
     console.log('  no se puede comparar: uno de los dos montones se quedó sin operaciones juzgadas')
+  }
+
+  // ── ⚠️⚠️ ¿ES EL CARRY O ES EL DÓLAR? ──────────────────────────────────
+  //
+  // El hueco que esta parte cierra, escrito el 2026-10-13: 2021-2026 es el
+  // ciclo de subidas de la Fed, y el dólar fue la divisa de tasa alta buena
+  // parte del periodo. Así que «ir en contra del carry» puede ser **vender
+  // dólar disfrazado** — una apuesta direccional de ESTE periodo y no una
+  // regla. Y un cubo de la mitad de la lista no es un filtro fino.
+  //
+  // Sin esta línea, un «en contra» positivo no se puede interpretar: no habría
+  // forma de distinguir un efecto del diferencial de una racha del dólar. Es
+  // la misma familia que «una etiqueta equivocada es un error de medición».
+  console.log('')
+  console.log('  ¿es el diferencial o es el DÓLAR? — reparto del montón EN CONTRA')
+  const enContra = cubos.enContra
+  const conUSD = enContra.filter((s) => monedasDe(s.par)?.includes('USD'))
+  const vendeUSD = conUSD.filter((s) => {
+    const [base] = monedasDe(s.par) || []
+    // Vender el dólar es: venderlo cuando va delante, o comprar el par cuando
+    // va detrás.
+    return base === 'USD' ? s.lado === 'VENTA' : s.lado === 'COMPRA'
+  })
+  const pc = (n) => (enContra.length ? ((n / enContra.length) * 100).toFixed(0) : '—')
+  console.log(`    señales en el montón: ${enContra.length}`)
+  console.log(`    llevan dólar: ${conUSD.length} (${pc(conUSD.length)} %)`)
+  console.log(`    de ésas, VENDEN dólar: ${vendeUSD.length} (${pc(vendeUSD.length)} % del montón)`)
+  // ⚠️ El umbral NO es un listón que decida nada: es solo cuándo hay que
+  // sospechar lo bastante para no citar el número sin mirar esto.
+  if (enContra.length && vendeUSD.length / enContra.length >= 0.5) {
+    console.log('    ⚠️ MÁS DE LA MITAD del montón vende dólar: lo que mide esta fila')
+    console.log('       puede ser el ciclo del dólar y no el diferencial. NO citarla')
+    console.log('       como hallazgo sin medir eso aparte.')
+  } else {
+    console.log('    → el montón no está dominado por un lado del dólar.')
   }
 }
 

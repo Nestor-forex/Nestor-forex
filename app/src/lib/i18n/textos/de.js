@@ -438,6 +438,10 @@ export default {
   },
 
   historial: {
+    esBollinger: 'BOLLINGER',
+    bollingerTitulo: 'Verlauf «Bandberührung»',
+    bollingerIntro:
+      'Die fünfte Regel: Einstieg, wenn der Kurs sein Bollinger-Band verlässt, mit Wette auf Rückkehr. ⚠️ Sie ist IN BEOBACHTUNG und nicht validiert, und zwei Dinge sind wichtig: diese Variante wurde NACH Sichtung der Backtest-Ergebnisse gewählt, und dort verlor sie bereits, sobald der nächtliche Swap mitgerechnet wurde. Keine Empfehlung.',
     esRuptura: 'STRUKTURBRUCH',
     rupturaTitulo: 'Verlauf von „Strukturbruch“',
     rupturaIntro:
@@ -447,10 +451,10 @@ export default {
     caidaVieja: ({ n, acierto, pips }) => `Davor wurden ${n} Trades mit einem Stop und einem Ziel erfasst, die nicht den bei der Freigabe gemessenen entsprachen. Sie zählen NICHT, und die Historie dieser Regel beginnt wieder bei null (jene ergaben ${acierto} % und ${pips} Pips). Sie bleiben sichtbar, weil sie tatsächlich stattfanden.`,
     caidaTitulo: "Verlauf von „den Einbruch kaufen“",
     caidaIntro:
-      "Die dritte Regel: Sie kauft ein Paar an dem Tag, an dem es sein 10-Tage-Tief erreicht. Bewusst getrennt — es ist ein anderes Experiment, und eine Vermischung würde keine der drei Fragen beantworten.",
+      "Die dritte Regel: Sie kauft ein Paar an dem Tag, an dem es sein 10-Tage-Tief erreicht. Bewusst getrennt — es ist ein anderes Experiment, und eine Vermischung würde keine der Fragen beantworten.",
     reversionTitulo: 'Verlauf der umgekehrten Regel',
     reversionIntro:
-      'Dieselbe Rechnung, aber für die Regel, die das Gefallene kauft. Bewusst getrennt: das sind zwei verschiedene Experimente, und zusammengelegt beantworten sie keine der beiden Fragen.',
+      'Dieselbe Rechnung, aber für die Regel, die das Gefallene kauft. Bewusst getrennt: das sind verschiedene Experimente, und zusammengelegt beantworten sie keine der Fragen.',
     titulo: 'Signalverlauf',
     intro: 'Was die App vorgeschlagen hat und was danach passierte. Die Experimente stehen weiter unten, jedes mit eigener Rechnung.',
     appTitulo: 'Die Signale der App',

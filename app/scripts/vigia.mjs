@@ -163,6 +163,11 @@ const todosLosSetups = [
   ...vista.setups,
   ...vista.setupsReversion,
   ...vista.setupsCaida,
+  // La cuarta de sombra, desde el 2026-10-13. ⚠️ Si alguien quita esta línea,
+  // su historial deja de crecer **sin dar ningún error** — igual que la
+  // reversión y «comprar la caída», y hay una comprobación que exige que el
+  // vigía lea las cuatro listas.
+  ...vista.setupsBollinger,
   ...setupsRuptura,
 ]
 

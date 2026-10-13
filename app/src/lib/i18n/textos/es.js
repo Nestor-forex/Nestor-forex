@@ -465,6 +465,10 @@ export default {
   },
 
   historial: {
+    esBollinger: 'BOLLINGER',
+    bollingerTitulo: 'Historial de «el toque de banda»',
+    bollingerIntro:
+      'La quinta regla: entra cuando el precio se sale de su banda de Bollinger y apuesta a que vuelve. ⚠️ Está EN OBSERVACIÓN y sin validar, y hay dos cosas que hay que saber: esta versión se eligió DESPUÉS de ver los resultados de la prueba, y en esa prueba YA perdía al contar el swap de cada noche. No es una recomendación.',
     esRuptura: 'RUPTURA DE ESTRUCTURA',
     rupturaTitulo: 'Historial de «ruptura de estructura»',
     rupturaIntro:
@@ -474,10 +478,10 @@ export default {
     caidaVieja: ({ n, acierto, pips }) => `Antes de esto se anotaron ${n} operaciones con un stop y un objetivo que no eran los que se midieron al aprobar la regla. NO cuentan, y el historial de esta regla vuelve a empezar desde cero (aquéllas daban ${acierto} % y ${pips} pips). Se dejan a la vista porque ocurrieron de verdad.`,
     caidaTitulo: "Historial de «comprar la caída»",
     caidaIntro:
-      "La tercera regla, que compra el par el día que toca su punto más bajo de 10 días. Va aparte porque es otro experimento distinto: mezclarla con las demás no respondería ninguna de las tres preguntas.",
+      "La tercera regla, que compra el par el día que toca su punto más bajo de 10 días. Va aparte porque es otro experimento distinto: mezclarla con las demás no respondería ninguna de las preguntas.",
     reversionTitulo: 'Historial de la regla contraria',
     reversionIntro:
-      'Las mismas cuentas, pero de la regla que compra lo que se cayó. Van aparte a propósito: son dos experimentos distintos y juntarlos no responde ninguna de las dos preguntas.',
+      'Las mismas cuentas, pero de la regla que compra lo que se cayó. Van aparte a propósito: cada experimento es distinto y juntarlos no respondería ninguna de las preguntas.',
     titulo: 'Historial de señales',
     intro: 'Lo que la app propuso y qué pasó después. Los experimentos van más abajo, cada uno con su propia cuenta.',
     appTitulo: 'Las señales de la app',

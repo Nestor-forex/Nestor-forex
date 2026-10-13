@@ -161,11 +161,25 @@ console.log('\n8. ⚠️ Los textos de cada regla ya NO escriben el conteo a man
 //
 // Es la misma lección que `medicion.queSignifica`, que dijo «55 %» durante
 // meses, y que las etiquetas «(hoy)» del banco de pruebas.
+//
+// Y el 2026-10-13 volvió a morder por otra cara, cazado MIRANDO LA CAPTURA:
+// `reversionIntro` decía «son DOS experimentos distintos… ninguna de las DOS
+// preguntas» y `caidaIntro` «ninguna de las TRES preguntas». Escritos cuando
+// esas eran las cuentas; con Bollinger ya son cuatro reglas en la sombra, así
+// que los 13 idiomas afirmaban un número falso. Ninguna prueba lo veía.
+//
+// La frase ya no cuenta nada. Los ORDINALES («la tercera regla») se quedan a
+// propósito: identifican a una regla y no cambian al añadir otra.
 {
   const es = (await import('../src/lib/i18n/textos/es.js')).default.historial
   const prohibido = /muy pocas operaciones|pocas operaciones/
-  for (const k of ['reversionIntro', 'caidaIntro', 'rupturaIntro']) {
+  const cuenta = /\b(dos|tres|cuatro|cinco)\s+(experimentos?|preguntas?|reglas?)\b|ninguna de las (dos|tres|cuatro|cinco)\b/i
+  // ⚠️ La lista va con `bollingerIntro` dentro. Al añadirlo el 2026-10-13 se
+  // quedó fuera, así que el texto nuevo nacía sin vigilar — el agujero de
+  // siempre: una lista a mano a la que nadie añade lo que viene después.
+  for (const k of ['reversionIntro', 'caidaIntro', 'rupturaIntro', 'bollingerIntro']) {
     comprobar(`\`${k}\` no afirma a mano cuántas operaciones lleva`, !prohibido.test(es[k]))
+    comprobar(`\`${k}\` tampoco cuenta a mano cuántos experimentos o preguntas hay`, !cuenta.test(es[k]))
   }
   // Y lo que SÍ tiene que seguir diciendo: que está sin validar. Eso no es un
   // número, no envejece, y es lo que el aviso NO dice.

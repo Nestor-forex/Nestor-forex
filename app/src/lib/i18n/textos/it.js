@@ -434,6 +434,10 @@ export default {
   },
 
   historial: {
+    esBollinger: 'BOLLINGER',
+    bollingerTitulo: 'Storico del «tocco di banda»',
+    bollingerIntro:
+      'La quinta regola: entra quando il prezzo esce dalla sua banda di Bollinger e scommette sul ritorno. ⚠️ È IN OSSERVAZIONE e non validata, e due cose contano: questa versione è stata scelta DOPO aver visto i risultati del test, e in quel test perdeva già contando lo swap di ogni notte. Non è una raccomandazione.',
     esRuptura: 'ROTTURA DI STRUTTURA',
     rupturaTitulo: 'Storico di «rottura di struttura»',
     rupturaIntro:
@@ -443,10 +447,10 @@ export default {
     caidaVieja: ({ n, acierto, pips }) => `Prima di questo sono state registrate ${n} operazioni con uno stop e un obiettivo diversi da quelli misurati all'approvazione della regola. NON contano, e lo storico di questa regola riparte da zero (quelle davano ${acierto} % e ${pips} pips). Restano visibili perché sono realmente avvenute.`,
     caidaTitulo: "Storico di «comprare il ribasso»",
     caidaIntro:
-      "La terza regola: compra la coppia il giorno in cui tocca il minimo di 10 giorni. Tenuta separata di proposito — è un altro esperimento, e mescolarla non risponderebbe a nessuna delle tre domande.",
+      "La terza regola: compra la coppia il giorno in cui tocca il minimo di 10 giorni. Tenuta separata di proposito — è un altro esperimento, e mescolarla non risponderebbe a nessuna delle domande.",
     reversionTitulo: 'Storico della regola contraria',
     reversionIntro:
-      'Gli stessi conti, ma della regola che compra ciò che è sceso. Vanno a parte di proposito: sono due esperimenti diversi e unirli non risponde a nessuna delle due domande.',
+      'Gli stessi conti, ma della regola che compra ciò che è sceso. Vanno a parte di proposito: sono esperimenti diversi e unirli non risponde a nessuna delle domande.',
     titulo: 'Storico dei segnali',
     intro: "Ciò che l'app ha proposto e cosa è successo dopo. Gli esperimenti sono più in basso, ognuno con il proprio conto.",
     appTitulo: "I segnali dell'app",

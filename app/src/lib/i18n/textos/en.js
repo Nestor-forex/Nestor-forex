@@ -438,6 +438,10 @@ export default {
   },
 
   historial: {
+    esBollinger: 'BOLLINGER',
+    bollingerTitulo: '«Band touch» history',
+    bollingerIntro:
+      'The fifth rule: it enters when price leaves its Bollinger band and bets on a return. ⚠️ It is UNDER OBSERVATION and unvalidated, and two things matter: this version was chosen AFTER seeing the backtest results, and in that backtest it already lost once nightly swap was counted. Not a recommendation.',
     esRuptura: 'STRUCTURE BREAK',
     rupturaTitulo: 'History of "structure break"',
     rupturaIntro:
@@ -447,10 +451,10 @@ export default {
     caidaVieja: ({ n, acierto, pips }) => `Before this, ${n} trades were logged with a stop and target that were not the ones measured when the rule was approved. They do NOT count, and this rule's record starts again from zero (those gave ${acierto} % and ${pips} pips). They stay visible because they really happened.`,
     caidaTitulo: "History of “buy the dip”",
     caidaIntro:
-      "The third rule: it buys a pair on the day it hits its 10-day low. Kept separate on purpose — it is a different experiment, and mixing it with the others would answer none of the three questions.",
+      "The third rule: it buys a pair on the day it hits its 10-day low. Kept separate on purpose — it is a different experiment, and mixing it with the others would answer none of the questions.",
     reversionTitulo: 'Opposite-rule history',
     reversionIntro:
-      'The same tally, but for the rule that buys what fell. Kept separate on purpose: these are two different experiments, and merging them answers neither question.',
+      'The same tally, but for the rule that buys what fell. Kept separate on purpose: these are different experiments, and merging them answers none of the questions.',
     titulo: 'Signal history',
     intro: 'What the app proposed and what happened next. The experiments are further down, each with its own count.',
     appTitulo: "The app's signals",

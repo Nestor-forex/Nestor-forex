@@ -438,6 +438,10 @@ export default {
   },
 
   historial: {
+    esBollinger: 'BOLLINGER',
+    bollingerTitulo: 'Histórico do «toque de banda»',
+    bollingerIntro:
+      'A quinta regra: entra quando o preço sai da sua banda de Bollinger e aposta no retorno. ⚠️ Está EM OBSERVAÇÃO e sem validar, e há duas coisas a saber: esta versão foi escolhida DEPOIS de ver os resultados do teste, e nesse teste já perdia ao contar o swap de cada noite. Não é uma recomendação.',
     esRuptura: 'ROMPIMENTO DE ESTRUTURA',
     rupturaTitulo: 'Histórico de «rompimento de estrutura»',
     rupturaIntro:
@@ -447,10 +451,10 @@ export default {
     caidaVieja: ({ n, acierto, pips }) => `Antes disto foram registadas ${n} operações com um stop e um objetivo que não eram os medidos ao aprovar a regra. NÃO contam, e o histórico desta regra recomeça do zero (aquelas davam ${acierto} % e ${pips} pips). Ficam à vista porque aconteceram de verdade.`,
     caidaTitulo: "Histórico de «comprar a queda»",
     caidaIntro:
-      "A terceira regra: compra o par no dia em que atinge a mínima de 10 dias. Vai à parte de propósito — é outra experiência, e misturá-la não responderia a nenhuma das três perguntas.",
+      "A terceira regra: compra o par no dia em que atinge a mínima de 10 dias. Vai à parte de propósito — é outra experiência, e misturá-la não responderia a nenhuma das perguntas.",
     reversionTitulo: 'Histórico da regra contrária',
     reversionIntro:
-      'As mesmas contas, mas da regra que compra o que caiu. Ficam à parte de propósito: são dois experimentos diferentes e juntá-los não responde a nenhuma das duas perguntas.',
+      'As mesmas contas, mas da regra que compra o que caiu. Ficam à parte de propósito: são experimentos diferentes e juntá-los não responde a nenhuma das perguntas.',
     titulo: 'Histórico de sinais',
     intro: 'O que a app propôs e o que aconteceu depois. As experiências estão mais abaixo, cada uma com a sua própria conta.',
     appTitulo: 'Os sinais da app',

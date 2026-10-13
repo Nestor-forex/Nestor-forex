@@ -189,6 +189,7 @@ console.log('\n9b. Cada experimento cuenta APARTE, y ninguno se cuela en otro')
     linea('d', 'caida', true, 'ganada', SIM),
     linea('e', 'caida', true, 'perdida', SIM),
     linea('f', 'lss', true, 'ganada'),
+    linea('g', 'bollinger', true, 'ganada', SIM),
   ])
 
   comprobar(r.todas.total === 1, 'las cuentas de la app solo miran lo que la app propone')
@@ -199,6 +200,11 @@ console.log('\n9b. Cada experimento cuenta APARTE, y ninguno se cuela en otro')
   // ⚠️ Ninguna regla de sombra puede colarse en el cubo de otra: son reglas
   // OPUESTAS y un promedio entre ellas no describe a ninguna.
   comprobar((r.ruptura?.total ?? -1) + r.caida.total + r.reversion.total === 4, 'y los tres experimentos no se pisan')
+  comprobar(r.bollinger?.total === 1, '«el toque de banda solo» cuenta aparte también')
+  comprobar(
+    (r.ruptura?.total ?? -1) + r.caida.total + r.reversion.total + (r.bollinger?.total ?? -1) === 5,
+    'y los CUATRO experimentos no se pisan entre sí'
+  )
   comprobar(r.otros?.total === 0, 'con tipos conocidos, el cajón de «otros» está vacío')
 
   // ─────────────────────────────────────────────────────────────────────────
