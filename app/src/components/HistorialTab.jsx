@@ -131,6 +131,28 @@ export default function HistorialTab() {
             </div>
           )}
 
+          {/* La CUARTA de sombra, desde el 2026-10-13: el toque de banda solo.
+              Lo pidió Néstor al leer la tabla del banco de pruebas — «veo que
+              da todo en positivo, pongámosla a prueba pero que podamos ver sus
+              movimientos y resultados».
+
+              ⚠️ Y su texto dice lo que el listón dice: que esta variante se
+              eligió DESPUÉS de ver los resultados y que su histórico YA medía
+              negativo pagando swap. Sin eso, un número positivo en esta
+              pantalla se leería como una regla que funciona, cuando lo único
+              que hay todavía es una promesa a comprobar. */}
+          {resumen.bollinger.total > 0 && (
+            <div style={{ ...BLOQUE_EXPERIMENTO }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 12.5, fontWeight: 600 }}>{t('historial.bollingerTitulo')}</span>
+                <Etiqueta>{t('historial.esBollinger')}</Etiqueta>
+              </div>
+              <Resumen resumen={{ todas: resumen.bollinger }} t={t} />
+              <AvisoSombra ops={resumen.bollinger.total} />
+              <p style={{ ...TEXTO, margin: 0 }}>{t('historial.bollingerIntro')}</p>
+            </div>
+          )}
+
           <MedicionLarga t={t} locale={locale} />
 
           {/* Una sola lista, en orden de fecha. Cada reversión lleva su

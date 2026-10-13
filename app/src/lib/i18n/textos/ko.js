@@ -432,6 +432,10 @@ export default {
   },
 
   historial: {
+    esBollinger: 'BOLLINGER',
+    bollingerTitulo: '「밴드 터치」 기록',
+    bollingerIntro:
+      '다섯 번째 규칙: 가격이 볼린저 밴드를 벗어날 때 진입해 복귀에 베팅합니다. ⚠️ 관찰 중이며 검증되지 않았고, 두 가지를 알아야 합니다. 이 버전은 백테스트 결과를 본 뒤에 선택됐고, 그 백테스트에서 매일 밤의 스왑을 계산하면 이미 손실이었습니다. 추천이 아닙니다.',
     esRuptura: '구조 돌파',
     rupturaTitulo: '「구조 돌파」 기록',
     rupturaIntro:

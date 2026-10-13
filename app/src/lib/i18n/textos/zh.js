@@ -428,6 +428,10 @@ export default {
   },
 
   historial: {
+    esBollinger: 'BOLLINGER',
+    bollingerTitulo: '「触及布林带」历史记录',
+    bollingerIntro:
+      '第五条规则：价格离开布林带时入场，押注其回归。⚠️ 它处于观察中且未经验证，有两点必须知道：这个版本是在看到回测结果之后才选定的，而在那次回测中，一旦计入每晚的隔夜利息它就已经亏损。这不是建议。',
     esRuptura: '结构突破',
     rupturaTitulo: '「结构突破」的历史记录',
     rupturaIntro:

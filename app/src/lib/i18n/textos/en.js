@@ -438,6 +438,10 @@ export default {
   },
 
   historial: {
+    esBollinger: 'BOLLINGER',
+    bollingerTitulo: '«Band touch» history',
+    bollingerIntro:
+      'The fifth rule: it enters when price leaves its Bollinger band and bets on a return. ⚠️ It is UNDER OBSERVATION and unvalidated, and two things matter: this version was chosen AFTER seeing the backtest results, and in that backtest it already lost once nightly swap was counted. Not a recommendation.',
     esRuptura: 'STRUCTURE BREAK',
     rupturaTitulo: 'History of "structure break"',
     rupturaIntro:

@@ -438,6 +438,10 @@ export default {
   },
 
   historial: {
+    esBollinger: 'BOLLINGER',
+    bollingerTitulo: 'Historique du « contact de bande »',
+    bollingerIntro:
+      'La cinquième règle : elle entre quand le prix sort de sa bande de Bollinger et parie sur un retour. ⚠️ Elle est EN OBSERVATION et non validée, et deux points comptent : cette version a été choisie APRÈS avoir vu les résultats du test, et dans ce test elle perdait déjà en comptant le swap de chaque nuit. Ce n\'est pas une recommandation.',
     esRuptura: 'CASSURE DE STRUCTURE',
     rupturaTitulo: 'Historique de « cassure de structure »',
     rupturaIntro:

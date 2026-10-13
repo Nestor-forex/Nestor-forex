@@ -432,6 +432,10 @@ export default {
   },
 
   historial: {
+    esBollinger: 'BOLLINGER',
+    bollingerTitulo: '「バンドタッチ」の記録',
+    bollingerIntro:
+      '5つ目のルール：価格がボリンジャーバンドを抜けたときに入り、戻りを狙います。⚠️ 観察中で未検証です。2点に注意してください。この版は検証結果を見た後に選ばれたもので、その検証では毎晩のスワップを含めると既に損失でした。推奨ではありません。',
     esRuptura: '構造ブレイク',
     rupturaTitulo: '「構造ブレイク」の履歴',
     rupturaIntro:

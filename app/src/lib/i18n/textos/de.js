@@ -438,6 +438,10 @@ export default {
   },
 
   historial: {
+    esBollinger: 'BOLLINGER',
+    bollingerTitulo: 'Verlauf «Bandberührung»',
+    bollingerIntro:
+      'Die fünfte Regel: Einstieg, wenn der Kurs sein Bollinger-Band verlässt, mit Wette auf Rückkehr. ⚠️ Sie ist IN BEOBACHTUNG und nicht validiert, und zwei Dinge sind wichtig: diese Variante wurde NACH Sichtung der Backtest-Ergebnisse gewählt, und dort verlor sie bereits, sobald der nächtliche Swap mitgerechnet wurde. Keine Empfehlung.',
     esRuptura: 'STRUKTURBRUCH',
     rupturaTitulo: 'Verlauf von „Strukturbruch“',
     rupturaIntro:

@@ -11077,3 +11077,148 @@ no es un filtro fino: es media lista.
 y por lado: si más de la mitad es «vender algo contra el dólar», es el dólar. Eso
 es una línea más en el informe y cero créditos nuevos, y **no se ha hecho**. Sin
 ella, este +0,011 no se puede citar como hallazgo.
+
+---
+
+# «El toque de banda solo» corre en la sombra (2026-10-13). La quinta regla
+
+Néstor, al leer la tabla del banco: **«veo que el toque de la banda sola da
+todo en positivo, entonces por qué no la ponemos a prueba a ella sola pero que
+podamos ver sus movimientos y resultados en las apps»**.
+
+⚠️ **No toca ni una señal de la app.** Swing sigue en −0,043 por unidad de
+riesgo. Lo único que hace es anotarse, como la reversión, «comprar la caída» y
+la ruptura de estructura.
+
+## ⚠️⚠️ PRIMERO LA CORRECCIÓN: no da «todo» en positivo
+
+| el toque de banda solo | |
+|---|---|
+| por 1R con spread | **+0,027** ✅ |
+| mitades | +0,031 / +0,022 ✅ |
+| **pagando 0,5 de swap por noche** | **−0,014** ❌ |
+| ventaja sobre la reversión M2 | **−0,008** ❌ |
+
+Las tres primeras filas son las que él vio, y son ciertas. **La cuarta no
+estaba en la tabla** porque la columna del swap va al final: con el peaje
+completo de una cuenta real **el histórico YA medía negativo**. Y no le gana a
+la regla que ya corre.
+
+📌 **Eso no tumba su idea — y conviene entender por qué.** Esos 1.341 días ya
+se usaron para ELEGIR la fila, así que volver a medirlos devuelve el mismo
+número por construcción. La única medición limpia que queda es el registro
+hacia adelante, y para eso hay que anotarla. Néstor llegó solo a la conclusión
+correcta. Lo que cambia es qué esperar: si en nueve meses sale negativa, el
+backtest lo había avisado; **si sale positiva PESE al swap, eso sí es nuevo.**
+
+## ⚠️⚠️ Y LA HONESTIDAD QUE VA DENTRO DEL LISTÓN
+
+Esta variante **NO es la que el listón del 2026-10-13 juzgaba.** Aquél fijó
+«con RSI estirado» antes de medir y esa falló. Coger la fila de al lado **es
+elegir después de ver la tabla** — lo que este proyecto rechazó con los
+controles de la confluencia y del barrido de liquidez.
+
+Lo que lo hace legítimo aquí, y solo aquí, son dos cosas juntas:
+
+1. **no se enciende nada** — no se propone, no despierta el celular, no entra
+   en el tablero de señales;
+2. **el veredicto sale de días que nadie ha mirado**, y por eso
+   `FUENTE_DEL_VEREDICTO` dice `'registro hacia adelante'`.
+
+Es la situación exacta del LSS (2026-09-20), resuelta igual. Y el histórico se
+guarda **con sus dos números malos dentro** (`conSwap05`, `ventajaSobreM2`):
+si solo se guardara el +0,027, dentro de un año un resultado negativo
+parecería una sorpresa.
+
+## Lo construido
+
+```
+src/lib/bollinger.js                 ← MOVIDO desde scripts/lib/   + PARAMS_SOMBRA
+scripts/lib/bollinger.mjs            puente: `export * from '../../src/lib/bollinger.js'`
+scripts/lib/preregistro-bollinger-sombra.mjs   el listón, fecha dentro
+scripts/prueba-preregistro-bollinger-sombra.mjs  36 comprobaciones
+src/lib/marketCalc.js                `setupsBollinger` + la vara
+src/lib/historialCalc.js             el cubo `bollinger`
+src/components/HistorialTab.jsx      su bloque, con el aviso
+```
+
+### ⚠️ Por qué la matemática se MOVIÓ a `src/lib/`
+
+Al mandarla a la sombra dejó de ser solo del banco: `derivarVista` tiene que
+poder calcularla, y `derivarVista` corre **también en el navegador**, donde
+`scripts/` no existe. Lo que NO se podía hacer es tener dos copias — es el
+fallo que este proyecto lleva meses cerrando (el umbral en nueve sitios,
+`ATR_REVERSION` en dos, la geometría de «comprar la caída») y aquí costaría lo
+más caro: que lo que el vigía ANOTA y lo que el banco MIDIÓ se separaran sin
+que nada falle, con el listón juzgando a otra regla. Mismo patrón que
+`perforaExtremo`.
+
+### ⚠️⚠️ LA PIEZA QUE DECIDE TODO: la vara
+
+`usaVaraSimetrica` tenía que incluir `'bollinger'`, **y se añadió viniendo aquí
+a mano**, que es justo lo que el comentario de esa función manda hacer. Sin esa
+línea la regla se habría anotado con la geometría de la app y su listón habría
+juzgado a otra — **el fallo entero del 2026-10-12 repetido al día siguiente.**
+
+Comprobado antes de añadirla, no supuesto: `nivelesSimetricos` de
+`marketCalc.js` y `simetrica` de `geometrias.mjs` son **lo mismo** — 1,5 × ATR
+a cada lado desde el precio (`ATR_REVERSION` allá, `riesgoATR` por defecto
+acá). Y verificado en el humo: las señales salen con **R/B 1:1 y stop =
+objetivo**.
+
+### Se calcula SIEMPRE, sin interruptor, y ésa es la diferencia con «la caída»
+
+`setupsCaida` necesita los 300 extremos, que `barrido.json` descarta, así que
+solo se puede calcular donde se calculó el barrido. Bollinger necesita **20
+cierres y el RSI**, y los dos SÍ viajan en el archivo publicado (`serie20`,
+`rsiV`). Por eso sus señales del día se podrán enseñar en la app — que es la
+otra mitad de lo que Néstor pidió.
+
+⚠️ Y **no revienta** cuando un par no tiene 20 cierres: `bandas` devuelve
+`null` y ese par no da señal. Decisión contraria a `setupsCaida` y a propósito:
+allá una lista vacía se confundiría con «hoy no hubo señales» y borraría
+historial; aquí un par sin serie es un caso normal, no un dato que falte.
+
+⚠️ **Se ordena por cuánto se salió el precio de su banda**, no por divergencia
+de fuerza. Con el orden de la app, la fila llamada «Bollinger solo» estaría
+midiendo «Bollinger desempatado por fuerza» — otra regla con el mismo nombre.
+
+## ✅ Cero señales hoy, y es la verdad del mercado
+
+El humo contra el `barrido.json` REAL de producción dio **0 señales**, y antes
+de darlo por bueno se miró por qué: **los 14 pares están DENTRO de sus bandas**
+(posiciones de −0,90 a +0,47). No es un fallo — y a 17,9 señales/mes, menos de
+una al día, cero es normal. Empujando dos pares fuera de banda salen las dos,
+con los lados correctos (por encima → VENTA, por debajo → COMPRA) y R/B 1:1.
+
+📌 Eso es exactamente el agujero que ya mordió en `prueba-barrido-publicado`:
+una prueba que pasa comparando listas vacías. Por eso el bloque nuevo de
+`prueba-marketcalc` **fuerza un par fuera de banda** en vez de confiar en que
+el mercado inventado dispare.
+
+## ✅ DOS GUARDIANES SALTARON SOLOS, sin que nadie los llamara
+
+| guardián | qué dijo |
+|---|---|
+| `prueba-sombra` bloque 7 | **«`bollinger` enseña su número CON el aviso»** — al quitarle el `AvisoSombra` a propósito, falló. Se escribió el 2026-10-07 para que «una regla de sombra que se añada mañana no pueda aparecer en positivo sin el aviso al lado», y cazó la quinta sin tocar una línea |
+| `prueba-cableado` | **«SE PIERDEN sin motivo escrito: setupsBollinger»** — el del 2026-10-07, que exige que todo lo que `derivarVista` calcula llegue a la pantalla o esté en `NO_SE_PASAN` con el motivo |
+
+⚠️ Y `esSombra` **no hubo que tocarla**: está escrita por el lado seguro
+(`!esDeLaApp`), así que un `tipo` nuevo **nace apagado solo**. Es la lección del
+2026-09-07 funcionando a los diez meses.
+
+📌 `setupsBollinger` entra en `NO_SE_PASAN` con un motivo **marcado como
+TEMPORAL**: Néstor sí quiere ver sus señales del día, y sale de la lista en el
+PR que pinte la pantalla. Pasarla al hook hoy, sin nada que la dibuje, sería el
+descuido del tick volume — un dato llegando a la nada. Lo que se anota no
+depende de eso: lo lee el vigía, no la app.
+
+## Cuánto hay que esperar
+
+**~9 meses.** A 17,9 señales/mes, 150 operaciones son ~8,4 meses más unas
+semanas para que resuelvan las últimas.
+
+⚠️ **El ritmo real puede salir por debajo**, y por el mismo motivo que el LSS:
+el vigía solo anota una señal cuando es NUEVA para ese par y lado. Si el mismo
+par sigue fuera de banda tres días, los días 2 y 3 no se cuentan; el banco
+contaba todas las velas.

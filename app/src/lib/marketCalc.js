@@ -1,3 +1,4 @@
+import { PARAMS_SOMBRA, posicionDe, reglaBollinger } from './bollinger.js'
 import { matrizCorrelacion, paresQueVanJuntos, riesgoEntreSenales } from './correlacion.js'
 import { crearT } from './i18n/crearT.js'
 import { IDIOMA_BASE } from './i18n/idiomas.js'
@@ -560,7 +561,16 @@ const nivelesSimetricos = (p, compra) => ({
 // otra, hay que venir aquí a mano. Eso es el lado seguro: equivocarse hacia
 // «mide la geometría de la app» se VE en el R/B del historial; equivocarse
 // hacia «se la cambié sin querer» rompe la comparación con lo medido.
-export const usaVaraSimetrica = (tipo) => tipo === 'reversion' || tipo === 'caida'
+// 📌 Y `'bollinger'` se añadió el 2026-10-13 **viniendo aquí a mano**, que es
+// exactamente lo que el párrafo de arriba dice que hay que hacer. Se midió con
+// `geometria: simetrica` en `medir-bollinger.mjs`, y las dos
+// implementaciones coinciden —1,5 × ATR a cada lado desde el precio: aquí
+// `ATR_REVERSION`, allá `riesgoATR` por defecto— comprobado antes de añadirla,
+// no supuesto. Sin esta línea la regla se habría anotado con la geometría de la
+// app y su listón habría juzgado a otra, que es el fallo entero del 2026-10-12
+// repetido al día siguiente.
+export const usaVaraSimetrica = (tipo) =>
+  tipo === 'reversion' || tipo === 'caida' || tipo === 'bollinger'
 
 const mkSetup = (p, lado, esc = {}, t, tipo = 'tendencia') => {
   const d = p.dec
@@ -846,6 +856,39 @@ export function derivarVista(
       .map((p) => mkSetup(p, clasificarCaida(p), esc, t, 'caida'))
   }
 
+  // ── Bollinger a secas, la CUARTA de sombra (desde el 2026-10-13) ────────
+  //
+  // El toque de banda sin RSI y sin fuerza, con los parámetros congelados en
+  // `PARAMS_SOMBRA`. Lo pidió Néstor al leer la tabla del banco de pruebas.
+  //
+  // ⚠️ SE CALCULA SIEMPRE, sin interruptor, y ésa es la diferencia con
+  // `setupsCaida`. Aquélla necesita `highs`/`lows` —los 300 extremos, que
+  // `barrido.json` descarta— así que solo se puede calcular donde se calculó
+  // el barrido. Bollinger necesita 20 cierres y el RSI, y los dos **sí** viajan
+  // en el archivo publicado (`serie20`, `rsiV`). O sea que se puede calcular
+  // igual en el vigía y en el navegador, y por eso sus señales del día se
+  // pueden enseñar en la app.
+  //
+  // ⚠️ Y NO REVIENTA cuando un par no tiene 20 cierres: `bandas` devuelve
+  // `null` y la regla devuelve `null`, así que ese par simplemente no da señal.
+  // Es la decisión contraria a `setupsCaida` y a propósito — allá una lista
+  // vacía se confundiría con «hoy no hubo señales» y borraría historial; aquí
+  // un par sin serie es un caso normal del primer día de un par nuevo, no un
+  // dato que falte.
+  const reglaBoll = reglaBollinger(PARAMS_SOMBRA)
+  const setupsBollinger = cands
+    .map((p) => ({ p, lado: reglaBoll(p, esc, thr) }))
+    .filter(({ lado }) => lado)
+    // ⚠️ Se ordena por cuánto se SALIÓ el precio de su banda, no por
+    // divergencia de fuerza. Es la misma razón por la que existe
+    // `ordenPorBollinger` en el banco: con el orden de la app, la fila llamada
+    // «Bollinger solo» estaría midiendo «Bollinger desempatado por fuerza» —
+    // otra regla con el mismo nombre, y una etiqueta equivocada es un error de
+    // medición.
+    .sort((a, b) => Math.abs(posicionDe(b.p) ?? 0) - Math.abs(posicionDe(a.p) ?? 0))
+    .slice(0, topN)
+    .map(({ p, lado }) => mkSetup(p, lado, esc, t, 'bollinger'))
+
   const corte = t('calc_barrido.corte', { fecha: data.ultima })
 
   // Las parejas que se mueven juntas, ya filtradas a las que importan. Pasa
@@ -903,6 +946,7 @@ export function derivarVista(
     setups,
     setupsReversion,
     setupsCaida,
+    setupsBollinger,
     correlaciones,
     riesgoSenales,
     corte,

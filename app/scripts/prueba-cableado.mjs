@@ -178,6 +178,11 @@ const NO_SE_PASAN = {
   umbral:
     'solo para el REPORTE diario (2026-10-12): dice con qué umbral de fuerza se clasificó. Llevarlo a la pantalla serían 13 idiomas y no lo ha pedido nadie.',
   difMax: 'ídem — hasta dónde llegó la divergencia de hoy. Va junto a `umbral` en el reporte, no en la app.',
+  setupsBollinger:
+    '⚠️ REGLA EN LA SOMBRA («el toque de banda solo»), y sigue aquí por un motivo distinto que `setupsCaida`: ' +
+    'Néstor SÍ pidió ver sus señales del día (2026-10-13), así que esta entrada es TEMPORAL — sale de la lista en ' +
+    'el PR que pinte la pantalla. Pasarla al hook hoy, sin nada que la dibuje, sería el descuido del tick volume: ' +
+    'un dato llegando a la nada. Lo que se anota en el historial no depende de esto: lo lee el vigía, no la app.',
 }
 
 const calculados = clavesDelReturn(leer('../src/lib/marketCalc.js'))

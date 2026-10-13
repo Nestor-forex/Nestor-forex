@@ -189,6 +189,16 @@ console.log('\n11. El vigía sigue anotando las reversiones tras separarlas de l
     'y la cuarta, la de «ruptura de estructura sola»',
     fuente.includes('setupsLSS(') && fuente.includes('...setupsRuptura')
   )
+
+  // ⚠️ Y DESDE EL 2026-10-13 SON CINCO. «El toque de banda solo» (Bollinger a
+  // secas) sí sale de `derivarVista` —le basta `serie20` y el RSI, que viajan
+  // en el barrido publicado— así que el renglón a vigilar vuelve a ser una
+  // lista de la vista. Mismo peligro: si el vigía deja de sumarla, deja de
+  // anotarse sin un solo error, y arranca de CERO hoy.
+  comprobar(
+    'y la quinta, la de «el toque de banda solo»',
+    fuente.includes('vista.setupsBollinger')
+  )
   // Y que se genere con las velas crudas, no con el barrido publicado: ahí no
   // están los máximos ni los mínimos y la regla no se puede calcular.
   comprobar(
@@ -223,6 +233,7 @@ console.log('\n11. El vigía sigue anotando las reversiones tras separarlas de l
   const calc = readFileSync(new URL('../src/lib/marketCalc.js', import.meta.url), 'utf8')
   comprobar('derivarVista devuelve `setupsReversion` como lista propia', calc.includes('setupsReversion'))
   comprobar('y `setupsCaida` como otra lista propia', calc.includes('setupsCaida'))
+  comprobar('y `setupsBollinger` como la quinta', calc.includes('setupsBollinger'))
 
   // ⚠️ Y que NINGUNA de las dos de sombra se cuele en `setups`, que es lo que
   // pinta el tablero. Son reglas OPUESTAS a la de la app —una compra lo fuerte,

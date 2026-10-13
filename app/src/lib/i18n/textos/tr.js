@@ -433,6 +433,10 @@ export default {
   },
 
   historial: {
+    esBollinger: 'BOLLINGER',
+    bollingerTitulo: '«Bant teması» geçmişi',
+    bollingerIntro:
+      'Beşinci kural: fiyat Bollinger bandından çıktığında girer ve geri döneceğine oynar. ⚠️ GÖZLEM ALTINDA ve doğrulanmamıştır; iki şey önemli: bu sürüm test sonuçları görüldükten SONRA seçildi ve o testte her gecenin swap maliyeti sayıldığında zaten kaybediyordu. Bir öneri değildir.',
     esRuptura: 'YAPI KIRILIMI',
     rupturaTitulo: '«Yapı kırılımı» geçmişi',
     rupturaIntro:

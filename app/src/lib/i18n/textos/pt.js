@@ -438,6 +438,10 @@ export default {
   },
 
   historial: {
+    esBollinger: 'BOLLINGER',
+    bollingerTitulo: 'Histórico do «toque de banda»',
+    bollingerIntro:
+      'A quinta regra: entra quando o preço sai da sua banda de Bollinger e aposta no retorno. ⚠️ Está EM OBSERVAÇÃO e sem validar, e há duas coisas a saber: esta versão foi escolhida DEPOIS de ver os resultados do teste, e nesse teste já perdia ao contar o swap de cada noite. Não é uma recomendação.',
     esRuptura: 'ROMPIMENTO DE ESTRUTURA',
     rupturaTitulo: 'Histórico de «rompimento de estrutura»',
     rupturaIntro:
