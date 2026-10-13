@@ -48,6 +48,74 @@ export { UMBRAL_NEUTRO }
  */
 export const DIAS_MARGEN = 2
 
+/**
+ * Cuántas observaciones del BIS pide el banco de pruebas.
+ *
+ * ⚠️⚠️ NO ES `OBSERVACIONES` DE `tasas.js`, Y SON DOS NÚMEROS A PROPÓSITO.
+ * `tasas.js` es GEMELO y su constante sirve a la PANTALLA, que solo necesita
+ * «al menos un cambio dentro de la ventana» para decir de dónde viene la tasa
+ * — y para eso 1000 está medido y sobra.
+ *
+ * Esto necesita algo distinto: **cubrir el periodo entero que se mide**, ~5,2
+ * años. Con 1000 no llegaba, porque la DENSIDAD de la serie cambia según la
+ * zona (`US` publica ~30 observaciones al mes, `AU` ~21), así que la misma N
+ * alcanza más atrás en unas que en otras. Medido en la corrida del 2026-10-13:
+ *
+ *     AUD 1000 · CHF 1000 · JPY 1000 · USD 1000
+ *     EUR  968 · GBP  967 · CAD  878 · NZD  717     ← útiles, sin los huecos
+ *
+ * **Y eso produjo un sesgo con dirección, no ruido:** 1.038 de 2.493 señales
+ * —el 42 %— cayeron en «sin tasa publicada todavía», concentradas al principio
+ * del periodo Y en los pares con NZD y CAD. La comparación «a favor contra en
+ * contra» no cubría ni el periodo ni los pares por igual, y una tabla así se
+ * lee como si los cubriera.
+ *
+ * ⚠️ El número NO es la defensa. Lo que vigila el sesgo es que el informe
+ * IMPRIMA la cobertura de cada divisa y avise cuando alguna no alcance (ver
+ * `cobertura` abajo). Subir la N sin esa comprobación volvería a esconder el
+ * problema el día que el periodo medido crezca.
+ */
+export const OBSERVACIONES_CARRY = 3500
+
+/**
+ * ¿Desde cuándo sabe cada divisa, y le alcanza para el periodo que se mide?
+ *
+ * Esto es la mitad que faltaba el 2026-10-13: el informe repartía las señales
+ * en cuatro montones y **no decía** que el cubo «sin dato» no era aleatorio.
+ *
+ * @returns { divisas: [{ divisa, desde, hasta, n, cubre }], faltan, desdeElMasTarde }
+ *          `faltan` son las divisas que arrancan DESPUÉS del día pedido, o sea
+ *          las que meten señales en «sin dato» por falta de ventana y no por
+ *          nada del mercado.
+ */
+export function cobertura(series, primerDia) {
+  const dia = typeof primerDia === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(primerDia) ? primerDia : null
+  const divisas = []
+  for (const [divisa, serie] of Object.entries(series || {})) {
+    if (!Array.isArray(serie) || !serie.length) {
+      // ⚠️ Una serie vacía NO cubre. Marcarla como `cubre: true` por no tener
+      // fecha que comparar sería justo el fallo que esto viene a cazar.
+      divisas.push({ divisa, desde: null, hasta: null, n: 0, cubre: false })
+      continue
+    }
+    const desde = serie[0]?.f ?? null
+    const hasta = serie.at(-1)?.f ?? null
+    // Hace falta el margen de `tasaEn`: una tasa solo se da por conocida
+    // DIAS_MARGEN días después de publicarse, así que cubrir el primer día
+    // exige haber empezado antes de él.
+    const cubre = typeof desde === 'string' && dia !== null ? desde < dia : false
+    divisas.push({ divisa, desde, hasta, n: serie.length, cubre })
+  }
+  divisas.sort((a, b) => String(a.desde ?? '9').localeCompare(String(b.desde ?? '9')))
+  const faltan = divisas.filter((d) => !d.cubre)
+  const conFecha = divisas.filter((d) => d.desde).map((d) => d.desde)
+  return {
+    divisas,
+    faltan,
+    desdeElMasTarde: conFecha.length ? conFecha.sort().at(-1) : null,
+  }
+}
+
 const restarDias = (fecha, n) => {
   const d = new Date(`${fecha}T00:00:00Z`)
   if (Number.isNaN(d.getTime())) return null

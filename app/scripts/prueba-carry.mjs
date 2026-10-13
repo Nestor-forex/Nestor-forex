@@ -19,12 +19,15 @@ import { readFileSync } from 'node:fs'
 import { monedasDe } from '../src/lib/pairs.js'
 import {
   DIAS_MARGEN,
+  OBSERVACIONES_CARRY,
   UMBRAL_NEUTRO,
   clasificarCarry,
+  cobertura,
   difDeTasas,
   repartir,
   tasaEn,
 } from './lib/carry.mjs'
+import { OBSERVACIONES } from '../src/lib/tasas.js'
 
 let fallos = 0
 const comprobar = (que, bien) => {
@@ -154,6 +157,55 @@ console.log('\n8. ⚠️ ES UN DIAGNÓSTICO: no devuelve ningún veredicto')
     'y que la diferencia de tasas NO es el swap',
     /diferencia de tasas \*\*NO es el swap\*\*|diferencia de tasas NO es el swap/i.test(fuente)
   )
+}
+
+console.log('\n9. ⚠️⚠️ La COBERTURA: el sesgo del 2026-10-13')
+{
+  // El fallo que esto caza: el informe repartía las señales en cuatro cubos y
+  // «sin dato» NO era aleatorio — con 1000 observaciones NZD solo alcanzaba
+  // 717 y CAD 878, así que ese cubo se concentraba al principio del periodo y
+  // en los pares de esas divisas. 1.038 de 2.493 señales, el 42 %.
+  const series = {
+    USD: [{ f: '2020-01-01', v: 1 }, { f: '2026-10-01', v: 4 }],
+    JPY: [{ f: '2020-01-01', v: 0 }, { f: '2026-10-01', v: 1 }],
+    NZD: [{ f: '2024-06-01', v: 5 }], // arranca TARDE: no cubre
+  }
+  const c = cobertura(series, '2021-08-19')
+
+  comprobar('las que arrancan antes del primer día cubren', c.divisas.filter((d) => d.cubre).length === 2)
+  comprobar('la que arranca después NO cubre', c.faltan.length === 1 && c.faltan[0].divisa === 'NZD')
+  comprobar('y se dice desde cuándo cubren TODAS', c.desdeElMasTarde === '2024-06-01')
+  comprobar('cuenta las observaciones útiles de cada una', c.divisas.find((d) => d.divisa === 'USD').n === 2)
+  comprobar('ordena por fecha de arranque', c.divisas[0].desde <= c.divisas.at(-1).desde)
+
+  // ⚠️ Una serie vacía NO cubre. Marcarla como que cubre por no tener fecha
+  // que comparar sería justo el fallo que esto viene a cazar.
+  const conVacia = cobertura({ USD: [], EUR: [{ f: '2020-01-01', v: 2 }] }, '2021-08-19')
+  comprobar('una serie VACÍA no cubre', conVacia.faltan.some((d) => d.divisa === 'USD'))
+  comprobar('…y la buena sigue cubriendo', conVacia.divisas.find((d) => d.divisa === 'EUR').cubre === true)
+
+  // Sin fecha pedida no se puede juzgar, y entonces NADIE cubre: ante la duda
+  // se avisa, nunca se calla. Misma asimetría que `tasaEn` devolviendo null.
+  comprobar('sin primer día nadie cubre (ante la duda, avisar)', cobertura(series, null).faltan.length === 3)
+  comprobar('con una fecha de basura, igual', cobertura(series, 'ayer').faltan.length === 3)
+  comprobar('sin series no revienta', cobertura(undefined, '2021-08-19').divisas.length === 0)
+
+  // Y que el banco pida MÁS que la pantalla, que es el arreglo del sesgo.
+  comprobar(
+    `el banco pide más observaciones que la pantalla (${OBSERVACIONES_CARRY} > ${OBSERVACIONES})`,
+    OBSERVACIONES_CARRY > OBSERVACIONES
+  )
+  comprobar(
+    'y bastantes más: 1000 dejaba al 42 % de las señales sin tasa',
+    OBSERVACIONES_CARRY >= 2500
+  )
+
+  // El informe tiene que IMPRIMIR la cobertura. Subir la N sin decir nada
+  // volvería a esconder el sesgo el día que el periodo medido crezca.
+  const informe = readFileSync(new URL('./medir-carry.mjs', import.meta.url), 'utf8')
+  comprobar('el informe llama a `cobertura`', /\bcobertura\(/.test(informe))
+  comprobar('…y la imprime antes de los montones', informe.indexOf('COBERTURA') < informe.indexOf('A FAVOR del diferencial'))
+  comprobar('…y avisa cuando alguna no alcanza', /NO cubren el periodo/.test(informe))
 }
 
 console.log('')

@@ -27,8 +27,8 @@ import { resolver } from './lib/resolver.mjs'
 import { simetrica } from './lib/geometrias.mjs'
 import { monedasDe } from '../src/lib/pairs.js'
 import { margen } from '../src/lib/diagnostico.js'
-import { leerSerieCSV, OBSERVACIONES, ZONA_DIVISA } from '../src/lib/tasas.js'
-import { DIAS_MARGEN, UMBRAL_NEUTRO, repartir } from './lib/carry.mjs'
+import { leerSerieCSV, ZONA_DIVISA } from '../src/lib/tasas.js'
+import { DIAS_MARGEN, OBSERVACIONES_CARRY, UMBRAL_NEUTRO, cobertura, repartir } from './lib/carry.mjs'
 
 const CALENTAMIENTO = 80
 const THR = UMBRAL_FUERZA
@@ -52,7 +52,7 @@ console.log('')
 const ZONAS = Object.values(ZONA_DIVISA).length ? Object.keys(ZONA_DIVISA).join('+') : ''
 const URL_BIS =
   `https://stats.bis.org/api/v2/data/dataflow/BIS/WS_CBPOL/1.0/D.${ZONAS}` +
-  `?lastNObservations=${OBSERVACIONES}&format=csv`
+  `?lastNObservations=${OBSERVACIONES_CARRY}&format=csv`
 
 console.log('Bajando las tasas del BIS…')
 // ⚠️ Con `try`. Un `fetch` que no llega REVIENTA con un volcado de pila, y eso
@@ -94,6 +94,45 @@ console.log(`  banda neutra: |diferencial| < ${UMBRAL_NEUTRO} puntos no se repar
 const { fechas, rates, rangosPar } = await obtenerVelas(leerLlave(), { velas: VELAS })
 const completo = computarBarrido(fechas, rates, rangosPar)
 console.log(`Días de mercado: ${fechas.length} · de ${fechas[0]} a ${fechas.at(-1)}\n`)
+
+// ── ⚠️⚠️ LA COBERTURA, ANTES DE NINGÚN MONTÓN ────────────────────────────
+//
+// Esto es la mitad que faltaba el 2026-10-13. El informe repartía las señales
+// en cuatro cubos y NO decía que «sin dato» no era aleatorio: con
+// `OBSERVACIONES = 1000`, NZD solo alcanzaba 717 observaciones útiles y CAD
+// 878, así que ese cubo se concentraba al principio del periodo y en los pares
+// con esas dos divisas — el 42 % de las señales. La tabla se leía como si
+// cubriera el periodo entero y no lo cubría.
+//
+// Va ANTES de los montones a propósito, igual que el aviso del COT y el de las
+// tasas van antes de ningún número: lo primero que se lee es lo que se
+// recuerda, y aquí lo caro es leer la tabla creyendo que está completa.
+const cob = cobertura(series, fechas[0])
+console.log('COBERTURA DE LAS TASAS (¿alcanzan para todo el periodo?)')
+console.log('')
+console.log('divisa   desde        hasta        obs   ¿cubre?')
+console.log('─'.repeat(56))
+for (const d of cob.divisas) {
+  console.log(
+    `${d.divisa.padEnd(8)} ${String(d.desde ?? '—').padEnd(12)} ${String(d.hasta ?? '—').padEnd(12)} ` +
+      `${String(d.n).padStart(4)}   ${d.cubre ? 'sí' : '⚠️ NO'}`
+  )
+}
+console.log('─'.repeat(56))
+if (cob.faltan.length) {
+  // ⚠️ NO se para: el informe sigue valiendo para el tramo que sí cubre, y
+  // pararse dejaría a Néstor sin ninguna tabla. Lo que no se puede es callarlo.
+  console.log('')
+  console.log(`⚠️⚠️ ${cob.faltan.length} divisa(s) NO cubren el periodo: ${cob.faltan.map((d) => d.divisa).join(', ')}`)
+  console.log('     Sus señales más antiguas caen en «sin tasa» POR FALTA DE VENTANA,')
+  console.log('     no por nada del mercado — y eso sesga el reparto hacia los pares')
+  console.log(`     de esas divisas. Se arregla subiendo OBSERVACIONES_CARRY (hoy ${OBSERVACIONES_CARRY}).`)
+  console.log(`     El tramo que TODAS cubren empieza el ${cob.desdeElMasTarde}.`)
+} else {
+  console.log(`✓ Las 8 divisas cubren desde antes de ${fechas[0]}: el cubo «sin dato»`)
+  console.log('  ya no viene de la ventana. El sesgo del 2026-10-13 está cerrado.')
+}
+console.log('')
 
 // Todo con la vara NEUTRA 1:1. Con objetivos variables, un corte puede
 // seleccionar operaciones con buena proporción objetivo/riesgo sin acertar ni
