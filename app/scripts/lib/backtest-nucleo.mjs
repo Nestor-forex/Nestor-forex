@@ -35,13 +35,23 @@ function setupsDeLaApp(data, thr, topN, vista = {}) {
 // Devuelve objetos con la misma forma que los de la app —{ name, lado, crudo }—
 // para que el resto del motor no note la diferencia. `crudo` se arma con los
 // mismos campos que pone `mkSetup`, porque las geometrías los leen de ahí.
-function porReglaPropia(data, regla, thr, topN) {
+function porReglaPropia(data, regla, thr, topN, orden = null) {
   const salida = []
   for (const lado of ['COMPRA', 'VENTA']) {
     const suyos = data.pares
       .filter((p) => regla(p, data.esc, thr) === lado)
       // Igual que la app: primero los de mayor diferencia de fuerza.
-      .sort((a, b) => Math.abs(b.dif) - Math.abs(a.dif))
+      //
+      // ⚠️ `orden` deja que una regla propia use SU propio criterio para
+      // desempatar, y no es cosmético. El corte de los N mejores decide qué
+      // señales existen, así que una regla que no mira la fuerza relativa
+      // —Bollinger, por ejemplo— quedaría medida como «esa regla, desempatada
+      // por fuerza», que es OTRA regla con el mismo nombre. Y aquí está
+      // escrito que una etiqueta equivocada es un error de medición.
+      //
+      // Por defecto `null` = el orden de siempre, así que ninguna fila ya
+      // medida cambia. Hay comprobación de eso.
+      .sort((a, b) => (orden ? orden(b) - orden(a) : Math.abs(b.dif) - Math.abs(a.dif)))
       .slice(0, topN)
 
     for (const p of suyos) {
@@ -95,6 +105,7 @@ export function generarSenales(
     geometria = actual,
     invertirVentas = false,
     reglaEntrada = null,
+    orden = null,
     vista = {},
   } = {}
 ) {
@@ -122,7 +133,7 @@ export function generarSenales(
     // Se ordenan por fuerza y se cortan igual que hace la app (top N por
     // lado), para que la comparación no cambie por el número de operaciones.
     const candidatos = reglaEntrada
-      ? porReglaPropia(data, reglaEntrada, thr, topN)
+      ? porReglaPropia(data, reglaEntrada, thr, topN, orden)
       : setupsDeLaApp(data, thr, topN, vista)
 
     const ahora = new Set()

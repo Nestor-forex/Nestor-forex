@@ -160,10 +160,15 @@ export function resolver(senales, data, resueltas = new Set()) {
       par: s.par,
       lado: s.lado,
       tipo: s.tipo,
-      // Se arrastra desde la señal para que el resultado se pueda leer solo,
+      // Se arrastran desde la señal para que el resultado se pueda leer solo,
       // sin cruzarlo otra vez con `senales.jsonl` para saber si contaba o no.
-      // Solo aparece cuando es verdad, igual que en la señal.
+      // Solo aparecen cuando existen, igual que en la señal.
       ...(s.sombra ? { sombra: true } : {}),
+      // ⚠️ `vara` es lo que impide promediar dos geometrías distintas bajo el
+      // mismo nombre. Sin él aquí, `resumir()` tendría que volver a abrir
+      // `senales.jsonl` para saberlo — y `useResumenReal` del tablero baja a
+      // propósito SOLO los resultados. Ver la nota de `vigia.mjs`.
+      ...(s.vara ? { vara: s.vara } : {}),
       vistoEl: s.vistoEl,
       velaEntrada: dia,
       velaFinal,

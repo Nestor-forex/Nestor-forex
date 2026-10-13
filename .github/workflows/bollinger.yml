@@ -1,0 +1,65 @@
+name: ¿Sirven las bandas de Bollinger?
+
+# ¿Mide algo la única familia de reglas que la literatura salva y que aquí
+# nunca se ha tocado?
+#
+# De los 113.148 reglas que midieron Coakley, Marzano y Nankervis (2016) sobre
+# 22 divisas, «prácticamente ninguna regla tradicional es significativa» en
+# 2006-2015 — salvo dos familias: banda de Bollinger y RSI. El RSI ya está
+# dentro de la única regla que ha medido positivo aquí (la reversión M2).
+# Bollinger es la mitad que falta.
+#
+# ⚠️⚠️ NO CAMBIA NADA, y no es una promesa: es el permiso.
+#
+# `permissions: contents: read` — no puede escribir en ninguna rama aunque
+# quisiera. No toca un archivo de `src/`, ni una señal, ni el barrido
+# publicado, ni el historial, ni ninguna de las reglas que ya corren en la
+# sombra. Y pasar el listón TAMPOCO enciende nada: sería una candidata a
+# anotarse hacia adelante, con su propio PR, y la decisión es de Néstor.
+#
+# ⚠️ EL LISTÓN ESTÁ ESCRITO ANTES, en `app/scripts/lib/preregistro-bollinger.mjs`
+# con fecha 2026-10-13 dentro — incluido CUÁL de las dos lecturas es la
+# candidata y cuál el control, y CUÁL variante se juzga. Sin eso, medir las dos
+# y quedarse con la que gane sería elegir después de ver la tabla.
+#
+# ⚠️ SOLO A MANO. Contesta una pregunta de una vez; no vigila nada.
+#
+# ⚠️⚠️ NECESITA EL SECRETO. Son 14 créditos de Twelve Data (los 14 pares en dos
+# tandas), así que sin el `env` de abajo `leerLlave` no encuentra la llave y el
+# guion falla. Ya pasó de verdad con `comparar-reglas.yml`.
+
+on:
+  workflow_dispatch:
+    inputs:
+      velas:
+        description: 'Cuántas velas diarias pedir (1500 ≈ 5 años de mercado)'
+        required: false
+        default: '1500'
+
+permissions:
+  contents: read
+
+jobs:
+  medir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Primero las comprobaciones sin internet, y la primera es la que
+      # importa: que el listón MUERDA. Un veredicto que calcula una función
+      # solo vale si esa función dice que no cuando toca.
+      - name: Comprobar que Bollinger y su listón muerden (sin internet)
+        working-directory: app
+        run: node scripts/prueba-bollinger.mjs
+
+      - name: Medir
+        working-directory: app
+        env:
+          VELAS: ${{ inputs.velas }}
+          # ⚠️ SIN ESTO EL GUION FALLA. Ver la cabecera.
+          TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
+        run: node scripts/medir-bollinger.mjs

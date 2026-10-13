@@ -1,0 +1,57 @@
+name: ¿Importa ir a favor o en contra del diferencial de tasas?
+
+# Néstor lo pidió de frente el 2026-10-13: «haz una comprobación de si las
+# señales que van a favor del diferencial miden distinto de las que van en
+# contra».
+#
+# ⚠️⚠️ ES UN DIAGNÓSTICO, NO UNA REGLA NI UN FILTRO. Parte en dos las señales
+# que la app y la reversión YA producen y compara los dos montones. Si saliera
+# que las de un lado miden mejor, eso NO enciende nada: sería un FILTRO, y los
+# filtros van al banco de pruebas con su listón escrito antes — van OCHO
+# familias medidas y OCHO fallando.
+#
+# `permissions: contents: read` — no puede escribir en ninguna rama.
+#
+# ⚠️ Las tasas salen del BIS, que es GRATIS y sin llave. Lo que cuesta créditos
+# son las velas: 14 de Twelve Data.
+#
+# ⚠️ Y la advertencia que está escrita en `sonda-tasas.mjs` desde antes de ver
+# ningún dato: la diferencia de tasas NO es el swap. El banco central pone la
+# referencia; el bróker le suma un margen que no publica nadie y que además es
+# asimétrico. Esto mira el SIGNO, no el número.
+#
+# ⚠️ SOLO A MANO.
+
+on:
+  workflow_dispatch:
+    inputs:
+      velas:
+        description: 'Cuántas velas diarias pedir (1500 ≈ 5 años de mercado)'
+        required: false
+        default: '1500'
+
+permissions:
+  contents: read
+
+jobs:
+  medir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Comprobar que el reparto muerde (sin internet)
+        working-directory: app
+        run: node scripts/prueba-carry.mjs
+
+      - name: Medir
+        working-directory: app
+        env:
+          VELAS: ${{ inputs.velas }}
+          # ⚠️ SIN ESTO EL GUION FALLA al pedir las velas. El BIS no necesita
+          # llave, pero Twelve Data sí.
+          TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
+        run: node scripts/medir-carry.mjs

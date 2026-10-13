@@ -315,6 +315,17 @@ const LIMPIA = [
   // había DECIDIDO su rejilla por escrito, que es justo lo que este bloque
   // existe para exigir. Se encontró el 2026-10-12 al correr todas las pruebas.
   'scripts/medir-breakeven.mjs',
+  // Los tres del 2026-10-13. Van en limpia porque miden la app (o una regla
+  // candidata) tal como existiría, y la app ya corre sobre la rejilla limpia
+  // desde el PR #106: medirlas sobre la sucia sería medir otra app.
+  //
+  // 📌 Este bloque los cazó SOLO, el mismo día en que aparecieron, sin que
+  // nadie lo llamara. Es la segunda vez que pasa (la primera fue
+  // `publicar-barrido.mjs` el 2026-10-07) y conviene dejarlo escrito: cuando
+  // una comprobación de este repositorio se pone roja al añadir algo, lo
+  // normal es que esté haciendo su trabajo y no que estorbe.
+  'scripts/medir-bollinger.mjs',
+  'scripts/medir-carry.mjs',
 ]
 
 const llaman = readdirSync(new URL('./', import.meta.url))

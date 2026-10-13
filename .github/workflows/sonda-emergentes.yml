@@ -1,0 +1,44 @@
+name: Sonda de los pares emergentes
+
+# ¿Hay datos de USD/MXN, USD/ZAR, USD/TRY y compañía, y cuántos años?
+#
+# ⚠️⚠️ ESTA SONDA NO PUEDE CONTESTAR LO QUE DECIDE, Y ESO VA DICHO DENTRO.
+# De las tres preguntas —¿hay datos?, ¿cuántos años?, ¿qué spread real?— la
+# sonda contesta las dos primeras. La tercera NO: Twelve Data da precios, no
+# spreads, y el puente de MT5 publica 18 pares de los que ninguno es
+# emergente. Para saber el spread, Néstor tiene que añadir esos símbolos a su
+# Observación del Mercado.
+#
+# Y es justo el que decide: en Intradía está MEDIDO que el peaje se come una
+# ventaja entera (la mejor regla daba +0,027 sin costes contra 0,063 de peaje).
+#
+# ⚠️ SONDA PRIMERO, LECTOR DESPUÉS. El mismo camino del calendario, las tasas,
+# el COT, el sentimiento y el oro.
+#
+# `permissions: contents: read` — no escribe nada. Cuesta como mucho 8
+# créditos de Twelve Data, uno por símbolo que responda.
+#
+# ⚠️ SOLO A MANO.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sondear:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Sondear
+        working-directory: app
+        env:
+          # ⚠️ SIN ESTO LA SONDA FALLA, y lo dice con esas palabras.
+          TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
+        run: node scripts/sonda-emergentes.mjs

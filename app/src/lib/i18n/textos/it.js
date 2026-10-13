@@ -440,6 +440,7 @@ export default {
       'La quarta regola, che entra quando il prezzo rompe l\'ultimo massimo o minimo segnato. ⚠️ È IN OSSERVAZIONE e non validata. Non è una raccomandazione — viene mostrata per poterla seguire, non per operarla.',
     esReversion: 'INVERSIONE',
     esCaida: "COMPRARE IL RIBASSO",
+    caidaVieja: ({ n, acierto, pips }) => `Prima di questo sono state registrate ${n} operazioni con uno stop e un obiettivo diversi da quelli misurati all'approvazione della regola. NON contano, e lo storico di questa regola riparte da zero (quelle davano ${acierto} % e ${pips} pips). Restano visibili perché sono realmente avvenute.`,
     caidaTitulo: "Storico di «comprare il ribasso»",
     caidaIntro:
       "La terza regola: compra la coppia il giorno in cui tocca il minimo di 10 giorni. Tenuta separata di proposito — è un altro esperimento, e mescolarla non risponderebbe a nessuna delle tre domande.",

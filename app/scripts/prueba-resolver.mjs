@@ -169,20 +169,25 @@ console.log('\n9b. Cada experimento cuenta APARTE, y ninguno se cuela en otro')
   //
   // Un cubo definido por descarte se traga en silencio todo lo que venga
   // después. Ahora cada uno se define por lo que ES.
-  const linea = (clave, tipo, sombra, resultado) => ({
+  const linea = (clave, tipo, sombra, resultado, extra = {}) => ({
     clave,
     tipo,
     sombra,
     resultado,
     pips: resultado === 'ganada' ? 100 : -100,
+    ...extra,
   })
+
+  // ⚠️ Desde el 2026-10-12 las de `caida` llevan `vara: 'simetrica'`. Ver más
+  // abajo el bloque 9c: las de antes del arreglo NO cuentan en su porcentaje.
+  const SIM = { vara: 'simetrica' }
 
   const r = resumir([
     linea('a', 'tendencia', false, 'ganada'), // la app, visible
     linea('b', 'tendencia', true, 'perdida'), // una venta pausada
-    linea('c', 'reversion', true, 'ganada'),
-    linea('d', 'caida', true, 'ganada'),
-    linea('e', 'caida', true, 'perdida'),
+    linea('c', 'reversion', true, 'ganada', SIM),
+    linea('d', 'caida', true, 'ganada', SIM),
+    linea('e', 'caida', true, 'perdida', SIM),
     linea('f', 'lss', true, 'ganada'),
   ])
 
@@ -195,6 +200,35 @@ console.log('\n9b. Cada experimento cuenta APARTE, y ninguno se cuela en otro')
   // OPUESTAS y un promedio entre ellas no describe a ninguna.
   comprobar((r.ruptura?.total ?? -1) + r.caida.total + r.reversion.total === 4, 'y los tres experimentos no se pisan')
   comprobar(r.otros?.total === 0, 'con tipos conocidos, el cajón de «otros» está vacío')
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 9c. ⚠️⚠️ LAS DOS GEOMETRÍAS DE «COMPRAR LA CAÍDA» NO SE PROMEDIAN
+  // ─────────────────────────────────────────────────────────────────────────
+  // El fallo que esto fija (2026-10-12): la regla se APROBÓ midiéndola con la
+  // vara simétrica (R/B 1:1, hace falta acertar el 50 % para empatar) y el
+  // vigía la ANOTÓ dos meses con la geometría de la app (R/B 1:6,70, hace
+  // falta el 13 %). `mkSetup` elegía la vara POR DESCARTE y la regla nueva
+  // cayó dentro sin que nada fallara.
+  //
+  // Promediar las dos daría un porcentaje que no contesta ninguna de las dos
+  // preguntas. Y ESCONDER las viejas sería el fallo del cajón `otros`: se
+  // anotaron de verdad y tienen que verse. Así que van en su propio cubo.
+  console.log('\n9c. Las dos geometrías de «comprar la caída» van separadas')
+  const g = resumir([
+    linea('v1', 'caida', true, 'ganada'), // sin `vara`: la geometría vieja
+    linea('v2', 'caida', true, 'perdida'),
+    linea('v3', 'caida', true, 'perdida'),
+    linea('n1', 'caida', true, 'ganada', SIM), // con la vara aprobada
+  ])
+  comprobar(g.caida.total === 1, 'el cubo bueno solo cuenta las de la vara aprobada')
+  comprobar(g.caidaVieja.total === 3, 'y las de la geometría vieja NO desaparecen: van a su cubo')
+  comprobar(g.caida.acierto === 100 && g.caidaVieja.acierto === 33, 'cada uno con SU acierto, sin promediarse')
+  // ⚠️ La que de verdad muerde: si alguien vuelve a juntarlas, el cubo bueno
+  // contaría 4 y el acierto saldría 50 % — un número que no describe ninguna
+  // de las dos reglas.
+  comprobar(g.caida.total + g.caidaVieja.total === 4 && g.caida.total !== 4, 'juntarlas otra vez rompe esta comprobación')
+  // Y las de la app y las otras sombras no se enteran de nada de esto.
+  comprobar(g.reversion.total === 0 && g.otros.total === 0 && g.todas.total === 0, 'ningún otro cubo se contamina')
 
   // La que de verdad vigila: un experimento que nadie ha inventado todavía NO
   // puede caer dentro de «ventas pausadas». Si cae, alguien volvió a definir
