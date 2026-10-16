@@ -11222,3 +11222,184 @@ semanas para que resuelvan las últimas.
 el vigía solo anota una señal cuando es NUEVA para ese par y lado. Si el mismo
 par sigue fuera de banda tres días, los días 2 y 3 no se cuentan; el banco
 contaba todas las velas.
+
+---
+
+# Las señales del día de las cuatro reglas en pruebas, en pantalla (2026-10-14)
+
+Néstor lo pidió con tres frases seguidas, y son las que mandaron el diseño:
+
+> «si la reversión también gana quiero ver sus movimientos y resultados diarios
+> en las apps como quiero ver lo de bollinger»
+> «también quiero ver lo del carry a favor del diferencial y en contra»
+> «quiero que las apps tengan varias formas de hacer sus cálculos o mediciones
+> para las señales que llevamos en pruebas… sin errores, sin retrasos, sin
+> congelaciones, no silencio»
+
+```
+app/src/lib/senalesSombra.js          agrupar lo anotado por regla   solo Swing
+app/src/lib/carrySenal.js             ¿a favor o en contra?          solo Swing
+app/src/components/SenalesSombra.jsx  la tarjeta plegable            solo Swing
+app/scripts/prueba-senales-sombra.mjs 44 comprobaciones, sin internet
+```
+
+Hasta hoy el Historial enseñaba de las cuatro reglas de sombra solo su
+PORCENTAJE. Esto enseña **las señales**: qué par, hacia dónde, con qué stop,
+con qué objetivo y con qué R/B.
+
+⚠️ **No cambia ni una señal de la app.** Swing sigue en −0,043 por unidad de
+riesgo con la vara neutra. Nada se encendió.
+
+## ⚠️⚠️ LA DECISIÓN QUE SOSTIENE LA TARJETA: ESTO NO SON PROPUESTAS
+
+Durante meses la decisión fue la contraria, y estaba escrita dentro de `unir()`:
+las filas de sombra quedan fuera de la lista principal porque **«se leerían como
+recomendaciones»**. Era la correcta mientras nadie las pidiera. Néstor las pide,
+y es su app. Lo que NO se puede es enseñarlas como las de la app:
+
+- van en **su propia tarjeta, PLEGADA**, en el Historial y no en el Barrido;
+- el aviso va **ANTES de cualquier número**, igual que en las tasas, el COT y la
+  actividad — aquí lo caro no es leer mal un dato, es creer que esta lista es lo
+  que la app propone;
+- cada regla lleva **su etiqueta ámbar**, la misma de los porcentajes;
+- y **no se pinta ningún número en verde ni en rojo**: un stop no es malo ni un
+  objetivo bueno, son los dos lados de la misma operación. (`SetupDetalle` sí
+  los colorea, y es la decisión contraria a propósito: allí son los niveles de
+  una señal que la app SÍ propone.)
+
+## ⚠️ De dónde salen, y por qué NO se recalculan en el navegador
+
+Salen de `historial/senales.jsonl`, que esta pantalla **ya baja** para los
+porcentajes. Cero datos nuevos, cero créditos, cero archivos que publicar.
+
+**Pero el motivo de fondo no es el ahorro: recalcularlas daría OTRO número.**
+Dos de las cuatro no se pueden calcular en el navegador —«comprar la caída»
+necesita los 300 extremos, que `barrido.json` descarta, y la ruptura vive en un
+guion—, así que media lista saldría vacía sin que nada fallara. Y las dos que sí
+saldrían del precio de AHORA, no del que tenía el par cuando el vigía la anotó:
+la pantalla y el historial discreparían, y el historial es lo único
+irrecuperable del proyecto. **Se lee lo ANOTADO.**
+
+## Las decisiones que no hay que ablandar
+
+⚠️ **NO SE DICE «HOY» EN NINGUNA PARTE.** Se enseña la FECHA de cada grupo. El
+vigía corre de lunes a viernes y el reloj de GitHub se le ha comido días enteros
+(el viernes 5 de septiembre), así que lo último anotado puede ser de hace tres
+días. Hay comprobación de que la palabra no aparece en ningún texto.
+
+⚠️ **Se agrupa por `cierre` (la fecha de la VELA), no por `vistoEl`.** El vigía
+puede correr a las 20:30 UTC juzgando la vela del día anterior. `cierre` es lo
+que la señal describe; `vistoEl` es cuándo se escribió. Se cae a `vistoEl` solo
+si falta — una fila con el día aproximado se lee; una que no sale, no.
+
+⚠️ **UNA REGLA SIN SEÑALES SIGUE SALIENDO, con su frase.** Esconderla dejaría
+en pantalla solo lo que parece estar pasando algo, que es cómo se fabrica un
+espejismo — misma decisión que los grupos con n = 0 de `Diagnostico`. Y para
+Néstor, que pidió «no silencio», una regla que dice «todavía nada» informa; una
+que desaparece, no. Lo que sí desaparece es la tarjeta entera si NINGUNA ha
+señalado nunca: sería un marco vacío repetido cuatro veces.
+
+⚠️ **La lista `REGLAS_SOMBRA` va ESCRITA A MANO**, como GEMELOS/PRIMOS.
+Calcularla («todos los `tipo` que aparezcan») escondería justo lo que hay que
+ver: una regla que el vigía dejara de anotar desaparecería sin que nadie lo
+notara. Y **`'tendencia'` NO está**: una señal de sombra con ese tipo es una
+VENTA PAUSADA —una señal de la propia app que se anota pero no se propone— y
+puesta entre los experimentos se leería como una regla nueva.
+
+⚠️ **El carry devuelve `null`, nunca «neutro», cuando no se sabe.** Una señal
+sin tasa publicada cayendo en un montón convertiría un hueco de datos en un
+hecho sobre el mercado. Misma decisión que `pearson` y que el cubo `sinDato` del
+banco.
+
+⚠️ **`carrySenal.js` NO reimplementa el convenio: llama a `difDePar`.** El signo
+y la banda neutra (`UMBRAL_NEUTRO`) viven en `tasas.js` y nada más. El día que
+uno de los dos se moviera, la pantalla y la medición dirían cosas opuestas sin
+que fallara nada — es el fallo del umbral de fuerza en nueve sitios y el de
+`ATR_REVERSION` en dos.
+
+⚠️ **Los rótulos de los niveles se REUSAN de `setup.*`** y las etiquetas de
+`historial.es*`. Inventar claves nuevas para lo mismo las dejaría separarse en
+silencio el día que alguien tradujera una y no la otra.
+
+## ⚠️⚠️ EL DEFECTO QUE SOLO SALIÓ MIRANDO LA CAPTURA
+
+La primera versión marcaba con «Geometría vieja» **cualquier** regla de vara
+simétrica a la que le faltara el campo `vara`. En la captura con el historial
+REAL salió el aviso **sobre las REVERSIONES** — y es falso: la reversión se
+anotó siempre bien, su R/B en el historial es 1:1.00.
+
+El campo `vara` se empezó a escribir **para todas las reglas el mismo día**
+(2026-10-13), así que **su ausencia no distingue nada por sí sola**. La única
+regla que estuvo mal anotada fue `caida`.
+
+Arreglado con un helper compartido en `historialCalc.js`:
+
+```js
+export function esVaraVieja(r) { return r?.tipo === 'caida' && r?.vara !== 'simetrica' }
+```
+
+📌 Y se **importa** en la tarjeta en vez de repetir la condición: si la lista
+marcara distinto del porcentaje, la misma señal saldría de dos maneras en la
+misma pestaña. Comprobado que la regresión MUERDE: ensanchar la condición a
+`r?.vara !== 'simetrica'` tumba 4.
+
+⚠️ La pista para detectarlo estaba en mi propia pantalla y no en el código: una
+reversión con R/B 1:1 y un aviso de «geometría vieja» encima **se contradicen a
+la vista**. Ni el build, ni el lint, ni las 42 pruebas lo veían.
+
+## 📌 Y el agujero de Bollinger que yo mismo abrí el día anterior
+
+`unir()` no tenía `filasBollinger`. **No fallaba nada** —caía en `filasOtras`,
+que es justo el cajón escrito para que no desapareciera— pero salía **SIN
+ETIQUETA**, o sea indistinguible de una señal de la app en la misma lista.
+**Que el cajón funcionara es lo que lo volvió invisible.**
+
+⚠️ **CUARTA vez que este descuido aparece** (`caida` el 2026-09-07, `retroceso`
+en Intradía el 2026-09-16, y ahora) y la primera en que lo cometí el día
+anterior: al poner Bollinger en la sombra se le dio su cubo en `resumir()` y su
+bloque de porcentajes, y nadie la añadió a la lista. **Un experimento nuevo no
+termina cuando el vigía lo anota, ni cuando tiene su porcentaje: termina cuando
+se puede VER con su nombre.**
+
+## Dos guardianes del repositorio saltaron SOLOS
+
+| guardián | qué dijo |
+|---|---|
+| `prueba-sombra` bloque 7 | al quitarle el `AvisoSombra` a Bollinger, falló — se escribió el 2026-10-07 para que «una regla de sombra que se añada mañana no pueda aparecer en positivo sin el aviso al lado» |
+| `prueba-cableado` | «SE PIERDEN sin motivo escrito: `setupsBollinger`» — el del 2026-10-07 |
+
+Es la tercera vez que una comprobación de este repositorio se pone roja al
+añadir algo y está haciendo su trabajo, no estorbando.
+
+## 📌 Cinco tropiezos MÍOS, todos en el banco de pruebas o en mi `grep`
+
+Van ocho o nueve veces en el proyecto, y por eso se siguen escribiendo:
+
+1. **`import { difDePar } from './tasas'`** sin `.js` — Vite lo resuelve, **Node
+   no**. Es la trampa ya documentada de `marketCalc.js`.
+2. **El primer daño de prueba REVENTABA el guion** en vez de hacerle pasar la
+   comprobación, así que conté 0 MAL y parecía que la prueba no muerde. Rehecho
+   como el error realista → 2 MAL. **Antes de concluir que algo no muerde,
+   comprobar que el daño se hizo.**
+3. **El banco pulsaba todo botón que acabara en «Ver»**, y el de BACKTEST
+   también acaba así: le robaba el clic y la tarjeta se quedaba cerrada en
+   español. Cuatro comprobaciones falsas sobre una app correcta.
+4. **Adiviné la etiqueta árabe** (`انعكاس`) y la real es `معاكسة` → 3 de 4
+   fallando. Se arregló **leyendo el diccionario** en vez de suponerlo.
+5. **Un `regex` de carry pedía un espacio** (`/Swap (a favor|…)/`) y la etiqueta
+   neutra es `Swap: apenas pesa`.
+
+## Cómo se verificó
+
+Lint (sin warnings nuevos: los dos de `HistorialTab` ya estaban), build, las
+**42 pruebas** sin internet y los **65 gemelos** idénticos. Todo lo tocado es
+PRIMO o nuevo y solo de Swing, así que no hay cambio emparejado.
+
+Y en **Chromium a 390 px**, banco **a través del hook** (interceptando la
+descarga, no inventando las props — la regla del 2026-10-07), con el historial
+REAL de producción, en cuatro cargas: español, árabe, sin tasas y sin Bollinger.
+Aviso ámbar primero, las fechas por regla (13 oct · 13 oct · 7 oct), niveles y
+R/B, la etiqueta de carry por fila, el aviso de geometría vieja **solo** en
+«comprar la caída», árabe reflejado con los códigos de par y los números en
+`ltr`. Cero errores de consola salvo el 404 que el banco provoca a propósito,
+cero hojas de datos en `rtl`, cero desplazamiento lateral.

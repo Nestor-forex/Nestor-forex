@@ -431,6 +431,25 @@ export default {
       `${ops}건으로는 그 비율이 우연만으로 ±${m}포인트 움직일 수 있습니다.`,
   },
 
+// Las señales del día de las reglas que corren en pruebas. Ver
+  // `components/SenalesSombra.jsx` — el aviso va ANTES de cualquier número a
+  // propósito: aquí lo caro no es leer mal un dato, es creer que esta lista es
+  // lo que la app propone.
+  sombraSenales: {
+    titulo: '시험 중인 규칙들이 표시한 것',
+    desc: '감시자가 기록만 하고 제안하지는 않는 네 가지 규칙',
+    paraQue: '승률이 쌓이기를 몇 달 기다리는 대신 매일 따라볼 수 있도록 하기 위함입니다. 각 규칙이 어떤 통화쌍을, 어느 방향으로, 어떤 가격대에서 표시했는지 보여줍니다. 무엇을 거래하라고는 말하지 않습니다 — 검증되지 않은 실험이라 앱 자체의 신호와 따로 둡니다.',
+    avance: ({ n }) => `신호 ${n}건 표시`,
+    aviso: '이것은 앱이 제안하는 내용이 아닙니다. 이 규칙들은 관찰 중입니다: 감시자가 실제 거래로 측정하려고 기록할 뿐이며, 아무에게도 알림이 가지 않았고, 아직 어느 것도 기준을 넘지 못했습니다.',
+    varaVieja: '예전 설정: 손절과 목표가 이 규칙을 승인할 때 측정한 값이 아닙니다. 이 규칙의 기록에는 포함되지 않습니다.',
+    sinSenales: '이 규칙은 아직 아무것도 표시하지 않았습니다.',
+    pieCarry: '금리차에 순행/역행은 포지션이 열려 있는 동안 스왑이 어느 쪽으로 작용하는지를 말합니다. 금리차는 스왑이 아닙니다: 중개사가 아무도 공개하지 않는, 게다가 비대칭인 마진을 덧붙입니다. 이것은 방향을 알려줄 뿐 금액은 아닙니다.',
+    carry: {
+      aFavor: '스왑이 유리',
+      enContra: '스왑이 불리',
+      neutro: '스왑: 거의 영향 없음',
+    },
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: '「밴드 터치」 기록',
