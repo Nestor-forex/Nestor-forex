@@ -433,6 +433,25 @@ export default {
       `Con ${ops} operazioni quella percentuale può muoversi di ±${m} punti solo per caso.`,
   },
 
+// Las señales del día de las reglas que corren en pruebas. Ver
+  // `components/SenalesSombra.jsx` — el aviso va ANTES de cualquier número a
+  // propósito: aquí lo caro no es leer mal un dato, es creer que esta lista es
+  // lo que la app propone.
+  sombraSenales: {
+    titulo: 'Cosa hanno segnalato le regole in prova',
+    desc: 'Le quattro regole che la sentinella annota senza proporle',
+    paraQue: 'Per poterle seguire giorno per giorno invece di aspettare mesi la loro percentuale: quale coppia ha segnalato ciascuna, in che direzione e con quali livelli. NON dice quale operare — sono esperimenti non convalidati, ed è per questo che restano separate dai segnali dell’app.',
+    avance: ({ n }) => `${n} segnali in vista`,
+    aviso: 'QUESTO NON È CIÒ CHE L’APP PROPONE. Sono regole IN OSSERVAZIONE: la sentinella le annota per misurarle su operazioni reali, nessuno è stato avvisato e nessuna ha ancora superato la sua asticella.',
+    varaVieja: 'Geometria vecchia: lo stop e l’obiettivo non sono quelli misurati quando questa regola è stata approvata. Non conta nel suo storico.',
+    sinSenales: 'Questa regola non ha ancora segnalato nulla.',
+    pieCarry: 'A favore / contro il differenziale dice da che parte gioca lo swap finché l’operazione resta aperta. La differenza di tassi NON è lo swap: il broker ci aggiunge un margine che nessuno pubblica e per di più disuguale. Questo dà il lato, non il numero.',
+    carry: {
+      aFavor: 'Swap a favore',
+      enContra: 'Swap contro',
+      neutro: 'Swap: pesa appena',
+    },
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: 'Storico del «tocco di banda»',

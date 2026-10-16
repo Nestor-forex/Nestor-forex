@@ -431,6 +431,25 @@ export default {
       `${ops}件では、その数字は偶然だけで±${m}ポイント動きえます。`,
   },
 
+// Las señales del día de las reglas que corren en pruebas. Ver
+  // `components/SenalesSombra.jsx` — el aviso va ANTES de cualquier número a
+  // propósito: aquí lo caro no es leer mal un dato, es creer que esta lista es
+  // lo que la app propone.
+  sombraSenales: {
+    titulo: 'テスト中のルールが示したもの',
+    desc: '見張りが記録するだけで提案はしない4つのルール',
+    paraQue: '勝率が出るまで何か月も待つのではなく、日々追えるようにするためです。どの通貨ペアを、どちらの向きで、どの水準で示したか。どれを取引すべきかは示しません——未検証の実験なので、アプリ自身のシグナルとは分けてあります。',
+    avance: ({ n }) => `${n} 件のシグナルを表示`,
+    aviso: 'これはアプリが提案しているものではありません。これらは観察中のルールです。見張りは実際の取引で測るために記録しているだけで、誰にも通知されておらず、まだ基準を満たしたものはありません。',
+    varaVieja: '古い設定：ストップと目標が、このルールを承認したときに測ったものと違います。この記録には数えません。',
+    sinSenales: 'このルールはまだ何も示していません。',
+    pieCarry: '金利差に沿う/逆らうは、ポジションを持ち続ける間スワップがどちらに働くかを示します。金利差はスワップではありません。業者は誰も公表しない、しかも非対称なマージンを上乗せします。これは向きを示すもので、金額ではありません。',
+    carry: {
+      aFavor: 'スワップは有利',
+      enContra: 'スワップは不利',
+      neutro: 'スワップ：ほとんど効かない',
+    },
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: '「バンドタッチ」の記録',

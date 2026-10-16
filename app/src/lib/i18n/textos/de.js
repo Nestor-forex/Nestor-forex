@@ -437,6 +437,25 @@ export default {
       `Mit ${ops} Trades kann sich dieser Prozentsatz allein durch Zufall um ±${m} Punkte bewegen.`,
   },
 
+// Las señales del día de las reglas que corren en pruebas. Ver
+  // `components/SenalesSombra.jsx` — el aviso va ANTES de cualquier número a
+  // propósito: aquí lo caro no es leer mal un dato, es creer que esta lista es
+  // lo que la app propone.
+  sombraSenales: {
+    titulo: 'Was die Regeln im Test gemeldet haben',
+    desc: 'Die vier Regeln, die der Wächter notiert, ohne sie vorzuschlagen',
+    paraQue: 'Um sie Tag für Tag verfolgen zu können, statt Monate auf ihre Quote zu warten: welches Paar jede gemeldet hat, in welche Richtung und mit welchen Niveaus. Es sagt NICHT, welche zu handeln ist — das sind unbestätigte Experimente, und deshalb stehen sie getrennt von den Signalen der App.',
+    avance: ({ n }) => `${n} Signale sichtbar`,
+    aviso: 'DAS IST NICHT, WAS DIE APP VORSCHLÄGT. Diese Regeln stehen UNTER BEOBACHTUNG: der Wächter notiert sie, um sie an echten Trades zu messen, niemand wurde über sie benachrichtigt, und keine hat ihre Hürde bisher genommen.',
+    varaVieja: 'Alte Geometrie: Stop und Ziel sind nicht die, mit denen diese Regel genehmigt wurde. Zählt nicht für ihre Bilanz.',
+    sinSenales: 'Diese Regel hat noch nichts gemeldet.',
+    pieCarry: 'Für / gegen die Zinsdifferenz sagt, in welche Richtung der Swap wirkt, solange die Position offen bleibt. Die Zinsdifferenz ist NICHT der Swap: der Broker schlägt eine Marge auf, die niemand veröffentlicht und die zudem ungleich ist. Das gibt die Seite, nicht die Zahl.',
+    carry: {
+      aFavor: 'Swap zu deinen Gunsten',
+      enContra: 'Swap gegen dich',
+      neutro: 'Swap: kaum spürbar',
+    },
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: 'Verlauf «Bandberührung»',

@@ -1,5 +1,6 @@
 import { useIdioma } from '../lib/i18n'
 import AvisoSombra from './AvisoSombra'
+import SenalesSombra from './SenalesSombra'
 import TarjetaPlegable from './TarjetaPlegable'
 import { useHistorial } from '../lib/useHistorial'
 import { MEDICION } from '../lib/medicion'
@@ -20,7 +21,7 @@ const COLOR = {
 
 export default function HistorialTab() {
   const { t, locale } = useIdioma()
-  const { cargando, error, filas, filasReversion, filasTodas, resumen } = useHistorial()
+  const { cargando, error, senales, filas, filasReversion, filasTodas, resumen } = useHistorial()
 
   if (cargando) return <Aviso>{t('historial.cargando')}</Aviso>
   if (error) return <Aviso ambar>{t('historial.error')}</Aviso>
@@ -154,6 +155,12 @@ export default function HistorialTab() {
           )}
 
           <MedicionLarga t={t} locale={locale} />
+
+          {/* Lo que señalaron las reglas en pruebas el último día que
+              señalaron. Va AQUÍ —entre las mediciones y la lista histórica— y
+              no en el Barrido a propósito: el Barrido es donde está lo que la
+              app PROPONE, y esto no se propone. Ver `SenalesSombra.jsx`. */}
+          <SenalesSombra senales={senales} />
 
           {/* Una sola lista, en orden de fecha. Cada reversión lleva su
               etiqueta: sin ella, dos reglas OPUESTAS se leerían como si fueran
@@ -398,6 +405,10 @@ function Fila({ f, t, locale }) {
           {f.tipo === 'reversion' && <Etiqueta>{t('historial.esReversion')}</Etiqueta>}
           {f.tipo === 'caida' && <Etiqueta>{t('historial.esCaida')}</Etiqueta>}
           {f.tipo === 'lss' && <Etiqueta>{t('historial.esRuptura')}</Etiqueta>}
+          {/* ⚠️ Faltaba, y por eso una señal de Bollinger salía SIN etiqueta
+              —o sea igual que una de la app— desde que la regla entró en la
+              sombra. Ver `useHistorial.js`. */}
+          {f.tipo === 'bollinger' && <Etiqueta>{t('historial.esBollinger')}</Etiqueta>}
         </div>
         <div style={{ fontSize: 12, fontWeight: 700, color: COLOR[estado] }}>
           {t('historial.' + estado)}

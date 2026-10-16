@@ -437,6 +437,25 @@ export default {
       `Avec ${ops} opérations, ce pourcentage peut bouger de ±${m} points par simple hasard.`,
   },
 
+// Las señales del día de las reglas que corren en pruebas. Ver
+  // `components/SenalesSombra.jsx` — el aviso va ANTES de cualquier número a
+  // propósito: aquí lo caro no es leer mal un dato, es creer que esta lista es
+  // lo que la app propone.
+  sombraSenales: {
+    titulo: 'Ce que les règles à l’essai ont signalé',
+    desc: 'Les quatre règles que la vigie note sans les proposer',
+    paraQue: 'Pour pouvoir les suivre au jour le jour au lieu d’attendre des mois leur pourcentage : quelle paire chacune a signalée, dans quel sens et à quels niveaux. Cela ne dit PAS laquelle trader — ce sont des expériences non validées, et c’est pourquoi elles restent à part des signaux de l’app.',
+    avance: ({ n }) => `${n} signaux affichés`,
+    aviso: 'CE N’EST PAS CE QUE L’APP PROPOSE. Ces règles sont EN OBSERVATION : la vigie les note pour les mesurer sur des opérations réelles, personne n’a été averti, et aucune n’a encore franchi sa barre.',
+    varaVieja: 'Ancienne géométrie : le stop et l’objectif ne sont pas ceux mesurés lors de l’approbation de cette règle. Ne compte pas dans son historique.',
+    sinSenales: 'Cette règle n’a encore rien signalé.',
+    pieCarry: 'Pour / contre le différentiel de taux indique de quel côté joue le swap tant que la position reste ouverte. L’écart de taux N’EST PAS le swap : le courtier y ajoute une marge que personne ne publie et qui est de surcroît inégale. Cela donne le côté, pas le chiffre.',
+    carry: {
+      aFavor: 'Swap en ta faveur',
+      enContra: 'Swap contre toi',
+      neutro: 'Swap : pèse à peine',
+    },
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: 'Historique du « contact de bande »',

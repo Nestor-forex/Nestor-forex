@@ -437,6 +437,25 @@ export default {
       `With ${ops} trades that percentage can move ±${m} points by chance alone.`,
   },
 
+// Las señales del día de las reglas que corren en pruebas. Ver
+  // `components/SenalesSombra.jsx` — el aviso va ANTES de cualquier número a
+  // propósito: aquí lo caro no es leer mal un dato, es creer que esta lista es
+  // lo que la app propone.
+  sombraSenales: {
+    titulo: 'What the rules under test flagged',
+    desc: 'The four rules the watcher records without proposing them',
+    paraQue: 'So you can follow them day by day instead of waiting months for their percentage: which pair each one flagged, in which direction and at what levels. It does NOT say which to trade — these are unvalidated experiments, which is why they are kept apart from the app’s own signals.',
+    avance: ({ n }) => `${n} signals shown`,
+    aviso: 'THIS IS NOT WHAT THE APP PROPOSES. These rules are UNDER OBSERVATION: the watcher records them to measure them against real trades, nobody was alerted about them, and none has cleared its bar yet.',
+    varaVieja: 'Old geometry: the stop and target are not the ones used when this rule was approved. It does not count towards its record.',
+    sinSenales: 'This rule has not flagged anything yet.',
+    pieCarry: 'With / against the rate differential says which way the swap works while the trade stays open. The rate difference is NOT the swap: the broker adds a margin nobody publishes, and an uneven one at that. This gives the side, not the number.',
+    carry: {
+      aFavor: 'Swap in your favour',
+      enContra: 'Swap against you',
+      neutro: 'Swap: barely counts',
+    },
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: '«Band touch» history',
