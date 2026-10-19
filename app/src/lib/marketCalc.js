@@ -936,6 +936,39 @@ export function derivarVista(
   // pinta nada. Misma asimetría que `pearson` y que `edadEnMinutos`.
   const difMax = difs.length ? Math.max(...difs) : null
 
+  // LOS PARES QUE PASARON EL UMBRAL Y SE CAYERON PORQUE SU LADO ESTÁ PAUSADO.
+  //
+  // ⚠️⚠️ ESTO TAPABA UN HUECO QUE SE LEÍA COMO UN MERCADO PLANO, y costó un
+  // error de los caros: el 2026-10-16 y el 19 el reporte de Swing decía
+  // «divergencia 1,32 contra un umbral de 0,50» y debajo las CUATRO listas
+  // vacías. Parecía «no destacó nada». La verdad era que destacaron cinco
+  // pares, los cinco del lado de las VENTAS, y las ventas están pausadas desde
+  // el 2026-08-12 (ver `reglas.js`).
+  //
+  // Y el agujero no es de forma: un par clasificado 'VENTA' con las ventas
+  // pausadas NO cae en `vigilancia` tampoco —`vigilancia` solo recoge
+  // 'VIGILAR'—, así que desaparece de TODAS las listas sin que nada falle.
+  // Dos situaciones opuestas se leían idénticas:
+  //
+  //     «el mercado está plano, no hay nada»          ← lo que parecía
+  //     «hay movimiento claro, todo al lado apagado»  ← lo que era
+  //
+  // ⚠️ Sale del MISMO `cls` que clasifica las listas, no de una condición
+  // nueva: si se reimplementara aquí, el día que una se moviera el aviso
+  // contaría pares que la app no dejó fuera. Es el fallo del umbral en nueve
+  // sitios, otra vez.
+  //
+  // ⚠️ `null` —y nunca `{ n: 0 }`— cuando no hay ninguno: quien lo pinte no
+  // escribe nada en vez de escribir «0 pares bloqueados», que es una frase
+  // sobre el mercado donde no hay nada que decir. Misma asimetría que `difMax`.
+  const ladosApagados = incluirVentas ? [] : ['VENTA']
+  const bloqueadosRaw = ladosApagados.length
+    ? cands.filter((p) => Math.abs(p.dif) > thr && ladosApagados.includes(cls(p)))
+    : []
+  const bloqueados = bloqueadosRaw.length
+    ? { n: bloqueadosRaw.length, lado: 'VENTA', pares: bloqueadosRaw.map((p) => p.name) }
+    : null
+
   return {
     monedas,
     pares,
@@ -954,5 +987,6 @@ export function derivarVista(
     // si alguien llama con otro `thr`, esto dice el que se usó de verdad.
     umbral: thr,
     difMax,
+    bloqueados,
   }
 }

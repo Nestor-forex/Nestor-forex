@@ -55,6 +55,63 @@ import { APP } from '../src/lib/identidad.js'
 // solo los días vacíos, su presencia sería el mensaje y nadie leería los
 // números. Con señales también dice algo — hoy a 1,77 sobre 0,50 es 3,5 veces
 // lo que se pedía.
+// POR QUÉ NO HAY SEÑALES CUANDO SÍ HUBO DIVERGENCIA.
+//
+// ⚠️⚠️ Sin esto, el reporte decía «divergencia 1,32 contra un umbral de 0,50»
+// y debajo cuatro listas vacías. Néstor lo leyó dos días seguidos (2026-10-16
+// y 19) y yo mismo lo leí como «el mercado está plano»: la verdad era que
+// cinco pares pasaron el umbral, los cinco del lado de las VENTAS, y las
+// ventas están pausadas desde el 2026-08-12. Nadie lo decía en ninguna parte.
+//
+// ⚠️ Va DESPUÉS de la línea del umbral y no antes: aquélla dice si hubo
+// divergencia —el hecho de mercado— y ésta dice qué hizo la app con ella. Al
+// revés se lee como si la pausa fuera el motivo de que no hubiera divergencia.
+const lineaBloqueados = (bloqueados) => {
+  // Ante la duda, nada. `null` es «no hubo ninguno», y una frase aquí diría
+  // algo sobre el mercado donde no hay nada que decir.
+  if (!bloqueados || !Number.isFinite(bloqueados.n) || bloqueados.n < 1) return ''
+  const n = bloqueados.n
+  const plural = n === 1 ? 'par pasó' : 'pares pasaron'
+  const lado = n === 1 ? 'su señal es de venta' : 'sus señales son de venta'
+  return `\n\n_${n} ${plural} el umbral de fuerza, pero ${lado} y las ventas están pausadas desde el 2026-08-12 (${bloqueados.pares.join(', ')}). Por eso no hay señales: no es que el mercado esté plano._`
+}
+
+// LA REVERSIÓN, QUE LA APP YA ENSEÑA Y EL REPORTE CALLABA.
+//
+// ⚠️⚠️ ÉSTE ES EL ARREGLO DE FONDO DEL 2026-10-19, y el fallo era mío.
+//
+// `useMarketData.js` llama a `derivarVista` con `incluirReversion: true` desde
+// el 2026-09-05, a petición de Néstor. Este guion la llamaba SIN eso. O sea
+// que la app y el reporte, con los mismos datos del mismo día, decían cosas
+// distintas: la app enseñaba «EUR/CAD COMPRA · EUR/NZD COMPRA · EUR/CHF
+// COMPRA» y el reporte decía «sin setups limpios hoy».
+//
+// Y no era un detalle de presentación: yo leí el reporte, le dije a Néstor que
+// los pares que destacaban eran para VENDER, y él abrió la app y vio COMPRA en
+// todos. Las dos cosas eran ciertas de reglas distintas —la de la app vende lo
+// débil, la reversión COMPRA lo débil— y nadie lo decía. Su reacción fue la
+// correcta: «que tú digas una cosa y la app diga otra, eso no puede pasar».
+//
+// ⚠️ NO se mezclan con los setups de arriba, en su propio bloque y con su
+// aviso. Son reglas OPUESTAS y promediarlas o listarlas juntas sería el peor
+// error posible aquí — es la misma decisión que `unir()` toma en el Historial.
+const bloqueReversion = (setupsReversion) => {
+  // Sin reversiones no se escribe el bloque. Un marco vacío cada día enseña a
+  // saltárselo, y el día que traiga algo ya nadie lo lee.
+  if (!Array.isArray(setupsReversion) || !setupsReversion.length) return ''
+  const filas = setupsReversion
+    .map(
+      (s) =>
+        `• *${s.name} ${s.lado}* — entrada ${s.entrada.split(' · ')[0]}, SL ${s.sl.split(' (')[0]}, TP ${s.tp} (R/B ${s.rr})`,
+    )
+    .join('\n')
+  return `\n*Regla en pruebas — reversión (esto es lo que ves en la app):*
+${filas}
+
+_⚠️ La reversión es un EXPERIMENTO y hace lo contrario que la app: compra la divisa débil. No son propuestas de la app, y su registro real todavía no alcanza para creerle (hacen falta 150 operaciones). Está aquí porque es lo que la app enseña, y el reporte tiene que decir lo mismo que la app._
+`
+}
+
 const lineaUmbral = (difMax, umbral) => {
   // ⚠️ Ante la duda NO SE ESCRIBE NADA. `difMax` es `null` cuando no se pudo
   // medir, y una línea inventada aquí es peor que ninguna.
@@ -66,9 +123,24 @@ const lineaUmbral = (difMax, umbral) => {
     : `\n\n_Ningún par llegó al umbral de fuerza: el más separado iba a ${d} y hacía falta ${u}. Por eso no hay señales._`
 }
 
-function formatoChat({ fecha, monedas, pares, compras, ventas, vigilancia, setups, corte, difMax, umbral }) {
+function formatoChat({
+  fecha,
+  monedas,
+  pares,
+  compras,
+  ventas,
+  vigilancia,
+  setups,
+  setupsReversion,
+  corte,
+  difMax,
+  umbral,
+  bloqueados,
+}) {
   const li = (xs) => (xs.length ? xs.map((x) => `• *${x.name}* — ${x.razon}`).join('\n') : '_Ninguno hoy._')
   const fuerza = monedas.map((m) => `${m.cod} ${m.score.toFixed(1)}`).join(' · ')
+  const niveles = (s) =>
+    `• *${s.name} ${s.lado}* — entrada ${s.entrada.split(' · ')[0]}, SL ${s.sl.split(' (')[0]}, TP ${s.tp} (R/B ${s.rr})`
 
   return `📊 *Nestor Forex Swing* — ${fecha}
 ${corte}
@@ -85,14 +157,8 @@ ${li(ventas)}
 ${li(vigilancia)}
 
 *Setups del top:*
-${
-  setups.length
-    ? setups
-        .map((s) => `• *${s.name} ${s.lado}* — entrada ${s.entrada.split(' · ')[0]}, SL ${s.sl.split(' (')[0]}, TP ${s.tp} (R/B ${s.rr})`)
-        .join('\n')
-    : '_Sin setups limpios hoy._'
-}${lineaUmbral(difMax, umbral)}
-
+${setups.length ? setups.map(niveles).join('\n') : '_Sin setups limpios hoy._'}${lineaUmbral(difMax, umbral)}${lineaBloqueados(bloqueados)}
+${bloqueReversion(setupsReversion)}
 _Riesgo: 1-2% del capital por operación. ${limitaciones}_`
 }
 
@@ -101,7 +167,12 @@ const data = computarBarrido(fechas, rates, rangosPar)
 // ⚠️ El umbral NO se escribe aquí: se deja el que trae `derivarVista`. Hasta
 // el 2026-10-12 este guion pasaba su propio `0.5`, así que cambiar el de la app
 // habría dejado el reporte midiendo con otro número sin que nada fallara.
-const vista = derivarVista(data, { topN: 3 })
+// ⚠️⚠️ `incluirReversion: true` PORQUE LA APP LO PASA (`useMarketData.js`).
+// Sin esta línea el reporte describe una app distinta de la que Néstor abre:
+// el 2026-10-19 la app enseñaba tres compras de reversión y el reporte decía
+// «sin setups limpios hoy», con los mismos datos. `prueba-umbral.mjs` lo
+// vigila comparando las dos llamadas, para que no puedan volver a separarse.
+const vista = derivarVista(data, { topN: 3, incluirReversion: true })
 const fecha = new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 const texto = formatoChat({ fecha, ...vista })
 
