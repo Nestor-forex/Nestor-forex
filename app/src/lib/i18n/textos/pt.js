@@ -437,6 +437,25 @@ export default {
       `Com ${ops} operações, essa percentagem pode mover-se ±${m} pontos só por casualidade.`,
   },
 
+// Las señales del día de las reglas que corren en pruebas. Ver
+  // `components/SenalesSombra.jsx` — el aviso va ANTES de cualquier número a
+  // propósito: aquí lo caro no es leer mal un dato, es creer que esta lista es
+  // lo que la app propone.
+  sombraSenales: {
+    titulo: 'O que as regras em testes sinalizaram',
+    desc: 'As quatro regras que o vigia anota sem propor',
+    paraQue: 'Para poder acompanhá-las dia a dia em vez de esperar meses pela sua percentagem: que par cada uma marcou, em que direção e com que níveis. NÃO diz qual operar — são experiências por validar, e por isso ficam à parte dos sinais da app.',
+    avance: ({ n }) => `${n} sinais à vista`,
+    aviso: 'ISTO NÃO É O QUE A APP PROPÕE. São regras EM OBSERVAÇÃO: o vigia anota-as para as medir com operações reais, ninguém foi avisado delas e nenhuma passou ainda o seu critério.',
+    varaVieja: 'Geometria antiga: o stop e o objetivo não são os que se mediram ao aprovar esta regra. Não conta para o seu histórico.',
+    sinSenales: 'Esta regra ainda não sinalizou nada.',
+    pieCarry: 'A favor / contra o diferencial diz para que lado joga o swap enquanto a operação ficar aberta. A diferença de taxas NÃO é o swap: o corretor soma-lhe uma margem que ninguém publica e que ainda por cima é desigual. Isto dá o lado, não o número.',
+    carry: {
+      aFavor: 'Swap a favor',
+      enContra: 'Swap contra',
+      neutro: 'Swap: quase não pesa',
+    },
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: 'Histórico do «toque de banda»',

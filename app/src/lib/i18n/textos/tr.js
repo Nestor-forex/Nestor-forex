@@ -432,6 +432,25 @@ export default {
       `${ops} işlemle o yüzde, sadece rastlantı yüzünden ±${m} puan oynayabilir.`,
   },
 
+// Las señales del día de las reglas que corren en pruebas. Ver
+  // `components/SenalesSombra.jsx` — el aviso va ANTES de cualquier número a
+  // propósito: aquí lo caro no es leer mal un dato, es creer que esta lista es
+  // lo que la app propone.
+  sombraSenales: {
+    titulo: 'Denemedeki kuralların işaret ettikleri',
+    desc: 'Gözcünün önermeden kaydettiği dört kural',
+    paraQue: 'Yüzdelerini aylarca beklemek yerine onları gün gün izleyebilmek için: her biri hangi pariteyi, hangi yönde ve hangi seviyelerle işaretledi. Hangisinin işleme açılacağını SÖYLEMEZ — bunlar doğrulanmamış denemelerdir, bu yüzden uygulamanın kendi sinyallerinden ayrı durur.',
+    avance: ({ n }) => `${n} sinyal görünür`,
+    aviso: 'BU, UYGULAMANIN ÖNERDİĞİ ŞEY DEĞİLDİR. Bu kurallar GÖZLEM ALTINDA: gözcü onları gerçek işlemlerle ölçmek için kaydediyor, kimseye bildirim gitmedi ve hiçbiri henüz kendi eşiğini geçmedi.',
+    varaVieja: 'Eski geometri: stop ve hedef, bu kural onaylanırken ölçülenler değil. Kendi geçmişine sayılmaz.',
+    sinSenales: 'Bu kural henüz hiçbir şey işaret etmedi.',
+    pieCarry: 'Faiz farkıyla / faiz farkına karşı, işlem açık kaldığı sürece swapın hangi yöne çalıştığını söyler. Faiz farkı swap DEĞİLDİR: aracı kurum kimsenin yayımlamadığı, üstelik eşit olmayan bir marj ekler. Bu yönü verir, rakamı değil.',
+    carry: {
+      aFavor: 'Swap lehine',
+      enContra: 'Swap aleyhine',
+      neutro: 'Swap: neredeyse etkisiz',
+    },
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: '«Bant teması» geçmişi',

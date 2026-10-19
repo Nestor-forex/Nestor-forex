@@ -427,6 +427,25 @@ export default {
       `只有 ${ops} 笔交易时，那个百分比仅凭偶然就可能移动 ±${m} 个点。`,
   },
 
+// Las señales del día de las reglas que corren en pruebas. Ver
+  // `components/SenalesSombra.jsx` — el aviso va ANTES de cualquier número a
+  // propósito: aquí lo caro no es leer mal un dato, es creer que esta lista es
+  // lo que la app propone.
+  sombraSenales: {
+    titulo: '测试中的规则今天标出了什么',
+    desc: '哨兵记录但不建议的四条规则',
+    paraQue: '为了能逐日跟踪它们，而不必等几个月才看到它们的胜率：每条规则标出了哪个货币对、方向如何、价位在哪里。它不会告诉你该交易哪一个——这些是尚未验证的实验，所以与应用自己的信号分开显示。',
+    avance: ({ n }) => `显示 ${n} 条信号`,
+    aviso: '这不是本应用所建议的内容。这些规则处于观察阶段：哨兵记录它们是为了用真实交易来衡量，没有人收到过它们的提醒，也没有一条通过了自己的门槛。',
+    varaVieja: '旧的止损/目标设置：与这条规则获批时所测量的并不相同。不计入它的历史记录。',
+    sinSenales: '这条规则还没有标出任何东西。',
+    pieCarry: '顺着/逆着利差，说明在持仓期间隔夜利息往哪一边走。利率差不等于隔夜利息：经纪商会加上一个无人公布且不对称的加价。这只给出方向，不是数字。',
+    carry: {
+      aFavor: '隔夜利息对你有利',
+      enContra: '隔夜利息对你不利',
+      neutro: '隔夜利息：几乎没影响',
+    },
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: '「触及布林带」历史记录',

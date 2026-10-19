@@ -172,6 +172,17 @@ export function unir(senales, resultados) {
   // ninguna pantalla y nadie lo notaría, porque nada falla.
   const filasRuptura = senales.filter((s) => s.tipo === 'lss').map(conResultado).sort(masNuevaPrimero)
 
+  // Y la quinta, «el toque de banda solo», desde el 2026-10-13.
+  //
+  // ⚠️ Y ésta es la CUARTA vez que este descuido aparece, con el agravante de
+  // que lo cometí yo el día anterior: al poner Bollinger en la sombra se le
+  // dio su cubo en `resumir()` y su bloque de porcentajes, y NADIE la añadió
+  // aquí. No fallaba nada —caía en `filasOtras`, que es justo el cajón escrito
+  // para que no desapareciera— pero salía SIN ETIQUETA, o sea indistinguible
+  // de una señal de la app en la misma lista. Que el cajón funcionara es lo
+  // que lo volvió invisible.
+  const filasBollinger = senales.filter((s) => s.tipo === 'bollinger').map(conResultado).sort(masNuevaPrimero)
+
   // ⚠️⚠️ EL CAJÓN DE LO QUE NADIE HA INVENTADO TODAVÍA, y es la pieza que
   // faltaba las TRES veces que este fallo mordió.
   //
@@ -190,7 +201,7 @@ export function unir(senales, resultados) {
   // propósito no se lista: puesta entre las demás se leería como una
   // recomendación que la app nunca hizo. Lo mismo las señales viejas sin
   // `tipo`. Aquí solo cae lo que de verdad no conoce nadie.
-  const CONOCIDOS = new Set(['tendencia', 'reversion', 'caida', 'lss'])
+  const CONOCIDOS = new Set(['tendencia', 'reversion', 'caida', 'lss', 'bollinger'])
   const filasOtras = senales
     .filter((s) => s.sombra && s.tipo && !CONOCIDOS.has(s.tipo))
     .map(conResultado)
@@ -201,6 +212,7 @@ export function unir(senales, resultados) {
     ...filasReversion,
     ...filasCaida,
     ...filasRuptura,
+    ...filasBollinger,
     ...filasOtras,
   ].sort(masNuevaPrimero)
 
@@ -209,6 +221,7 @@ export function unir(senales, resultados) {
     filasReversion,
     filasCaida,
     filasRuptura,
+    filasBollinger,
     filasOtras,
     filasTodas,
     resumen: resumir(resultados),

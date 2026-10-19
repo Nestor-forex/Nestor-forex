@@ -27,6 +27,29 @@
  * juntas entre sí — el promedio de dos experimentos distintos no responde
  * ninguna de las dos preguntas.
  */
+/**
+ * ¿Esta señal se anotó con una geometría que NO es la que aprobó su regla?
+ *
+ * ⚠️ SOLO «COMPRAR LA CAÍDA», y la precisión importa. El fallo del 2026-10-12
+ * fue que `mkSetup` elegía la vara POR DESCARTE, así que la regla que cayó
+ * dentro fue la que se añadió después: `caida`. La REVERSIÓN siempre se anotó
+ * bien (su R/B real es 1:1, comprobado en el historial), y Bollinger nació ya
+ * con el campo puesto.
+ *
+ * Marcar por «no trae el campo `vara`» a secas diría que las reversiones de
+ * antes de ayer llevan geometría vieja, y es FALSO: ese campo se empezó a
+ * escribir el 2026-10-13 para TODAS, así que su ausencia no distingue una
+ * regla mal anotada de una bien anotada antes de esa fecha. Lo único que la
+ * ausencia marca es la caída, porque es la única que estuvo mal.
+ *
+ * Vive aquí y se exporta para que la PANTALLA que lista las señales y el
+ * RESUMEN que las cuenta no puedan separarse: si una marcara distinto de la
+ * otra, la misma señal saldría de dos maneras en la misma pestaña.
+ */
+export function esVaraVieja(r) {
+  return r?.tipo === 'caida' && r?.vara !== 'simetrica'
+}
+
 export function resumir(resultados) {
   const cuenta = (lista) => {
     const ganadas = lista.filter((r) => r.resultado === 'ganada').length
@@ -115,8 +138,8 @@ export function resumir(resultados) {
   // ⚠️ Y las viejas NO desaparecen: van en su propio cubo y la pantalla las
   // nombra. Es la lección del cajón `otros` — lo que no encaja en ningún sitio
   // se anota durante meses y nadie lo ve.
-  const deCaida = todasJuzgadas.filter((r) => r.tipo === 'caida' && r.vara === 'simetrica')
-  const deCaidaVieja = todasJuzgadas.filter((r) => r.tipo === 'caida' && r.vara !== 'simetrica')
+  const deCaida = todasJuzgadas.filter((r) => r.tipo === 'caida' && !esVaraVieja(r))
+  const deCaidaVieja = todasJuzgadas.filter((r) => r.tipo === 'caida' && esVaraVieja(r))
   const esDeLaApp = (r) => !r.tipo || r.tipo === 'tendencia'
   const ventasPausadas = todasJuzgadas.filter((r) => r.sombra && esDeLaApp(r))
 
