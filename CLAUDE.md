@@ -11403,3 +11403,351 @@ R/B, la etiqueta de carry por fila, el aviso de geometría vieja **solo** en
 «comprar la caída», árabe reflejado con los códigos de par y los números en
 `ltr`. Cero errores de consola salvo el 404 que el banco provoca a propósito,
 cero hojas de datos en `rtl`, cero desplazamiento lateral.
+
+---
+
+# El reporte decía una cosa y la app otra (2026-10-19). El fallo era MÍO
+
+Néstor: **«dices que en swing aparecen para vender pero miro en la app y todas
+dicen comprar, eso es grave, que tú digas una cosa y la app diga otra. eso no
+puede pasar, son muchos errores que ya se deben parar»**.
+
+Tenía razón, y el error no era de la app: era mío y de este guion.
+
+## La causa, en una línea
+
+```
+useMarketData.js:141   derivarVista(data, { thr, topN, t, incluirReversion: true })
+reporte-diario.mjs     derivarVista(data, { topN: 3 })          ← sin la opción
+```
+
+`incluirReversion` se encendió en la app el **2026-09-05**, a petición suya. El
+reporte **nunca** se enteró. Así que con los mismos datos del mismo día:
+
+| | lo que decía |
+|---|---|
+| la app | **EUR/CAD COMPRA · EUR/NZD COMPRA · EUR/CHF COMPRA** |
+| el reporte | «_Sin setups limpios hoy._» |
+
+Y yo leí el reporte, vi esos pares como los más separados por fuerza, y le dije
+que destacaban **para vender** — que es cierto de la regla de la app (vende lo
+débil) y falso de lo que él tenía delante (la reversión **compra** lo débil).
+**Las dos frases eran ciertas de reglas distintas y nadie lo decía.**
+
+📌 Es la misma familia del 2026-10-07 y del 2026-10-12: repetir una afirmación
+correcta **de una fuente** al lado de los números **de otra**. Van tres veces en
+doce días, y es la que más daño hace porque ninguna de las dos mitades es falsa
+por separado.
+
+## ⚠️⚠️ EL SEGUNDO HUECO, QUE ERA PEOR: un par pasaba el umbral y DESAPARECÍA
+
+Al mirarlo apareció algo que no venía en la queja. El reporte decía
+«divergencia 1,32 contra un umbral de 0,50» y debajo **cuatro listas vacías**.
+Néstor lo leyó dos días seguidos (16 y 19 de octubre) y yo mismo lo leí como
+«el mercado está plano».
+
+**La verdad era otra:** cinco pares pasaron el umbral, **los cinco del lado de
+las VENTAS**, y las ventas están pausadas desde el 2026-08-12
+(`VENTAS_PAUSADAS = true` en `reglas.js`, medido: compras 58 %/−0,00 contra
+ventas 40 %/−0,30, y las ventas se llevaron el 87 % de todas las pérdidas).
+
+**Nadie lo decía en ninguna parte.** Un par podía pasar la única puerta que
+ninguna señal se salta y no aparecer en una sola lista, sin que nada fallara.
+
+## El arreglo, en tres piezas
+
+**1. `bloqueados` en `derivarVista`** (`marketCalc.js`, PRIMO). Sale del
+**MISMO `cls`** que decide el sesgo, así que no puede discrepar de lo que la
+pantalla enseña:
+
+```js
+const ladosApagados = incluirVentas ? [] : ['VENTA']
+const bloqueadosRaw = ladosApagados.length
+  ? cands.filter((p) => Math.abs(p.dif) > thr && ladosApagados.includes(cls(p)))
+  : []
+```
+
+⚠️ Devuelve **`null`, nunca `{ n: 0 }`**, cuando no hay ninguno: un cero se
+leería como un hecho sobre el mercado donde no hay nada que decir. Misma
+asimetría que `pearson`, `difMax` y `edadEnMinutos`.
+
+**2. El reporte pasa `incluirReversion: true`** e imprime el bloque de la
+reversión **aparte y con su aviso**. ⚠️ **NO se mezcla con los setups de
+arriba**: son reglas OPUESTAS, y listarlas juntas sería el peor error posible
+aquí — la misma decisión que `unir()` toma en el Historial.
+
+**3. `lineaBloqueados`**, DESPUÉS de la línea del umbral y no antes: aquélla
+dice si hubo divergencia —el hecho de mercado— y ésta dice qué hizo la app con
+ella. Al revés se lee como si la pausa fuera el motivo de que no hubiera
+divergencia.
+
+## El guardián: `prueba-umbral.mjs` bloques 5 y 6 (GEMELO)
+
+**Bloque 5 — las dos llamadas a `derivarVista` tienen que pasar las mismas
+opciones.** Lee los dos archivos **como texto**, saca el conjunto de opciones
+de cada uno (ignorando `t`, `topN` y `thr`, que son de presentación) y falla si
+la app enciende algo que el reporte no. Más: si la app enciende cualquier regla
+`incluir*`, el reporte **tiene que imprimir un bloque con la palabra
+EXPERIMENTO**. Con guarda para fallar si no encuentra una de las dos llamadas.
+
+**Bloque 6 — el invariante de verdad: ningún par que pase el umbral desaparece
+en silencio.** Para cada par con `|dif| > umbral`, o sale en alguna lista, o
+`bloqueados.pares` lo nombra. **La comprobación nombra el par que se estaba
+perdiendo.**
+
+⚠️ **Es GEMELO, así que los dos bloques están escritos como INVARIANTES y no
+como afirmaciones sobre Swing.** Lo que tiene que ser igual en las dos apps es
+la disciplina —el reporte dice lo que la app dice, y nada se pierde en
+silencio—, no los valores. El fixture lleva la **unión** de los campos que
+piden las dos (`adx`, `e9`, `e21`, `pivots` para Intradía incluidos).
+
+**Comprobado que MUERDEN**, con el daño verificado en el archivo antes de darlo
+por bueno: quitarle `incluirReversion` al reporte tumba 2 · devolver
+`{ n: 0 }` en vez de `null` tumba 1 · quitar `bloqueados` del `return` tumba 1
+y nombra el par.
+
+## 📌 Y tres tropiezos míos, los tres en el banco y no en el código
+
+Van nueve o diez veces en el proyecto:
+
+1. **Llamé a `derivarVista(data, t, opts)` con TRES argumentos.** La firma son
+   dos —`t` va dentro de las opciones—, así que `t` se convirtió en el objeto
+   de opciones y `incluirVentas` nunca llegó. Lo vi porque la salida se
+   contradecía, y rehíce el guion antes de tocar nada del código.
+2. **El fixture clasificaba `VIGILAR` y no `VENTA`:** con
+   `TENDENCIA_MIN = 'media'`, `cumpleTendencia` exige `p.c < p.e20` para
+   vender, y mis pares no traían ni `c` ni `e20`. Después faltaron
+   `lo20`/`hi20`/`atrAbs` para `mkSetup`.
+3. **Falsa alarma en el `main` de Intradía:** `prueba-mt5` y `prueba-push`
+   salían rojas, y la causa era que mi clon no tenía `node_modules`
+   (`Cannot find package 'react'`) — no podían ni arrancar.
+
+**Antes de creerse que la app está rota, comprobar que el banco mide lo que
+dice medir.**
+
+## Comprobado contra la producción real, no razonado
+
+El reporte corregido, con el `barrido.json` del día:
+
+```
+_Divergencia: el par más separado iba a 1.28 y el umbral era 0.50._
+
+_5 pares pasaron el umbral de fuerza, pero sus señales son de venta y las
+ventas están pausadas desde el 2026-08-12 (EUR/CAD, EUR/NZD, EUR/CHF,
+EUR/USD, AUD/USD). Por eso no hay señales: no es que el mercado esté plano._
+
+*Regla en pruebas — reversión (esto es lo que ves en la app):*
+• *EUR/CAD COMPRA* — entrada 1.5808 actual, SL 1.5690, TP 1.5927 (R/B 1:1.0)
+• *EUR/NZD COMPRA* — entrada 1.9791 actual, SL 1.9607, TP 1.9976 (R/B 1:1.0)
+• *EUR/CHF COMPRA* — entrada 0.9264 actual, SL 0.9186, TP 0.9342 (R/B 1:1.0)
+```
+
+Y el historial de producción lo confirma por otro lado: la **única** señal de
+`tendencia` anotada hoy es **`EUR/CAD|VENTA|tendencia` con `sombra: true`** —
+o sea una venta pausada— mientras `reversion`, `caida` y `bollinger` anotan
+COMPRAS en ese mismo par. **Es exactamente lo que Néstor vio en pantalla.**
+
+## ⚠️ Lo que esto NO arregla, dicho antes que lo que arregla
+
+**Ninguna señal cambia.** Swing sigue en −0,043 por unidad de riesgo con la
+vara neutra. Lo que cambia es que el reporte y la app **ya no pueden describir
+apps distintas**, y que un par que pasa el umbral ya no puede desaparecer de
+todas las listas sin que nadie lo diga.
+
+## 📌 Y la otra mitad de su queja: «no veo nada en las apps»
+
+Tenía razón y la causa era bochornosa: **el PR #122 —la tarjeta que enseña las
+señales del día de las cuatro reglas en pruebas— se había quedado SIN
+FUSIONAR.** Verificado en navegador, con todas las pruebas en verde, y en una
+rama. Es la lección del 2026-09-16 otra vez, palabra por palabra: **un trabajo
+verificado vale exactamente cero hasta que está en `main`. Néstor no ve ramas:
+ve la app publicada.**
+
+Fusionado (`c1197f3`), con su despliegue a Pages en verde. Y con el historial
+de hoy ya trae contenido real: **6 señales anotadas el 2026-10-19**, las cuatro
+reglas representadas.
+
+⚠️ Lo que sigue sin llegar a ninguna pantalla es **`setupsBollinger`**, o sea
+la señal de Bollinger calculada EN VIVO sobre el barrido del navegador. Su
+motivo en `NO_SE_PASAN` sigue marcado como TEMPORAL, pero la premisa cambió:
+la tarjeta fusionada ya enseña las de Bollinger **leyéndolas del historial, con
+su fecha**, que es la forma honesta. La diferencia práctica es de horas — hasta
+que el vigía anota, no se ve la de hoy. No se toca sin decidirlo.
+
+---
+
+# «Por eso no hay señales» salió ENCIMA de señales reales (2026-10-20)
+
+Néstor: **«arregla esa línea en las dos apps. TOCA LO DE BOLLINGER… y arregla
+lo que falte arreglar y fusiona si hay algo que fusionar. que no quede nada
+pendiente»**.
+
+⚠️ **El fallo era mío y de ayer.** La línea que avisa de que ningún par llegó
+al umbral se escribió el 2026-10-19 para arreglar un hueco real (un par pasaba
+el umbral y desaparecía de todas las listas). Al día siguiente salió publicada
+**dos veces** diciendo una falsedad:
+
+| app | lo que salió |
+|---|---|
+| Intradía, apertura de Asia | la frase **con una señal de modo rango impresa justo encima** |
+| Swing, reporte diario | la frase **con DOS setups impresos justo encima** |
+
+## La causa, y por qué no era un descuido de redacción
+
+`lineaUmbral` y `lineaBloqueados` recibían **solo `difMax` y `umbral`**, y con
+eso afirmaban algo sobre **la SALIDA del reporte** — si había señales o no. Una
+función no puede afirmar lo que no puede observar.
+
+⚠️⚠️ **Y en Intradía era FALSO POR CONSTRUCCIÓN en el caso más común**, no por
+mala suerte: **`clasificarRango` NO recibe el umbral.** Comprobado en el código,
+no supuesto. El modo rango se salta esa puerta a propósito, así que puede dar
+señales con la divergencia por debajo del umbral — o sea que allí «ningún par
+llegó al umbral» y «hay señales» **conviven como estado normal**, y la frase
+vieja estaba condenada a salir mal.
+
+## El arreglo: el HECHO siempre, la CONSECUENCIA solo si toca
+
+```
+difMax ≤ umbral y SIN señales → «Ningún par llegó… Por eso la app no propone ninguna señal hoy.»
+difMax ≤ umbral y CON señales → «Ningún par llegó… » y nada más (Swing)
+                               → «…así que no hay señales de tendencia — las de arriba son de modo rango.» (Intradía)
+```
+
+⚠️ **Los dos números no se esconden nunca**, ni cuando hay señales: son el dato
+de mercado (hasta dónde llegó la divergencia y cuánto hacía falta) y no dependen
+de lo que la app haya decidido. Lo único que se cae es la conclusión. Hay
+comprobación de que los dos siguen saliendo en los dos casos.
+
+⚠️ **La frase de Intradía es la de Néstor, palabra por palabra.** La pidió así.
+
+## ⚠️ Las dos líneas SALEN del guion, y no es organización
+
+`scripts/lib/lineas-reporte.mjs` (PRIMO en las dos apps). Vivían dentro de
+`reporte-diario.mjs`, y ahí **no se podían probar**: ese guion pide velas en
+cuanto se importa (`await obtenerVelas(...)` en el cuerpo), así que una prueba
+tendría que gastar créditos y tener llave para comprobar una frase.
+
+📌 **Eso es lo que permitió el fallo.** No había forma de escribir «con señales,
+no digas que no hay señales» sin sacarlas de ahí. **Una línea de texto que
+afirma algo es código, y el código que no se puede probar es el que se
+equivoca.**
+
+⚠️ Y es PRIMO, no GEMELO, con el motivo escrito: en Swing hay un lado pausado
+(`lineaBloqueados`) y el umbral es fijo; en Intradía el umbral se mueve con la
+hora y el modo rango se lo salta.
+
+## El guardián: `prueba-umbral.mjs` bloque 7 (GEMELO)
+
+**Escrito como INVARIANTES, no como afirmaciones sobre Swing** — es el mismo
+archivo en las dos apps (56 comprobaciones aquí, 43 allá). Exige: que el módulo
+exista y sea función · que el reporte **no tenga su propia copia** · que lo
+importe · que calcule `haySenales` y lo pase en **las dos** llamadas · que con
+`false` afirme la ausencia y con `true` **no** la afirme · que los dos números
+sobrevivan en los dos casos · que con divergencia alta nunca afirme ausencia ·
+que un número no finito devuelva `''`. Y lo de `lineaBloqueados` va dentro de
+`if (estaAppApagaUnLado)`, para que el archivo valga en las dos.
+
+**Comprobado que MUERDE**, con el daño verificado en el archivo antes de darlo
+por bueno: quitarle el `haySenales` a una llamada tumba 1 · devolver la frase
+vieja tumba 2.
+
+## Bollinger ya se ve en el tablero
+
+Lo pidió con mayúsculas. Su motivo en `NO_SE_PASAN` estaba marcado TEMPORAL
+desde el 2026-10-13, y hoy sale de la lista: `useMarketData` devuelve
+`setupsBollinger` y el tablero tiene su sección.
+
+⚠️ **VA EN SU PROPIA LISTA, y aquí el motivo es MÁS fuerte que con la
+reversión:** Bollinger **no mira la fuerza**, así que puede proponer el MISMO
+par que la app **con el lado contrario el mismo día**. Pasó el 2026-10-20 — sacó
+GBP/USD VENTA y GBP/JPY VENTA mientras la app proponía las dos en COMPRA.
+Mezclarlas sería ilegible, y el texto `bandas.ojoContrario` lo explica en
+pantalla para que un par repetido al revés no se lea como un fallo.
+
+⚠️ **NINGÚN número del backtest escrito a mano** en los 13 idiomas. El texto
+dice que midió «un poco a favor contando solo el spread, y EN CONTRA contando el
+swap» — lo cualitativo, que no envejece. Es la lección de
+`medicion.queSignifica`, que dijo «55 %» durante meses. Cuántas operaciones
+reales lleva lo dice `AvisoSombra`, que **lo LEE**.
+
+## ⚠️ El defecto que solo salió MIRANDO LA CAPTURA
+
+**Las tarjetas de Bollinger salían SIN etiqueta de regla**, o sea
+indistinguibles de las de la app, en la misma pantalla donde la app proponía los
+mismos pares al revés. `SetupCard` decidía con `{s.tipo === 'reversion' && …}`:
+**una condición escrita por enumeración**, la familia que este archivo lleva
+meses coleccionando (`esSombra`, `ventasPausadas`, `esDeLaApp`, `filasOtras`, la
+regla de Firestore, la geometría de «comprar la caída»). **Séptima vez.**
+
+Ahora decide por lo que la tarjeta **ES** (`esDeLaApp = !s.tipo || s.tipo ===
+'tendencia'`) y una regla sin traducir enseña su nombre en crudo en vez de una
+pastilla vacía — nace visible, no invisible.
+
+📌 Ni el build, ni el lint, ni las 44 pruebas lo veían.
+
+## Y «lleva 1 operaciones reales», en 7 idiomas
+
+`sombra.aviso` y `sombra.margen` ponían el número **delante del sustantivo
+flexionado**. Con Bollinger a 1 operación real salía «lleva 1 operaciones
+reales» y «Con 1 operaciones». Arreglado **de raíz y no con un caso especial**:
+la frase se reordena para que el número no mande en la flexión («lleva 1 de las
+150 operaciones reales…», «Con una muestra de 1, …»). En **es, en, de, fr, pt,
+it, ru**; zh, ja, ko, hi, tr y ar ya estaban bien porque no flexionan así.
+
+⚠️ Es un fallo **anterior** a Bollinger: llevaba ahí desde el 2026-10-07 y no se
+veía porque las otras reglas nunca pasaron por 1.
+
+## Un detalle que se cerró antes de que muerda
+
+`claveSetup` ahora incluye el `tipo`. La pantalla de detalle buscaba el setup
+por par y lado, y **Bollinger puede coincidir con la app en los dos** — con
+geometría distinta (vara simétrica contra la de la app). Habría abierto la que
+no era, sin que nada fallara.
+
+## 📌 Tres tropiezos míos en el banco de navegador, ninguno en la app
+
+Van diez u once veces, y por eso se siguen escribiendo:
+
+1. **La ruta comodín de Playwright interceptaba `barrido.json`.** El 404 de
+   `**/estado/*.json` se registró al final, y **Playwright da prioridad a la
+   ÚLTIMA ruta registrada**: el comodín se comía la buena. Los comodines van
+   PRIMERO.
+2. **`innerText` aplica el `text-transform` del CSS**, que pone el título en
+   mayúsculas, así que mi comparación exacta fallaba sobre una app correcta.
+   `textContent` no lo aplica.
+3. **Mi detección del orden de secciones cazaba la tabla de pares** en vez de la
+   sección de setups.
+
+## 📌 Y un commit que estuve a punto de perder
+
+Al reiniciar la rama desde `main` se quedó fuera el commit de la memoria del
+2026-10-19, y el `git push --force-with-lease` lo habría borrado del PR #124 —
+que está abierto **sobre esta misma rama**. Se recuperó del sha viejo
+(`git checkout <sha> -- CLAUDE.md`, idéntico byte a byte).
+
+⚠️ **La lección: antes de reiniciar una rama desde `main`, mirar si tiene un PR
+abierto con algo que no esté en `main`.** Está escrito en las convenciones que
+hay que comprobar que la rama remota solo tenga historial ya fusionado; aquí no
+lo tenía, y lo que casi se pierde era la memoria del proyecto — que es lo que
+evita repetir los fallos de arriba.
+
+## Cómo se verificó
+
+Lint (8 avisos en Swing y 8 en Intradía, **todos preexistentes**), build, y
+**todas** las pruebas sin internet en los dos repos — 41 de 43 en Swing y 30 de
+32 en Intradía, con los dos rojos esperados: `prueba-aviso-real` (pide el
+secreto VAPID y manda un aviso de verdad) y `prueba-gemelos` comparando contra
+`main` de la hermana, que todavía no tenía su mitad. **Comparando rama contra
+rama, los 65 gemelos idénticos en los dos sentidos.**
+
+Y en **Chromium a 390 px**, banco **a través del hook** (interceptando la
+descarga, no inventando las props — la regla del 2026-10-07), con el
+`barrido.json` REAL de producción, en español y en árabe: la sección de
+Bollinger con su explicación, su aviso de sombra y sus tarjetas **con
+etiqueta**, debajo de la de reversión; 28 hojas de datos y **0 en `rtl`**; cero
+desplazamiento lateral; cero errores de consola de la app.
+
+Y el reporte de las dos apps corrido **con los datos reales del día que falló**:
+Swing con 2 setups y 5 bloqueados saca «Además de las de arriba, otros 5 pares
+pasaron el umbral…», e Intradía con 0,34 contra 0,44 y una señal de rango saca
+la frase de Néstor.
