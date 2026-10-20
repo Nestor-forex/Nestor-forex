@@ -110,6 +110,21 @@ export default {
     vacio: 'لا توجد إشارات لهذه القاعدة اليوم.',
   },
 
+  // El toque de banda de Bollinger, la quinta regla en pruebas. Enseñada en
+  // el tablero desde el 2026-10-20, a petición de Néstor.
+  //
+  // ⚠️ `explica` cuenta lo que midió CON PALABRAS y no con cifras, a
+  // propósito: en este proyecto hay dos casos escritos de un número a mano que
+  // se quedó viejo enseñando una pérdida como ganancia. Las cifras reales las
+  // cuenta `AvisoSombra` leyendo el historial en vivo.
+  bandas: {
+    titulo: 'لمس النطاق (Bollinger)',
+    explica:
+      'هذه الإشارات لا تنظر إلى قوة العملات، بل تنظر إلى ما إذا كان السعر قد خرج من نطاقه المعتاد. تشتري عند الخروج من الأسفل وتبيع عند الخروج من الأعلى. في منصة الاختبار قاست ميلاً بسيطاً لصالحها عند حساب spread وحده، وضدها عند حساب swap كل ليلة — أي أن اختبارها نفسه لا يوافق عليها. هي هنا لتتمكن من متابعتها، لا لتتداول بها.',
+    ojoContrario:
+      'قد تشير إلى نفس الأزواج الموجودة في الأعلى لكن بالاتجاه المعاكس. هذا ليس خطأ: فهي لا تنظر إلى الشيء نفسه. إذا رأيت زوجاً متكرراً بالجهة المعاكسة، فهما قاعدتان مختلفتان تختلفان في الرأي.',
+  },
+
   setup: {
     soporte: 'الدعم',
     resistencia: 'المقاومة',

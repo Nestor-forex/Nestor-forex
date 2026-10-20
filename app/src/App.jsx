@@ -26,6 +26,10 @@ import { useTrades } from './lib/useTrades'
 import { useMarketData } from './lib/useMarketData'
 import { useCalendario } from './lib/useCalendario'
 
+// La clave con la que se recuerda qué setup está abierto en la pantalla de
+// detalle. Lleva el `tipo` a propósito: ver el comentario de `detalle`.
+const claveSetup = (s) => `${s.name}|${s.lado}|${s.tipo ?? ''}`
+
 const NOMBRE_APP = 'NESTOR FOREX SWING'
 
 function SinConfigurar() {
@@ -60,9 +64,11 @@ export default function App() {
   const [screen, setScreen] = useState('splash')
   const [tab, setTab] = useState('barrido')
   const [msgAuth, setMsgAuth] = useState('')
-  // Setup abierto en la pantalla de detalle, guardado por nombre + lado en vez
-  // de por objeto: así, si el barrido se recarga, el detalle se actualiza solo
-  // en lugar de quedarse con los números del momento en que se abrió.
+  // Setup abierto en la pantalla de detalle, guardado por nombre + lado + regla
+  // en vez de por objeto: así, si el barrido se recarga, el detalle se
+  // actualiza solo en lugar de quedarse con los números del momento en que se
+  // abrió. El `tipo` va dentro porque dos reglas distintas pueden proponer el
+  // mismo par y el mismo lado con niveles distintos — ver `detalle` más abajo.
   const [detalleId, setDetalleId] = useState(null)
   // Datos con los que llega precargado el formulario del Diario cuando se
   // anota un setup desde su detalle.
@@ -107,10 +113,22 @@ export default function App() {
     return r
   }
 
-  // Busca en las DOS listas: si mirara solo `mercado.setups`, el botón «ver la
-  // señal en detalle» de una reversión abriría una pantalla en blanco.
+  // Busca en las TRES listas: si mirara solo `mercado.setups`, el botón «ver la
+  // señal en detalle» de una reversión o de un toque de banda abriría una
+  // pantalla en blanco.
+  //
+  // ⚠️⚠️ Y LA CLAVE LLEVA EL `tipo`, QUE NO ES COSMÉTICO. La app mira la fuerza
+  // y la reversión mira la fuerza al revés, así que esas dos NUNCA pueden
+  // coincidir en par+lado. **Bollinger no mira la fuerza en absoluto**, así que
+  // sí puede proponer el mismo par y el mismo lado que la app — y entonces
+  // `find` devolvería el primero y abriría los niveles de OTRA regla, que usa
+  // otra geometría (vara simétrica contra la de la app). Mismos nombres,
+  // niveles distintos: el fallo de siempre. Con el `tipo` dentro no hay dos
+  // claves iguales.
   const detalle = detalleId
-    ? [...mercado.setups, ...mercado.setupsReversion].find((s) => s.name + s.lado === detalleId)
+    ? [...mercado.setups, ...mercado.setupsReversion, ...mercado.setupsBollinger].find(
+        (s) => claveSetup(s) === detalleId,
+      )
     : null
 
   // Pasa el setup al Diario: llena el par, la dirección y una nota con los
@@ -269,7 +287,7 @@ export default function App() {
         {authUser && perfilEstado === 'aprobado' && !detalle && tab === 'tablero' && (
           <TableroCompleto
             onVolver={() => setTab('barrido')}
-            onVerSetup={(s) => setDetalleId(s.name + s.lado)}
+            onVerSetup={(s) => setDetalleId(claveSetup(s))}
             loading={mercado.loading}
             error={mercado.error}
             stale={mercado.stale}
@@ -284,6 +302,7 @@ export default function App() {
             vigilancia={mercado.vigilancia}
             setups={mercado.setups}
             setupsReversion={mercado.setupsReversion}
+            setupsBollinger={mercado.setupsBollinger}
             correlaciones={mercado.correlaciones}
             riesgoSenales={mercado.riesgoSenales}
             corte={mercado.corte}

@@ -109,6 +109,21 @@ export default {
     vacio: 'Сегодня нет сигналов по этому правилу.',
   },
 
+  // El toque de banda de Bollinger, la quinta regla en pruebas. Enseñada en
+  // el tablero desde el 2026-10-20, a petición de Néstor.
+  //
+  // ⚠️ `explica` cuenta lo que midió CON PALABRAS y no con cifras, a
+  // propósito: en este proyecto hay dos casos escritos de un número a mano que
+  // se quedó viejo enseñando una pérdida como ganancia. Las cifras reales las
+  // cuenta `AvisoSombra` leyendo el historial en vivo.
+  bandas: {
+    titulo: 'Касание полосы (Bollinger)',
+    explica:
+      'Эти сигналы НЕ смотрят на силу валют: они смотрят, вышла ли цена за свою обычную полосу. Покупают при выходе вниз и продают при выходе вверх. На испытательном стенде правило дало небольшой плюс, если считать только spread, и МИНУС, если считать swap за каждую ночь, — то есть его не одобряет даже собственная проверка. Оно здесь, чтобы за ним можно было следить, а не чтобы по нему торговать.',
+    ojoContrario:
+      'Оно может указать ТЕ ЖЕ пары, что и сигналы выше, но в обратную сторону. Это не ошибка: оно смотрит на другое. Если пара повторяется с противоположной стороной, значит два разных правила расходятся во мнениях.',
+  },
+
   setup: {
     soporte: 'Поддержка',
     resistencia: 'Сопротивление',
@@ -428,9 +443,9 @@ export default {
 
   sombra: {
     aviso: ({ ops, meta }) =>
-      `Это правило ещё НЕЛЬЗЯ брать как сигнал: у него ${ops} реальных сделок из ${meta}, нужных чтобы ему верить, каким бы ни вышло число.`,
+      `Это правило ещё НЕЛЬЗЯ брать как сигнал: у него ${ops} из ${meta} реальных сделок, нужных чтобы ему верить, каким бы ни вышло число.`,
     margen: ({ ops, m }) =>
-      `При ${ops} сделках этот процент может сдвинуться на ±${m} пунктов просто случайно.`,
+      `При выборке из ${ops} этот процент может сдвинуться на ±${m} пунктов просто случайно.`,
   },
 
 // Las señales del día de las reglas que corren en pruebas. Ver

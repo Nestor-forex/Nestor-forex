@@ -38,43 +38,12 @@ import { computarBarrido, derivarVista } from '../src/lib/marketCalc.js'
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
 import { limitaciones } from '../src/lib/fakeData.js'
 import { APP } from '../src/lib/identidad.js'
-
-// HASTA DÓNDE LLEGÓ LA DIVERGENCIA Y CUÁNTO HACÍA FALTA.
-//
-// ⚠️ Esto es lo único que distingue «el mercado está plano» de «la app está
-// atascada»: las dos se leen igual en «_Ninguno hoy._».
-//
-// ⚠️⚠️ Y NO SE PUEDE DEDUCIR DE LA LÍNEA DE FUERZA QUE ESTÁ ARRIBA. La escala
-// 0-10 es una normalización de mínimo a máximo: el más débil vale 0 y el más
-// fuerte 10 SIEMPRE, por pequeña que sea la diferencia real. El 2026-10-12 yo
-// leí «CAD 10,0 · CHF 0,0» en Intradía y afirmé que había divergencia de
-// sobra; la mayor de verdad era 0,31 contra un umbral de 0,59. La escala es un
-// ORDEN, no una magnitud.
-//
-// Se enseña SIEMPRE, también los días con señales, y a propósito: si apareciera
-// solo los días vacíos, su presencia sería el mensaje y nadie leería los
-// números. Con señales también dice algo — hoy a 1,77 sobre 0,50 es 3,5 veces
-// lo que se pedía.
-// POR QUÉ NO HAY SEÑALES CUANDO SÍ HUBO DIVERGENCIA.
-//
-// ⚠️⚠️ Sin esto, el reporte decía «divergencia 1,32 contra un umbral de 0,50»
-// y debajo cuatro listas vacías. Néstor lo leyó dos días seguidos (2026-10-16
-// y 19) y yo mismo lo leí como «el mercado está plano»: la verdad era que
-// cinco pares pasaron el umbral, los cinco del lado de las VENTAS, y las
-// ventas están pausadas desde el 2026-08-12. Nadie lo decía en ninguna parte.
-//
-// ⚠️ Va DESPUÉS de la línea del umbral y no antes: aquélla dice si hubo
-// divergencia —el hecho de mercado— y ésta dice qué hizo la app con ella. Al
-// revés se lee como si la pausa fuera el motivo de que no hubiera divergencia.
-const lineaBloqueados = (bloqueados) => {
-  // Ante la duda, nada. `null` es «no hubo ninguno», y una frase aquí diría
-  // algo sobre el mercado donde no hay nada que decir.
-  if (!bloqueados || !Number.isFinite(bloqueados.n) || bloqueados.n < 1) return ''
-  const n = bloqueados.n
-  const plural = n === 1 ? 'par pasó' : 'pares pasaron'
-  const lado = n === 1 ? 'su señal es de venta' : 'sus señales son de venta'
-  return `\n\n_${n} ${plural} el umbral de fuerza, pero ${lado} y las ventas están pausadas desde el 2026-08-12 (${bloqueados.pares.join(', ')}). Por eso no hay señales: no es que el mercado esté plano._`
-}
+// ⚠️ ESTAS DOS LÍNEAS VIVEN FUERA, Y NO ES ORGANIZACIÓN: dentro de este guion
+// no se podían probar, porque aquí se piden velas en cuanto se importa. Eso
+// costó un fallo real el 2026-10-20 — la frase «por eso no hay señales» salió
+// publicada en un reporte que traía dos señales. El porqué entero está en la
+// cabecera de `lib/lineas-reporte.mjs`.
+import { lineaBloqueados, lineaUmbral } from './lib/lineas-reporte.mjs'
 
 // LA REVERSIÓN, QUE LA APP YA ENSEÑA Y EL REPORTE CALLABA.
 //
@@ -112,17 +81,6 @@ _⚠️ La reversión es un EXPERIMENTO y hace lo contrario que la app: compra l
 `
 }
 
-const lineaUmbral = (difMax, umbral) => {
-  // ⚠️ Ante la duda NO SE ESCRIBE NADA. `difMax` es `null` cuando no se pudo
-  // medir, y una línea inventada aquí es peor que ninguna.
-  if (!Number.isFinite(difMax) || !Number.isFinite(umbral)) return ''
-  const d = difMax.toFixed(2)
-  const u = umbral.toFixed(2)
-  return difMax > umbral
-    ? `\n\n_Divergencia: el par más separado iba a ${d} y el umbral era ${u}._`
-    : `\n\n_Ningún par llegó al umbral de fuerza: el más separado iba a ${d} y hacía falta ${u}. Por eso no hay señales._`
-}
-
 function formatoChat({
   fecha,
   monedas,
@@ -142,6 +100,14 @@ function formatoChat({
   const niveles = (s) =>
     `• *${s.name} ${s.lado}* — entrada ${s.entrada.split(' · ')[0]}, SL ${s.sl.split(' (')[0]}, TP ${s.tp} (R/B ${s.rr})`
 
+  // ⚠️ LO QUE LAS DOS LÍNEAS DE ABAJO NECESITAN SABER, y que antes no sabían.
+  //
+  // Son las señales que la APP propone — `setups`, no las de la reversión, que
+  // van en su propio bloque marcadas como experimento. Sin esto, la frase
+  // «por eso no hay señales» se publicó el 2026-10-20 encima de dos setups
+  // reales. Ver la cabecera de `lib/lineas-reporte.mjs`.
+  const haySenales = setups.length > 0
+
   return `📊 *Nestor Forex Swing* — ${fecha}
 ${corte}
 
@@ -157,7 +123,7 @@ ${li(ventas)}
 ${li(vigilancia)}
 
 *Setups del top:*
-${setups.length ? setups.map(niveles).join('\n') : '_Sin setups limpios hoy._'}${lineaUmbral(difMax, umbral)}${lineaBloqueados(bloqueados)}
+${setups.length ? setups.map(niveles).join('\n') : '_Sin setups limpios hoy._'}${lineaUmbral({ difMax, umbral, haySenales })}${lineaBloqueados({ bloqueados, haySenales })}
 ${bloqueReversion(setupsReversion)}
 _Riesgo: 1-2% del capital por operación. ${limitaciones}_`
 }

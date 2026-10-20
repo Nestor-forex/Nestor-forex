@@ -109,6 +109,21 @@ export default {
     vacio: 'Bugün bu kuraldan sinyal yok.',
   },
 
+  // El toque de banda de Bollinger, la quinta regla en pruebas. Enseñada en
+  // el tablero desde el 2026-10-20, a petición de Néstor.
+  //
+  // ⚠️ `explica` cuenta lo que midió CON PALABRAS y no con cifras, a
+  // propósito: en este proyecto hay dos casos escritos de un número a mano que
+  // se quedó viejo enseñando una pérdida como ganancia. Las cifras reales las
+  // cuenta `AvisoSombra` leyendo el historial en vivo.
+  bandas: {
+    titulo: 'Bant dokunuşu (Bollinger)',
+    explica:
+      'Bu sinyaller para birimlerinin gücüne BAKMAZ: fiyatın normal bandının dışına çıkıp çıkmadığına bakar. Aşağı taşarsa alır, yukarı taşarsa satar. Test tezgâhında yalnızca spread sayıldığında hafif lehte, her gecenin swap’ı sayıldığında ALEYHTE ölçtü — yani kendi testi bile onu onaylamıyor. Burada takip edebilmen için var, işlem açmak için değil.',
+    ojoContrario:
+      'Yukarıdaki sinyallerle AYNI pariteleri, yönü ters olacak şekilde gösterebilir. Bu bir hata değil: aynı şeye bakmıyor. Aynı paritenin ters yönle tekrar çıkması, iki ayrı kuralın farklı düşündüğü anlamına gelir.',
+  },
+
   setup: {
     soporte: 'Destek',
     resistencia: 'Direnç',

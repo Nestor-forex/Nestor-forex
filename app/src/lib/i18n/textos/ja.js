@@ -109,6 +109,21 @@ export default {
     vacio: '本日このルールのシグナルはありません。',
   },
 
+  // El toque de banda de Bollinger, la quinta regla en pruebas. Enseñada en
+  // el tablero desde el 2026-10-20, a petición de Néstor.
+  //
+  // ⚠️ `explica` cuenta lo que midió CON PALABRAS y no con cifras, a
+  // propósito: en este proyecto hay dos casos escritos de un número a mano que
+  // se quedó viejo enseñando una pérdida como ganancia. Las cifras reales las
+  // cuenta `AvisoSombra` leyendo el historial en vivo.
+  bandas: {
+    titulo: 'バンドタッチ（Bollinger）',
+    explica:
+      'これらのシグナルは通貨の強さを見ません。価格が通常のバンドから外れたかどうかだけを見ます。下に外れたら買い、上に外れたら売りです。テスト台では spread だけを数えるとわずかに有利、毎晩の swap を数えると不利になりました——つまり自分自身のテストでも承認されていません。ここにあるのは追跡できるようにするためで、売買するためではありません。',
+    ojoContrario:
+      '上のシグナルと同じ通貨ペアを、逆の方向で示すことがあります。これは誤りではありません。見ているものが違うからです。同じペアが逆の向きで出ていたら、別々のルールが違う意見を言っているということです。',
+  },
+
   setup: {
     soporte: 'サポート',
     resistencia: 'レジスタンス',

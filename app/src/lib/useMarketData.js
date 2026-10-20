@@ -161,6 +161,20 @@ export function useMarketData({ thr = 0.5, topN = 3 } = {}) {
     vigilancia: vista?.vigilancia ?? [],
     setups: vista?.setups ?? [],
     setupsReversion: vista?.setupsReversion ?? [],
+    // El toque de banda de Bollinger, la quinta regla en pruebas (2026-10-13).
+    // Lo pidió Néstor el 2026-10-20: «TOCA LO DE BOLLINGER».
+    //
+    // ⚠️ Se calcula SIEMPRE y sin interruptor, al revés que `setupsCaida`: solo
+    // necesita los 20 cierres y el RSI, y los dos viajan en `barrido.json`.
+    // `setupsCaida` necesita los 300 extremos, que el barrido descarta al
+    // publicarse, así que ésa no se puede calcular aquí y sigue fuera.
+    //
+    // ⚠️ VA EN SU PROPIA LISTA, nunca dentro de `setups`. Y aquí el motivo es
+    // MÁS fuerte que con la reversión: Bollinger no mira la fuerza, así que
+    // puede proponer el MISMO par que la app con el lado CONTRARIO el mismo día
+    // — el 2026-10-20 sacó GBP/USD VENTA y GBP/JPY VENTA mientras la app
+    // proponía las dos en COMPRA. Mezclarlas sería ilegible.
+    setupsBollinger: vista?.setupsBollinger ?? [],
     // ⚠️ ESTAS DOS FALTABAN, y por eso sus tarjetas NO SE VEÍAN en la app
     // publicada (encontrado el 2026-10-07). `derivarVista` las calculaba,
     // `App.jsx` las pasaba y `TableroCompleto` las recibía con `= []` por
