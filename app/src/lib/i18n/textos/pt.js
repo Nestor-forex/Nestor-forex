@@ -113,6 +113,21 @@ export default {
     vacio: 'Hoje não há nenhum sinal desta regra.',
   },
 
+  // El toque de banda de Bollinger, la quinta regla en pruebas. Enseñada en
+  // el tablero desde el 2026-10-20, a petición de Néstor.
+  //
+  // ⚠️ `explica` cuenta lo que midió CON PALABRAS y no con cifras, a
+  // propósito: en este proyecto hay dos casos escritos de un número a mano que
+  // se quedó viejo enseñando una pérdida como ganancia. Las cifras reales las
+  // cuenta `AvisoSombra` leyendo el historial en vivo.
+  bandas: {
+    titulo: 'O toque de banda (Bollinger)',
+    explica:
+      'Estes sinais NÃO olham a força das moedas: olham se o preço saiu da sua banda normal. Compram quando sai por baixo e vendem quando sai por cima. No banco de provas mediu um pouco a favor contando só o spread, e CONTRA contando o swap de cada noite — ou seja, nem a sua própria prova a aprova. Está aqui para poderes acompanhá-la, não para a operar.',
+    ojoContrario:
+      'Pode assinalar os MESMOS pares que os sinais de cima e com a direção ao contrário. Não é um erro: não olha para o mesmo. Se vês um par repetido com o lado contrário, são duas regras diferentes a opinar.',
+  },
+
   setup: {
     soporte: 'Suporte',
     resistencia: 'Resistência',
@@ -432,9 +447,9 @@ export default {
 
   sombra: {
     aviso: ({ ops, meta }) =>
-      `Ainda NÃO pode ser tomada como sinal: tem ${ops} operações reais das ${meta} necessárias para acreditar nela, seja qual for o número.`,
+      `Ainda NÃO pode ser tomada como sinal: tem ${ops} das ${meta} operações reais necessárias para acreditar nela, seja qual for o número.`,
     margen: ({ ops, m }) =>
-      `Com ${ops} operações, essa percentagem pode mover-se ±${m} pontos só por casualidade.`,
+      `Com uma amostra de ${ops}, essa percentagem pode mover-se ±${m} pontos só por casualidade.`,
   },
 
 // Las señales del día de las reglas que corren en pruebas. Ver

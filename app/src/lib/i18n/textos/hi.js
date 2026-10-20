@@ -109,6 +109,21 @@ export default {
     vacio: 'आज इस नियम का कोई संकेत नहीं है।',
   },
 
+  // El toque de banda de Bollinger, la quinta regla en pruebas. Enseñada en
+  // el tablero desde el 2026-10-20, a petición de Néstor.
+  //
+  // ⚠️ `explica` cuenta lo que midió CON PALABRAS y no con cifras, a
+  // propósito: en este proyecto hay dos casos escritos de un número a mano que
+  // se quedó viejo enseñando una pérdida como ganancia. Las cifras reales las
+  // cuenta `AvisoSombra` leyendo el historial en vivo.
+  bandas: {
+    titulo: 'बैंड का स्पर्श (Bollinger)',
+    explica:
+      'ये संकेत मुद्राओं की ताकत नहीं देखते: ये देखते हैं कि कीमत अपने सामान्य बैंड से बाहर निकली या नहीं। नीचे से बाहर निकलने पर खरीदते हैं और ऊपर से निकलने पर बेचते हैं। परीक्षण मंच पर केवल spread गिनने से यह थोड़ा पक्ष में निकला, और हर रात का swap गिनने पर विपक्ष में — यानी इसकी अपनी जाँच भी इसे मंज़ूरी नहीं देती। यह यहाँ इसलिए है कि आप इसे देख सकें, इस पर सौदा करने के लिए नहीं।',
+    ojoContrario:
+      'यह ऊपर वाले संकेतों के वही जोड़े दिखा सकता है, पर उलटी दिशा में। यह गलती नहीं है: यह एक ही चीज़ नहीं देख रहा। अगर कोई जोड़ा उलटी तरफ दोहराया दिखे, तो वे दो अलग नियम अलग राय दे रहे हैं।',
+  },
+
   setup: {
     soporte: 'सपोर्ट',
     resistencia: 'रेज़िस्टेंस',

@@ -106,6 +106,21 @@ export default {
     vacio: '今天没有此规则的信号。',
   },
 
+  // El toque de banda de Bollinger, la quinta regla en pruebas. Enseñada en
+  // el tablero desde el 2026-10-20, a petición de Néstor.
+  //
+  // ⚠️ `explica` cuenta lo que midió CON PALABRAS y no con cifras, a
+  // propósito: en este proyecto hay dos casos escritos de un número a mano que
+  // se quedó viejo enseñando una pérdida como ganancia. Las cifras reales las
+  // cuenta `AvisoSombra` leyendo el historial en vivo.
+  bandas: {
+    titulo: '触及布林带（Bollinger）',
+    explica:
+      '这些信号不看货币强弱，只看价格是否离开了它的正常区间。价格跌出下轨时买入，涨出上轨时卖出。在测试台上，只算 spread 时它略微有利，一旦算上每晚的 swap 就变成了不利——也就是说连它自己的测试都不认可它。放在这里是为了让你能跟踪它，不是为了拿它下单。',
+    ojoContrario:
+      '它可能标出和上面信号相同的货币对，但方向相反。这不是错误：它看的不是同一件事。同一个货币对出现两个相反的方向，说明是两条不同的规则在各说各话。',
+  },
+
   setup: {
     soporte: '支撑',
     resistencia: '阻力',

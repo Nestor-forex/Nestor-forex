@@ -109,6 +109,21 @@ export default {
     vacio: '오늘은 이 규칙의 신호가 없습니다.',
   },
 
+  // El toque de banda de Bollinger, la quinta regla en pruebas. Enseñada en
+  // el tablero desde el 2026-10-20, a petición de Néstor.
+  //
+  // ⚠️ `explica` cuenta lo que midió CON PALABRAS y no con cifras, a
+  // propósito: en este proyecto hay dos casos escritos de un número a mano que
+  // se quedó viejo enseñando una pérdida como ganancia. Las cifras reales las
+  // cuenta `AvisoSombra` leyendo el historial en vivo.
+  bandas: {
+    titulo: '밴드 터치 (Bollinger)',
+    explica:
+      '이 신호들은 통화의 강세를 보지 않습니다. 가격이 평소 밴드를 벗어났는지만 봅니다. 아래로 벗어나면 매수, 위로 벗어나면 매도입니다. 테스트 벤치에서는 spread만 계산하면 약간 유리했고, 매일 밤의 swap을 계산하면 불리하게 나왔습니다 — 즉 자기 자신의 테스트도 이 규칙을 승인하지 않습니다. 추적할 수 있도록 여기에 둔 것이지, 매매하려고 둔 것이 아닙니다.',
+    ojoContrario:
+      '위의 신호와 같은 통화쌍을 반대 방향으로 표시할 수 있습니다. 오류가 아닙니다. 같은 것을 보고 있지 않기 때문입니다. 같은 쌍이 반대쪽으로 다시 나오면 서로 다른 두 규칙이 다른 의견을 내고 있다는 뜻입니다.',
+  },
+
   setup: {
     soporte: '지지',
     resistencia: '저항',

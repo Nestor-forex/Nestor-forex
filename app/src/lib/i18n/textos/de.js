@@ -113,6 +113,21 @@ export default {
     vacio: 'Heute keine Signale dieser Regel.',
   },
 
+  // El toque de banda de Bollinger, la quinta regla en pruebas. Enseñada en
+  // el tablero desde el 2026-10-20, a petición de Néstor.
+  //
+  // ⚠️ `explica` cuenta lo que midió CON PALABRAS y no con cifras, a
+  // propósito: en este proyecto hay dos casos escritos de un número a mano que
+  // se quedó viejo enseñando una pérdida como ganancia. Las cifras reales las
+  // cuenta `AvisoSombra` leyendo el historial en vivo.
+  bandas: {
+    titulo: 'Die Bandberührung (Bollinger)',
+    explica:
+      'Diese Signale schauen NICHT auf die Währungsstärke, sondern darauf, ob der Preis sein normales Band verlassen hat. Sie kaufen beim Ausbruch nach unten und verkaufen beim Ausbruch nach oben. Im Prüfstand lag sie leicht im Plus, wenn nur der Spread zählt, und im MINUS, sobald der Swap jeder Nacht mitzählt — nicht einmal der eigene Test billigt sie also. Sie steht hier, damit du sie verfolgen kannst, nicht um sie zu handeln.',
+    ojoContrario:
+      'Sie kann DIESELBEN Paare wie die Signale oben nennen, mit umgekehrter Richtung. Das ist kein Fehler: sie schaut auf etwas anderes. Ein Paar, das mit der Gegenseite auftaucht, sind zwei verschiedene Regeln, die sich widersprechen.',
+  },
+
   setup: {
     soporte: 'Unterstützung',
     resistencia: 'Widerstand',
@@ -432,9 +447,9 @@ export default {
 
   sombra: {
     aviso: ({ ops, meta }) =>
-      `Sie kann noch NICHT als Signal genommen werden: sie hat ${ops} echte Trades von den ${meta}, die nötig sind, um ihr zu glauben — egal wie die Zahl ausfällt.`,
+      `Sie kann noch NICHT als Signal genommen werden: sie hat ${ops} von den ${meta} echten Trades, die nötig sind, um ihr zu glauben — egal wie die Zahl ausfällt.`,
     margen: ({ ops, m }) =>
-      `Mit ${ops} Trades kann sich dieser Prozentsatz allein durch Zufall um ±${m} Punkte bewegen.`,
+      `Bei einer Stichprobe von ${ops} kann sich dieser Prozentsatz allein durch Zufall um ±${m} Punkte bewegen.`,
   },
 
 // Las señales del día de las reglas que corren en pruebas. Ver

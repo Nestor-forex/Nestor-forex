@@ -14,6 +14,7 @@ import Frescura from './Frescura'
 import ClimaMercado from './ClimaMercado'
 import Correlacion from './Correlacion'
 import RiesgoSenales from './RiesgoSenales'
+import AvisoSombra from './AvisoSombra'
 
 function Chip({ children, color }) {
   return (
@@ -37,7 +38,18 @@ function Chip({ children, color }) {
 // señales de la app y las de la regla contraria. Duplicarla habría dejado dos
 // copias que se separan en cuanto alguien toque una — el mismo problema que
 // las dos apps hermanas, en pequeño.
+// Las reglas en pruebas que tienen nombre traducido. Lo que NO esté aquí
+// sigue etiquetándose con su nombre crudo — ver el comentario de la pastilla.
+const ETIQUETA_REGLA = {
+  reversion: 'historial.esReversion',
+  bollinger: 'historial.esBollinger',
+}
+
 function SetupCard({ s, t, onVerSetup }) {
+  // De la app es lo que ES de la app; todo lo demás es una regla en pruebas y
+  // lleva su etiqueta sí o sí.
+  const esDeLaApp = !s.tipo || s.tipo === 'tendencia'
+  const etiquetaRegla = esDeLaApp ? null : ETIQUETA_REGLA[s.tipo] ? t(ETIQUETA_REGLA[s.tipo]) : s.tipo.toUpperCase()
   return (
     <div className="card">
       {/* ⚠️ LA TARJETA SE IDENTIFICA SOLA, y no basta con el título de la
@@ -54,9 +66,27 @@ function SetupCard({ s, t, onVerSetup }) {
           <span className="mono" dir="ltr" style={{ fontWeight: 600, fontSize: 16 }}>
             {s.name}
           </span>
-          {s.tipo === 'reversion' && (
+          {/* ⚠️⚠️ LA ETIQUETA SE DECIDE POR LO QUE LA TARJETA ES, NO POR UNA
+              LISTA DE REGLAS. Hasta el 2026-10-20 esto decía
+              `s.tipo === 'reversion'`, así que al enseñar el toque de banda las
+              tarjetas de Bollinger salían SIN NINGUNA ETIQUETA — justo el fallo
+              que el comentario de arriba dice que ya mordió una vez, y con los
+              mismos pares: ese día la app proponía GBP/JPY y GBP/USD en COMPRA
+              y Bollinger los sacaba en VENTA.
+
+              Es la familia de siempre (`esSombra`, `ventasPausadas`,
+              `esDeLaApp`): una condición que ENUMERA se traga en silencio lo
+              que venga después. Ahora de la app es solo lo que ES de la app, y
+              todo lo demás se etiqueta.
+
+              ⚠️ Y una regla que nadie haya traducido todavía enseña su nombre
+              crudo en vez de una pastilla VACÍA: un `t()` sin clave no da
+              error, sale en blanco — y una tarjeta sin etiqueta se lee como
+              una señal de la app, que es el error caro. */}
+          {etiquetaRegla && (
             <span
               className="mono"
+              dir="ltr"
               style={{
                 fontSize: 9.5,
                 fontWeight: 600,
@@ -68,7 +98,7 @@ function SetupCard({ s, t, onVerSetup }) {
                 whiteSpace: 'nowrap',
               }}
             >
-              {t('historial.esReversion')}
+              {etiquetaRegla}
             </span>
           )}
         </span>
@@ -118,7 +148,7 @@ function RazonList({ items, emptyText }) {
   )
 }
 
-export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], correlaciones = [], riesgoSenales = [], corte, generadoEl, horasViejo, costePorAntiguedad }) {
+export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], setupsBollinger = [], correlaciones = [], riesgoSenales = [], corte, generadoEl, horasViejo, costePorAntiguedad }) {
   const { t, locale } = useIdioma()
   // Cómo le va de verdad a la regla de reversión, contado en vivo. Ver el
   // porqué en `useResumenReal`: este número estuvo escrito a mano y se quedó
@@ -377,6 +407,54 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {setupsReversion.map((s) => (
+                <SetupCard key={s.name + s.lado} s={s} t={t} onVerSetup={onVerSetup} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ⚠️ EL TOQUE DE BANDA, LA QUINTA REGLA EN PRUEBAS (2026-10-20).
+            Lo pidió Néstor: «TOCA LO DE BOLLINGER». Hasta hoy se calculaba y
+            no llegaba a ninguna pantalla — el descuido del tick volume, que
+            estuvo un día entero llegando a la nada.
+
+            ⚠️ VA EN SU PROPIA SECCIÓN Y POR UN MOTIVO MÁS FUERTE QUE LA
+            REVERSIÓN. La reversión mira la fuerza al revés que la app, así que
+            nunca puede coincidir con ella en par+lado. Bollinger NO MIRA LA
+            FUERZA, así que sí puede: el 2026-10-20 sacó GBP/USD VENTA y
+            GBP/JPY VENTA mientras la app proponía esos dos mismos pares en
+            COMPRA. Mezclarlas en la tabla de arriba sería ilegible.
+
+            ⚠️ NO LLEVA NÚMEROS DEL BANCO DE PRUEBAS ESCRITOS A MANO, y es
+            deliberado: aquí vivía `MEDICION.reversion` y en este repositorio
+            hay DOS casos escritos de un número a mano que envejeció enseñando
+            una pérdida como ganancia. Lo que esta regla midió —un poco a favor
+            con solo spread y EN CONTRA pagando swap— va contado con palabras
+            en `explica`, que no caduca, y lo real lo cuenta `AvisoSombra`
+            leyendo el historial en vivo. */}
+        {!loading && !error && setupsBollinger.length > 0 && (
+          <section style={{ marginTop: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <h2 className="section-title" style={{ margin: 0 }}>{t('bandas.titulo')}</h2>
+              <Chip color="var(--amber)">{t('reversion.marca')}</Chip>
+            </div>
+            <p style={{ margin: '10px 0 0', fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              {t('bandas.explica')}
+            </p>
+            {/* La misma frase que evitó la confusión con la reversión, y aquí
+                hace más falta: son los MISMOS pares con el lado al revés. */}
+            <p style={{ margin: '8px 0 0', fontSize: 13, color: 'var(--amber)', lineHeight: 1.6 }}>
+              {t('bandas.ojoContrario')}
+            </p>
+            {/* Cuántas operaciones reales lleva y cuánto puede moverse su
+                número por casualidad. Lo cuenta en vivo del historial: ni un
+                número escrito a mano que pueda quedarse viejo. */}
+            <div style={{ margin: '12px 0 14px' }}>
+              <AvisoSombra ops={real.resumen?.bollinger?.total ?? null} />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {setupsBollinger.map((s) => (
                 <SetupCard key={s.name + s.lado} s={s} t={t} onVerSetup={onVerSetup} />
               ))}
             </div>
