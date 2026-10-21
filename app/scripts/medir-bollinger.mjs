@@ -15,6 +15,7 @@
 
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
 import { computarBarrido, UMBRAL_FUERZA } from '../src/lib/marketCalc.js'
+import { PAIR_NAMES } from '../src/lib/pairs.js'
 import { generarSenales, medir } from './lib/backtest-nucleo.mjs'
 import { resolver } from './lib/resolver.mjs'
 import { simetrica } from './lib/geometrias.mjs'
@@ -215,6 +216,87 @@ if (mayor) {
 } else {
   console.log('  sin señales que repartir')
 }
+
+// ── EL DESGLOSE POR DIVISA ────────────────────────────────────────────────
+//
+// Lo pidió Néstor el 2026-10-20: «ver si es rentable en forma robusta en todas
+// las divisas». El reparto de arriba contesta otra cosa —que el total no salga
+// de un solo par— y hasta hoy el resultado de CADA par no se imprimía nunca.
+//
+// ⚠️⚠️ ESTO NO DECIDE NADA, Y LA TENTACIÓN ES OBVIA: al ver que una regla gana
+// en cinco pares y pierde en nueve, lo que se quiere hacer es operar solo esos
+// cinco. **Eso sería elegir DESPUÉS de ver la tabla** —el troceo a posteriori
+// que este proyecto rechazó con el control de la confluencia (2026-09-04) y
+// con el del barrido de liquidez— y necesitaría su propio preregistro, con los
+// pares nombrados ANTES de medirlos.
+//
+// ⚠️ EL MARGEN VA PEGADO A CADA FILA, porque sin él la tabla engaña sola:
+// repartir unas 550 operaciones entre 14 pares deja ~39 por par, y con 39 el
+// margen del peor caso es ±16 puntos de acierto. Un par con +0,20 y otro con
+// −0,20 pueden perfectamente ser el mismo par.
+//
+// Lo que la tabla SÍ dice con fuerza es el RECUENTO de la última línea: una
+// regla que gana en 12 de 14 es robusta; una que gana en 7 es una moneda al
+// aire. Ese número no depende del margen de cada fila.
+
+const COLUMNAS = [
+  ['sola', resultados.get(CANDIDATAS[0][0])],
+  ['+RSI(J)', gJuzgada],
+  ['+fuerza', resultados.get(CANDIDATAS[2][0])],
+  ['M2', gM2],
+  ['app', gApp],
+]
+
+/** El resultado de UN par dentro de una regla. `null` si no dio señales. */
+function delPar(g, par) {
+  // `par`, no `name`: así se llama el campo que escribe `generarSenales`. El
+  // humo ya cazó una vez el «undefined con el 100 %» por confundirlos.
+  const suyas = g.senales.filter((s) => s.par === par)
+  if (!suyas.length) return { ops: 0, por1R: null }
+  const m = medir(suyas, g.porClave, { conSpread: true })
+  // `m.total` son las JUZGADAS: las que siguen abiertas al final de la serie
+  // se generan y no entran en el número, igual que en la tabla de arriba.
+  return { ops: m.total, por1R: m.total ? m.porRiesgo : null }
+}
+
+const margenDe = (n) => (n > 0 ? Math.round(98 / Math.sqrt(n)) : null)
+
+console.log('')
+console.log('DESGLOSE POR DIVISA — ¿gana en todas o solo en unas pocas?')
+console.log('(por 1R con spread, vara neutra 1:1. El margen es del acierto de la variante juzgada.)')
+console.log('')
+console.log(`${'par'.padEnd(10)} ${'ops(J)'.padStart(6)} ${'margen'.padStart(7)}   ` + COLUMNAS.map(([n]) => n.padStart(8)).join(''))
+console.log('─'.repeat(10 + 1 + 6 + 1 + 7 + 3 + 8 * COLUMNAS.length))
+
+// Los 14 van SIEMPRE, también los que no dieron ni una señal. Esconder los
+// vacíos dejaría en pantalla solo lo que parece significar algo, que es cómo
+// se fabrica un espejismo — misma decisión que en `Diagnostico`.
+const positivos = COLUMNAS.map(() => 0)
+const negativos = COLUMNAS.map(() => 0)
+
+for (const par of PAIR_NAMES) {
+  const celdas = COLUMNAS.map(([, g], i) => {
+    const { por1R } = delPar(g, par)
+    if (por1R === null || !Number.isFinite(por1R)) return '       —'
+    if (por1R > 0) positivos[i]++
+    else negativos[i]++
+    return ((por1R >= 0 ? '+' : '') + por1R.toFixed(2)).padStart(8)
+  })
+  const { ops } = delPar(gJuzgada, par)
+  const m = margenDe(ops)
+  console.log(
+    `${par.padEnd(10)} ${String(ops).padStart(6)} ${(m === null ? '—' : '±' + m).padStart(7)}   ` + celdas.join('')
+  )
+}
+
+console.log('─'.repeat(10 + 1 + 6 + 1 + 7 + 3 + 8 * COLUMNAS.length))
+console.log(
+  `${'GANA EN'.padEnd(10)} ${''.padStart(6)} ${''.padStart(7)}   ` +
+    positivos.map((p, i) => `${p}/${p + negativos[i]}`.padStart(8)).join('')
+)
+console.log('')
+console.log('  El recuento es la respuesta a «robusta en todas las divisas». Cada')
+console.log('  fila suelta lleva un margen tan ancho que no distingue casi nada.')
 
 // ── EL VEREDICTO ──────────────────────────────────────────────────────────
 
