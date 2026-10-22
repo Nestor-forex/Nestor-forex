@@ -16,6 +16,7 @@
 //      la fila diría «Bollinger» y mediría «Bollinger desempatado por fuerza»;
 //   5. y que el listón dé un verde sobre un grupo vacío.
 
+import { readFileSync } from 'node:fs'
 import {
   DESVIACIONES,
   PERIODO,
@@ -302,6 +303,49 @@ console.log('\n12. ⚠️⚠️ SE NIEGA A JUZGAR SIN DATOS (el falso verde del 
   // con muestra corta se descartaría por el motivo equivocado.
   const pocas = juzgar({ ...BUENO, candidata: { ...BUENO.candidata, ops: MIN_OPS - 1 } })
   comprobar('con menos de MIN_OPS dice que no se pudo medir', pocas.pasa === false && !!pocas.noSePudoMedir)
+}
+
+console.log('\n13. ⚠️ EL DESGLOSE POR DIVISA DICE LO QUE DICE DECIR')
+{
+  // Lo pidió Néstor el 2026-10-20 («rentable en forma robusta en todas las
+  // divisas»). Se lee el guion COMO TEXTO porque importarlo pide velas en
+  // cuanto arranca: tendría que gastar 14 créditos y llave para comprobar una
+  // tabla. Es el mismo camino que `prueba-umbral.mjs` con el reporte.
+  const src = readFileSync(new URL('./medir-bollinger.mjs', import.meta.url), 'utf8')
+
+  // Guarda: si el guion se renombra o se parte, esto no puede quedarse en
+  // verde sin haber mirado nada. «Una prueba que se adapta a lo que encuentra
+  // no comprueba nada.»
+  comprobar('se encontró el guion de la medición', src.length > 2000)
+  comprobar('…y trae el desglose por divisa', src.includes('DESGLOSE POR DIVISA'))
+
+  // ⚠️ LOS 14 PARES, no solo los que dieron señal. Recorrer únicamente los
+  // pares con señal dejaría en pantalla solo lo que parece significar algo,
+  // que es cómo se fabrica un espejismo.
+  comprobar('recorre los 14 pares y no solo los que tienen señal', /for \(const par of PAIR_NAMES\)/.test(src))
+  comprobar('…y PAIR_NAMES se importa, no se escribe a mano', /import \{ PAIR_NAMES \} from '\.\.\/src\/lib\/pairs\.js'/.test(src))
+
+  // ⚠️ EL MARGEN. Sin él la tabla engaña sola: ~39 operaciones por par dan
+  // ±16 puntos de acierto, así que un par con +0,20 y otro con −0,20 pueden
+  // ser el mismo par. Es la misma pieza que el ± del Diario (2026-09-14).
+  comprobar('cada fila lleva su margen de error', /98 \/ Math\.sqrt/.test(src))
+
+  // ⚠️ EL RECUENTO es lo único que la tabla dice con fuerza, y es justo la
+  // respuesta a «robusta en todas las divisas».
+  comprobar('imprime el recuento de pares en que gana', src.includes('GANA EN'))
+
+  // ⚠️⚠️ LA ADVERTENCIA. La tentación obvia al ver la tabla es quedarse con
+  // los pares que ganan, y eso es elegir DESPUÉS de ver los datos. Que esta
+  // comprobación exista obliga a venir aquí a borrarla — o sea, a propósito y
+  // no de pasada. Misma idea que la que prohíbe un veredicto en `cot.js`.
+  comprobar(
+    'avisa de que el desglose NO decide nada',
+    /ESTO NO DECIDE NADA/.test(src) && /posteriori/.test(src) && /preregistro/.test(src)
+  )
+
+  // Y que el resultado de un par se mida con `par`, no con `name`: el humo ya
+  // cazó una vez el «undefined con el 100 %» por confundirlos.
+  comprobar('agrupa por el campo `par`', /s\.par === par/.test(src))
 }
 
 console.log('')

@@ -1,0 +1,59 @@
+name: Sonda de la volatilidad implícita
+
+# Averigua si se puede conseguir gratis la volatilidad implícita de divisas
+# (lo que el mercado de opciones espera que se mueva un par) y con qué forma.
+# Ver la cabecera de app/scripts/sonda-volatilidad.mjs.
+#
+# Lo pidió Néstor el 2026-10-20: «estudiar la volatilidad de las opciones a ver
+# si sirve para saber cuál es el horizonte de las apps».
+#
+# EXISTE POR EL MISMO MOTIVO QUE LAS OTRAS SONDAS: la red de las sesiones donde
+# se programa esta app bloquea los seis candidatos — `cdn.cboe.com`,
+# `stooq.com`, `query1.finance.yahoo.com` y `api.stlouisfed.org` dieron
+# «fetch failed» el 2026-10-21, comprobado y no supuesto. Desde ahí no se puede
+# ver ni si responden. Escribir el lector a ciegas y descubrirlo con la app
+# publicada es al revés de como se trabaja aquí: primero se mira, después se
+# escribe.
+#
+# ⚠️ NO gasta créditos de Twelve Data y NO necesita ningún secreto: solo se
+# prueban fuentes SIN llave, a propósito. Si ninguna sirve, lo que toca es
+# decidir si se añade un secreto, con el dato delante. Por eso no lleva `env`.
+#
+# ⚠️ NO ESCRIBE NADA: `contents: read`. No toca `src/`, ni el historial, ni la
+# rama `datos`.
+#
+# Solo a mano. No tiene sentido programarlo: se lanza cuando hay que decidir.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    # Seis candidatas, cada una con su robots.txt y 20 s de tope. Si tarda más
+    # de 5 minutos es que algo se colgó, y sin esto GitHub lo dejaría correr
+    # seis horas.
+    timeout-minutes: 5
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Las comprobaciones primero: la trampa de la anualización (dividir
+      # entre los días en vez de entre su raíz da un número plausible y siete
+      # veces menor, con la conclusión al revés) está vigilada aquí, y no
+      # tiene sentido leer un informe calculado con la cuenta mala.
+      - name: Comprobar las cuentas antes de pedir nada
+        working-directory: app
+        run: node scripts/prueba-volatilidad.mjs
+
+      # No hace falta `npm ci`: la sonda solo usa `fetch`, que ya viene en Node.
+      - name: Sondear
+        working-directory: app
+        run: node scripts/sonda-volatilidad.mjs

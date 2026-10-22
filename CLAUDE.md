@@ -11751,3 +11751,186 @@ Y el reporte de las dos apps corrido **con los datos reales del día que falló*
 Swing con 2 setups y 5 bloqueados saca «Además de las de arriba, otros 5 pares
 pasaron el umbral…», e Intradía con 0,34 contra 0,44 y una señal de rango saca
 la frase de Néstor.
+
+---
+
+# Bollinger por divisa, y el corte dólar/cruces que salió de paso (2026-10-21)
+
+Néstor preguntó dos cosas y la segunda tenía una premisa que había que
+corregir: **«¿hiciste lo de Bollinger solo o con el RSI?»** y **«estudiar la
+volatilidad de las opciones a ver si sirve para saber cuál es el horizonte de
+las apps»**. Después pidió el desglose por divisa y la sonda.
+
+⚠️ **Nada de esto cambió una señal.** Cero archivos de `src/` tocados.
+
+## 1. La respuesta a la primera: las DOS, y el RSI era la que decidía
+
+Estaba escrito en `preregistro-bollinger.mjs` línea 58 **antes** de medir
+(`VARIANTE_JUZGADA = 'con RSI estirado'`), con el motivo dentro: la literatura
+empareja las dos familias, y de las cuatro reversiones medidas el 2026-09-03
+la única que aguanta el swap es justo la que lleva el RSI. O sea que **juntar
+los dos indicadores no era una idea nueva: era la que se puso a prueba de
+frente.** Falló 4 de 6 criterios y solapa el 76 % con M2.
+
+## 2. El desglose por divisa, que es lo que faltaba
+
+El reparto que ya existía solo decía **cuál es el par que más aporta** (para
+que el total no saliera de uno solo). El resultado de CADA par **no se
+imprimía nunca** — y «rentable en forma robusta en todas las divisas» es
+exactamente esa pregunta. Sale del mismo backtest: 14 créditos, cero datos
+nuevos, y **no cambia el veredicto: lo desglosa**.
+
+Corrida real del 2026-10-21, 1.341 días, vara neutra 1:1, spread por par:
+
+| | sola | +RSI (la juzgada) | +fuerza | M2 | la app |
+|---|---:|---:|---:|---:|---:|
+| **gana en** | **7/14** | **9/14** | **7/14** | **11/14** | **7/14** |
+
+**Bollinger+RSI gana en 9 de 14: NO es robusta. Y M2 gana en 11 de 14, o sea
+que es MÁS robusta que ella.** Es la cuarta vez que un camino nuevo rodea a la
+reversión y no la supera.
+
+⚠️ **El margen va pegado a cada fila y no es decoración:** ~39 operaciones por
+par dan **±16 puntos de acierto**, así que un par con +0,20 y otro con −0,20
+pueden ser el mismo par. Lo único que la tabla dice con fuerza es el RECUENTO.
+
+⚠️ **Y hay una comprobación que falla si alguien borra el aviso de que el
+desglose NO decide**, para que quitarlo sea a propósito y no de pasada. La
+tentación es obvia: al ver que gana en nueve pares, lo que se quiere hacer es
+operar solo esos nueve. Eso es elegir después de ver la tabla.
+
+## ⚠️⚠️ 3. LO QUE SALIÓ DE PASO, Y ES LO MÁS GRANDE DEL DÍA
+
+Partiendo las 14 filas en **pares con dólar** y **cruces**:
+
+| | sola | +RSI | +fuerza | M2 | **la app** |
+|---|---:|---:|---:|---:|---:|
+| **con dólar (7 pares, 313 ops)** | −0,040 | −0,036 | −0,039 | +0,020 | **+0,066** |
+| gana en | 2/7 | 3/7 | 2/7 | 4/7 | **5/7** |
+| **cruces (7 pares, 238 ops)** | +0,087 | **+0,100** | +0,083 | +0,077 | **−0,140** |
+| gana en | 5/7 | **6/7** | 5/7 | 6/7 | **1/7** |
+| diferencia | −0,127 | −0,136 | −0,121 | −0,057 | **+0,206** |
+
+> **La app gana en los pares con dólar (+0,066, 5 de 7) y pierde fuerte en los
+> cruces (−0,140, 1 de 7). Bollinger y la reversión hacen LO CONTRARIO.**
+
+El −0,043 total de la app es la media de esas dos cosas opuestas, igual que el
+31 % de Intradía era la media de tendencia (20 %) y rango (54 %).
+
+### ✅ Y el spread NO lo explica, que es lo que lo vuelve interesante
+
+Era la explicación obvia: los cruces cuestan 3-4 pips y EUR/USD menos de 1. Se
+descarta **con la propia tabla y sin medir nada más**: todas las reglas pagan
+el MISMO spread en los MISMOS pares, y M2 y Bollinger **ganan** en los cruces
+mientras la app pierde. Si fuera el peaje, las tres perderían allí.
+
+### ⚠️⚠️ PERO NO SE ENCIENDE NADA, Y HAY QUE SER ESTRICTO AQUÍ
+
+**Esto se miró DESPUÉS de ver la tabla.** Es el troceo a posteriori que este
+proyecto rechazó con el control de la confluencia (2026-09-04) y con el de
+«comprar la caída». Que el número sea grande no cambia de qué clase de número
+es.
+
+Dos cosas lo hacen algo menos arbitrario, y ninguna lo exime:
+
+- **el corte ya existía en el proyecto**: `diagnostico.js` parte el Diario de
+  Néstor en «cruce o par con dólar» desde el 2026-09-14, así que no es una
+  partición inventada para que cuadre;
+- los márgenes de GRUPO son ±6 puntos de acierto (313 y 238 operaciones), y la
+  diferencia de la app es 0,206 — por encima de eso.
+
+⚠️ **Lo que haría falta para perseguirlo** es un preregistro propio escrito
+ANTES, con el listón de siempre: gana en las dos mitades · aguanta 0,5 de swap
+· suficientes señales/mes. Y ojo con la trampa ya documentada: **la app se
+queda con los 5 mejores por lado**, así que quitar los cruces no quita señales
+— las cambia por otras. Medir «la app sin cruces» no es «la app menos lo malo».
+
+📌 Y la pregunta honesta que abre, sin contestar: si la app solo operara pares
+con dólar, serían 7 pares en vez de 14 y **la correlación entre ellos es
+altísima** (el 2026-09-30 quedó medido que cinco señales con dólar eran una
+sola apuesta dicha cinco veces). Más rentable por operación y menos
+diversificado no es automáticamente mejor.
+
+## 4. La volatilidad implícita: la premisa estaba mal
+
+⚠️ **El horizonte de las apps YA está medido** y no era una pregunta abierta:
+Swing **5 días** de mediana con la vara neutra y **12-13** con la geometría
+real; Intradía **9 h** de mediana, 17,9 de media, con el 52 % cruzando una
+noche. Así que la volatilidad implícita no viene a contestar cuánto duran las
+operaciones, sino otra cosa que sí está abierta: **si el objetivo que pone la
+app (2 × ATR) cabe dentro de ese horizonte.**
+
+```
+app/scripts/lib/volatilidad.mjs     las cuentas y el veredicto (puro)
+app/scripts/sonda-volatilidad.mjs   pide, cuenta y enseña. No interpreta
+app/scripts/prueba-volatilidad.mjs  44 comprobaciones, sin internet
+.github/workflows/sonda-volatilidad.yml   solo a mano, permiso de LECTURA
+```
+
+### ⚠️⚠️ LA TRAMPA, escrita ANTES de ver un dato
+
+La volatilidad implícita se cotiza SIEMPRE en **porcentaje ANUAL**, y pasarla a
+5 días pide dividir entre la **RAÍZ** de los periodos, no entre los periodos:
+
+```
+correcto:    10 % · √(5/252) = 1,41 %   → 163 pips en EUR/USD
+equivocado:  10 % · (5/252)  = 0,20 %   →  23 pips
+```
+
+**Plausible, SIETE veces menor, y con la conclusión al revés:** con el número
+malo el objetivo de la app parecería inalcanzable siempre y en cualquier par.
+Es la familia del ATR de cierre a cierre y de los dos informes de `TFF_All`. Por
+eso la cuenta vive en un lib con pruebas y no dentro de la sonda — **romper la
+raíz tumba 8 comprobaciones.**
+
+### Lo demás que no hay que ablandar
+
+⚠️ **Un índice de volatilidad es de UN par**: EVZ el euro, JYVIX el yen, BPVIX
+la libra. **En el mejor caso cubre 3 de los 14**, y lo que no cubra NO se
+rellena con el número de otro par — el veredicto lo dice él solo. La
+volatilidad implícita de verdad, por par y por plazo, la cotizan los bancos en
+el mercado OTC y **no se publica gratis**.
+
+⚠️ **No es un máximo: es UNA desviación típica.** El precio se sale de ese
+margen una de cada tres veces. Y **no dice la dirección**, igual que la
+actividad del puente de MT5.
+
+⚠️ **Sin fuentes leídas NO hay veredicto.** «Respondieron y ninguna trae el
+dato» es un hallazgo; «no se pudo mirar» no es nada. Misma asimetría que
+`veredictoBusqueda`, y comprobada: desde esta sesión los seis candidatos dan
+`fetch failed` (y 000 con `curl`), y el veredicto sale `NO SE PUDO MIRAR`.
+
+⚠️ **Y sería INFORMACIÓN, no un filtro.** «No operar cuando la volatilidad esté
+alta» va al banco de pruebas con su listón escrito antes: van ocho familias
+medidas y ocho fallando.
+
+📌 **Nota para quien venga después:** en estas sesiones hay un conector de Alpha
+Vantage con llave. **NO sirve para producción** — un workflow no lo tiene. Por
+eso la sonda solo prueba fuentes SIN llave; si ninguna sirve, lo que toca es
+decidir si se añade un secreto, con el dato delante.
+
+## 📌 Un workflow NUEVO no se puede lanzar desde una rama
+
+`sonda-volatilidad.yml` dio **404 al dispatcharlo** desde la rama de trabajo,
+dos veces. No es un fallo del archivo: GitHub solo deja lanzar a mano los
+workflows que ya existen en la rama por defecto. **Un workflow nuevo hay que
+fusionarlo antes de poder pulsarlo**, al revés que uno que ya está en `main`
+(el de Bollinger se lanzó desde la rama sin problema y corrió con el código
+nuevo). Conviene saberlo para no diagnosticar el archivo.
+
+## 📌 Y una falsa alarma que casi me hace destruir trabajo
+
+`prueba-gemelos` salió en rojo con **269 líneas distintas** en
+`prueba-umbral.mjs`. No era una divergencia: **el clon local de Intradía estaba
+en un commit propio que no estaba en `main`**, de antes del squash del PR #94.
+
+Lo que se hizo, en este orden: **guardar el commit como parche** antes de
+tocar nada, comprobar con `git ls-remote` (que es el que dice la verdad en ese
+repo, porque su fetch solo trae `main`) si estaba pusheado, y descubrir que su
+contenido **ya estaba en `main` como PR #92** — los cuatro archivos presentes y
+el `CLAUDE.md` idéntico byte a byte. Entonces, y solo entonces, el reset. Con
+el clon al día, los **65 gemelos idénticos**.
+
+⚠️ La lección es la de ayer con otra cara: **antes de creer que algo está roto,
+comprobar que la herramienta con la que miras está diciendo la verdad** — y
+antes de reiniciar una rama, mirar qué lleva encima de `main`.
