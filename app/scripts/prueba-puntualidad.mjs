@@ -12,6 +12,7 @@ import {
   rachaMala,
   resumir,
   retrasoEnMinutos,
+  retrasoMasProbable,
 } from './lib/puntualidad.mjs'
 
 let fallos = 0
@@ -233,6 +234,75 @@ console.log('\n10. ⚠️⚠️ LA RACHA: un reloj muerto no puede tardar 15 dí
   // abrir un log; al revés cuesta lo que esta herramienta existe para cazar.
   comprobar('racha 0 no salva a quien la mediana condena', juzgar(resumir([300, 320, 340]), 0).veredicto === 'inservible')
   comprobar('y sin pasarle racha se comporta igual que antes', juzgar(resumir([300, 320, 340])).veredicto === 'inservible')
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+console.log('\n11. ⚠️⚠️ CON VARIAS ENTRADAS, CUÁL DE ELLAS DISPARÓ LA CORRIDA')
+// ─────────────────────────────────────────────────────────────────────────
+// El fallo que esto arregla, con el caso REAL del vigía de Swing: tiene tres
+// horas pedidas (15:50, 16:20 y 16:50 UTC) y el reloj de fuera lo pulsa a las
+// 15:20. `Math.min` de los tres retrasos elegía el más NEGATIVO —la entrada
+// más LEJANA— y salía −90 min cuando lo honesto es −30, que es lo que se
+// adelantó a la primera hora pedida.
+//
+// El veredicto no cambiaba (llegar antes de la hora es puntual de sobra), pero
+// el número impreso describía otra cosa. Y el comentario del guion decía «la
+// entrada MÁS CERCANA por debajo», que no era lo que hacía.
+{
+  const TRES = ['15:50', '16:20', '16:50']
+  // Lo que hacía la versión vieja, para que la comparación sea explícita y no
+  // una afirmación mía.
+  const viejo = (hs, iso) => {
+    const ds = hs.map((h) => retrasoEnMinutos(h, iso)).filter((d) => d !== null)
+    return ds.length ? Math.min(...ds) : null
+  }
+
+  const pulso = '2026-10-22T15:20:21Z'
+  comprobar('⚠️ el método viejo daba −90 (la entrada más LEJANA)', viejo(TRES, pulso) === -90)
+  comprobar('y ahora da −30: lo que se adelantó a la PRIMERA hora pedida', retrasoMasProbable(TRES, pulso) === -30)
+  comprobar(
+    'el veredicto no cambia —los dos son puntuales—, solo el número',
+    juzgar(resumir([viejo(TRES, pulso)])).veredicto === 'aTiempo' &&
+      juzgar(resumir([retrasoMasProbable(TRES, pulso)])).veredicto === 'aTiempo'
+  )
+
+  // ⚠️ LO QUE NO SE PUEDE ROMPER: una corrida genuinamente tarde tiene que dar
+  // el MISMO número que antes. Con todos los retrasos positivos, `Math.min` ya
+  // era el menor, así que este arreglo no toca ni un día malo — y si lo
+  // tocara, todos los números medidos hasta hoy dejarían de ser comparables.
+  const tarde = '2026-10-22T20:34:00Z'
+  comprobar('una corrida tarde de verdad: se atribuye a la última entrada por debajo (224 min)', retrasoMasProbable(TRES, tarde) === 224)
+  comprobar('⚠️ y el número es IDÉNTICO al del método viejo', retrasoMasProbable(TRES, tarde) === viejo(TRES, tarde))
+
+  // El caso mezclado, que es donde la diferencia SÍ cambia el veredicto: a las
+  // 16:40 hay dos entradas ya pasadas (15:50 y 16:20) y una por venir (16:50).
+  // La disparó la de 16:20, veinte minutos tarde. El método viejo leía −10 y
+  // decía «se adelantó a las 16:50», que es atribuirla a una entrada que
+  // todavía no había llegado.
+  const mezcla = '2026-10-22T16:40:00Z'
+  comprobar('⚠️ el método viejo daba −10: la atribuía a una entrada FUTURA', viejo(TRES, mezcla) === -10)
+  comprobar('y ahora da +20: la disparó la de 16:20, veinte minutos tarde', retrasoMasProbable(TRES, mezcla) === 20)
+  comprobar('aquí el veredicto SÍ cambia, y hacia el lado honesto', juzgar(resumir([retrasoMasProbable(TRES, mezcla)])).veredicto === 'tarde')
+
+  // Con una sola entrada tiene que comportarse exactamente como antes: la
+  // mayoría de los programas son así y sus números no pueden moverse.
+  for (const iso of ['2026-10-22T06:20:00Z', '2026-10-22T06:35:00Z', '2026-10-22T11:56:55Z', '2026-10-22T06:18:00Z']) {
+    comprobar(
+      `con UNA entrada es idéntico a retrasoEnMinutos (${iso.slice(11, 16)})`,
+      retrasoMasProbable(['06:20'], iso) === retrasoEnMinutos('06:20', iso)
+    )
+  }
+  comprobar('justo a la hora → 0', retrasoMasProbable(TRES, '2026-10-22T16:20:00Z') === 0)
+
+  // Lo de siempre: «no lo sé» NUNCA es 0. Un 0 aquí diría «llegó clavada».
+  comprobar('sin entradas → null, no 0', retrasoMasProbable([], '2026-10-22T16:20:00Z') === null)
+  comprobar('fecha ilegible → null', retrasoMasProbable(TRES, 'ayer por la tarde') === null)
+  comprobar('entradas basura → null', retrasoMasProbable(['25:00', '6h20'], '2026-10-22T16:20:00Z') === null)
+  comprobar('nada de nada → null', retrasoMasProbable(null, null) === null)
+  comprobar(
+    'una entrada mala entre dos buenas no tumba la cuenta',
+    retrasoMasProbable(['no es hora', '16:20'], '2026-10-22T16:40:00Z') === 20
+  )
 }
 
 console.log(fallos === 0 ? `\n✓ todo bien (${fallos === 0 ? 'sin fallos' : ''}).\n` : `\n✗ ${fallos} comprobación(es) fallaron.\n`)

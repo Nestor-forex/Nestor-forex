@@ -71,6 +71,45 @@ export function retrasoEnMinutos(programadoHHMM, creadoISO) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// ⚠️⚠️ CON VARIAS ENTRADAS DE CRON, CUÁL DE ELLAS DISPARÓ LA CORRIDA
+// ─────────────────────────────────────────────────────────────────────────
+//
+// Un programa puede tener varias horas pedidas: el vigía de Swing tiene tres
+// (15:50, 16:20 y 16:50 UTC). Una corrida suelta no dice de cuál viene, así
+// que hay que atribuirla, y la atribución cambia el número que se imprime.
+//
+// 📌 LA PRIMERA VERSIÓN USABA `Math.min` DE TODOS LOS RETRASOS, y eso no es
+// «la entrada más cercana»: es la que da el número más NEGATIVO. El 2026-10-22
+// el reloj de fuera pulsó el vigía a las 15:20 y salió **−90 min** (medido
+// contra las 16:50, la entrada más lejana) cuando lo honesto es **−30**, que
+// es lo que se adelantó a la primera hora pedida. El veredicto era correcto
+// —llegar antes de la hora es puntual de sobra— pero el número describía otra
+// cosa, que es la familia de fallo que este proyecto lleva meses
+// coleccionando. Y el comentario del guion decía «la entrada MÁS CERCANA por
+// debajo», que no era lo que hacía.
+//
+// La regla, que es la que de verdad describe lo que pasó:
+//
+//   · si alguna entrada queda EN o ANTES de la corrida (retraso ≥ 0), la
+//     disparó la ÚLTIMA de ésas → el MENOR de los retrasos no negativos;
+//   · si la corrida llegó antes que TODAS (todos negativos), es el reloj de
+//     fuera adelantándose, y lo que se dice es cuánto se adelantó a la
+//     primera → el MAYOR, o sea el menos negativo.
+//
+// ⚠️ Para una corrida genuinamente tarde las dos reglas coinciden (con todos
+// los retrasos positivos, `Math.min` ya era el menor), así que esto NO toca
+// ningún número de los días malos: solo arregla los adelantos y los casos
+// mezclados. Tiene comprobación propia.
+export function retrasoMasProbable(programados, creadoISO) {
+  const ds = (Array.isArray(programados) ? programados : [])
+    .map((h) => retrasoEnMinutos(h, creadoISO))
+    .filter((d) => d !== null)
+  if (!ds.length) return null
+  const noNegativos = ds.filter((d) => d >= 0)
+  return noNegativos.length ? Math.min(...noNegativos) : Math.max(...ds)
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // ⚠️⚠️ UNA CORRIDA POR DÍA, LA MÁS TEMPRANA — Y ESTO ARREGLA UN FALLO REAL
 // ─────────────────────────────────────────────────────────────────────────
 //

@@ -12072,3 +12072,82 @@ gemelo, así que no hay cambio emparejado.
 📌 **Y un aviso de lint que añadí yo** (`(_, i) => 0` con la `i` sin usar) se
 cazó **contando los avisos contra `main`**, no mirándolos de vista: 9 contra 8.
 Un aviso nuevo escondido entre ocho de siempre no se ve leyendo la lista.
+
+---
+
+# El tercer fallo: `Math.min` no es «la entrada más cercana» (2026-10-22)
+
+Quedaba anotado en el PR del mismo día como «un arreglo aparte y no se metió
+aquí sin decidirlo». Néstor lo pidió: **«arregla en otro PR lo que debes
+arreglar»**.
+
+⚠️ **No cambia ni una señal.** Swing sigue en −0,043 por unidad de riesgo con
+la vara neutra. Solo toca cómo se atribuye una corrida a su entrada de cron.
+
+## El fallo
+
+Un programa puede tener varias horas pedidas —el vigía de Swing tiene tres,
+15:50, 16:20 y 16:50 UTC— y una corrida suelta no dice de cuál viene. La
+atribución se hacía con `Math.min` de los tres retrasos, y **eso no es «la
+entrada más cercana»: es la que da el número más NEGATIVO, o sea la más
+LEJANA.**
+
+Con el reloj de fuera pulsando a las 15:20:
+
+| | |
+|---|---:|
+| vs 15:50 (la primera) | **−30** ← lo honesto |
+| vs 16:20 | −60 |
+| vs 16:50 | −90 ← lo que salía |
+
+📌 **El veredicto era correcto** —llegar antes de la hora es puntual de sobra—
+**y el número describía otra cosa.** Y el comentario del guion decía «la entrada
+MÁS CERCANA por debajo», que no era lo que hacía. Es la familia de siempre: un
+número bien calculado que no es el que dice ser. Van seis en tres semanas.
+
+## La regla, en `retrasoMasProbable`
+
+- si alguna entrada queda **en o antes** de la corrida, la disparó **la última
+  de ésas** → el menor de los retrasos no negativos;
+- si la corrida llegó antes que **todas**, es el reloj de fuera adelantándose,
+  y se dice cuánto se adelantó **a la primera** → el mayor, el menos negativo.
+
+⚠️ **Para una corrida genuinamente tarde las dos reglas dan EL MISMO número**
+(con todos los retrasos positivos, `Math.min` ya era el menor), y eso es lo que
+no se podía romper: si el arreglo hubiera tocado los días malos, **todos los
+números medidos hasta hoy dejarían de ser comparables**. Tiene comprobación
+propia y es la que más vale del bloque.
+
+## ⚠️ Dónde SÍ cambia el veredicto, y hacia el lado honesto
+
+El caso mezclado. A las 16:40 hay dos entradas ya pasadas y una por venir:
+
+| | |
+|---|---|
+| antes | **−10** — la atribuía a las 16:50, una entrada que **todavía no había llegado** |
+| ahora | **+20** — la disparó la de 16:20, veinte minutos tarde |
+
+O sea que el método viejo podía leer una corrida TARDE como un adelanto. Y por
+el mismo motivo **no podía dar 0 ni para una corrida clavada** en una entrada
+del medio: a las 16:20 exactas daba −30.
+
+## Lo medido contra producción, antes y después
+
+| | antes | ahora |
+|---|---:|---:|
+| mediana del vigía de Swing | **−90 min** | **−30 min** |
+| resumen de los 18 programas | 9 aTiempo · 3 tarde · 6 inservible | **idéntico** |
+| salida del workflow | 0 (verde) | **0 (verde)** |
+
+**Ningún veredicto se mueve**, que es lo que había que comprobar: el arreglo es
+de rótulo, no de criterio.
+
+## Comprobado que la prueba MUERDE
+
+Con el daño verificado en el archivo antes de darlo por bueno (`grep` de la
+línea con el `Math.min` puesto): **devolver `Math.min(...ds)` tumba 4**, y una
+de las cuatro es la del cero exacto, que no estaba buscada y salió sola.
+
+Lint (8 avisos, los mismos que `main`), build, **43 de 44 pruebas en verde**
+—solo falla `prueba-aviso-real`, que pide el secreto VAPID— y los **65 gemelos
+idénticos**. Ningún archivo tocado es gemelo.
