@@ -11934,3 +11934,141 @@ el clon al día, los **65 gemelos idénticos**.
 ⚠️ La lección es la de ayer con otra cara: **antes de creer que algo está roto,
 comprobar que la herramienta con la que miras está diciendo la verdad** — y
 antes de reiniciar una rama, mirar qué lleva encima de `main`.
+
+---
+
+# Dos comprobaciones que NO podían morder (2026-10-22)
+
+Las dos salieron el mismo día, ninguna buscándolas, y las dos son de la misma
+familia: **código escrito para avisar de un problema que, al fallar, era
+indistinguible de que todo iba bien.**
+
+## 1. La puntualidad no podía ponerse verde NUNCA
+
+Néstor mandó la captura de `puntualidad.yml` en rojo y preguntó qué era. Lo
+primero fue comprobar el reloj de fuera con las horas reales del día, no de
+memoria: tasas **06:20:50**, COT **07:20:50**, oro **07:38:50**, clavados. **El
+reloj funciona.**
+
+⚠️⚠️ **Y aun así el número no podía mejorar, por construcción.** El reloj de
+Cloudflare **no apaga el de GitHub**: los dos disparan, así que cada día hay
+dos corridas del mismo programa.
+
+```
+`tasas`, 22 de octubre de 2026
+  06:20:50  ← el reloj de fuera, clavado
+  11:56:55  ← GitHub, 5 h 36 min tarde
+```
+
+`juzgar` miraba la **mediana de TODAS las corridas**. Con una puntual y una
+tarde cada día, la del medio es siempre la tarde — y con número par `resumir`
+toma el de arriba a propósito. O sea que `tasas`, `COT` y `oro` (1 cron + 1
+pulso) y el vigía de Swing (3 crones + 1 pulso) **estaban condenados a
+«inservible» para siempre**, con el dato llegando a su hora todos los días.
+
+📌 **Y lo que de verdad hacía daño era el rótulo**, no el rojo: el informe
+decía *«Si YA estaba puesto: o su token caducó, o dejó de pulsar. Comprobar en
+Cloudflare»*. Habría mandado a Néstor a buscar en Cloudflare un problema que
+no existía. **Una etiqueta equivocada es un error de medición**, otra vez.
+
+### El arreglo: una corrida por día, la más temprana
+
+`mejorPorDia` deja un solo valor por día. La pregunta buena no es «¿qué tan
+tarde llega la corrida mediana?» sino **«¿llegó el dato a su hora ESE DÍA?»** —
+una vez publicado el barrido a las 06:20, que GitHub lo republique a las 11:56
+no le quita nada a nadie.
+
+⚠️ **Se agrupa por el día que le TOCABA, no por el día en que llegó.** Se resta
+el retraso a la hora de creación, así que una corrida de las 19:20 que dispara
+a la 01:20 cuenta en el día anterior. Agrupar por llegada la movería de día y
+dejaría uno sin corrida y otro con dos.
+
+### ⚠️⚠️ Y la mediana sola seguía sin cazar un reloj MUERTO
+
+Con ventana de 30 días, si el reloj dejara de pulsar hoy los días buenos ya
+dentro sostendrían la mediana **dos semanas**: la herramienta escrita para
+avisar de ese fallo tardaría quince días en avisar. Y el fallo es plausible y
+silencioso — **el token de GitHub del reloj CADUCA**.
+
+Por eso `juzgar(res, racha)` mira además la **racha**: `RACHA_MALA = 3` días
+seguidos sin llegar a su hora, contando desde el más reciente.
+
+⚠️ **La racha SOLO CONDENA, NUNCA SALVA.** Puede tumbar a un programa que la
+ventana da por bueno; no puede rescatar a uno que la ventana da por malo.
+Equivocarse hacia «mira esto» cuesta abrir un log; al revés cuesta justo lo que
+esto existe para cazar. Tiene comprobación propia.
+
+⚠️ Y se cuentan **días CON CORRIDA**, no de calendario: un fin de semana sin
+corridas no rompe la racha ni la alarga.
+
+### El consejo del informe ahora se elige según lo que pasa
+
+Si hay racha → «apunta a que el reloj dejó de pulsar, mira su token». Si no →
+«lo que arrastra el número son los días anteriores a ponerlo, se apaga solo».
+Decir siempre lo primero era lo que iba a mandar a Néstor a buscar en vano.
+
+### Medido contra producción, no solo con pruebas
+
+Antes: **6 inservibles de los pulsados, salida 1**. Ahora: **9 a tiempo · 3
+tarde · 0 inservibles de los pulsados, salida 0**, y los 6 «tarde a propósito»
+siguen marcados como tales.
+
+⚠️ **`Swing · vigía` pasa raspando: 12 de 23 días.** Es verde porque la mediana
+cae justo en el límite, no con holgura. Mejorará según la ventana avance.
+
+📌 **Un detalle que NO se tocó y queda anotado:** con varias entradas de cron,
+`Math.min` elige la entrada que da el número más NEGATIVO, no la más cercana —
+el vigía de Swing, pulsado a las 15:20 con entradas 15:50/16:20/16:50, sale
+como **−90 min** en vez de −30. El veredicto es correcto (llega antes de su
+hora, que es puntual de sobra) pero el número que se imprime describe otra
+cosa, y el comentario del guion dice «la entrada MÁS CERCANA por debajo», que
+no es lo que hace. **Es un tercer arreglo y no se metió aquí sin decidirlo.**
+
+## 2. El guardia del robots.txt de la sonda de volatilidad
+
+La corrida real imprimió `robots.txt: 200 → [object Object]`.
+`decidirConRobots` devuelve una ficha `{ veredicto, porque }` y la sonda la
+comparaba contra la palabra `'prohibido'`, **que ni siquiera es uno de los tres
+veredictos posibles** (el real es `'⛔ LO PROHÍBE'`). Doblemente rota: tipo
+equivocado y valor inexistente.
+
+**O sea que el guardia no podía saltar nunca.** No hubo daño —ninguna de las
+dos fuentes lo prohibía— pero **una comprobación que no muerde es lo mismo que
+no tener comprobación**.
+
+⚠️ **El arreglo no es corregir la palabra: es EXPORTARLA.** `robots.mjs` ahora
+exporta `PROHIBE`, `NO_PROHIBE` y `NO_SE_SABE`, los usa en sus propios
+`return`, y los importan la sonda y `prueba-sentimiento.mjs` (que los tenía
+escritos a mano). Es la disciplina de `UMBRAL_FUERZA` y `ATR_REVERSION`.
+
+📌 **Comprobado que el fallo era SOLO de la sonda que escribí el día anterior:**
+`sonda-contexto.mjs` y `sonda-sentimiento.mjs` leen `.veredicto` bien. La regla
+de «un error recién cometido en un sitio es el que se va a cometer en el de al
+lado» se aplicó mirando, no suponiendo.
+
+El bloque 8 de `prueba-volatilidad.mjs` lee la sonda **como texto** y exige el
+cableado: que importe la constante, que compare `permiso.veredicto`, que ya no
+exista `=== 'prohibido'`, y que el log imprima el veredicto y no la ficha. Más
+la otra mitad, que es la que lo cierra: **que el veredicto que la sonda busca
+sea el que la librería de verdad devuelve** — comparar contra una constante no
+sirve de nada si la constante no es la que sale.
+
+## Comprobado que las tres muerden
+
+Con el daño verificado en el archivo antes de darlo por bueno:
+
+| daño | caen |
+|---|---:|
+| quedarse con la ÚLTIMA corrida del día en vez de la más temprana | 2 |
+| agrupar por el día de llegada en vez del día que tocaba | 1 |
+| que la racha no condene (el reloj muerto pasa desapercibido) | 2 |
+| devolver el `=== 'prohibido'` a la sonda | 3 |
+
+Lint (8 avisos, los mismos que `main`), build, **43 de 44 pruebas en verde**
+—solo falla `prueba-aviso-real`, que pide el secreto VAPID y manda un aviso de
+verdad— y los **65 gemelos idénticos**. Ninguno de los archivos tocados es
+gemelo, así que no hay cambio emparejado.
+
+📌 **Y un aviso de lint que añadí yo** (`(_, i) => 0` con la `i` sin usar) se
+cazó **contando los avisos contra `main`**, no mirándolos de vista: 9 contra 8.
+Un aviso nuevo escondido entre ocho de siempre no se ve leyendo la lista.

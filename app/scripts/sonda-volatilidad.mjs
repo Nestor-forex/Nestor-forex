@@ -19,7 +19,7 @@
 // la trampa de la anualización (√ y no división), lo que la volatilidad
 // implícita NO dice, y que sería INFORMACIÓN y no un filtro.
 
-import { decidirConRobots } from './lib/robots.mjs'
+import { NO_SE_SABE, PROHIBE, decidirConRobots } from './lib/robots.mjs'
 import { plausibleIV, veredictoSonda } from './lib/volatilidad.mjs'
 
 // Un User-Agent HONESTO. Un 403 a un programa es una respuesta y se respeta:
@@ -163,11 +163,22 @@ for (const c of CANDIDATAS) {
   // publican para que se lea. Y sirve para DESCARTAR, nunca para aprobar: uno
   // permisivo no autoriza nada; uno que lo prohíbe sí es un «no» explícito.
   if (c.comercial) {
+    //
+    // ⚠️⚠️ `decidirConRobots` devuelve una FICHA `{ veredicto, porque }`, y los
+    // veredictos se importan — NO se escriben a mano. La primera versión de
+    // este bloque comparaba la ficha entera contra la palabra `'prohibido'`,
+    // que ni siquiera es uno de los tres valores posibles: imprimía
+    // `[object Object]` en el log y **el guardia no podía saltar nunca**.
+    // Salió en la corrida real del 2026-10-22. Una comprobación que no muerde
+    // es lo mismo que no tener comprobación.
     const host = new URL(c.url).origin
     const rb = await pedir(host + '/robots.txt', 10)
-    const permiso = rb.ok && rb.estado === 200 ? decidirConRobots(rb.cuerpo, c.url) : 'no se sabe'
-    console.log(`  robots.txt: ${rb.ok ? rb.estado : 'no respondió'} → ${permiso}`)
-    if (permiso === 'prohibido') {
+    const permiso =
+      rb.ok && rb.estado === 200
+        ? decidirConRobots(rb.cuerpo, c.url)
+        : { veredicto: NO_SE_SABE, porque: `el robots.txt no respondió (${rb.ok ? rb.estado : rb.error})` }
+    console.log(`  robots.txt: ${rb.ok ? rb.estado : 'no respondió'} → ${permiso.veredicto} · ${permiso.porque}`)
+    if (permiso.veredicto === PROHIBE) {
       console.log('  ⛔ El sitio lo prohíbe explícitamente. NO se pide.')
       fuentes.push({ nombre: c.nombre, respondio: false, iv: null, pares: c.pares })
       continue

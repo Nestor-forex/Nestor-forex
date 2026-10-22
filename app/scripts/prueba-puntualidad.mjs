@@ -5,8 +5,11 @@
 import {
   A_TIEMPO_MIN,
   INUTIL_MIN,
+  RACHA_MALA,
   horasCubiertas,
   juzgar,
+  mejorPorDia,
+  rachaMala,
   resumir,
   retrasoEnMinutos,
 } from './lib/puntualidad.mjs'
@@ -144,6 +147,93 @@ console.log(`       mediana real: ${rTasas.mediana} min (${(rTasas.mediana / 60)
 comprobar('las 10 corridas reales dan INSERVIBLE', jTasas.veredicto === 'inservible')
 comprobar('ninguna de las 10 llegó a tiempo', rTasas.aTiempo === 0)
 comprobar('la mediana real pasa de 5 horas', rTasas.mediana > 300)
+
+// ─────────────────────────────────────────────────────────────────────────
+console.log('\n9. ⚠️⚠️ UNA CORRIDA POR DÍA: LA MÁS TEMPRANA')
+// ─────────────────────────────────────────────────────────────────────────
+// El fallo que esto arregla, con los datos REALES del 22 de octubre de 2026:
+// el reloj de fuera pulsó `tasas` a las 06:20:50 —clavado, pedido a las
+// 06:20— y GitHub la disparó otra vez a las 11:56:55. Las dos corridas son
+// del mismo día y del mismo programa.
+//
+// Resumiéndolas juntas, la mediana de dos valores toma el de arriba (es la
+// asimetría del bloque 5), o sea la TARDE. Así que el número decía
+// «inservible» con el dato llegando puntual todos los días, y no podía
+// ponerse verde nunca.
+{
+  const dia = (iso, retraso) => ({ creadoISO: iso, retraso })
+
+  // El caso real, tal cual.
+  const reales = [dia('2026-10-22T06:20:50Z', 0), dia('2026-10-22T11:56:55Z', 336)]
+  const porDia = mejorPorDia(reales)
+  comprobar('las dos corridas del mismo día se quedan en UNA', porDia.length === 1)
+  comprobar('y la que queda es la TEMPRANA (0 min), no la tarde', porDia[0].retraso === 0)
+  comprobar(
+    '⚠️ con el método viejo esto daba INSERVIBLE; ahora da aTiempo',
+    juzgar(resumir(reales.map((r) => r.retraso))).veredicto === 'inservible' &&
+      juzgar(resumir(porDia.map((d) => d.retraso))).veredicto === 'aTiempo'
+  )
+
+  // ⚠️ SE AGRUPA POR EL DÍA QUE LE TOCABA, NO POR EL DE LLEGADA. Una corrida
+  // pedida a las 19:20 que dispara a la 01:20 del día siguiente pertenece al
+  // día anterior; agrupándola por su día de llegada dejaría un día sin
+  // corrida y el siguiente con dos, o sea movería el problema de sitio.
+  const cruzaMedianoche = mejorPorDia([dia('2026-10-23T01:20:00Z', 360)])
+  comprobar('una corrida que cruza medianoche cuenta en el día que le tocaba', cruzaMedianoche[0].dia === '2026-10-22')
+
+  // Días distintos NO se mezclan.
+  const dosDias = mejorPorDia([dia('2026-10-21T06:20:00Z', 0), dia('2026-10-22T11:56:00Z', 336)])
+  comprobar('dos días distintos siguen siendo dos', dosDias.length === 2)
+  comprobar('y vienen ordenados del más viejo al más nuevo', dosDias[0].dia < dosDias[1].dia)
+
+  // Lo de siempre: nada que mirar NO es «va bien».
+  comprobar('sin nada que agrupar → lista vacía', mejorPorDia([]).length === 0)
+  comprobar('lo que no se entiende se descarta, no cuenta como 0', mejorPorDia([dia('ayer', 5), dia('2026-10-22T06:20:00Z', null)]).length === 0)
+  comprobar('⚠️ y una lista vacía sigue dando noSePudoMirar, no aTiempo', juzgar(resumir(mejorPorDia([]).map((d) => d.retraso))).veredicto === 'noSePudoMirar')
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+console.log('\n10. ⚠️⚠️ LA RACHA: un reloj muerto no puede tardar 15 días en verse')
+// ─────────────────────────────────────────────────────────────────────────
+// Con una ventana de 30 días, si el reloj de fuera dejara de pulsar hoy, los
+// días buenos que ya están dentro sostendrían la mediana durante dos
+// semanas. O sea que la herramienta escrita para avisar de ese fallo
+// tardaría quince días en avisar — y el fallo es plausible y silencioso,
+// porque el token de GitHub que usa el reloj CADUCA.
+{
+  const d = (dia, retraso) => ({ dia, retraso })
+
+  comprobar('sin días → racha 0', rachaMala([]) === 0)
+  comprobar('todo puntual → racha 0', rachaMala([d('2026-10-20', 0), d('2026-10-21', 2), d('2026-10-22', 1)]) === 0)
+  comprobar(
+    'los dos últimos tarde → racha 2',
+    rachaMala([d('2026-10-20', 0), d('2026-10-21', 300), d('2026-10-22', 310)]) === 2
+  )
+  comprobar(
+    '⚠️ la racha se cuenta desde el final: un día malo ANTIGUO no cuenta',
+    rachaMala([d('2026-10-20', 999), d('2026-10-21', 0), d('2026-10-22', 1)]) === 0
+  )
+  comprobar(`el borde: ${A_TIEMPO_MIN} min todavía es puntual`, rachaMala([d('2026-10-22', A_TIEMPO_MIN)]) === 0)
+  comprobar(`y ${A_TIEMPO_MIN + 1} ya no`, rachaMala([d('2026-10-22', A_TIEMPO_MIN + 1)]) === 1)
+
+  // ⚠️ LO QUE DE VERDAD IMPORTA: la racha condena aunque la ventana larga
+  // esté llena de días buenos. Es el reloj recién muerto.
+  const buenos = Array.from({ length: 20 }, () => 0)
+  const resBueno = resumir([...buenos, 300, 300, 300])
+  comprobar('23 días con 20 buenos → la mediana sola diría aTiempo', juzgar(resBueno).veredicto === 'aTiempo')
+  comprobar(
+    `⚠️ pero con ${RACHA_MALA} días seguidos tarde → INSERVIBLE`,
+    juzgar(resBueno, RACHA_MALA).veredicto === 'inservible'
+  )
+  comprobar('y el motivo dice que apunta al reloj, no a la ventana', /reloj de fuera/.test(juzgar(resBueno, RACHA_MALA).porque))
+  comprobar(`${RACHA_MALA - 1} días seguidos todavía NO condena`, juzgar(resBueno, RACHA_MALA - 1).veredicto === 'aTiempo')
+
+  // ⚠️ Y SOLO CONDENA, NUNCA SALVA: una racha de 0 no puede rescatar a un
+  // programa que la ventana da por malo. Equivocarse hacia «mira esto» cuesta
+  // abrir un log; al revés cuesta lo que esta herramienta existe para cazar.
+  comprobar('racha 0 no salva a quien la mediana condena', juzgar(resumir([300, 320, 340]), 0).veredicto === 'inservible')
+  comprobar('y sin pasarle racha se comporta igual que antes', juzgar(resumir([300, 320, 340])).veredicto === 'inservible')
+}
 
 console.log(fallos === 0 ? `\n✓ todo bien (${fallos === 0 ? 'sin fallos' : ''}).\n` : `\n✗ ${fallos} comprobación(es) fallaron.\n`)
 process.exit(fallos === 0 ? 0 : 1)

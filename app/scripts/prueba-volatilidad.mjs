@@ -14,6 +14,9 @@
 //   4. y dar un veredicto sin haber leído una sola fuente, que es decir «no
 //      existe» cuando lo que pasó es «no se pudo mirar».
 
+import { readFileSync } from 'node:fs'
+
+import { PROHIBE, decidirConRobots } from './lib/robots.mjs'
 import {
   DIAS_MERCADO_ANIO,
   IV_MAX_PLAUSIBLE,
@@ -189,6 +192,55 @@ console.log('\n7. EL CASO QUE MOTIVA TODO: ¿cabe el objetivo en el horizonte?')
   // número que nadie leería como absurdo.
   const linealPips = ((8 * (5 / DIAS_MERCADO_ANIO)) / 100) * 1.16 / 0.0001
   comprobar('⚠️ la cuenta lineal daría 18 pips y la conclusión contraria', linealPips < 25 && linealPips < OBJETIVO_PIPS)
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+console.log('\n8. ⚠️⚠️ El guardia del robots.txt TIENE que poder saltar')
+// ─────────────────────────────────────────────────────────────────────────
+// Esto no comprueba una cuenta: comprueba que el guardia esté ENCHUFADO.
+//
+// En la corrida real del 2026-10-22 el log imprimió «robots.txt: 200 →
+// [object Object]». El motivo: `decidirConRobots` devuelve una ficha
+// `{ veredicto, porque }` y la sonda la comparaba contra la palabra
+// `'prohibido'` — que ni siquiera es uno de los tres veredictos posibles. O
+// sea que el guardia **no podía saltar nunca**, y si una de las fuentes
+// hubiera dicho «no me leas», la sonda se lo habría pedido igual.
+//
+// No hubo daño porque ninguna lo prohibía. Pero una comprobación que no
+// puede morder es lo mismo que no tener comprobación, así que lo que se
+// vigila aquí es el cableado, leyendo la sonda como texto.
+{
+  const fuente = readFileSync(new URL('./sonda-volatilidad.mjs', import.meta.url), 'utf8')
+
+  // Guarda: si algún día se renombra el archivo, esto no puede quedarse en
+  // verde sin haber mirado nada.
+  comprobar('se encontró la sonda para leerla', fuente.length > 2000)
+
+  comprobar(
+    'importa los veredictos de `robots.mjs` en vez de escribirlos',
+    /import\s*\{[^}]*\bPROHIBE\b[^}]*\}\s*from\s*'\.\/lib\/robots\.mjs'/.test(fuente)
+  )
+  comprobar(
+    'compara `permiso.veredicto` contra la constante, no la ficha entera',
+    /permiso\.veredicto\s*===\s*PROHIBE/.test(fuente)
+  )
+  comprobar(
+    '⚠️ ya NO compara contra la palabra inventada `prohibido`',
+    !/===\s*'prohibido'/.test(fuente)
+  )
+  // Y que el log imprima el veredicto y no la ficha: `[object Object]` en un
+  // informe es ruido, pero aquí era el ÚNICO síntoma visible del fallo.
+  comprobar(
+    'el log imprime `permiso.veredicto`, no el objeto',
+    /\$\{permiso\.veredicto\}/.test(fuente) && !/→ \$\{permiso\}/.test(fuente)
+  )
+
+  // Y la otra mitad: que el veredicto que la sonda busca sea el que la
+  // librería de verdad devuelve. Comparar contra una constante no sirve de
+  // nada si la constante no es la que sale.
+  const prohibido = decidirConRobots('User-agent: *\nDisallow: /', 'https://x.com/lo-que-sea')
+  comprobar('un robots.txt que lo prohíbe devuelve exactamente PROHIBE', prohibido.veredicto === PROHIBE)
+  comprobar('y uno que no, NO lo devuelve', decidirConRobots('User-agent: *\nDisallow:', 'https://x.com/a').veredicto !== PROHIBE)
 }
 
 console.log('')
