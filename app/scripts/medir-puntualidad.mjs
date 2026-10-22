@@ -37,7 +37,7 @@
 // puede importar nada: se pega entero en el panel de Cloudflare.
 
 import { PROGRAMAS } from '../../reloj-externo/worker.js'
-import { RACHA_MALA, horasCubiertas, juzgar, mejorPorDia, rachaMala, resumir, retrasoEnMinutos } from './lib/puntualidad.mjs'
+import { RACHA_MALA, horasCubiertas, juzgar, mejorPorDia, rachaMala, resumir, retrasoMasProbable } from './lib/puntualidad.mjs'
 
 // ⚠️⚠️ NO SE MANDA NINGÚN TOKEN, Y ES UNA DECISIÓN, NO UN OLVIDO.
 //
@@ -125,9 +125,9 @@ const esquemaDe = (p, corridasUsadas, etiqueta) => {
     return { veredicto: pct >= 85 ? 'aTiempo' : pct >= 50 ? 'tarde' : 'inservible', porque: `${pct.toFixed(0)} % de cobertura` }
   }
 
-  // Los de hora fija: lo que decide es el RETRASO. Con varias entradas se
-  // mide cada corrida contra la entrada MÁS CERCANA por debajo, que es la que
-  // la disparó.
+  // Los de hora fija: lo que decide es el RETRASO. Con varias entradas, la
+  // atribución la hace `retrasoMasProbable` — y el porqué está allí, porque
+  // «la entrada más cercana» NO es `Math.min` de todos los retrasos.
   //
   // ⚠️⚠️ Y DESPUÉS SE DEJA UNA SOLA CORRIDA POR DÍA: LA MÁS TEMPRANA. El
   // porqué entero está en `mejorPorDia`, y en corto es que el reloj de fuera
@@ -135,10 +135,7 @@ const esquemaDe = (p, corridasUsadas, etiqueta) => {
   // cinco horas más tarde. Resumiéndolas juntas, la del medio es siempre la
   // tarde y el número no podía ponerse verde nunca.
   const porDia = mejorPorDia(
-    corridasUsadas.map((c) => {
-      const ds = p.programado.map((h) => retrasoEnMinutos(h, c.created_at)).filter((d) => d !== null)
-      return { creadoISO: c.created_at, retraso: ds.length ? Math.min(...ds) : null }
-    })
+    corridasUsadas.map((c) => ({ creadoISO: c.created_at, retraso: retrasoMasProbable(p.programado, c.created_at) }))
   )
   const res = resumir(porDia.map((d) => d.retraso))
   if (!res) return null
