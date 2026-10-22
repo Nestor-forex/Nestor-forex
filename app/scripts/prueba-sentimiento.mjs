@@ -10,7 +10,7 @@
 // Los casos de abajo no son inventados al azar: cada uno es una forma concreta
 // en que un analizador ingenuo se equivoca.
 
-import { decidirConRobots } from './lib/robots.mjs'
+import { NO_PROHIBE, NO_SE_SABE, PROHIBE, decidirConRobots } from './lib/robots.mjs'
 import { veredictoBusqueda } from './lib/sitemaps.mjs'
 
 let hechas = 0
@@ -23,9 +23,12 @@ const ok = (cond, que) => {
   return false
 }
 
-const prohibe = (r) => r.veredicto === '⛔ LO PROHÍBE'
-const permite = (r) => r.veredicto === 'no lo prohíbe'
-const nose = (r) => r.veredicto === 'no se sabe'
+// ⚠️ Los tres veredictos se IMPORTAN, no se escriben aquí. Escritos a mano, el
+// día que uno cambiara de texto esta prueba seguiría en verde comparando
+// contra una palabra que ya no devuelve nadie — una prueba que no puede fallar.
+const prohibe = (r) => r.veredicto === PROHIBE
+const permite = (r) => r.veredicto === NO_PROHIBE
+const nose = (r) => r.veredicto === NO_SE_SABE
 
 console.log('1. Ante la duda, «no se sabe» — NUNCA «permitido»')
 {

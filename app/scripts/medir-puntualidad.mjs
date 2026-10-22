@@ -37,7 +37,7 @@
 // puede importar nada: se pega entero en el panel de Cloudflare.
 
 import { PROGRAMAS } from '../../reloj-externo/worker.js'
-import { horasCubiertas, juzgar, resumir, retrasoEnMinutos } from './lib/puntualidad.mjs'
+import { RACHA_MALA, horasCubiertas, juzgar, mejorPorDia, rachaMala, resumir, retrasoEnMinutos } from './lib/puntualidad.mjs'
 
 // ⚠️⚠️ NO SE MANDA NINGÚN TOKEN, Y ES UNA DECISIÓN, NO UN OLVIDO.
 //
@@ -128,18 +128,27 @@ const esquemaDe = (p, corridasUsadas, etiqueta) => {
   // Los de hora fija: lo que decide es el RETRASO. Con varias entradas se
   // mide cada corrida contra la entrada MÁS CERCANA por debajo, que es la que
   // la disparó.
-  const res = resumir(
+  //
+  // ⚠️⚠️ Y DESPUÉS SE DEJA UNA SOLA CORRIDA POR DÍA: LA MÁS TEMPRANA. El
+  // porqué entero está en `mejorPorDia`, y en corto es que el reloj de fuera
+  // no apaga el de GitHub, así que cada día hay una corrida puntual y otra de
+  // cinco horas más tarde. Resumiéndolas juntas, la del medio es siempre la
+  // tarde y el número no podía ponerse verde nunca.
+  const porDia = mejorPorDia(
     corridasUsadas.map((c) => {
       const ds = p.programado.map((h) => retrasoEnMinutos(h, c.created_at)).filter((d) => d !== null)
-      return ds.length ? Math.min(...ds) : null
+      return { creadoISO: c.created_at, retraso: ds.length ? Math.min(...ds) : null }
     })
   )
+  const res = resumir(porDia.map((d) => d.retraso))
   if (!res) return null
+  const racha = rachaMala(porDia)
   console.log(
-    `    ${etiqueta.padEnd(16)} ${res.n} corridas · retraso mediana ${res.mediana} min · p90 ${res.p90} · ` +
-      `máx ${res.max} · a tiempo ${res.aTiempo} de ${res.n}`
+    `    ${etiqueta.padEnd(16)} ${corridasUsadas.length} corridas en ${res.n} días · la MÁS TEMPRANA de cada día: ` +
+      `mediana ${res.mediana} min · p90 ${res.p90} · máx ${res.max} · a tiempo ${res.aTiempo} de ${res.n} días` +
+      (racha ? ` · ⚠️ ${racha} día(s) seguidos tarde` : '')
   )
-  return juzgar(res)
+  return juzgar(res, racha)
 }
 
 for (const p of PROGRAMAS) {
@@ -233,14 +242,31 @@ if (sinMirar.length === veredictos.length) {
 // TODOS en silencio, y eso es lo que acaba de cerrarse arriba.
 const malos = veredictos.filter((v) => v.pulsa && v.veredicto === 'inservible')
 if (malos.length) {
-  console.log(`  ✗ ${malos.length} programa(s) que el reloj PULSA siguen INSERVIBLE(S): ${malos.map((v) => v.nombre).join(', ')}`)
+  console.log(`  ✗ ${malos.length} programa(s) que el reloj PULSA siguen INSERVIBLE(S):`)
+  for (const v of malos) console.log(`      · ${v.nombre} — ${v.detalle}`)
   console.log('')
-  console.log('    📌 SI EL RELOJ DE FUERA TODAVÍA NO ESTÁ PUESTO, ESTE ROJO ES LO ESPERADO:')
-  console.log('       es verdad que llegan tarde, y se apaga solo en cuanto el reloj funcione.')
-  console.log('       Los pasos están en `reloj-externo/README.md`.')
+
+  // ⚠️ EL CONSEJO SE ELIGE SEGÚN LO QUE PASA, y no es un detalle de estilo.
+  // La versión anterior decía SIEMPRE «o su token caducó, o dejó de pulsar», y
+  // el 2026-10-22 eso era falso: el reloj estaba pulsando clavado y el rojo
+  // venía de cómo se contaba. Un rótulo equivocado manda a buscar un problema
+  // que no existe, que es peor que no decir nada.
+  const porRacha = malos.filter((v) => /días con corrida/.test(v.detalle || ''))
+  if (porRacha.length) {
+    console.log(`    ⚠️ ${porRacha.length} de ellos llevan ${RACHA_MALA}+ DÍAS SEGUIDOS sin llegar a su hora.`)
+    console.log('       Eso NO es la ventana de 30 días: apunta a que el reloj de fuera dejó')
+    console.log('       de pulsar. Lo más probable es que su token de GitHub haya caducado.')
+    console.log('       Comprobar en Cloudflare → Workers → el worker → Logs.')
+  } else {
+    console.log('    📌 NINGUNO lleva varios días seguidos tarde, así que el reloj de fuera')
+    console.log('       parece estar pulsando. Lo que arrastra el número son los días')
+    console.log('       ANTERIORES a ponerlo, que todavía están dentro de la ventana de')
+    console.log(`       ${DIAS} días. Se apaga solo según la ventana avance.`)
+    console.log('')
+    console.log('       Si el reloj todavía NO está puesto, los pasos están en')
+    console.log('       `reloj-externo/README.md`.')
+  }
   console.log('')
-  console.log('    Si YA estaba puesto: o su token caducó, o dejó de pulsar.')
-  console.log('    Comprobar en Cloudflare → Workers → el worker → Logs.\n')
   process.exit(1)
 }
 const aPropositoTarde = veredictos.filter((v) => !v.pulsa && v.veredicto === 'inservible').length
