@@ -47,7 +47,14 @@ const mediaDe = (t) => (Object.values(t).reduce((a, b) => a + b, 0) / Object.key
 // 📌 Una etiqueta equivocada es un error de medición: los números estaban bien
 // y la conclusión que inducían era falsa. Ya había pasado con «rompimiento» el
 // 2026-09-04. Derivándola del propio valor no puede volver a envejecer sola.
-import { computarBarrido, RSI_MAX, TENDENCIA_MIN, CONFLUENCIA_MIN, UMBRAL_FUERZA } from '../src/lib/marketCalc.js'
+import {
+  computarBarrido,
+  RSI_MAX,
+  RSI_REVERSION,
+  TENDENCIA_MIN,
+  CONFLUENCIA_MIN,
+  UMBRAL_FUERZA,
+} from '../src/lib/marketCalc.js'
 
 // Le pega «(hoy)» a la fila que de verdad corre en la app.
 const hoySi = (nombre, esLaDeHoy) => (esLaDeHoy ? `${nombre}  (hoy)` : nombre)
@@ -663,8 +670,17 @@ console.log('')
 const REGLAS_REVERSION = [
   ['M1. Comprar lo débil, vender lo fuerte', (p, esc, thr) => (p.dif < -thr ? 'COMPRA' : p.dif > thr ? 'VENTA' : null)],
   [
-    'M2. …y solo con el RSI estirado',
-    (p, esc, thr) => (p.dif < -thr && p.rsiV <= 35 ? 'COMPRA' : p.dif > thr && p.rsiV >= 65 ? 'VENTA' : null),
+    // ⚠️ El umbral se LEE, no se escribe. Hasta el 2026-10-22 esta fila decía
+    // 35 a mano y la reversión que corre usa 40: la fila llamada «M2» medía
+    // otra regla. Y el nombre lleva el número dentro para que no pueda volver
+    // a envejecer por su cuenta.
+    `M2. …y solo con el RSI estirado (${RSI_REVERSION}/${100 - RSI_REVERSION})`,
+    (p, esc, thr) =>
+      p.dif < -thr && p.rsiV <= RSI_REVERSION
+        ? 'COMPRA'
+        : p.dif > thr && p.rsiV >= 100 - RSI_REVERSION
+          ? 'VENTA'
+          : null,
   ],
   [
     'M3. …y solo lejos de la media de 20',
@@ -888,7 +904,7 @@ console.log('justo al lado caro de lo normal.')
 // --------------------------------------------------------------------------
 
 console.log('')
-console.log('¿ES REAL EL 35 DEL RSI, O LO AJUSTÉ YO? (con spread, regla neutra)')
+console.log(`¿ES REAL EL ${RSI_REVERSION} DEL RSI, O LO AJUSTÉ YO? (con spread, regla neutra)`)
 console.log('Un efecto real es ancho: los vecinos tienen que acompañar.')
 console.log('Un pico solitario es una curva ajustada al pasado.')
 console.log('')
@@ -907,7 +923,10 @@ for (const u of [25, 30, 35, 40, 45, 50]) {
     )
     return (x.porRiesgo === null ? '   —' : (x.porRiesgo >= 0 ? '+' : '') + x.porRiesgo.toFixed(2)).padStart(7)
   }
-  const marca = u === 35 ? '  ← el elegido' : ''
+  // ⚠️ La marca sale del valor REAL, no de un número escrito aquí. Antes
+  // apuntaba al 35 y el que corre es el 40: el informe señalaba como «el
+  // elegido» una fila que la app no usa.
+  const marca = u === RSI_REVERSION ? '  ← LA QUE CORRE en la sombra' : ''
   console.log(
     `RSI ${String(u).padStart(2)} / ${100 - u}${' '.repeat(20)} ${String(m.total).padStart(5)}   ` +
       `${m.acierto === null ? '  — ' : (m.acierto.toFixed(0) + '%').padStart(4)}   ` +
@@ -917,7 +936,7 @@ for (const u of [25, 30, 35, 40, 45, 50]) {
 }
 console.log('─'.repeat(86))
 console.log('Si toda la columna es positiva y sube/baja suave, el efecto es real.')
-console.log('Si solo el 35 destaca y los vecinos se caen, lo ajusté yo y no sirve.')
+console.log(`Si solo el ${RSI_REVERSION} destaca y los vecinos se caen, lo ajusté yo y no sirve.`)
 
 // ==========================================================================
 // EL ESPEJISMO DE LA PANTALLA DE HISTORIAL

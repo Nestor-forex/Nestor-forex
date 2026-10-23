@@ -586,5 +586,49 @@ console.log('\n13. El filtro de "no perseguir" (RSI) está apagado y es simétri
   )
 }
 
+// --- El UNIVERSO de pares: restringe lo que la app MIRA, no lo que se cuenta ---
+//
+// ⚠⚠ Es la pieza central del corte dólar/cruces y lo que lo separa de una
+// resta. La app se queda con los `topN` mejores por lado, así que quitar pares
+// NO quita señales: el que estaba cuarto SUBE al hueco y entra en otra fecha,
+// a otro precio, con su propio resultado. Filtrar la lista de salida mediría
+// «la app con menos señales»; filtrar el universo mide OTRA app.
+{
+  console.log('\nEl universo de pares')
+
+  const esConDolar = (par) => par.includes('USD')
+  const esCruce = (par) => !par.includes('USD')
+  const opciones = { calentamiento: 80, geometria: simetrica }
+
+  const base = generarSenales(fechas, rates, rangosPar, opciones)
+  comprobar(base.length > 0, `el mercado da señales (${base.length}) — si fueran 0 esto no probaría nada`)
+
+  // a) Aditivo: sin la opción, o con un universo que acepta todo, nada cambia.
+  //    Sin esto, añadir el parámetro habría movido TODAS las filas ya medidas.
+  const conNull = generarSenales(fechas, rates, rangosPar, { ...opciones, universo: null })
+  const conTodo = generarSenales(fechas, rates, rangosPar, { ...opciones, universo: () => true })
+  comprobar(JSON.stringify(base) === JSON.stringify(conNull), '`universo: null` da EXACTAMENTE las mismas señales')
+  comprobar(JSON.stringify(base) === JSON.stringify(conTodo), 'un universo que acepta todo, también')
+
+  // b) Restringe de verdad.
+  const dolar = generarSenales(fechas, rates, rangosPar, { ...opciones, universo: esConDolar })
+  const cruces = generarSenales(fechas, rates, rangosPar, { ...opciones, universo: esCruce })
+  comprobar(dolar.length > 0 && dolar.every((s) => esConDolar(s.par)), `con dólar: ${dolar.length} señales, todas con USD`)
+  comprobar(cruces.length > 0 && cruces.every((s) => esCruce(s.par)), `cruces: ${cruces.length} señales, ninguna con USD`)
+
+  // c) ⚠ LA QUE IMPORTA: cambia señales por otras, no las resta.
+  const delSubconjunto = new Set(base.filter((s) => esConDolar(s.par)).map((s) => `${s.id}@${s.vistoEl}`))
+  const nuevas = dolar.filter((s) => !delSubconjunto.has(`${s.id}@${s.vistoEl}`))
+  comprobar(nuevas.length > 0, `aparecen ${nuevas.length} señales que con los 14 pares NO existían`)
+
+  // d) Y la fuerza NO se recorta: sale de la serie de cada divisa, no de qué
+  //    pares se miran. Recortarla cambiaría el ranking, que es un dato del
+  //    mercado y no una decisión de la app.
+  comprobar(
+    cruces.some((s) => s.fuerzaBaseAntes !== null),
+    'las señales siguen trayendo la fuerza de hace 5 días (se guarda sin recortar)'
+  )
+}
+
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')
 process.exit(fallos ? 1 : 0)

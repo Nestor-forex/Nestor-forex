@@ -57,7 +57,27 @@ export const LECTURA_CONTROL = 'momento'
  */
 export const VARIANTE_JUZGADA = 'con RSI estirado'
 
-/** El umbral de RSI de la variante juzgada. El mismo 35 de la reversión M2. */
+/**
+ * El umbral de RSI de la variante juzgada: la de BOLLINGER.
+ *
+ * ⚠️⚠️ CORREGIDO EL 2026-10-22. Aquí decía que era «el mismo de la reversión
+ * M2» y era FALSO: la reversión que corre en la sombra usa **40**
+ * (`RSI_REVERSION` en `src/lib/marketCalc.js`, con su motivo escrito desde
+ * entonces — 40 tiene casi el doble de operaciones que 35 y aguanta mejor la
+ * segunda mitad del periodo).
+ *
+ * El número de Bollinger NO se toca: se eligió el 13 de octubre, antes de
+ * medir, y cambiarlo ahora sería mover el listón después de ver el resultado.
+ * Lo que estaba mal es la frase, y la frase hacía daño de verdad: la fila de la
+ * reversión en `medir-bollinger.mjs` se calculaba con ESTE umbral por creerla,
+ * así que el criterio `VENTAJA_SOBRE_M2` se midió contra una regla **que no
+ * corre**. Ya está arreglado ahí: esa fila importa `RSI_REVERSION`.
+ *
+ * 📌 O sea que lo mismo que pasó en el barrido de umbrales de `backtest.mjs`
+ * pasaba aquí al lado, por la misma causa: un número escrito a mano con una
+ * frase que afirmaba de quién era. «Un error recién cometido en un sitio es el
+ * que se va a cometer en el de al lado.»
+ */
 export const RSI_ESTIRADO = 35
 
 // EL MOTIVO, que es lo que hay que poder leer dentro de seis meses:

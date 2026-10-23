@@ -14,7 +14,18 @@
 // veredicto lo calcula `juzgar()`.
 
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
-import { computarBarrido, UMBRAL_FUERZA } from '../src/lib/marketCalc.js'
+import { computarBarrido, RSI_REVERSION, UMBRAL_FUERZA } from '../src/lib/marketCalc.js'
+import { esConDolar, esCruce } from '../src/lib/diagnostico.js'
+import {
+  EXIGE_CONTROL_PEOR,
+  FECHA_DEL_LISTON as FECHA_LISTON_CRUCES,
+  MIN_SENALES_MES,
+  QUE_NO_AUTORIZA,
+  QUE_SIGNIFICA,
+  SWAP_EXIGIDO as SWAP_CRUCES,
+  UMBRAL as UMBRAL_CRUCES,
+  juzgar as juzgarCruces,
+} from './lib/preregistro-cruces.mjs'
 import { PAIR_NAMES } from '../src/lib/pairs.js'
 import { generarSenales, medir } from './lib/backtest-nucleo.mjs'
 import { resolver } from './lib/resolver.mjs'
@@ -68,7 +79,7 @@ console.log(`Meses de mercado medidos: ${MESES.toFixed(1)}\n`)
 // está escrito desde el 2026-09-14: con objetivos variables un filtro puede
 // seleccionar operaciones con buena proporción objetivo/riesgo sin acertar ni
 // una dirección de más. Con 1:1 el resultado depende SOLO de acertar el lado.
-function correr(reglaEntrada, orden = null) {
+function correr(reglaEntrada, orden = null, universo = null) {
   const senales = generarSenales(fechas, rates, rangosPar, {
     calentamiento: CALENTAMIENTO,
     thr: THR,
@@ -76,6 +87,10 @@ function correr(reglaEntrada, orden = null) {
     geometria: simetrica,
     reglaEntrada,
     orden,
+    // ⚠️ Restringe qué pares MIRA la app, no qué señales se cuentan después.
+    // La diferencia está explicada en `generarSenales` y es toda la medición
+    // del corte: con `topN` fijo, quitar pares cambia las señales por otras.
+    universo,
   })
   const { resultados } = resolver(senales, completo)
   return { senales, porClave: new Map(resultados.map((r) => [r.clave, r])) }
@@ -126,8 +141,31 @@ const CANDIDATAS = [
 // copia un número de la memoria: los de CLAUDE.md son de antes de la rejilla
 // limpia (2026-10-06) y del swap por noches de calendario, así que compararse
 // con ellos sería compararse con otra medición.
+// ⚠️⚠️ USA `RSI_REVERSION`, NO `RSI_ESTIRADO`. Hasta el 2026-10-22 usaba el 35
+// de Bollinger porque el preregistro lo describía como «el mismo de la M2», y
+// era falso: la reversión que corre en la sombra usa **40**. O sea que el
+// criterio `VENTAJA_SOBRE_M2` se estaba midiendo contra una regla que NO corre.
+//
+// El 35 de Bollinger se queda donde está —se eligió antes de medir— y lo que
+// cambia es contra quién se compara: contra la regla de verdad. Si algún día
+// los dos números coincidieran, seguirían siendo dos decisiones distintas y
+// hay que importarlas de dos sitios distintos.
 const REGLA_M2 = (p, esc, thr) =>
-  p.dif < -thr && p.rsiV <= RSI_ESTIRADO ? 'COMPRA' : p.dif > thr && p.rsiV >= 100 - RSI_ESTIRADO ? 'VENTA' : null
+  p.dif < -thr && p.rsiV <= RSI_REVERSION
+    ? 'COMPRA'
+    : p.dif > thr && p.rsiV >= 100 - RSI_REVERSION
+      ? 'VENTA'
+      : null
+
+// La MISMA reversión con el umbral de Bollinger, solo para contestar la
+// pregunta de Néstor del 2026-10-22: «enséñame primero qué mide cada uno».
+// No decide nada — es la fila de contraste.
+const REGLA_M2_35 = (p, esc, thr) =>
+  p.dif < -thr && p.rsiV <= RSI_ESTIRADO
+    ? 'COMPRA'
+    : p.dif > thr && p.rsiV >= 100 - RSI_ESTIRADO
+      ? 'VENTA'
+      : null
 
 console.log('LAS FILAS (vara neutra 1:1, spread por par descontado)')
 console.log('')
@@ -330,6 +368,162 @@ console.log('')
 console.log('⚠️  LO QUE ESTO AUTORIZA')
 console.log('')
 for (const linea of [v.pasa ? QUE_HACER.pasa : QUE_HACER.noPasa, QUE_HACER.control, QUE_HACER.siempre]) {
+  for (const trozo of linea.match(/.{1,70}(\s|$)/g) || []) console.log(`   ${trozo.trim()}`)
+  console.log('')
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// LOS DOS UMBRALES DE RSI, UNO AL LADO DEL OTRO
+// ══════════════════════════════════════════════════════════════════════════
+//
+// Néstor, el 2026-10-22: «enséñame primero qué mide cada uno». La pregunta
+// venía de un fallo real: el barrido de umbrales de `backtest.mjs` marcaba
+// «← el elegido» sobre el 35 ESCRITO A MANO, y la reversión que corre usa 40.
+//
+// Esta tabla NO decide nada. El 40 ya está elegido, con su motivo escrito en
+// `marketCalc.js` desde antes (casi el doble de operaciones que el 35 y mejor
+// segunda mitad), así que cambiarlo por lo que salga aquí sería elegir después
+// de ver el número. Está para que se vea de dónde viene cada cifra.
+
+console.log('')
+console.log('═'.repeat(104))
+console.log('LA REVERSIÓN CON SUS DOS UMBRALES (vara neutra 1:1, spread por par)')
+console.log('═'.repeat(104))
+console.log('')
+console.log('regla                                      ops  señ/mes  acierto   por 1R   1ª mit   2ª mit   +swap')
+console.log('─'.repeat(104))
+
+const gM2_35 = grupo(correr(REGLA_M2_35))
+for (const [nombre, g] of [
+  [`M2 con RSI ${RSI_REVERSION}  ← LA QUE CORRE en la sombra`, gM2],
+  [`M2 con RSI ${RSI_ESTIRADO}  (el de Bollinger, de contraste)`, gM2_35],
+]) {
+  console.log(
+    `${nombre.padEnd(42)} ${String(g.ops).padStart(5)}   ${(g.ops / MESES).toFixed(1).padStart(5)}   ` +
+      `${pct(g.acierto)}  ${num(g.por1R)}  ${num(g.mitad1)}  ${num(g.mitad2)}  ${num(g.swap)}`
+  )
+}
+console.log('─'.repeat(104))
+console.log('')
+console.log('  ⚠️  Esta tabla NO elige. El 40 se eligió antes, por tener casi el doble')
+console.log('      de operaciones y aguantar mejor la segunda mitad; mirar el total de')
+console.log('      hoy y cambiarlo sería elegir después de ver el número.')
+console.log('  📌  Y el 35 de Bollinger se queda como está: su listón es del 13 de')
+console.log('      octubre y mover un umbral preregistrado después de medir no vale.')
+
+// ══════════════════════════════════════════════════════════════════════════
+// EL CORTE DÓLAR / CRUCES
+// ══════════════════════════════════════════════════════════════════════════
+//
+// El listón está en `lib/preregistro-cruces.mjs`, escrito antes de esta
+// corrida, y el veredicto lo CALCULA `juzgarCruces()`.
+//
+// ⚠️⚠️ Lo que se mide es LA APP ENTERA con 7 pares, no el montón de los 7.
+// Con `topN` fijo, quitar pares no quita señales: las cambia por otras. Ver
+// `generarSenales`.
+
+console.log('')
+console.log('═'.repeat(104))
+console.log('¿SIRVE PARTIR EN PARES CON DÓLAR Y CRUCES?')
+console.log(`Listón escrito el ${FECHA_LISTON_CRUCES}, antes de esta corrida.`)
+console.log('═'.repeat(104))
+console.log('')
+console.log('⚠️  Este corte se miró DESPUÉS de ver el desglose por divisa del 21 de')
+console.log('    octubre. Es troceo a posteriori, y por eso lleva un CONTROL: cada')
+console.log('    regla con el montón CONTRARIO. Si el control no empeora, lo que se')
+console.log('    midió fue ruido de partir una muestra en dos.')
+console.log('')
+
+// Suma de R por par, para saber si la mejora se la lleva uno solo. Con 7 pares
+// por montón hay mucha menos holgura que con 14: uno que aporte casi todo no
+// es una regla, es ese par en ese periodo.
+function concentracionDeLaMejora(g) {
+  const sumas = PAIR_NAMES.map((par) => {
+    const { ops, por1R } = delPar(g, par)
+    return ops && Number.isFinite(por1R) ? ops * por1R : 0
+  })
+  const total = sumas.reduce((a, b) => a + b, 0)
+  // Si en conjunto no gana, la pregunta «¿quién se lleva la mejora?» no tiene
+  // respuesta. `null` = no se puede juzgar, nunca «no se concentra».
+  if (!(total > 0)) return null
+  const mayor = Math.max(...sumas)
+  return mayor > 0 ? mayor / total : null
+}
+
+const VARIANTES = [
+  ['la app', null, null, esConDolar, 'con dólar', esCruce, 'cruces'],
+  ['la reversión M2', REGLA_M2, null, esCruce, 'cruces', esConDolar, 'con dólar'],
+  [`Bollinger + RSI ${RSI_ESTIRADO}`, CANDIDATAS[1][1], ordenB, esCruce, 'cruces', esConDolar, 'con dólar'],
+]
+const BASES = [gApp, gM2, gJuzgada]
+
+console.log(
+  `${'regla'.padEnd(26)} ${'montón'.padEnd(18)} ${'ops'.padStart(5)}  ${'por 1R'.padStart(7)}  ` +
+    `${'1ª mit'.padStart(7)}  ${'2ª mit'.padStart(7)}  ${'+swap'.padStart(7)}`
+)
+console.log('─'.repeat(104))
+
+const veredictos = []
+for (const [i, [nombre, regla, orden, filtroBueno, etiqBuena, filtroMalo, etiqMala]] of VARIANTES.entries()) {
+  const base = BASES[i]
+  const bueno = grupo(correr(regla, orden, filtroBueno))
+  const malo = grupo(correr(regla, orden, filtroMalo))
+
+  for (const [etiq, g] of [
+    ['los 14', base],
+    [etiqBuena, bueno],
+    [`${etiqMala} (CONTROL)`, malo],
+  ]) {
+    console.log(
+      `${(etiq === 'los 14' ? nombre : '').padEnd(26)} ${etiq.padEnd(18)} ${String(g.ops).padStart(5)}  ` +
+        `${num(g.por1R)}  ${num(g.mitad1)}  ${num(g.mitad2)}  ${num(g.swap)}`
+    )
+  }
+  console.log('─'.repeat(104))
+
+  veredictos.push([
+    `${nombre} solo con ${etiqBuena}`,
+    juzgarCruces({
+      porRiesgo: bueno.por1R,
+      base: base.por1R,
+      mitades: [bueno.mitad1, bueno.mitad2],
+      mitadesBase: [base.mitad1, base.mitad2],
+      control: malo.por1R,
+      senales: bueno.ops,
+      meses: MESES,
+      conSwap: bueno.swap,
+      aporteMaxPar: concentracionDeLaMejora(bueno),
+    }),
+  ])
+}
+
+console.log('')
+console.log(`Criterios: mejora ≥ ${UMBRAL_CRUCES} · gana en las dos mitades · el CONTROL`)
+console.log(`empeora (${EXIGE_CONTROL_PEOR ? 'exigido' : 'no exigido'}) · deja ≥ ${MIN_SENALES_MES} señales/mes ·`)
+console.log(`aguanta ${SWAP_CRUCES} de swap · ningún par aporta más del 40 % de la mejora.`)
+console.log('')
+
+let algunoPasa = false
+for (const [nombre, v] of veredictos) {
+  if (v === null) {
+    console.log(`  ⚠️  ${nombre}: NO SE PUDO JUZGAR — falta un número, y un falso verde`)
+    console.log('      es peor que un rojo.')
+    continue
+  }
+  if (v.pasa) algunoPasa = true
+  console.log(`  ${v.pasa ? '✅ PASA   ' : '❌ NO PASA'} ${nombre}`)
+  for (const f of v.falta) console.log(`             · ${f}`)
+}
+
+console.log('')
+console.log('⚠️  LO QUE ESTO AUTORIZA')
+console.log('')
+for (const linea of [
+  algunoPasa ? QUE_SIGNIFICA.pasa : QUE_SIGNIFICA.noPasa,
+  `No se enciende nada por sí solo: ${QUE_NO_AUTORIZA.porque}.`,
+  'Y si algo quedó A UN PELO de un criterio, la respuesta NO es aflojarlo. ' +
+    'Éste es el momento exacto para el que se escribe el listón antes.',
+]) {
   for (const trozo of linea.match(/.{1,70}(\s|$)/g) || []) console.log(`   ${trozo.trim()}`)
   console.log('')
 }

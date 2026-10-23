@@ -346,6 +346,41 @@ console.log('\n13. ⚠️ EL DESGLOSE POR DIVISA DICE LO QUE DICE DECIR')
   // Y que el resultado de un par se mida con `par`, no con `name`: el humo ya
   // cazó una vez el «undefined con el 100 %» por confundirlos.
   comprobar('agrupa por el campo `par`', /s\.par === par/.test(src))
+
+  // ⚠️⚠️ CONTRA QUIÉN SE COMPARA. Hasta el 2026-10-22 la fila de la reversión
+  // de este script se calculaba con `RSI_ESTIRADO` (el 35 de Bollinger) porque
+  // el preregistro lo describía como «el mismo de la reversión M2», y era
+  // FALSO: la que corre en la sombra usa 40. O sea que el criterio
+  // `VENTAJA_SOBRE_M2` se medía contra una regla QUE NO CORRE.
+  //
+  // No es cosmético: ese criterio decide si Bollinger se asciende.
+  comprobar(
+    'la fila de la reversión importa `RSI_REVERSION` de la app',
+    /import \{[^}]*\bRSI_REVERSION\b[^}]*\} from '\.\.\/src\/lib\/marketCalc\.js'/.test(src)
+  )
+  const defM2 = src.match(/const REGLA_M2 = [\s\S]*?\n\n/)
+  comprobar('se encontró la definición de esa fila', !!defM2)
+  if (defM2) {
+    comprobar(
+      'y usa RSI_REVERSION, no el umbral de Bollinger',
+      /RSI_REVERSION/.test(defM2[0]) && !/RSI_ESTIRADO/.test(defM2[0])
+    )
+  }
+
+  // Y que el 35 de Bollinger siga DISTINGUIÉNDOSE del de la reversión. Se
+  // comprueba que su documentación NOMBRE la otra constante, no que no diga
+  // cierta frase: un regex sobre la prosa cazaba el texto viejo CITADO dentro
+  // de la corrección que lo desmiente, que es «contar apariciones no es leer»
+  // por tercera vez en este repositorio.
+  const liston = readFileSync(new URL('./lib/preregistro-bollinger.mjs', import.meta.url), 'utf8')
+  const docRsi = liston.match(/\/\*\*[\s\S]*?\*\/\s*export const RSI_ESTIRADO/)
+  comprobar('se encontró la documentación de RSI_ESTIRADO', !!docRsi)
+  if (docRsi) {
+    comprobar(
+      'su documentación distingue su umbral del de la reversión',
+      /RSI_REVERSION/.test(docRsi[0])
+    )
+  }
 }
 
 console.log('')
