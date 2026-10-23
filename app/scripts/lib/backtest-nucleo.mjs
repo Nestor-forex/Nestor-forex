@@ -91,6 +91,26 @@ function porReglaPropia(data, regla, thr, topN, orden = null) {
  *                   pierde siempre no es una señal sin información: es una con
  *                   información y el signo cambiado, y eso se arregla distinto
  *                   que una que acierta a medias. Las compras se dejan igual.
+ * @param universo  función (nombreDelPar) → boolean. Restringe QUÉ PARES mira
+ *                   la app, no qué señales se cuentan después.
+ *
+ *                   ⚠️⚠️ La diferencia no es de estilo y es la pieza central del
+ *                   corte dólar/cruces. La app se queda con los `topN` mejores
+ *                   por lado, así que quitar pares NO quita señales: **las
+ *                   cambia por otras.** Si se filtrara la lista de salida, los
+ *                   huecos se quedarían vacíos y se mediría «la app con menos
+ *                   señales»; filtrando aquí, el que estaba cuarto sube al
+ *                   hueco y entra en otra fecha, a otro precio, con su propio
+ *                   resultado — que es lo que de verdad haría una app de 7
+ *                   pares. Lo primero es una resta; esto es OTRA app.
+ *
+ *                   📌 Se filtra `data.pares` y NO `data.esc`: la fuerza de una
+ *                   divisa sale de su propia serie, no de qué pares se miran.
+ *                   Recortarla además cambiaría el ranking de fuerza, que es
+ *                   un dato del mercado y no una decisión de la app.
+ *
+ *                   Por defecto `null` = los 14 de siempre, así que ninguna
+ *                   fila ya medida cambia. Hay comprobación de eso.
  * @returns lista de señales en el mismo formato que escribe el vigía, lista
  *          para pasarle a `resolver.mjs`.
  */
@@ -106,6 +126,7 @@ export function generarSenales(
     invertirVentas = false,
     reglaEntrada = null,
     orden = null,
+    universo = null,
     vista = {},
   } = {}
 ) {
@@ -120,8 +141,13 @@ export function generarSenales(
 
   for (let i = calentamiento; i < fechas.length; i++) {
     const hasta = fechas.slice(0, i + 1)
-    const data = computarBarrido(hasta, rates, rangosPar)
-    escPorDia.set(i, data.esc)
+    const completo = computarBarrido(hasta, rates, rangosPar)
+    // La fuerza se guarda SIN recortar, aunque el universo esté restringido:
+    // es un dato del mercado y además se usa para mirar atrás cinco días.
+    escPorDia.set(i, completo.esc)
+    const data = universo
+      ? { ...completo, pares: completo.pares.filter((p) => universo(p.name)) }
+      : completo
     // De dónde salen las candidatas del día.
     //
     // Sin `reglaEntrada` se usa el barrido de la app tal cual, que es lo que
