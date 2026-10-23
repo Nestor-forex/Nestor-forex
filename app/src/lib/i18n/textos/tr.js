@@ -502,6 +502,10 @@ export default {
     rupturaTitulo: '«Yapı kırılımı» geçmişi',
     rupturaIntro:
       'Dördüncü kural: fiyat işaretlediği son tepe ya da dibi kırdığında girer. ⚠️ GÖZLEM ALTINDA ve doğrulanmamış. Bir öneri değil — işlem yapmak için değil, takip edilebilsin diye gösteriliyor.',
+    rsiTitulo: "Daha fazla gerilmiş olanlar daha iyi mi gidiyor?",
+    rsiAviso: "Bu, kuralın daha sıkı bir eşikle ne vereceğini SÖYLEMEZ. Uygulama her taraftan en iyi 3 tanesini tutuyor, dolayısıyla başka bir eşikle bugün giremeyen pariteler boşalan yere yükselir ve başka tarihlerde girer. Burada olan yalnızca zaten kaydedilmiş olanın dağılımı.",
+    rsiEstiradas: ({ u }) => `RSI ${u} ile de geçecek olanlar`,
+    rsiResto: ({ u, v }) => `Yalnızca ${v} sayesinde geçenler (RSI ${u} ile ${v} arasında)`,
     esReversion: 'TERS',
     esCaida: "DÜŞÜŞÜ SATIN AL",
     caidaVieja: ({ n, acierto, pips }) => `Bundan önce ${n} işlem, kural onaylanırken ölçülenlerden farklı bir zarar durdur ve hedefle kaydedildi. SAYILMAZLAR ve bu kuralın geçmişi sıfırdan yeniden başlar (onlar ${acierto} % ve ${pips} pips verdi). Gerçekten olduğu için görünür kalıyorlar.`,

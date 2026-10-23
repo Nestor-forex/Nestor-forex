@@ -507,6 +507,10 @@ export default {
     rupturaTitulo: 'Verlauf von „Strukturbruch“',
     rupturaIntro:
       'Die vierte Regel: Sie steigt ein, wenn der Preis das zuletzt markierte Hoch oder Tief bricht. ⚠️ Sie steht UNTER BEOBACHTUNG und ist nicht validiert. Keine Empfehlung — sie wird gezeigt, damit man sie verfolgen kann, nicht um sie zu handeln.',
+    rsiTitulo: "Laufen die stärker gedehnten besser?",
+    rsiAviso: "Das sagt NICHT, was die Regel mit einer strengeren Schwelle ergäbe. Die App behält die 3 besten je Seite, also würden mit einer anderen Schwelle Paare nachrücken, die heute nicht hineinkommen, an anderen Tagen. Das hier ist nur die Aufteilung des bereits Aufgezeichneten.",
+    rsiEstiradas: ({ u }) => `Die, die auch mit RSI ${u} durchkämen`,
+    rsiResto: ({ u, v }) => `Die, die nur wegen der ${v} durchkamen (RSI zwischen ${u} und ${v})`,
     esReversion: 'UMKEHR',
     esCaida: "DEN EINBRUCH KAUFEN",
     caidaVieja: ({ n, acierto, pips }) => `Davor wurden ${n} Trades mit einem Stop und einem Ziel erfasst, die nicht den bei der Freigabe gemessenen entsprachen. Sie zählen NICHT, und die Historie dieser Regel beginnt wieder bei null (jene ergaben ${acierto} % und ${pips} Pips). Sie bleiben sichtbar, weil sie tatsächlich stattfanden.`,

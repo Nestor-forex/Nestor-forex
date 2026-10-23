@@ -503,6 +503,10 @@ export default {
     rupturaTitulo: 'Storico di «rottura di struttura»',
     rupturaIntro:
       'La quarta regola, che entra quando il prezzo rompe l\'ultimo massimo o minimo segnato. ⚠️ È IN OSSERVAZIONE e non validata. Non è una raccomandazione — viene mostrata per poterla seguire, non per operarla.',
+    rsiTitulo: "Vanno meglio le più tirate?",
+    rsiAviso: "Questo NON dice cosa darebbe la regola con una soglia più severa. L’app tiene le 3 migliori per lato, quindi con un’altra soglia salirebbero nel posto coppie che oggi non entrano, in altre date. Questa è solo la ripartizione di quanto già registrato.",
+    rsiEstiradas: ({ u }) => `Quelle che passerebbero anche con RSI ${u}`,
+    rsiResto: ({ u, v }) => `Quelle passate solo grazie al ${v} (RSI tra ${u} e ${v})`,
     esReversion: 'INVERSIONE',
     esCaida: "COMPRARE IL RIBASSO",
     caidaVieja: ({ n, acierto, pips }) => `Prima di questo sono state registrate ${n} operazioni con uno stop e un obiettivo diversi da quelli misurati all'approvazione della regola. NON contano, e lo storico di questa regola riparte da zero (quelle davano ${acierto} % e ${pips} pips). Restano visibili perché sono realmente avvenute.`,

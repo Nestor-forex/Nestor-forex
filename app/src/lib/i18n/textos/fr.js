@@ -507,6 +507,10 @@ export default {
     rupturaTitulo: 'Historique de « cassure de structure »',
     rupturaIntro:
       'La quatrième règle, qui entre quand le prix casse le dernier sommet ou creux qu\'il a marqué. ⚠️ Elle est EN OBSERVATION et non validée. Ce n\'est pas une recommandation — elle est affichée pour pouvoir être suivie, pas pour être tradée.',
+    rsiTitulo: "Les plus étirées vont-elles mieux ?",
+    rsiAviso: "Cela ne dit PAS ce que donnerait la règle avec un seuil plus strict. L'app garde les 3 meilleures par côté, donc avec un autre seuil des paires qui n'entrent pas aujourd'hui monteraient dans le trou, à d'autres dates. Ceci n'est que la répartition de ce qui est déjà enregistré.",
+    rsiEstiradas: ({ u }) => `Celles qui passeraient aussi avec un RSI ${u}`,
+    rsiResto: ({ u, v }) => `Celles qui ne sont passées que grâce au ${v} (RSI entre ${u} et ${v})`,
     esReversion: 'INVERSION',
     esCaida: "ACHETER LA BAISSE",
     caidaVieja: ({ n, acierto, pips }) => `Avant cela, ${n} opérations ont été enregistrées avec un stop et un objectif qui n'étaient pas ceux mesurés lors de la validation de la règle. Elles ne comptent PAS, et l'historique de cette règle repart de zéro (elles donnaient ${acierto} % et ${pips} pips). Elles restent visibles car elles ont réellement eu lieu.`,

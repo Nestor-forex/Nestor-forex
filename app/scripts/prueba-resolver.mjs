@@ -8,6 +8,7 @@
 // comprobaciones para tan pocas líneas.
 
 import { claveDe, resolver, resumir } from './lib/resolver.mjs'
+import { cuentaDe, masEstiradaQue, partirPorRsi } from '../src/lib/historialCalc.js'
 
 let fallos = 0
 const comprobar = (bien, que) => {
@@ -480,6 +481,52 @@ console.log('\n16. La lista del Historial no se traga ningún experimento')
   // Sin duplicados: una señal en dos listas se contaría dos veces al leer.
   comprobar(u.filasTodas.length === new Set(u.filasTodas.map((f) => `${f.id}@${f.vistoEl}`)).size,
     'ninguna señal aparece dos veces en la lista')
+}
+
+console.log('\n17. El reparto por RSI de las reversiones ya anotadas')
+{
+  // Una compra entra con el RSI bajo y una venta con el RSI alto, así que
+  // «más estirada» es RSI ≤ u de un lado y ≥ 100 − u del otro. Si la condición
+  // se escribiera igual para los dos lados, las ventas caerían TODAS en el
+  // cubo equivocado y nada fallaría: saldrían dos porcentajes plausibles.
+  const f = [
+    { lado: 'COMPRA', rsi: 30, resultado: 'ganada', pips: 10 },
+    { lado: 'COMPRA', rsi: 38, resultado: 'perdida', pips: -10 },
+    { lado: 'VENTA', rsi: 70, resultado: 'ganada', pips: 20 },
+    { lado: 'VENTA', rsi: 62, resultado: 'perdida', pips: -20 },
+    { lado: 'COMPRA', rsi: 35, resultado: 'ganada', pips: 5 },
+    { lado: 'VENTA', rsi: 65, resultado: 'ganada', pips: 5 },
+  ]
+  const r = partirPorRsi(f, 35)
+  comprobar(r.estiradas.total === 4 && r.estiradas.ganadas === 4,
+    'las de RSI ≤ 35 y ≥ 65 van al cubo estirado, los dos lados')
+  comprobar(r.resto.total === 2 && r.resto.ganadas === 0,
+    'y las de en medio al otro — si el lado se ignorara, las ventas caerían mal')
+  comprobar(r.estiradas.total + r.resto.total === f.length,
+    'entre los dos cubos están todas: ninguna se evapora')
+  comprobar(r.estiradas.pips === 40 && r.resto.pips === -30, 'los pips se reparten con ellas')
+
+  // El borde exacto cuenta como estirada, igual que en `clasificarReversion`
+  // (`<=` y `>=`). Si fuera estricto, la señal justo en el umbral cambiaría de
+  // cubo sin que nada lo dijera.
+  comprobar(masEstiradaQue({ lado: 'COMPRA', rsi: 35 }, 35) === true, 'el borde de la compra cuenta como estirada')
+  comprobar(masEstiradaQue({ lado: 'VENTA', rsi: 65 }, 35) === true, 'y el de la venta también')
+
+  // ⚠️ Sin RSI devuelve `null`, NUNCA `false`: una línea sin el dato cayendo
+  // en «no estirada» convertiría un hueco en un hecho sobre el mercado.
+  comprobar(masEstiradaQue({ lado: 'COMPRA' }, 35) === null, 'una señal sin RSI no se clasifica')
+  comprobar(masEstiradaQue({ lado: 'COMPRA', rsi: NaN }, 35) === null, 'ni una con un RSI que no es número')
+  const sin = partirPorRsi([{ lado: 'COMPRA', resultado: 'ganada', pips: 1 }], 35)
+  comprobar(sin.estiradas.total === 0 && sin.resto.total === 0 && sin.sinRsi.total === 1,
+    'y va a su propio cubo en vez de desaparecer')
+
+  comprobar(partirPorRsi(null, 35).estiradas.total === 0, '`null` no revienta')
+
+  // Las cuentas son las MISMAS que las de `resumir`: dos implementaciones del
+  // mismo porcentaje en la misma pantalla se separan sin que falle nada.
+  const c = cuentaDe([{ resultado: 'ganada', pips: 3 }, { resultado: 'perdida', pips: -1 }])
+  comprobar(c.total === 2 && c.acierto === 50 && c.pips === 2, '`cuentaDe` cuenta acierto y pips')
+  comprobar(cuentaDe([]).acierto === null, 'y sin nada devuelve null, no 0 % de acierto')
 }
 
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')

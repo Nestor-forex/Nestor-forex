@@ -538,6 +538,26 @@ const razon = (p, esc, t) => {
 // usa se actualiza solo mientras el texto que lo describe no.
 export const RSI_REVERSION = 40
 
+// El umbral MÁS EXIGENTE con el que se compara, y que NO decide ninguna señal.
+//
+// Existe para una sola cosa: que la pantalla pueda partir las reversiones ya
+// anotadas en «también habrían pasado con 35» y «solo pasaron por el 40», y
+// enseñar los dos números del registro REAL. O sea, contestar con datos de
+// verdad —hoy, no dentro de nueve meses— si exigir más estiramiento ayuda.
+//
+// ⚠️ NO es el 35 de `preregistro-bollinger.mjs`. Aquél es el umbral de OTRA
+// regla (el toque de banda) y coinciden por casualidad; que compartan valor es
+// justo lo que hizo que el 2026-10-22 la fila «M2» del informe se midiera con
+// el umbral de Bollinger y describiera una regla que no corre. Dos constantes
+// distintas con nombres distintos, aunque hoy valgan lo mismo.
+//
+// ⚠️ Y NO basta con cambiar este número para «probar la regla con 35»: el
+// umbral decide QUÉ pares pasan el filtro, y la app se queda con los `topN`
+// mejores por lado, así que con 35 un par que hoy queda cuarto subiría al
+// hueco y entraría otro día. La partición de la pantalla son «las estiradas
+// que el 40 sacó a la superficie», no «las que sacaría el 35».
+export const RSI_REVERSION_ESTRICTO = 35
+
 const clasificarReversion = (p, thr, { rsiMax = RSI_REVERSION } = {}) => {
   if (p.dif < -thr && p.rsiV <= rsiMax) return 'COMPRA'
   if (p.dif > thr && p.rsiV >= 100 - rsiMax) return 'VENTA'

@@ -507,6 +507,10 @@ export default {
     rupturaTitulo: 'History of "structure break"',
     rupturaIntro:
       'The fourth rule, which enters when price breaks the last high or low it made. ⚠️ It is UNDER OBSERVATION and unvalidated. It is not a recommendation — it is shown so it can be followed, not traded.',
+    rsiTitulo: "Do the more stretched ones do better?",
+    rsiAviso: "This does NOT say what the rule would give with a stricter threshold. The app keeps the 3 best per side, so with another threshold pairs that do not make it today would rise into the slot, on other dates. This is only how what was already recorded splits.",
+    rsiEstiradas: ({ u }) => `Those that would also pass with RSI ${u}`,
+    rsiResto: ({ u, v }) => `Those that only passed because of the ${v} (RSI between ${u} and ${v})`,
     esReversion: 'REVERSION',
     esCaida: "BUY THE DIP",
     caidaVieja: ({ n, acierto, pips }) => `Before this, ${n} trades were logged with a stop and target that were not the ones measured when the rule was approved. They do NOT count, and this rule's record starts again from zero (those gave ${acierto} % and ${pips} pips). They stay visible because they really happened.`,

@@ -534,6 +534,10 @@ export default {
     rupturaTitulo: 'Historial de «ruptura de estructura»',
     rupturaIntro:
       'La cuarta regla, que entra cuando el precio rompe el último máximo o mínimo que marcó. ⚠️ Está EN OBSERVACIÓN y sin validar. No es una recomendación — se enseña para que se pueda seguir, no para operarla.',
+    rsiTitulo: "¿Van mejor las más estiradas?",
+    rsiAviso: "Esto NO dice qué daría la regla con un umbral más exigente. La app se queda con los 3 mejores por lado, así que con otro umbral subirían al hueco pares que hoy no entran, en otras fechas. Esto es solo el reparto de lo que ya se anotó.",
+    rsiEstiradas: ({ u }) => `Las que también pasarían con RSI ${u}`,
+    rsiResto: ({ u, v }) => `Las que solo pasaron por el ${v} (RSI entre ${u} y ${v})`,
     esReversion: 'REVERSIÓN',
     esCaida: "COMPRAR LA CAÍDA",
     caidaVieja: ({ n, acierto, pips }) => `Antes de esto se anotaron ${n} operaciones con un stop y un objetivo que no eran los que se midieron al aprobar la regla. NO cuentan, y el historial de esta regla vuelve a empezar desde cero (aquéllas daban ${acierto} % y ${pips} pips). Se dejan a la vista porque ocurrieron de verdad.`,
