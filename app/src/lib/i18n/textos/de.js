@@ -471,6 +471,33 @@ export default {
       neutro: 'Swap: kaum spürbar',
     },
   },
+  // El corte pares con dólar / cruces. Ver `components/MidePositivo.jsx` —
+  // el aviso va ANTES de cualquier número a propósito: aquí lo caro no es
+  // leer mal un dato, es creer que esta lista es lo que la app propone o que
+  // el corte está confirmado.
+  corte: {
+    titulo: "Was positiv messt: Dollar-Paare und Cross-Paare",
+    desc: "In welcher Paargruppe jede Regel gut gemessen hat und welche von heute dort landen",
+    paraQue: "Um zu sehen, ob ein Signal von heute in die Paargruppe fällt, in der seine Regel gut gemessen hat, oder in die mit schlechtem Ergebnis. Es sagt NICHT, welches zu handeln ist, und schaltet keines ab: die App schlägt weiterhin ihre 14 Paare vor.",
+    avance: ({ n }) => `${n} Signale in der guten Gruppe`,
+    aviso: "DAS IST NICHT, WAS DIE APP VORSCHLÄGT, UND KEIN NEUES SIGNAL: es sind dieselben Signale von oben, nur anders gruppiert. Und die Aufteilung wurde durch ANSEHEN der Ergebnisse gefunden, über dieselben Tage, also hat sie noch keine Aufzeichnung nach vorn bestätigt. Es wurde nichts ein- oder ausgeschaltet.",
+    montonDolar: "nur in Dollar-Paaren",
+    montonCruces: "nur in Cross-Paaren (ohne Dollar)",
+    pasa: "HAT DIE HÜRDE GESCHAFFT",
+    noPasa: "HAT DIE HÜRDE NICHT GESCHAFFT",
+    porQueNoPasa: ({ n, piso }) => `Es bleiben ${n} Signale im Monat und das Minimum ist ${piso}: auch bei guter Zahl sind es zu wenige, um ihr zu glauben.`,
+    yConcentracion: "Und ein einzelnes Paar trägt zu viel der Verbesserung bei.",
+    enSuMonton: "In seiner Paargruppe",
+    conLos14: "Mit allen 14 Paaren",
+    control: "Die Gegengruppe (Kontrolle)",
+    conSwap: "Mit Swap jede Nacht",
+    mitades: "Die zwei Hälften des Zeitraums",
+    ops: "Trades",
+    fuera: ({ n }) => `Signale dieser Regel, die heute in die negativ messende Gruppe fallen: ${n}.`,
+    sinSenales: "Heute fällt keines ihrer Signale in diese Gruppe.",
+    pieCorrelacion: "Die 7 Dollar-Paare bewegen sich fast alle gemeinsam: es ist gemessen, dass fünf Dollar-Signale eine einzige, fünfmal gesagte Wette sein können. Mehr pro Trade verdienen und das Risiko weniger streuen ist nicht automatisch besser.",
+    pieFecha: ({ fecha, dias }) => `Gemessen am ${fecha} über ${dias} Tage echten Markt, mit abgezogenem Spread je Paar und dem neutralen Maßstab: Stop und Ziel gleich weit entfernt.`,
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: 'Verlauf «Bandberührung»',

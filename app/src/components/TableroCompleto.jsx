@@ -15,6 +15,7 @@ import ClimaMercado from './ClimaMercado'
 import Correlacion from './Correlacion'
 import RiesgoSenales from './RiesgoSenales'
 import AvisoSombra from './AvisoSombra'
+import MidePositivo from './MidePositivo'
 
 function Chip({ children, color }) {
   return (
@@ -459,6 +460,27 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
               ))}
             </div>
           </section>
+        )}
+
+        {/* ⚠️ EL CORTE PARES CON DÓLAR / CRUCES, DEBAJO DE LAS TRES LISTAS Y
+            PLEGADO (2026-10-23). Lo pidió Néstor: «quiero ver como señales
+            aparte las señales que dan positivo».
+
+            Va aquí abajo y no arriba a propósito. Estas señales YA están en
+            pantalla, cada una en la sección de su regla; aquí se repiten
+            agrupadas por el montón en que caen. Puesto arriba, una partición
+            encontrada A POSTERIORI —sobre los mismos días con los que se
+            encontró— se leería como «lo bueno» y las secciones de verdad
+            pasarían a parecer el relleno.
+
+            No apaga ni cambia ninguna señal: la app sigue con sus 14 pares,
+            que es lo que Néstor pidió expresamente («no quites nada»). */}
+        {!loading && !error && (
+          <MidePositivo
+            setups={setups}
+            setupsReversion={setupsReversion}
+            setupsBollinger={setupsBollinger}
+          />
         )}
 
         <section style={{ borderTop: '1px solid var(--border)', paddingTop: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>

@@ -466,6 +466,33 @@ export default {
       neutro: 'Swap: neredeyse etkisiz',
     },
   },
+  // El corte pares con dólar / cruces. Ver `components/MidePositivo.jsx` —
+  // el aviso va ANTES de cualquier número a propósito: aquí lo caro no es
+  // leer mal un dato, es creer que esta lista es lo que la app propone o que
+  // el corte está confirmado.
+  corte: {
+    titulo: "Pozitif ölçen kısım: dolarlı pariteler ve çaprazlar",
+    desc: "Her kuralın hangi parite grubunda iyi ölçtüğü ve bugünkülerden hangilerinin oraya düştüğü",
+    paraQue: "Bugünkü bir sinyalin, kuralının iyi ölçtüğü parite grubuna mı yoksa kötü ölçtüğü gruba mı düştüğünü görmek için. Hangisinin işleme alınacağını SÖYLEMEZ ve hiçbirini kapatmaz: uygulama 14 paritesini eskisi gibi önermeye devam ediyor.",
+    avance: ({ n }) => `İyi grupta ${n} sinyal`,
+    aviso: "BU, UYGULAMANIN ÖNERDİĞİ ŞEY DEĞİL VE YENİ BİR SİNYAL DE DEĞİL: yukarıdaki aynı sinyaller, başka biçimde gruplanmış. Ayrıca bu ayrım sonuçlara BAKTIKTAN sonra, aynı günler üzerinde bulundu; yani ileriye dönük hiçbir kayıt onu henüz doğrulamadı. Hiçbir şey açılmadı ya da kapatılmadı.",
+    montonDolar: "yalnızca dolarlı paritelerde",
+    montonCruces: "yalnızca çaprazlarda (dolarsız olanlar)",
+    pasa: "ÇUBUĞU GEÇTİ",
+    noPasa: "ÇUBUĞU GEÇMEDİ",
+    porQueNoPasa: ({ n, piso }) => `Ayda ${n} sinyal bırakıyor ve alt sınır ${piso}: sayı iyi olsa bile, ona inanmak için yeterli değil.`,
+    yConcentracion: "Üstelik tek bir parite iyileşmenin çok büyük bir kısmını sağlıyor.",
+    enSuMonton: "Kendi parite grubunda",
+    conLos14: "14 paritenin tamamıyla",
+    control: "Karşı grup (kontrol)",
+    conSwap: "Her gece swap ödeyerek",
+    mitades: "Dönemin iki yarısı",
+    ops: "işlem",
+    fuera: ({ n }) => `Bu kuralın bugün negatif ölçen gruba düşen sinyal sayısı: ${n}.`,
+    sinSenales: "Bugün onun hiçbir sinyali bu gruba düşmüyor.",
+    pieCorrelacion: "7 dolarlı paritenin neredeyse tamamı birlikte hareket eder: dolarlı beş sinyalin, beş kez söylenmiş tek bir bahis olabileceği ölçüldü. İşlem başına daha çok kazanmak ve riski daha az dağıtmak otomatik olarak daha iyi değildir.",
+    pieFecha: ({ fecha, dias }) => `${fecha} tarihinde ${dias} günlük gerçek piyasa üzerinde, her paritenin spreadi düşülerek ve nötr ölçüyle ölçüldü: stop ve hedef aynı mesafede.`,
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: '«Bant teması» geçmişi',

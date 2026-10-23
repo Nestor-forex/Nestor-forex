@@ -465,6 +465,33 @@ export default {
       neutro: 'スワップ：ほとんど効かない',
     },
   },
+  // El corte pares con dólar / cruces. Ver `components/MidePositivo.jsx` —
+  // el aviso va ANTES de cualquier número a propósito: aquí lo caro no es
+  // leer mal un dato, es creer que esta lista es lo que la app propone o que
+  // el corte está confirmado.
+  corte: {
+    titulo: "プラスに出ている部分：ドル絡みの通貨ペアとクロス",
+    desc: "各ルールがどちらのペア群でよく測れたか、そして今日どれがそこに入るか",
+    paraQue: "今日のシグナルが、そのルールがよく測れたペア群に入るのか、悪く測れた群に入るのかを見るためのものです。どれを取引すべきかは言わず、どれも止めません。アプリは今までどおり 14 ペアを提示します。",
+    avance: ({ n }) => `よい群に ${n} 件のシグナル`,
+    aviso: "これはアプリの提案ではなく、新しいシグナルでもありません。上にあるのと同じシグナルを別の形でまとめただけです。しかもこの分け方は結果を見てから、同じ期間のデータで見つけたものなので、前向きの記録ではまだ確認されていません。何も有効化も無効化もしていません。",
+    montonDolar: "ドル絡みのペアのみ",
+    montonCruces: "クロスのみ（ドルを含まないもの）",
+    pasa: "基準を満たした",
+    noPasa: "基準を満たさなかった",
+    porQueNoPasa: ({ n, piso }) => `1 か月に ${n} 件しか残らず、下限は ${piso} 件です。数字がよくても、信じるには足りません。`,
+    yConcentracion: "さらに、たった 1 つのペアが改善分の多くを占めています。",
+    enSuMonton: "そのペア群で",
+    conLos14: "14 ペア全部で",
+    control: "反対の群（対照）",
+    conSwap: "毎晩スワップを払って",
+    mitades: "期間の前半と後半",
+    ops: "件",
+    fuera: ({ n }) => `このルールのうち、今日マイナスに出ている群に入っている数：${n}。`,
+    sinSenales: "今日はこのルールのシグナルがこの群に入っていません。",
+    pieCorrelacion: "ドル絡みの 7 ペアはほとんど一緒に動きます。ドル絡みのシグナル 5 件が、同じ賭けを 5 回言っているだけになりうることは測定済みです。1 件あたりの利益が大きくリスクの分散が小さいことは、自動的によいとは言えません。",
+    pieFecha: ({ fecha, dias }) => `${fecha} に実際の相場 ${dias} 日分で測定。各ペアのスプレッドを差し引き、中立の基準（損切りと目標を同じ距離）で測っています。`,
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: '「バンドタッチ」の記録',

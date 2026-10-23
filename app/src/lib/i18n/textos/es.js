@@ -498,6 +498,33 @@ export default {
       neutro: 'Swap: apenas pesa',
     },
   },
+  // El corte pares con dólar / cruces. Ver `components/MidePositivo.jsx` —
+  // el aviso va ANTES de cualquier número a propósito: aquí lo caro no es
+  // leer mal un dato, es creer que esta lista es lo que la app propone o que
+  // el corte está confirmado.
+  corte: {
+    titulo: "Lo que mide positivo: pares con dólar y cruces",
+    desc: "En qué grupo de pares ha medido bien cada regla, y cuáles de hoy caen ahí",
+    paraQue: "Para ver si una señal de hoy cae en el grupo de pares donde su regla ha medido bien o en el que ha medido mal. NO dice cuál operar y no apaga ninguna: la app sigue proponiendo sus 14 pares igual que antes.",
+    avance: ({ n }) => `${n} señales en el grupo bueno`,
+    aviso: "ESTO NO ES LO QUE LA APP PROPONE NI UNA SEÑAL NUEVA: son las mismas señales de arriba, agrupadas de otra forma. Y el corte se encontró MIRANDO los resultados, sobre los mismos días, así que ningún registro hacia adelante lo ha confirmado todavía. Nada se ha encendido ni apagado.",
+    montonDolar: "solo en pares con dólar",
+    montonCruces: "solo en cruces (los que no llevan dólar)",
+    pasa: "PASÓ EL LISTÓN",
+    noPasa: "NO PASÓ EL LISTÓN",
+    porQueNoPasa: ({ n, piso }) => `Deja ${n} señales al mes y el mínimo son ${piso}: aunque el número sea bueno, no hay suficientes para creerle.`,
+    yConcentracion: "Y además un solo par aporta demasiado de la mejora.",
+    enSuMonton: "En su grupo de pares",
+    conLos14: "Con los 14 pares",
+    control: "El grupo contrario (control)",
+    conSwap: "Pagando swap cada noche",
+    mitades: "Las dos mitades del periodo",
+    ops: "ops",
+    fuera: ({ n }) => `Señales de esta regla que hoy caen en el grupo que mide negativo: ${n}.`,
+    sinSenales: "Hoy ninguna de sus señales cae en este grupo.",
+    pieCorrelacion: "Los 7 pares con dólar se mueven casi todos juntos: está medido que cinco señales con dólar pueden ser una sola apuesta dicha cinco veces. Ganar más por operación y repartir menos el riesgo no es automáticamente mejor.",
+    pieFecha: ({ fecha, dias }) => `Medido el ${fecha} sobre ${dias} días de mercado real, con el spread de cada par descontado y la vara neutra: stop y objetivo a la misma distancia.`,
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: 'Historial de «el toque de banda»',

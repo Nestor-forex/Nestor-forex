@@ -471,6 +471,33 @@ export default {
       neutro: 'Swap: barely counts',
     },
   },
+  // El corte pares con dólar / cruces. Ver `components/MidePositivo.jsx` —
+  // el aviso va ANTES de cualquier número a propósito: aquí lo caro no es
+  // leer mal un dato, es creer que esta lista es lo que la app propone o que
+  // el corte está confirmado.
+  corte: {
+    titulo: "What measures positive: dollar pairs and crosses",
+    desc: "Which group of pairs each rule has measured well in, and which of today fall there",
+    paraQue: "To see whether today's signal falls in the group of pairs where its rule has measured well or in the one where it measured badly. It does NOT say which to trade and it turns none off: the app still proposes its 14 pairs just as before.",
+    avance: ({ n }) => `${n} signals in the good group`,
+    aviso: "THIS IS NOT WHAT THE APP PROPOSES, NOR A NEW SIGNAL: they are the same signals from above, grouped differently. And the split was found by LOOKING at the results, over the same days, so no forward record has confirmed it yet. Nothing has been turned on or off.",
+    montonDolar: "only in dollar pairs",
+    montonCruces: "only in crosses (the ones without the dollar)",
+    pasa: "PASSED THE BAR",
+    noPasa: "DID NOT PASS THE BAR",
+    porQueNoPasa: ({ n, piso }) => `It leaves ${n} signals a month and the minimum is ${piso}: even with a good number, there are not enough to believe it.`,
+    yConcentracion: "And a single pair contributes too much of the improvement.",
+    enSuMonton: "In its group of pairs",
+    conLos14: "With all 14 pairs",
+    control: "The opposite group (control)",
+    conSwap: "Paying swap every night",
+    mitades: "The two halves of the period",
+    ops: "trades",
+    fuera: ({ n }) => `Signals from this rule that fall today in the group that measures negative: ${n}.`,
+    sinSenales: "None of its signals falls in this group today.",
+    pieCorrelacion: "The 7 dollar pairs nearly all move together: it is measured that five dollar signals can be a single bet said five times. Earning more per trade and spreading the risk less is not automatically better.",
+    pieFecha: ({ fecha, dias }) => `Measured on ${fecha} over ${dias} days of real market, with each pair’s spread subtracted and the neutral yardstick: stop and target at the same distance.`,
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: '«Band touch» history',

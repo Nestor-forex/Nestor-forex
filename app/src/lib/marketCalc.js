@@ -497,6 +497,29 @@ const razon = (p, esc, t) => {
 // mitad del periodo (+0,08 contra +0,07). Entre dos números buenos se elige el
 // que descansa sobre más datos, no el más bonito.
 //
+// ⚠️⚠️ ESA SEGUNDA RAZÓN YA NO SE SOSTIENE (medido el 2026-10-23), y queda
+// escrita en vez de borrada porque el número NO se cambió:
+//
+//                    ops     por 1R   1ª mitad   2ª mitad   +swap 0,5
+//   RSI 40 (este)   1.554   +0,005     −0,046     +0,055     −0,036
+//   RSI 35            856   +0,036     +0,039     +0,032     −0,007
+//
+// Con la rejilla limpia (2026-10-06) y el swap cobrado por noches de
+// calendario, **el 40 PIERDE la primera mitad y el 35 gana las dos**. Lo del
+// doble de operaciones sigue siendo verdad; lo de aguantar mejor las mitades
+// es justo lo contrario de lo que decía.
+//
+// ⚠️ Y AUN ASÍ NO SE TOCA, por una razón que no es prudencia vacía: el vigía
+// lleva anotando con 40 desde agosto. Mover el umbral convierte lo acumulado
+// en el registro de OTRA regla y el contador vuelve a cero — que es exactamente
+// lo que le pasó a «comprar la caída» el 2026-10-12 y costó dos meses. Néstor
+// eligió la salida que no cuesta nada: dejar este 40 donde está y añadir el 35
+// como regla aparte, para que los dos relojes corran en paralelo.
+//
+// 📌 La lección, que ya está escrita para las etiquetas «(hoy)» del banco de
+// pruebas: al cambiar algo hay que mirar quién lo NOMBRA. Aquí el número no
+// cambió y su justificación sí se volvió falsa, porque cambió el dato debajo.
+//
 // ⚠️ ARRANCA APAGADA (`incluirReversion`). Esto no es un ajuste de la app: es
 // su idea al revés. Encenderla convertiría a Swing en otro producto, y esa es
 // una decisión de Néstor, no una consecuencia de una medición. Por ahora el
