@@ -12151,3 +12151,180 @@ de las cuatro es la del cero exacto, que no estaba buscada y salió sola.
 Lint (8 avisos, los mismos que `main`), build, **43 de 44 pruebas en verde**
 —solo falla `prueba-aviso-real`, que pide el secreto VAPID— y los **65 gemelos
 idénticos**. Ningún archivo tocado es gemelo.
+
+---
+
+# ⚠️⚠️ LA APP SOLO CON PARES CON DÓLAR PASA EL LISTÓN (2026-10-23)
+
+**Es la primera vez en todo el proyecto que algo pasa un preregistro completo
+con la vara neutra y los costes descontados.** Y es un cambio de la APP, no una
+regla de sombra. Por eso lo primero de esta sección es lo que NO autoriza.
+
+⚠️ **NO SE HA ENCENDIDO NADA.** Cero archivos de `src/` tocados. Swing sigue
+midiendo −0,040 por unidad de riesgo y proponiendo sus 14 pares.
+
+## Cómo salió, que es la mitad que importa
+
+Néstor dio la regla de decisión el 2026-10-22 al responder «las dos cosas»:
+poner la tabla en pantalla con su advertencia Y, en paralelo, escribir el
+listón y medirlo. El listón (`scripts/lib/preregistro-cruces.mjs`) se escribió
+**antes de medir**, con la fecha dentro, y el veredicto lo **calcula**
+`juzgar()`.
+
+⚠️ **El corte se miró DESPUÉS de ver el desglose por divisa del 2026-10-21.** Es
+troceo a posteriori — el mismo que este proyecto rechazó con el control de la
+confluencia y con el del barrido de liquidez. Por eso el listón añade un
+criterio que **ningún otro preregistro del proyecto tiene**: el CONTROL —la
+misma regla con el montón CONTRARIO— tiene que EMPEORAR. Sin eso no hay forma
+de distinguir «el corte dice algo» de «partir 14 pares en dos da uno mejor por
+azar».
+
+## La tabla, 1.341 días, vara neutra 1:1, spread por par
+
+| regla | montón | ops | por 1R | 1ª mit | 2ª mit | +swap |
+|---|---|---:|---:|---:|---:|---:|
+| **la app** | los 14 | 2.484 | −0,040 | −0,044 | −0,037 | −0,083 |
+| | **con dólar** | 1.193 | **+0,073** | +0,063 | +0,083 | **+0,033** |
+| | cruces (CONTROL) | 1.406 | **−0,142** | −0,158 | −0,123 | −0,188 |
+| reversión M2 | los 14 | 1.554 | +0,005 | −0,046 | +0,055 | −0,036 |
+| | cruces | 755 | **+0,111** | +0,041 | +0,179 | +0,068 |
+| | con dólar (CONTROL) | 799 | −0,086 | −0,115 | −0,057 | −0,126 |
+| Bollinger + RSI 35 | los 14 | 551 | +0,013 | +0,045 | −0,016 | −0,028 |
+| | cruces | 238 | +0,074 | +0,082 | +0,067 | +0,035 |
+| | con dólar (CONTROL) | 311 | −0,034 | +0,010 | −0,073 | −0,075 |
+
+| veredicto calculado | |
+|---|---|
+| ✅ **la app solo con pares con dólar** | **los 6 criterios** |
+| ❌ la reversión M2 solo con cruces | solo falla señales/mes (13,0 contra 15) |
+| ❌ Bollinger + RSI solo con cruces | señales/mes (4,1) y un par aporta el 43 % |
+
+**La app pasa de −0,040 a +0,073** —mejora de 0,113, más de cinco veces el
+umbral—, gana en las DOS mitades, **aguanta el swap y sigue positiva** (+0,033),
+deja 20,5 señales al mes y ningún par aporta más del 10 % de la mejora. Y el
+CONTROL se derrumba a −0,142, que es justo lo que tenía que pasar.
+
+## ⚠️⚠️ LO QUE SIGUE EN PIE Y NO SE ABLANDA
+
+1. **Son los MISMOS 1.341 días con los que se encontró el corte.** El control y
+   las dos mitades hacen muy improbable que sea ruido, pero no borran el origen
+   a posteriori. Lo único limpio es el registro hacia adelante.
+2. **7 pares con dólar están MUY correlacionados entre sí** — medido el
+   2026-09-30: cinco señales con dólar eran *una sola apuesta dicha cinco
+   veces*. Más rentable por operación y menos diversificado no es
+   automáticamente mejor, y eso el listón no lo mide.
+3. ⚠️ **Quitar pares NO quita señales: las cambia por otras.** Es la respuesta a
+   la pregunta de Néstor y está dentro del listón. Con `topN` fijo el que estaba
+   cuarto SUBE al hueco y entra en otra fecha, a otro precio. Por eso se midió
+   «la app ENTERA con 7 pares» y no «el montón de los 7»: son cosas distintas, y
+   el +0,066 del 21 de octubre **no** era el número que daría la app sin cruces
+   (el real es +0,073).
+4. **La M2 con cruces falla por un pelo** (13,0 señales/mes contra 15) y **el
+   umbral no se toca**: para ese momento exacto se escribe el listón antes. Lo
+   que sí hay que decir es que ese piso de 15 se derivó **para la app**, que da
+   ~36 al mes; los demás listones de este proyecto piden 8-10 a una regla de
+   sombra. Con el resultado ya visto no se puede distinguir «arreglar un
+   criterio mal especificado» de «aflojarlo para que pase», así que se queda.
+
+## ⚠️⚠️ Y EL HALLAZGO INCÓMODO: la justificación escrita del RSI 40 ENVEJECIÓ
+
+Néstor pidió ver «qué mide cada uno» antes de decidir. Salió esto:
+
+| | ops | señ/mes | acierto | por 1R | 1ª mit | 2ª mit | +swap |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **M2 con RSI 40 ← LA QUE CORRE** | 1.554 | 26,8 | 51 % | **+0,005** | **−0,046** | +0,055 | −0,036 |
+| M2 con RSI 35 (contraste) | 856 | 14,8 | 53 % | **+0,036** | +0,039 | +0,032 | −0,007 |
+
+El comentario de `marketCalc.js` justifica el 40 diciendo que «tiene casi el
+doble de operaciones y **aguanta mejor la segunda mitad** (+0,08 contra +0,07)».
+Lo del doble de operaciones **sigue siendo verdad** (1.554 contra 856). Lo de
+las mitades **ya no**: con la rejilla limpia y el swap por noches de calendario,
+**el 40 PIERDE en la primera mitad y el 35 gana en las dos**, y el 35 aguanta
+mejor el swap.
+
+⚠️ **El 40 NO se cambia, y el motivo es el de siempre:** esos días son los
+mismos con los que se eligió, y moverlo al ver el número es exactamente lo que
+el listón previene. Lo que queda escrito es que **la razón por la que está en 40
+ya no se sostiene con los datos de hoy**, y que lo que el vigía lleva acumulando
+en la sombra desde agosto es con 40. Si se quiere cambiar, es una decisión de
+Néstor y **el contador vuelve a cero** — como pasó con la geometría de «comprar
+la caída» el 2026-10-12.
+
+## Dos duplicaciones del umbral, en las dos apps
+
+| dónde | qué pasaba |
+|---|---|
+| `backtest.mjs` de Swing | el barrido marcaba «← el elegido» sobre un **35 escrito a mano** y la que corre usa 40 |
+| `medir-bollinger.mjs` | su fila «M2» se calculaba con el **35 de Bollinger** porque el listón lo describía como «el mismo de la reversión» → el criterio `VENTAJA_SOBRE_M2` se midió contra una regla **que no corre** |
+| `medir-fase1.mjs` de Intradía | comparaba contra **70 y 30 a mano** mientras `RSI_MAX` lo exporta la app |
+| `backtest.mjs` de Intradía | el umbral de la R2 estaba en **tres sitios**: la R2, la R4 y la etiqueta |
+
+`RSI_REVERSION` se exporta ahora desde `marketCalc.js` y quien lo nombra lo lee.
+Ninguno de los arreglos cambia un número: 70/30 sigue siendo 70/30 y 35/65
+sigue siendo 35/65, comprobado.
+
+📌 **Las dos últimas las encontró la comprobación nueva al estrenarse en
+Intradía**, que es exactamente su trabajo. Y confirma la regla de siempre: *un
+error recién cometido en un sitio es el que se va a cometer en el de al lado.*
+
+## Las comprobaciones, y los TRES fallos propios que salieron de ellas
+
+`prueba-umbral.mjs` bloque 8 (**GEMELO**, escrito como invariantes y
+condicionado a que la app tenga la regla) · `prueba-backtest.mjs` el universo ·
+`prueba-bollinger.mjs` contra quién se compara la fila M2.
+
+📌 **Tres fallos míos en mis propias comprobaciones, el mismo día:**
+
+1. **Buscar un dígito en el nombre completo de la fila cazaba el del PREFIJO**
+   («M2»), así que «lleva su umbral dentro» se cumplía por construcción en
+   TODAS las filas: la comprobación **no podía fallar**.
+2. **`/RSI/i` cazaba «inve*rsi*ón»** en «M4. CONTROL: la inversión de antes».
+3. **`\d+` sin `\b` leía «10» dentro de «100 − u»** y marcaba como sospechosos
+   cuatro guiones que estaban bien.
+
+Y una cuarta, de prosa: el regex que exigía que el listón **no** dijera «el
+mismo 35 de la reversión» **cazaba esa frase citada DENTRO de la corrección que
+la desmiente**. Es «contar apariciones no es leer», tercera vez en este
+repositorio. Se cambió por comprobar que la documentación **NOMBRE** la otra
+constante, que es satisfacible y dice lo que quiere decir.
+
+## 📌 Y el fallo de criterio que cazó el humo antes de gastar un crédito
+
+El criterio 4 del listón pedía al principio «≥ 70 % de las señales de la app con
+14 pares», razonando que con `topN` fijo los huecos se siguen llenando. **Ese
+razonamiento era falso**: el humo dio el **49 %**, porque quien decide cuántas
+señales hay no es `topN` sino **cuántos pares pasan el umbral de fuerza ese
+día**, y con la mitad de pares eso es la mitad. O sea que el criterio **no podía
+cumplirse por construcción** y habría tumbado el corte sin mirar el mercado.
+
+⚠️ **La diferencia entre eso y aflojar un umbral**, que es la línea que no hay
+que cruzar: aflojar es mover un número al ver que el RESULTADO no pasa; esto fue
+cambiar un criterio que medía otra cosa de la que decía medir, **antes de tener
+un solo resultado real**. Pasó a ser un piso absoluto en señales/mes, derivado
+de la estructura.
+
+## ⚠️ El contenedor se reinició y se perdió todo el trabajo sin commitear
+
+Pasó a media tarea: `node_modules` vacío, la rama de vuelta a `main`, el
+scratchpad borrado. Se rehizo entero desde el contexto. Y de paso explicó cinco
+pruebas en rojo que no tenían nada que ver con el cambio (`prueba-mt5`,
+`prueba-push`, `prueba-resolver` por falta de `node_modules`; `prueba-gemelos` y
+`prueba-reloj-externo` por falta del clon hermano).
+
+📌 **La lección, que es de las que cuestan:** en estas sesiones el contenedor es
+efímero y lo que no está commiteado no existe. **Commitear en cuanto una pieza
+está coherente, no al final.** Y antes de creerse que algo está roto, mirar si
+falta `node_modules` o el repositorio hermano — es la tercera vez que esa falsa
+alarma aparece en este archivo.
+
+## Lo que falta, y NO se hace sin que Néstor lo confirme
+
+1. **El tablero de señales en vivo que pidió**, con una corrección de nombres
+   que hay que decirle: lo que corre en vivo **no es «Bollinger + RSI»** sino la
+   **banda sola** (`PARAMS_SOMBRA` lleva `rsiEstirado: null`), y la reversión en
+   vivo usa **RSI 40**, no el 35 de las tablas. Llamarlas como él las nombró
+   sería la etiqueta equivocada de siempre.
+2. **La tabla dólar/cruces en pantalla**, con su advertencia, en los 13 idiomas.
+3. **Y la decisión de fondo: ¿se le quitan los cruces a la app?** Eso cambia lo
+   que la app propone, así que es decisión suya, con su propio PR, su prueba y
+   su verificación en navegador. Con la nota de la correlación encima.
