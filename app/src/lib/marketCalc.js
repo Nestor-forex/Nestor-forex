@@ -502,7 +502,18 @@ const razon = (p, esc, t) => {
 // una decisión de Néstor, no una consecuencia de una medición. Por ahora el
 // vigía la anota en la sombra —sin enseñarla y sin avisar a nadie— para ver
 // los dos números correr en paralelo con dinero real de por medio en ninguno.
-const RSI_REVERSION = 40
+// ⚠️ Se EXPORTA, y el motivo es un fallo real del 2026-10-22. El barrido de
+// umbrales de `backtest.mjs` marcaba «← el elegido» sobre el 35 **escrito a
+// mano**, cuando el elegido es este 40; y la fila «M2» de `medir-bollinger.mjs`
+// se calculaba con el 35 de Bollinger porque su listón lo describía como «el
+// mismo de la reversión». O sea que el informe nombraba, y medía, una regla que
+// NO corre. Los números estaban bien y la conclusión que inducían era falsa.
+//
+// Exportándolo, quien lo NOMBRA lo lee en vez de repetirlo. Es la disciplina de
+// `UMBRAL_FUERZA` (2026-10-12) y de `ATR_REVERSION`, por la misma razón: al
+// cambiar un umbral hay que mirar también quién lo nombra, y el código que lo
+// usa se actualiza solo mientras el texto que lo describe no.
+export const RSI_REVERSION = 40
 
 const clasificarReversion = (p, thr, { rsiMax = RSI_REVERSION } = {}) => {
   if (p.dif < -thr && p.rsiV <= rsiMax) return 'COMPRA'
