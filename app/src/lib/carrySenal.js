@@ -1,10 +1,11 @@
 // ¿Esta señal va A FAVOR o EN CONTRA del diferencial de tasas?
 //
 // Néstor lo pidió el 2026-10-13: «también quiero ver lo del carry a favor del
-// diferencial y en contra». El banco de pruebas ya lo reparte —ver
-// `scripts/lib/carry.mjs`— pero aquello mira la serie HISTÓRICA del BIS para
-// saber qué tasa regía el día de cada señal. La pantalla no tiene esa serie:
-// `estado/tasas.json` trae la tasa VIGENTE de cada divisa y nada más.
+// diferencial y en contra». El banco de pruebas de Swing también lo reparte
+// —`scripts/lib/carry.mjs`, que solo existe allí— pero aquello mira la serie
+// HISTÓRICA del BIS para saber qué tasa regía el día de cada señal. La pantalla
+// no tiene esa serie: `estado/tasas.json` trae la tasa VIGENTE de cada divisa y
+// nada más.
 //
 // Así que son dos funciones distintas con entradas distintas, y eso está bien.
 // Lo que NO puede haber dos veces es el CONVENIO —el signo y la banda neutra—,
