@@ -12328,3 +12328,129 @@ alarma aparece en este archivo.
 3. **Y la decisión de fondo: ¿se le quitan los cruces a la app?** Eso cambia lo
    que la app propone, así que es decisión suya, con su propio PR, su prueba y
    su verificación en navegador. Con la nota de la correlación encima.
+
+---
+
+# Lo que mide positivo, en pantalla (2026-10-23). Y el RSI 35 contestado con datos REALES
+
+Néstor pidió cinco cosas en un mensaje. Las tres decisiones las resolvió él y
+en las tres tenía razón; lo que sigue es lo construido y, sobre todo, **el
+número que desmonta la pregunta del RSI**.
+
+## Las decisiones, y por qué su criterio era el bueno
+
+| | lo que eligió | veredicto |
+|---|---|---|
+| quitarle los cruces a la app | **no quitar nada; añadir una tabla aparte** | ✅ correcto, y por tres razones |
+| la tabla dólar/cruces en pantalla | hazlo | ✅ hecho |
+| el RSI a 35 | «como el punto 1, pero si es lo mejor hazlo» | ✅ añadir, nunca reemplazar |
+
+Las tres razones para NO quitar los cruces, que van escritas en el código:
+el +0,073 sale de **los mismos días con los que se encontró el corte** · los 7
+pares con dólar están **muy correlacionados** (el 2026-09-30 quedó medido que
+cinco señales con dólar eran una sola apuesta dicha cinco veces) · y en este
+proyecto **nunca se ha encendido nada solo con un backtest**.
+
+## ⚠️⚠️ EL HALLAZGO DEL DÍA: el registro REAL ya podía contestar lo del RSI 35
+
+Yo iba a construir una sexta regla de sombra con su preregistro, su cubo, su
+bloque y **nueve meses de espera**. Antes de escribirla miré el historial de
+producción, y resultó que **el vigía ya escribe el `rsi` de cada señal desde
+siempre**, así que la pregunta se podía contestar ese mismo día:
+
+| de las 45 reversiones anotadas | acierto | ops | pips |
+|---|---:|---:|---:|
+| **también pasarían con RSI 35** | **39 % ±16** | 38 | −383 |
+| solo pasaron por el 40 | **29 % ±37** | 7 | −126 |
+
+**Las más estiradas van algo mejor y LAS DOS PIERDEN.** Con geometría 1:1 hace
+falta el 50 % para empatar.
+
+📌 **Eso cambia la conclusión, no solo el camino.** El backtest promete +0,036
+con el 35 contra +0,005 con el 40; la realidad dice 39 % y 29 %, las dos por
+debajo del equilibrio. O sea que **el desacuerdo entre banco y realidad es de
+la familia entera, no del umbral** — la reversión con 40 va 38 % real contra
+54 % medido. Cambiar el umbral no arregla eso, y una sexta regla habría tardado
+nueve meses en decir lo mismo.
+
+⚠️ **Por eso NO se creó la sexta regla**, y la diferencia con «no hacer lo que
+pidió» es que lo que pidió era ver la medición: la medición está, es real, y es
+más informativa que la que él imaginaba.
+
+⚠️ **Y el `RSI_REVERSION = 40` sigue sin tocarse**, aunque su justificación
+escrita («aguanta mejor la segunda mitad») sea hoy falsa — con la rejilla
+limpia el 40 pierde la PRIMERA mitad y el 35 gana las dos. Moverlo pone el
+contador de la sombra a cero, como le pasó a «comprar la caída» el 2026-10-12 y
+costó dos meses. La razón se corrigió; el número no.
+
+## ⚠️ El reparto por RSI NO es el registro de la regla con 35
+
+Es la misma distinción que el +0,066 contra el +0,073, y va escrita **en
+pantalla** y no solo en el código: la app se queda con los 3 mejores por lado,
+así que con 35 un par que hoy queda cuarto **subiría al hueco** y entraría otro
+día, a otro precio. Lo que hay es «las estiradas que el 40 sacó a la
+superficie», no «las que sacaría el 35».
+
+📌 Es la tercera vez en dos días que esa trampa decide cómo se mide algo. Vale
+la pena tenerla como pregunta fija: **¿esto filtra la SALIDA o el UNIVERSO?**
+
+## Lo construido
+
+```
+src/lib/corteDolarCruces.js     el corte medido + el reparto de hoy   (puro)
+src/components/MidePositivo.jsx la tarjeta, plegada, bajo las 3 listas
+scripts/prueba-corte.mjs        comprobaciones sin internet
+src/lib/historialCalc.js        `cuentaDe`, `masEstiradaQue`, `partirPorRsi`
+src/lib/marketCalc.js           `RSI_REVERSION_ESTRICTO` (no decide nada)
+```
+
+⚠️ **`RSI_REVERSION_ESTRICTO` lleva escrito que NO es el 35 de Bollinger**,
+aunque hoy valgan lo mismo. Que compartieran valor es justo lo que hizo que el
+2026-10-22 la fila «M2» del informe se midiera con el umbral de otra regla.
+
+⚠️ **El piso de señales/mes está a mano en `src/` porque `scripts/` no existe
+en el navegador**, y hay una comprobación que lo compara con el listón de
+verdad y falla si se separan. Más otra que exige que el sello «pasó / no pasó»
+cuadre con los propios números que la pantalla enseña.
+
+## 📌 Tres defectos que solo salieron MIRANDO LA CAPTURA
+
+1. **«Otras 1 señales de esta regla»** — el mismo fallo de concordancia que
+   `sombra.aviso` el 2026-10-20, reintroducido por mí tres días después.
+   Arreglado **de raíz** (rótulo + número, así el número no manda sobre la
+   flexión en ningún idioma), no con un caso especial para el 1.
+2. **Las señales de la app salían con «1 : 0.56» a secas**, sin el «⚠ por
+   debajo de 1:1.5» que sí llevan en su sección — justo en la tarjeta que las
+   presenta como el montón que mide bien. Ahora usa `rrOk`, el MISMO campo y el
+   MISMO texto que la app: dos copias de esa condición se separarían sin que
+   fallara nada.
+3. **El conteo de operaciones iba sin rótulo** entre dos números
+   (`39% ±16 · 38 · −383`). Ahora dice «38 ops».
+
+Ninguno de los tres lo veían el build, el lint ni las 44 pruebas.
+
+## Comprobado que muerden, con el daño verificado en el archivo
+
+definir el montón por descarte tumba **13** · esconder una regla sin señales
+tumba **3** · separar el piso del listón tumba **3** · ignorar el lado en el
+reparto por RSI tumba **5** · devolver `false` en vez de `null` sin RSI tumba
+**4**.
+
+Y en Chromium a 390 px con el `barrido.json` y el historial **reales de
+producción**, en español y árabe, con cuatro casos de la tarjeta (real, árabe,
+sin señales, solo-montón-malo): 24 y 293 hojas de datos **0 en `rtl`** con el
+CSS calculado, cero desplazamiento lateral, cero errores de consola.
+
+⚠️ Detalle del entorno, para la próxima vez: **`playwright` no está en
+`package.json`** y hay que instalarlo a mano para el banco de navegador —
+y luego revertir `package.json` y `package-lock.json` antes de commitear. Y el
+guion del banco tiene que vivir **dentro de `app/`**, no en el scratchpad, o
+Node no resuelve el paquete.
+
+## Lo que queda pendiente, y NO se hace sin que lo confirme
+
+1. **La sexta regla de sombra con RSI 35 y su propio `topN`**, si aun con el
+   número de arriba quiere el registro limpio hacia adelante. Son ~9 meses.
+2. **El corte dólar/cruces en el reporte diario**, que hoy solo está en la app.
+3. Y sigue en pie que **quitarle los cruces a la app** sería otra decisión, con
+   su propio PR — hoy descartada por él y por las tres razones de arriba.
