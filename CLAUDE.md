@@ -12606,3 +12606,86 @@ va **determinista**, no `Math.random`.
 2. Siguen en pie los tres de la sesión anterior (la sexta regla de sombra con
    RSI 35, el corte en el reporte diario de Swing, y quitarle los cruces a la
    app), **y ninguno se hace sin que Néstor lo confirme**.
+
+---
+
+# El corte dólar/cruces NO se repite en Intradía (2026-10-24), pero la dirección SÍ
+
+Lanzada la medición que quedó construida ese mismo día. 19.903 velas de una
+hora (2023-11-21 a 2026-10-24), vara neutra 1:1, spread por par, **28 créditos**.
+
+| universo | ops | acierto | por 1R | 1ª mit | 2ª mit | +swap |
+|---|---:|---:|---:|---:|---:|---:|
+| los 18 (la app) | 7.650 | 49 % | **−0,095** | −0,108 | −0,068 | −0,103 |
+| **solo con dólar (7)** | 3.942 | 49 % | **−0,081** | −0,092 | −0,061 | −0,090 |
+| solo cruces (11) — CONTROL | 3.917 | 47 % | **−0,123** | −0,136 | −0,088 | −0,130 |
+
+## ❌ NO PASA: falla 2 de los 6, y los dos son de TAMAÑO
+
+- la mejora es **+0,014** y el umbral era **0,02**;
+- pagando 0,5 de swap cae a **+0,004**.
+
+Los otros cuatro sí: mejora en las dos mitades (+0,016 y +0,007), el CONTROL
+empeora (−0,028 contra la base), deja el **51,5 %** de las señales (hacía falta
+30 %) y ningún par se lleva la mejora.
+
+⚠️ **0,014 contra 0,02 es quedarse A UN PELO, y por eso NO se afloja.** El
+listón lo dice con esas palabras y éste es el momento exacto para el que se
+escribe antes. Aflojarlo aquí sería convertir el preregistro en un adorno.
+
+📌 **Y el criterio del swap tiene un detalle que conviene saber, aunque no
+cambie nada:** compara la variante PAGANDO swap contra la base SIN pagarlo, o
+sea que es más exigente de lo que suena. Comparando lo comparable —las dos
+pagando— la mejora es **+0,013**, que **sigue por debajo del 0,02**. El
+veredicto es el mismo por los dos caminos, así que no hay nada que decidir.
+
+## ⚠️⚠️ LO QUE SÍ SE REPITIÓ, Y ESTABA PREDICHO POR ESCRITO
+
+**La dirección.** El listón fijó `MONTON_PREDICHO = 'dolar'` antes de correr
+nada, y salió así: los pares con dólar miden mejor que la app entera y los
+cruces miden peor. El control se derrumba igual que allá.
+
+Eso es una confirmación **fuera de muestra** de la dirección, en otra app, con
+otras velas, otros pares y otro periodo — y vale justamente porque estaba
+escrita antes. Lo que no llegó es el **tamaño**: allá el corte movía la app
+0,113 (de −0,040 a +0,073) y aquí mueve 0,014.
+
+⚠️ **Y lo que ya estaba escrito antes de medir sigue en pie: aunque hubiera
+pasado, la app seguiría perdiendo.** −0,081 es negativo. Allá el corte ponía la
+app en positivo; aquí el mejor montón pierde 8 centavos por dólar arriesgado en
+vez de 9,5. «Menos malo» no es «bueno».
+
+## 📌 MI INFERENCIA DEL MERCADO INVENTADO ERA FALSA EN DATOS REALES
+
+Al construir esto, un barrido de 54 mercados inventados no encontró **ni un
+caso** en que restringir el universo hiciera aparecer señales nuevas, y de ahí
+deduje que aquí quitar pares «puede ser una resta limpia», al revés que en
+Swing.
+
+**Los datos reales dicen lo contrario:** 178 señales nuevas de 3.942 con dólar
+y 244 de 3.917 en cruces. **Sí se desplaza**: al quitar pares, otros suben al
+hueco y entran en otra hora.
+
+⚠️ Es el **undécimo** mecanismo convincente de este proyecto que resulta falso
+al medirlo, y lo que salvó la medición es que **no lo di por hecho**: cambié la
+comprobación imposible por el invariante que sí vale y dejé que el guion
+IMPRIMIERA el número. Si lo hubiera escrito como conclusión en vez de como
+pregunta, estaría hoy en este archivo como un hecho sobre Intradía.
+
+📌 **Y la lección sobre los mercados inventados, que es nueva:** sirven para
+comprobar que la plomería funciona y que una prueba muerde. **No sirven para
+sacar conclusiones sobre cómo se comporta la app** — mi mercado daba 28 señales
+y el real da 7.650, así que nunca iba a saturar los huecos.
+
+## Lo que esto cierra y lo que no
+
+**Cierra** la pregunta en Intradía: la app se queda con sus 18 pares y la tabla
+no se enciende. Novena familia medida y novena que no pasa.
+
+**No desmiente lo de Swing.** Son velas distintas y esa es la regla de siempre.
+Lo que sí hace es dejar **sin apoyo la idea de que sea algo general del Forex**:
+si lo fuera, con 7.650 operaciones aquí tendría que haberse visto con el mismo
+tamaño, no con un séptimo.
+
+⚠️ Y **no se mide otra vez sobre este periodo**. Estos 19.903 velas ya se
+usaron; volver a barrer parámetros devolvería el mismo número por construcción.
