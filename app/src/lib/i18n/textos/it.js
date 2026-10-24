@@ -467,6 +467,33 @@ export default {
       neutro: 'Swap: pesa appena',
     },
   },
+  // El corte pares con dólar / cruces. Ver `components/MidePositivo.jsx` —
+  // el aviso va ANTES de cualquier número a propósito: aquí lo caro no es
+  // leer mal un dato, es creer que esta lista es lo que la app propone o que
+  // el corte está confirmado.
+  corte: {
+    titulo: "Quello che misura positivo: coppie con dollaro e cross",
+    desc: "In quale gruppo di coppie ogni regola ha misurato bene, e quali di oggi ci cadono",
+    paraQue: "Per vedere se un segnale di oggi cade nel gruppo di coppie dove la sua regola ha misurato bene o in quello dove ha misurato male. NON dice quale operare e non ne spegne nessuno: l’app continua a proporre le sue 14 coppie come prima.",
+    avance: ({ n }) => `${n} segnali nel gruppo buono`,
+    aviso: "QUESTO NON È QUELLO CHE PROPONE L’APP NÉ UN SEGNALE NUOVO: sono gli stessi segnali di sopra, raggruppati in altro modo. E il taglio è stato trovato GUARDANDO i risultati, sugli stessi giorni, quindi nessun registro in avanti lo ha ancora confermato. Non si è acceso né spento niente.",
+    montonDolar: "solo in coppie con dollaro",
+    montonCruces: "solo nei cross (quelli senza dollaro)",
+    pasa: "HA SUPERATO L’ASTA",
+    noPasa: "NON HA SUPERATO L’ASTA",
+    porQueNoPasa: ({ n, piso }) => `Lascia ${n} segnali al mese e il minimo è ${piso}: anche con un numero buono, non bastano per crederci.`,
+    yConcentracion: "E inoltre una sola coppia porta troppo del miglioramento.",
+    enSuMonton: "Nel suo gruppo di coppie",
+    conLos14: "Con le 14 coppie",
+    control: "Il gruppo opposto (controllo)",
+    conSwap: "Pagando swap ogni notte",
+    mitades: "Le due metà del periodo",
+    ops: "ops",
+    fuera: ({ n }) => `Segnali di questa regola che oggi cadono nel gruppo che misura negativo: ${n}.`,
+    sinSenales: "Oggi nessuno dei suoi segnali cade in questo gruppo.",
+    pieCorrelacion: "Le 7 coppie con dollaro si muovono quasi tutte insieme: è misurato che cinque segnali con dollaro possono essere una sola scommessa detta cinque volte. Guadagnare più per operazione e distribuire meno il rischio non è automaticamente meglio.",
+    pieFecha: ({ fecha, dias }) => `Misurato il ${fecha} su ${dias} giorni di mercato reale, con lo spread di ogni coppia scontato e l’asta neutra: stop e obiettivo alla stessa distanza.`,
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: 'Storico del «tocco di banda»',
@@ -476,6 +503,10 @@ export default {
     rupturaTitulo: 'Storico di «rottura di struttura»',
     rupturaIntro:
       'La quarta regola, che entra quando il prezzo rompe l\'ultimo massimo o minimo segnato. ⚠️ È IN OSSERVAZIONE e non validata. Non è una raccomandazione — viene mostrata per poterla seguire, non per operarla.',
+    rsiTitulo: "Vanno meglio le più tirate?",
+    rsiAviso: "Questo NON dice cosa darebbe la regola con una soglia più severa. L’app tiene le 3 migliori per lato, quindi con un’altra soglia salirebbero nel posto coppie che oggi non entrano, in altre date. Questa è solo la ripartizione di quanto già registrato.",
+    rsiEstiradas: ({ u }) => `Quelle che passerebbero anche con RSI ${u}`,
+    rsiResto: ({ u, v }) => `Quelle passate solo grazie al ${v} (RSI tra ${u} e ${v})`,
     esReversion: 'INVERSIONE',
     esCaida: "COMPRARE IL RIBASSO",
     caidaVieja: ({ n, acierto, pips }) => `Prima di questo sono state registrate ${n} operazioni con uno stop e un obiettivo diversi da quelli misurati all'approvazione della regola. NON contano, e lo storico di questa regola riparte da zero (quelle davano ${acierto} % e ${pips} pips). Restano visibili perché sono realmente avvenute.`,

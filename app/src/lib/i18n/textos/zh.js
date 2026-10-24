@@ -461,6 +461,33 @@ export default {
       neutro: '隔夜利息：几乎没影响',
     },
   },
+  // El corte pares con dólar / cruces. Ver `components/MidePositivo.jsx` —
+  // el aviso va ANTES de cualquier número a propósito: aquí lo caro no es
+  // leer mal un dato, es creer que esta lista es lo que la app propone o que
+  // el corte está confirmado.
+  corte: {
+    titulo: "测出为正的部分：美元货币对与交叉盘",
+    desc: "每条规则在哪一组货币对上测得较好，以及今天有哪些落在其中",
+    paraQue: "用来看今天的信号落在其规则测得较好的那组货币对里，还是测得较差的那组里。它不会告诉你该做哪一个，也不会关闭任何信号：应用仍然和以前一样提供它的 14 个货币对。",
+    avance: ({ n }) => `好的那组里有 ${n} 个信号`,
+    aviso: "这不是应用的建议，也不是新的信号：这就是上面那些信号，只是换了一种分组方式。而且这个划分是在看过结果之后、在同样的那些天里找出来的，所以还没有任何向前记录确认过它。没有打开也没有关闭任何东西。",
+    montonDolar: "仅美元货币对",
+    montonCruces: "仅交叉盘（不含美元的）",
+    pasa: "通过了标准",
+    noPasa: "未通过标准",
+    porQueNoPasa: ({ n, piso }) => `它每月只留下 ${n} 个信号，而下限是 ${piso} 个：即使数字好看，也不足以让人相信。`,
+    yConcentracion: "而且单独一个货币对贡献了过多的改善。",
+    enSuMonton: "在它那组货币对里",
+    conLos14: "用全部 14 个货币对",
+    control: "相反的那一组（对照）",
+    conSwap: "每晚支付隔夜利息",
+    mitades: "时期的两个一半",
+    ops: "笔",
+    fuera: ({ n }) => `这条规则今天落在测出为负那一组里的信号数：${n}。`,
+    sinSenales: "今天它没有任何信号落在这一组里。",
+    pieCorrelacion: "7 个美元货币对几乎都一起动：已经测出，五个美元信号可能只是同一笔押注说了五遍。每笔赚得更多而风险更集中，并不自动等于更好。",
+    pieFecha: ({ fecha, dias }) => `于 ${fecha} 在 ${dias} 天真实行情上测得，已扣除每个货币对的点差，并使用中性尺度：止损与目标距离相同。`,
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: '「触及布林带」历史记录',
@@ -470,6 +497,10 @@ export default {
     rupturaTitulo: '「结构突破」的历史记录',
     rupturaIntro:
       '第四条规则：当价格突破它最近形成的高点或低点时入场。⚠️ 它处于观察中且未经验证。这不是建议 — 展示它是为了可以跟踪，而不是为了交易。',
+    rsiTitulo: "拉得更开的那些表现更好吗？",
+    rsiAviso: "这并不能说明换一个更严格的门槛后这条规则会给出什么。应用每一边只保留最好的 3 个，所以换门槛后今天进不来的货币对会补上空位，而且是在别的日子。这里只是已记录内容的分组。",
+    rsiEstiradas: ({ u }) => `同样能通过 RSI ${u} 的那些`,
+    rsiResto: ({ u, v }) => `只因为 ${v} 才通过的那些（RSI 在 ${u} 到 ${v} 之间）`,
     esReversion: '反向',
     esCaida: "买入下跌",
     caidaVieja: ({ n, acierto, pips }) => `在此之前记录了 ${n} 笔交易，其止损和目标与批准该规则时所测量的并不一致。它们不计入，该规则的记录从零重新开始（那些为 ${acierto} %、${pips} 点）。它们保留显示，因为确实发生过。`,

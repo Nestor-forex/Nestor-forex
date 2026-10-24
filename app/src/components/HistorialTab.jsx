@@ -5,6 +5,12 @@ import TarjetaPlegable from './TarjetaPlegable'
 import { useHistorial } from '../lib/useHistorial'
 import { MEDICION } from '../lib/medicion'
 import { fmtFecha } from '../lib/format'
+import { partirPorRsi } from '../lib/historialCalc'
+// Los dos umbrales se LEEN de donde vive la regla, nunca se escriben aquí: el
+// texto que describe un número se queda viejo cuando el código que lo usa se
+// actualiza solo. Es la disciplina de `UMBRAL_FUERZA` y `ATR_REVERSION`.
+import { RSI_REVERSION, RSI_REVERSION_ESTRICTO } from '../lib/marketCalc'
+import { margen } from '../lib/diagnostico'
 
 // La pantalla que responde la única pregunta que importa: ¿esto acierta?
 //
@@ -69,6 +75,7 @@ export default function HistorialTab() {
               <Resumen resumen={{ todas: resumen.reversion }} t={t} />
               <AvisoSombra ops={resumen.reversion.total} />
               <p style={{ ...TEXTO, margin: 0 }}>{t('historial.reversionIntro')}</p>
+              <PorRsi filas={filasReversion} t={t} />
             </div>
           )}
 
@@ -343,6 +350,74 @@ function Etiqueta({ children }) {
     >
       {children}
     </span>
+  )
+}
+
+// ¿LAS REVERSIONES MÁS ESTIRADAS VAN MEJOR? CON EL REGISTRO REAL, NO CON EL
+// BANCO DE PRUEBAS.
+//
+// Néstor, 2026-10-23: «si de alguna manera mejoraría esa señal pues hagamos
+// otro tablero con esa medición».
+//
+// El banco de pruebas dice que exigir RSI 35 en vez de 40 mide siete veces
+// mejor (+0,036 contra +0,005) y gana en las dos mitades, mientras el 40
+// pierde la primera. La tentación era cambiar el umbral — y eso pone el
+// contador de la sombra a cero, porque lo anotado desde agosto pasaría a ser
+// el registro de otra regla. Le pasó a «comprar la caída» el 2026-10-12.
+//
+// 📌 LA SALIDA QUE NO CUESTA NADA: el vigía YA escribe el `rsi` de cada señal,
+// así que el registro real se puede partir hoy mismo, con las operaciones que
+// ya hay, sin tocar ni un umbral y sin reiniciar ningún contador.
+//
+// ⚠️⚠️ Y LO QUE NO ES, que va EN PANTALLA y no solo aquí: estas son las
+// señales estiradas que el umbral de HOY sacó a la superficie, no las que
+// sacaría un umbral estricto. La app se queda con los `topN` mejores por lado,
+// así que con 35 un par que hoy queda cuarto subiría al hueco y entraría otro
+// día, a otro precio. Es exactamente la diferencia entre el +0,066 y el +0,073
+// del corte dólar/cruces, y presentarlo como el veredicto de esa regla sería
+// el mismo error.
+//
+// ⚠️ Los dos márgenes van pegados a su porcentaje. Partir en dos hace las
+// muestras pequeñas, y un porcentaje de una muestra pequeña se lee como un
+// diagnóstico cuando no distingue nada.
+function PorRsi({ filas, t }) {
+  const { estiradas, resto } = partirPorRsi(filas, RSI_REVERSION_ESTRICTO)
+  // Sin los dos lados no hay comparación que enseñar, y un solo porcentaje
+  // suelto con un rótulo de «más estiradas» se leería como un veredicto.
+  if (!estiradas.total || !resto.total) return null
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ fontSize: 12, fontWeight: 600 }}>{t('historial.rsiTitulo')}</div>
+      {/* ⚠️ EL AVISO VA ANTES DE LOS DOS NÚMEROS. Aquí lo caro no es leer mal
+          un dato: es creer que esto dice qué daría la regla con el umbral
+          estricto. */}
+      <p style={{ ...TEXTO, margin: 0, color: 'var(--amber)' }}>{t('historial.rsiAviso')}</p>
+      <FilaRsi t={t} etiqueta={t('historial.rsiEstiradas', { u: RSI_REVERSION_ESTRICTO })} c={estiradas} />
+      <FilaRsi t={t} etiqueta={t('historial.rsiResto', { u: RSI_REVERSION_ESTRICTO, v: RSI_REVERSION })} c={resto} />
+    </div>
+  )
+}
+
+function FilaRsi({ etiqueta, c, t }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
+      <span style={{ ...TEXTO, flex: 1 }}>{etiqueta}</span>
+      {/* `ltr` fijo: son datos sueltos, no una frase traducida. El acierto NO
+          se pinta de color —está medido en esta app que se puede acertar más y
+          perder dinero— y los pips SÍ, porque significan algo en plata. */}
+      {/* Sin `nowrap`: con el rótulo de operaciones dentro, en un teléfono de
+          390 px la línea puede necesitar dos renglones, y forzarla a uno
+          obligaría a desplazar la pantalla de lado. */}
+      <span className="mono" dir="ltr" style={{ fontSize: 12.5, textAlign: 'right' }}>
+        {c.acierto}% ±{margen(c.total)} · {c.total} {t('corte.ops')} ·{' '}
+        <strong style={{ color: c.pips >= 0 ? 'var(--green)' : 'var(--red)' }}>
+          {c.pips >= 0 ? '+' : ''}
+          {c.pips}
+        </strong>{' '}
+        <span style={{ color: 'var(--text-muted)' }}>{t('historial.pips')}</span>
+      </span>
+    </div>
   )
 }
 

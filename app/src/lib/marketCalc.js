@@ -497,6 +497,29 @@ const razon = (p, esc, t) => {
 // mitad del periodo (+0,08 contra +0,07). Entre dos números buenos se elige el
 // que descansa sobre más datos, no el más bonito.
 //
+// ⚠️⚠️ ESA SEGUNDA RAZÓN YA NO SE SOSTIENE (medido el 2026-10-23), y queda
+// escrita en vez de borrada porque el número NO se cambió:
+//
+//                    ops     por 1R   1ª mitad   2ª mitad   +swap 0,5
+//   RSI 40 (este)   1.554   +0,005     −0,046     +0,055     −0,036
+//   RSI 35            856   +0,036     +0,039     +0,032     −0,007
+//
+// Con la rejilla limpia (2026-10-06) y el swap cobrado por noches de
+// calendario, **el 40 PIERDE la primera mitad y el 35 gana las dos**. Lo del
+// doble de operaciones sigue siendo verdad; lo de aguantar mejor las mitades
+// es justo lo contrario de lo que decía.
+//
+// ⚠️ Y AUN ASÍ NO SE TOCA, por una razón que no es prudencia vacía: el vigía
+// lleva anotando con 40 desde agosto. Mover el umbral convierte lo acumulado
+// en el registro de OTRA regla y el contador vuelve a cero — que es exactamente
+// lo que le pasó a «comprar la caída» el 2026-10-12 y costó dos meses. Néstor
+// eligió la salida que no cuesta nada: dejar este 40 donde está y añadir el 35
+// como regla aparte, para que los dos relojes corran en paralelo.
+//
+// 📌 La lección, que ya está escrita para las etiquetas «(hoy)» del banco de
+// pruebas: al cambiar algo hay que mirar quién lo NOMBRA. Aquí el número no
+// cambió y su justificación sí se volvió falsa, porque cambió el dato debajo.
+//
 // ⚠️ ARRANCA APAGADA (`incluirReversion`). Esto no es un ajuste de la app: es
 // su idea al revés. Encenderla convertiría a Swing en otro producto, y esa es
 // una decisión de Néstor, no una consecuencia de una medición. Por ahora el
@@ -514,6 +537,26 @@ const razon = (p, esc, t) => {
 // cambiar un umbral hay que mirar también quién lo nombra, y el código que lo
 // usa se actualiza solo mientras el texto que lo describe no.
 export const RSI_REVERSION = 40
+
+// El umbral MÁS EXIGENTE con el que se compara, y que NO decide ninguna señal.
+//
+// Existe para una sola cosa: que la pantalla pueda partir las reversiones ya
+// anotadas en «también habrían pasado con 35» y «solo pasaron por el 40», y
+// enseñar los dos números del registro REAL. O sea, contestar con datos de
+// verdad —hoy, no dentro de nueve meses— si exigir más estiramiento ayuda.
+//
+// ⚠️ NO es el 35 de `preregistro-bollinger.mjs`. Aquél es el umbral de OTRA
+// regla (el toque de banda) y coinciden por casualidad; que compartan valor es
+// justo lo que hizo que el 2026-10-22 la fila «M2» del informe se midiera con
+// el umbral de Bollinger y describiera una regla que no corre. Dos constantes
+// distintas con nombres distintos, aunque hoy valgan lo mismo.
+//
+// ⚠️ Y NO basta con cambiar este número para «probar la regla con 35»: el
+// umbral decide QUÉ pares pasan el filtro, y la app se queda con los `topN`
+// mejores por lado, así que con 35 un par que hoy queda cuarto subiría al
+// hueco y entraría otro día. La partición de la pantalla son «las estiradas
+// que el 40 sacó a la superficie», no «las que sacaría el 35».
+export const RSI_REVERSION_ESTRICTO = 35
 
 const clasificarReversion = (p, thr, { rsiMax = RSI_REVERSION } = {}) => {
   if (p.dif < -thr && p.rsiV <= rsiMax) return 'COMPRA'

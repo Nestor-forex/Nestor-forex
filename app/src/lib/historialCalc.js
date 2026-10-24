@@ -50,21 +50,77 @@ export function esVaraVieja(r) {
   return r?.tipo === 'caida' && r?.vara !== 'simetrica'
 }
 
-export function resumir(resultados) {
-  const cuenta = (lista) => {
-    const ganadas = lista.filter((r) => r.resultado === 'ganada').length
-    const perdidas = lista.filter((r) => r.resultado === 'perdida').length
-    const total = ganadas + perdidas
-    return {
-      ganadas,
-      perdidas,
-      total,
-      // null y no 0 cuando no hay nada: "todavía no se sabe" y "0% de acierto"
-      // son cosas muy distintas y la pantalla las muestra distinto.
-      acierto: total ? Math.round((ganadas / total) * 100) : null,
-      pips: Math.round(lista.reduce((a, r) => a + (r.pips || 0), 0)),
-    }
+/**
+ * Las cuentas de una lista de resultados (o de filas ya unidas, que traen los
+ * mismos campos `resultado` y `pips`).
+ *
+ * ⚠️ Se EXPORTA desde el 2026-10-23 para que el desglose por RSI de la
+ * reversión use exactamente las mismas cuentas que los cubos de `resumir`. Dos
+ * implementaciones del mismo porcentaje en la misma pantalla se separan sin que
+ * falle nada, y entonces dos números que deberían sumar no suman.
+ */
+export function cuentaDe(lista) {
+  const l = Array.isArray(lista) ? lista : []
+  const ganadas = l.filter((r) => r.resultado === 'ganada').length
+  const perdidas = l.filter((r) => r.resultado === 'perdida').length
+  const total = ganadas + perdidas
+  return {
+    ganadas,
+    perdidas,
+    total,
+    // null y no 0 cuando no hay nada: "todavía no se sabe" y "0% de acierto"
+    // son cosas muy distintas y la pantalla las muestra distinto.
+    acierto: total ? Math.round((ganadas / total) * 100) : null,
+    pips: Math.round(l.reduce((a, r) => a + (r.pips || 0), 0)),
   }
+}
+
+/**
+ * ¿Esta señal también pasaría un umbral de RSI MÁS EXIGENTE que el que la
+ * generó?
+ *
+ * Una compra entra cuando el RSI está bajo, así que «más estirada» es RSI ≤ u;
+ * una venta entra cuando está alto, así que es RSI ≥ 100 − u. Es exactamente la
+ * condición de `clasificarReversion`, con otro umbral.
+ *
+ * ⚠️ Devuelve `null` —no `false`— si la señal no trae RSI. Una línea sin el
+ * dato cayendo en el grupo «no estirada» convertiría un hueco de datos en un
+ * hecho sobre el mercado, que es el fallo que este archivo lleva meses
+ * evitando (`pearson`, `difMax`, `edadEnMinutos`).
+ */
+export function masEstiradaQue(fila, umbral) {
+  const rsi = fila?.rsi
+  if (typeof rsi !== 'number' || !Number.isFinite(rsi)) return null
+  return fila?.lado === 'COMPRA' ? rsi <= umbral : rsi >= 100 - umbral
+}
+
+/**
+ * Parte unas filas en las que pasarían un umbral de RSI más exigente y las que
+ * no.
+ *
+ * ⚠️⚠️ ESTO NO ES EL REGISTRO DE «LA REGLA CON EL UMBRAL MÁS EXIGENTE», y la
+ * diferencia es la misma que hay entre el +0,066 y el +0,073 del corte
+ * dólar/cruces. La app se queda con los `topN` mejores por lado: con un umbral
+ * más estricto, un par que hoy queda cuarto SUBIRÍA al hueco y entraría otro
+ * día, a otro precio. O sea que esto son «las señales estiradas que el umbral
+ * de hoy sacó a la superficie», no «las que sacaría el umbral estricto».
+ *
+ * Sirve igual, y por eso existe: contesta con el registro REAL que ya hay si
+ * las más estiradas van mejor, hoy y no dentro de nueve meses. Lo que no se
+ * puede es presentarlo como el veredicto de esa regla — y la pantalla lo dice.
+ */
+export function partirPorRsi(filas, umbral) {
+  const l = Array.isArray(filas) ? filas : []
+  return {
+    estiradas: cuentaDe(l.filter((f) => masEstiradaQue(f, umbral) === true)),
+    resto: cuentaDe(l.filter((f) => masEstiradaQue(f, umbral) === false)),
+    // Lo que no se pudo clasificar no desaparece: mismo cajón que `otros`.
+    sinRsi: cuentaDe(l.filter((f) => masEstiradaQue(f, umbral) === null)),
+  }
+}
+
+export function resumir(resultados) {
+  const cuenta = cuentaDe
 
   // El archivo puede traer más de una línea por señal: una "caducada" de un
   // día en que no se pudo juzgar y, más adelante, su veredicto de verdad.

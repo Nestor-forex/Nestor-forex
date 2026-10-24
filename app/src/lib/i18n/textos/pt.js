@@ -471,6 +471,33 @@ export default {
       neutro: 'Swap: quase não pesa',
     },
   },
+  // El corte pares con dólar / cruces. Ver `components/MidePositivo.jsx` —
+  // el aviso va ANTES de cualquier número a propósito: aquí lo caro no es
+  // leer mal un dato, es creer que esta lista es lo que la app propone o que
+  // el corte está confirmado.
+  corte: {
+    titulo: "O que mede positivo: pares com dólar e cruzados",
+    desc: "Em que grupo de pares cada regra mediu bem, e quais de hoje caem lá",
+    paraQue: "Para ver se um sinal de hoje cai no grupo de pares onde a sua regra mediu bem ou no que mediu mal. NÃO diz qual operar e não desliga nenhum: o app continua a propor os seus 14 pares como antes.",
+    avance: ({ n }) => `${n} sinais no grupo bom`,
+    aviso: "ISTO NÃO É O QUE O APP PROPÕE NEM UM SINAL NOVO: são os mesmos sinais de cima, agrupados de outra forma. E o corte foi encontrado OLHANDO os resultados, sobre os mesmos dias, portanto nenhum registo para a frente o confirmou ainda. Nada foi ligado nem desligado.",
+    montonDolar: "só em pares com dólar",
+    montonCruces: "só em cruzados (os que não levam dólar)",
+    pasa: "PASSOU O CRITÉRIO",
+    noPasa: "NÃO PASSOU O CRITÉRIO",
+    porQueNoPasa: ({ n, piso }) => `Deixa ${n} sinais por mês e o mínimo são ${piso}: mesmo com um número bom, não há suficientes para acreditar.`,
+    yConcentracion: "E além disso um só par contribui demasiado para a melhoria.",
+    enSuMonton: "No seu grupo de pares",
+    conLos14: "Com os 14 pares",
+    control: "O grupo contrário (controlo)",
+    conSwap: "Pagando swap cada noite",
+    mitades: "As duas metades do período",
+    ops: "ops",
+    fuera: ({ n }) => `Sinais desta regra que hoje caem no grupo que mede negativo: ${n}.`,
+    sinSenales: "Hoje nenhum dos seus sinais cai neste grupo.",
+    pieCorrelacion: "Os 7 pares com dólar movem-se quase todos juntos: está medido que cinco sinais com dólar podem ser uma só aposta dita cinco vezes. Ganhar mais por operação e repartir menos o risco não é automaticamente melhor.",
+    pieFecha: ({ fecha, dias }) => `Medido em ${fecha} sobre ${dias} dias de mercado real, com o spread de cada par descontado e a vara neutra: stop e objetivo à mesma distância.`,
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: 'Histórico do «toque de banda»',
@@ -480,6 +507,10 @@ export default {
     rupturaTitulo: 'Histórico de «rompimento de estrutura»',
     rupturaIntro:
       'A quarta regra, que entra quando o preço rompe a última máxima ou mínima que marcou. ⚠️ Está EM OBSERVAÇÃO e sem validar. Não é uma recomendação — é mostrada para poder ser acompanhada, não para ser operada.',
+    rsiTitulo: "As mais esticadas vão melhor?",
+    rsiAviso: "Isto NÃO diz o que daria a regra com um limiar mais exigente. O app fica com os 3 melhores por lado, por isso com outro limiar subiriam ao lugar pares que hoje não entram, noutras datas. Isto é só a repartição do que já foi registado.",
+    rsiEstiradas: ({ u }) => `As que também passariam com RSI ${u}`,
+    rsiResto: ({ u, v }) => `As que só passaram pelo ${v} (RSI entre ${u} e ${v})`,
     esReversion: 'REVERSÃO',
     esCaida: "COMPRAR A QUEDA",
     caidaVieja: ({ n, acierto, pips }) => `Antes disto foram registadas ${n} operações com um stop e um objetivo que não eram os medidos ao aprovar a regra. NÃO contam, e o histórico desta regra recomeça do zero (aquelas davam ${acierto} % e ${pips} pips). Ficam à vista porque aconteceram de verdade.`,

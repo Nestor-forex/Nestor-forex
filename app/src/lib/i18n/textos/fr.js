@@ -471,6 +471,33 @@ export default {
       neutro: 'Swap : pèse à peine',
     },
   },
+  // El corte pares con dólar / cruces. Ver `components/MidePositivo.jsx` —
+  // el aviso va ANTES de cualquier número a propósito: aquí lo caro no es
+  // leer mal un dato, es creer que esta lista es lo que la app propone o que
+  // el corte está confirmado.
+  corte: {
+    titulo: "Ce qui mesure positif : paires en dollar et croisées",
+    desc: "Dans quel groupe de paires chaque règle a bien mesuré, et lesquelles du jour y tombent",
+    paraQue: "Pour voir si un signal du jour tombe dans le groupe de paires où sa règle a bien mesuré ou dans celui où elle a mal mesuré. Il ne dit PAS lequel trader et n'en éteint aucun : l'app propose toujours ses 14 paires comme avant.",
+    avance: ({ n }) => `${n} signaux dans le bon groupe`,
+    aviso: "CE N'EST PAS CE QUE L'APP PROPOSE, NI UN NOUVEAU SIGNAL : ce sont les mêmes signaux du dessus, regroupés autrement. Et la coupure a été trouvée en REGARDANT les résultats, sur les mêmes jours, donc aucun registre vers l'avant ne l'a encore confirmée. Rien n'a été allumé ni éteint.",
+    montonDolar: "seulement en paires avec dollar",
+    montonCruces: "seulement en croisées (celles sans dollar)",
+    pasa: "A PASSÉ LE SEUIL",
+    noPasa: "N'A PAS PASSÉ LE SEUIL",
+    porQueNoPasa: ({ n, piso }) => `Elle laisse ${n} signaux par mois et le minimum est ${piso} : même avec un bon chiffre, ils ne suffisent pas pour y croire.`,
+    yConcentracion: "Et une seule paire apporte trop de l'amélioration.",
+    enSuMonton: "Dans son groupe de paires",
+    conLos14: "Avec les 14 paires",
+    control: "Le groupe opposé (contrôle)",
+    conSwap: "En payant le swap chaque nuit",
+    mitades: "Les deux moitiés de la période",
+    ops: "ops",
+    fuera: ({ n }) => `Signaux de cette règle qui tombent aujourd’hui dans le groupe qui mesure négatif : ${n}.`,
+    sinSenales: "Aujourd'hui aucun de ses signaux ne tombe dans ce groupe.",
+    pieCorrelacion: "Les 7 paires en dollar bougent presque toutes ensemble : il est mesuré que cinq signaux en dollar peuvent être un seul pari dit cinq fois. Gagner plus par opération et moins répartir le risque n'est pas automatiquement mieux.",
+    pieFecha: ({ fecha, dias }) => `Mesuré le ${fecha} sur ${dias} jours de marché réel, spread de chaque paire déduit et avec la mesure neutre : stop et objectif à la même distance.`,
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: 'Historique du « contact de bande »',
@@ -480,6 +507,10 @@ export default {
     rupturaTitulo: 'Historique de « cassure de structure »',
     rupturaIntro:
       'La quatrième règle, qui entre quand le prix casse le dernier sommet ou creux qu\'il a marqué. ⚠️ Elle est EN OBSERVATION et non validée. Ce n\'est pas une recommandation — elle est affichée pour pouvoir être suivie, pas pour être tradée.',
+    rsiTitulo: "Les plus étirées vont-elles mieux ?",
+    rsiAviso: "Cela ne dit PAS ce que donnerait la règle avec un seuil plus strict. L'app garde les 3 meilleures par côté, donc avec un autre seuil des paires qui n'entrent pas aujourd'hui monteraient dans le trou, à d'autres dates. Ceci n'est que la répartition de ce qui est déjà enregistré.",
+    rsiEstiradas: ({ u }) => `Celles qui passeraient aussi avec un RSI ${u}`,
+    rsiResto: ({ u, v }) => `Celles qui ne sont passées que grâce au ${v} (RSI entre ${u} et ${v})`,
     esReversion: 'INVERSION',
     esCaida: "ACHETER LA BAISSE",
     caidaVieja: ({ n, acierto, pips }) => `Avant cela, ${n} opérations ont été enregistrées avec un stop et un objectif qui n'étaient pas ceux mesurés lors de la validation de la règle. Elles ne comptent PAS, et l'historique de cette règle repart de zéro (elles donnaient ${acierto} % et ${pips} pips). Elles restent visibles car elles ont réellement eu lieu.`,

@@ -465,6 +465,33 @@ export default {
       neutro: '스왑: 거의 영향 없음',
     },
   },
+  // El corte pares con dólar / cruces. Ver `components/MidePositivo.jsx` —
+  // el aviso va ANTES de cualquier número a propósito: aquí lo caro no es
+  // leer mal un dato, es creer que esta lista es lo que la app propone o que
+  // el corte está confirmado.
+  corte: {
+    titulo: "플러스로 측정되는 쪽: 달러 페어와 크로스",
+    desc: "각 규칙이 어느 페어 묶음에서 잘 측정됐는지, 그리고 오늘 어느 것이 거기 들어가는지",
+    paraQue: "오늘의 신호가 그 규칙이 잘 측정된 페어 묶음에 들어가는지, 나쁘게 측정된 쪽에 들어가는지 보기 위한 것입니다. 어느 것을 거래하라고 말하지 않고 아무것도 끄지 않습니다. 앱은 전과 같이 14개 페어를 계속 제시합니다.",
+    avance: ({ n }) => `좋은 묶음에 ${n}개 신호`,
+    aviso: "이것은 앱의 제안도 아니고 새로운 신호도 아닙니다. 위에 있는 같은 신호를 다른 방식으로 묶은 것입니다. 게다가 이 구분은 결과를 본 뒤에 같은 기간의 데이터에서 찾은 것이라, 앞으로의 기록으로는 아직 확인되지 않았습니다. 아무것도 켜거나 끄지 않았습니다.",
+    montonDolar: "달러 페어에서만",
+    montonCruces: "크로스에서만 (달러가 없는 쪽)",
+    pasa: "기준을 통과했다",
+    noPasa: "기준을 통과하지 못했다",
+    porQueNoPasa: ({ n, piso }) => `한 달에 ${n}개 신호만 남고 하한은 ${piso}개입니다. 숫자가 좋아도 믿기에는 부족합니다.`,
+    yConcentracion: "게다가 단 한 페어가 개선분의 너무 많은 부분을 차지합니다.",
+    enSuMonton: "자기 페어 묶음에서",
+    conLos14: "14개 페어 전부로",
+    control: "반대 묶음 (대조)",
+    conSwap: "매일 밤 스왑을 내면서",
+    mitades: "기간의 두 절반",
+    ops: "건",
+    fuera: ({ n }) => `이 규칙의 신호 중 오늘 마이너스로 측정되는 묶음에 들어가는 수: ${n}.`,
+    sinSenales: "오늘은 이 규칙의 신호가 이 묶음에 하나도 들어가지 않습니다.",
+    pieCorrelacion: "달러 페어 7개는 거의 다 함께 움직입니다. 달러 신호 다섯 개가 같은 베팅을 다섯 번 말한 것일 수 있다는 점은 이미 측정되어 있습니다. 건당 더 많이 벌고 위험을 덜 나누는 것이 자동으로 더 좋은 것은 아닙니다.",
+    pieFecha: ({ fecha, dias }) => `${fecha}에 실제 시장 ${dias}일로 측정했습니다. 페어별 스프레드를 뺀 뒤 중립 기준(손절과 목표를 같은 거리)으로 측정했습니다.`,
+  },
   historial: {
     esBollinger: 'BOLLINGER',
     bollingerTitulo: '「밴드 터치」 기록',
@@ -474,6 +501,10 @@ export default {
     rupturaTitulo: '「구조 돌파」 기록',
     rupturaIntro:
       '네 번째 규칙으로, 가격이 직전에 만든 고점이나 저점을 돌파할 때 진입합니다. ⚠️ 관찰 중이며 검증되지 않았습니다. 권유가 아닙니다 — 따라갈 수 있도록 보여줄 뿐, 거래하라는 뜻이 아닙니다.',
+    rsiTitulo: "더 많이 늘어난 쪽이 더 잘 되나?",
+    rsiAviso: "이것은 더 엄격한 기준으로 바꿨을 때 이 규칙이 무엇을 낼지 말해 주지 않습니다. 앱은 한쪽마다 가장 좋은 3개만 남기므로, 기준을 바꾸면 오늘은 들어오지 못하는 페어가 빈자리로 올라오고 날짜도 달라집니다. 여기 있는 것은 이미 기록된 것의 분류뿐입니다.",
+    rsiEstiradas: ({ u }) => `RSI ${u}로도 통과할 것들`,
+    rsiResto: ({ u, v }) => `${v} 덕분에만 통과한 것들 (RSI ${u}에서 ${v} 사이)`,
     esReversion: '역방향',
     esCaida: "하락 매수",
     caidaVieja: ({ n, acierto, pips }) => `그 전에 ${n}건의 거래가 규칙을 승인할 때 측정한 것과 다른 손절과 목표로 기록되었습니다. 이들은 세지 않으며 이 규칙의 기록은 0에서 다시 시작합니다 (그것들은 ${acierto} %, ${pips} pips였습니다). 실제로 일어난 일이므로 계속 표시합니다.`,
