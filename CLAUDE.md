@@ -12454,3 +12454,155 @@ Node no resuelve el paquete.
 2. **El corte dólar/cruces en el reporte diario**, que hoy solo está en la app.
 3. Y sigue en pie que **quitarle los cruces a la app** sería otra decisión, con
    su propio PR — hoy descartada por él y por las tres razones de arriba.
+
+---
+
+# Lo que Intradía no enseñaba, y el listón del corte allí (2026-10-24)
+
+Néstor: **«ni veo ese botón que diga "lo que mide positivo" pero sí veo en swing
+en historial un botón que dice "lo que señalaron las reglas en pruebas". En
+intradía no veo nada, ¿o es que esas mediciones o agregados no sirven para
+intradía?»**. Y después: **«las dos, en ese orden»**.
+
+⚠️ **Nada de esto cambia una señal.** Swing sigue en −0,040 por unidad de
+riesgo e Intradía en −0,13.
+
+## 1. La tarjeta que no veía en Swing: estaba, y él estaba en el sitio correcto
+
+Su captura lo resolvió en un minuto, que es la lección de siempre: se veía la
+última tarjeta de Bollinger, «Riesgo», «Limitaciones» y el botón de descargar —
+o sea el **final del tablero completo**, que es justo donde va `MidePositivo`.
+
+Comprobado antes de teorizar, y las cuatro cosas dieron bien: el código está en
+`main` (`0ffd6b6`), el despliegue salió verde a las 00:27 UTC, **el texto «Lo
+que mide positivo» aparece en el `.js` compilado**, y con el `barrido.json` real
+de ese día la tarjeta **sí tiene qué enseñar** (NZD/USD y AUD/USD · EUR/CAD y
+EUR/NZD · EUR/NZD y GBP/CAD).
+
+Su captura es de las 19:48 Colombia y el despliegue terminó a las 19:27: **21
+minutos antes, con la app ya abierta**. El service worker hace `skipWaiting()` y
+`clientsClaim()` —comprobado, no supuesto—, así que la versión nueva SÍ se
+activa; lo que no cambia es la ventana que ya está abierta.
+
+📌 **Y la lección de diseño:** le dije «Barrido → Ver tablero completo → abajo
+del todo» y aun así fue al Historial. Cuando una pantalla tiene dos sitios
+plausibles, decir el camino no basta — conviene dar un dato que solo se ve en el
+sitio bueno (los pares concretos de hoy), para que él mismo sepa si llegó.
+
+## 2. Intradía: la respuesta son DOS mitades, y solo una era un olvido
+
+| | ¿se porta? |
+|---|---|
+| la tabla dólar/cruces | ❌ **no se copia**: el +0,073 se midió sobre 14 pares y velas diarias. Se MIDE aquí, con su listón |
+| la lista de señales de la sombra | ✅ **sí, y era un olvido**: 11 señales anotadas desde el 3 de septiembre sin ninguna pantalla que las enseñara |
+
+## ⚠️⚠️ La tarjeta de Intradía NO es una copia, y la diferencia deja la pantalla vacía sin dar error
+
+| | Swing | Intradía |
+|---|---|---|
+| campo | `cierre` → `"2026-10-15"` | **`vela`** → `"2026-10-15 22:00:00"` |
+| una vela es | un DÍA | una HORA |
+| se agrupa por | el día | **la vela**, con su hora |
+
+Copiar el archivo de allá leería un campo que aquí no existe: **cero señales,
+cero errores**. Y agrupar por día metería hasta 24 velas en el mismo montón — el
+retroceso de las 22:00 y el de las 09:00 son operaciones distintas en sesiones
+distintas.
+
+⚠️ `aFechaUTC` se **importa** (por eso se exporta de `marketCalc.js`): Twelve
+Data manda la hora sin zona y `new Date()` la leería como local, **cinco horas
+corridas en Colombia**.
+
+`carrySenal.js` **sí es GEMELO (66)**: no decide nada propio, llama a `difDePar`
+de `tasas.js`. Para que pudiera serlo hubo que dejar neutra en las DOS una frase
+que nombraba un archivo que solo existe en Swing — igual que el 2026-09-08 con
+las tres de «vela diaria».
+
+## ⚠️⚠️ UNA COMPROBACIÓN MÍA NO PODÍA MORDER, Y OTRA ERA IMPOSIBLE DE CUMPLIR
+
+Las dos del mismo día y las dos cazadas antes de dar nada por bueno.
+
+**1. La de la hora.** Pedía `toISOString() === '…22:00Z'`. Se le puso el fallo a
+propósito (`new Date(v)` en vez de `aFechaUTC`) y **las 44 comprobaciones
+siguieron en verde**: esta máquina corre en UTC, donde las dos lecturas dan
+exactamente lo mismo — y el fallo que vigila solo aparece en el teléfono de
+quien mira, que no está en UTC. Ahora corre en **un proceso aparte con la zona
+forzada a Bogotá**, con una segunda comprobación que exige que esa zona de
+verdad desplace: si dejara de hacerlo, la primera habría vuelto a ser inofensiva.
+
+📌 Es una cara nueva de «una prueba que se adapta a lo que encuentra»: aquí el
+daño SÍ se hizo y la prueba pasó igual, porque **el entorno donde corre no puede
+distinguir los dos casos**.
+
+**2. La del desplazamiento, en el listón del corte.** Escribí que al restringir
+el universo tienen que aparecer señales NUEVAS (el cuarto sube al hueco), que es
+lo medido en Swing. **Un barrido de 54 mercados inventados no encontró ni un
+caso.**
+
+No era un fixture malo: es que los filtros de Intradía son más estrictos y rara
+vez hay más de `topN` candidatos por lado, **o sea que allí quitar pares puede
+ser una resta limpia**. Exigirlo habría sido exigir que esa app se comportara
+como la otra. Se cambió por el invariante que sí vale (con un universo de un
+solo par no sale ningún otro) y **la medición IMPRIME el desplazamiento real**,
+que es lo que decide cómo se lee la tabla.
+
+⚠️ La diferencia con aflojar un umbral: aflojar es mover un número al ver que el
+resultado no pasa. Esto fue quitar un criterio **imposible por construcción**,
+antes de tener un solo resultado real — lo mismo que ya pasó con el criterio del
+70 % en el listón de Swing.
+
+## El listón de Intradía fija la DIRECCIÓN antes, y eso allá era imposible
+
+En Swing el corte se encontró mirando los resultados. En Intradía no se ha
+mirado nunca, así que `MONTON_PREDICHO = 'dolar'` va escrito antes y `juzgar()`
+**se niega** a dar por bueno el montón que no se predijo. Con dos montones
+siempre hay uno mejor; elegirlo al verlo no mide nada.
+
+⚠️ Y queda escrito que **la predicción es floja**: nadie ha explicado POR QUÉ
+pasa en Swing. Hay un número y no hay mecanismo.
+
+⚠️ Y que **aunque pasara, la app seguiría perdiendo**: parte de −0,13, así que
+0,02 o 0,05 la dejan en −0,11 o −0,08. Allá el corte la ponía en positivo; aquí
+ni el mejor caso imaginable hace eso.
+
+El criterio de señales va en **fracción** (30 %, con los pares al 39 %) y no en
+el 15 absoluto de Swing, que está derivado de SUS ~36 al mes: el reparto allí es
+**7 y 11**, no 7 y 7, así que quedarse con los pares con dólar quita el 61 % del
+universo. Copiarlo habría sido el fallo de `barridoSwap`.
+
+## 📌 El error de árabe que yo mismo reintroduje el mismo día
+
+Añadí «hace 8 días» al lado de la fecha —porque «15 de octubre» no dice que es
+de hace más de una semana, y esa regla señala poco— reusando las claves de
+`Tasas.jsx`. En árabe salió:
+
+```
+١٥ أكتوبر في ١٠:٠٠ م · قبل 8 يومًا
+```
+
+La fecha en cifras árabo-índicas y el «8» en latinas: **el fallo del COT del
+2026-09-29, reintroducido por mí**. Salió mirando la captura; ni el build ni las
+44 comprobaciones lo veían. Corregido formateando el número con el locale, y
+ahora comprobado **por máquina** en el banco de navegador.
+
+⚠️ Las claves compartidas **no se tocaron**: en `Tasas.jsx` el vecino es la
+tasa, en cifras latinas, así que allí lo correcto es lo contrario. **La regla no
+es «localizar siempre» ni «nunca»: es mirar qué más hay en la frase.**
+
+## Y el mercado inventado, que costó varios intentos
+
+Solo ondas → **RSI clavado en 1,5** y el filtro rechaza todo: cero señales, y la
+prueba habría pasado comparando listas vacías (el agujero de
+`prueba-barrido-publicado`). Solo paseo aleatorio → RSI en su sitio pero
+divergencia **0,31**, por debajo del umbral de 0,5. Hacen falta las dos cosas: la
+onda da la divergencia y el paseo da los retrocesos que mueven el RSI. Y el azar
+va **determinista**, no `Math.random`.
+
+## Lo que queda pendiente
+
+1. **Lanzar la medición**: Actions de Intradía → «¿Sirve partir en pares con
+   dólar y cruces?» → Run workflow. **7 créditos**, solo lectura, no se ha
+   lanzado.
+2. Siguen en pie los tres de la sesión anterior (la sexta regla de sombra con
+   RSI 35, el corte en el reporte diario de Swing, y quitarle los cruces a la
+   app), **y ninguno se hace sin que Néstor lo confirme**.
