@@ -11,6 +11,7 @@ import CotizacionesVivo from './components/CotizacionesVivo'
 import Tasas from './components/Tasas'
 import Cot from './components/Cot'
 import Oro from './components/Oro'
+import Estacionalidad from './components/Estacionalidad'
 import Calendario from './components/Calendario'
 import HistorialTab from './components/HistorialTab'
 import TableroCompleto from './components/TableroCompleto'
@@ -256,6 +257,19 @@ export default function App() {
                       entre pares: la ventana de 60 sesiones son 60 DÍAS aquí y
                       60 HORAS en la app hermana. Ver `useOro.js`. */}
                   <Oro />
+                  {/* LA ÚLTIMA, y el orden tiene un porqué: las cinco de
+                      arriba dicen algo del AHORA —a qué hora no entrar, qué
+                      cuesta abrir, qué cuesta mantener, cómo está posicionada
+                      la divisa, qué hace el oro hoy— y ésta dice qué suele
+                      pasar en este día de la semana y en este mes. Es la única
+                      que no cambia de un día para otro, así que va al final.
+
+                      ⚠️ Mide CUÁNTO se mueve, nunca hacia dónde, y no apaga ni
+                      reordena ninguna señal. Si algún día decidiera, sería un
+                      FILTRO y tendría que pasar por el banco de pruebas con su
+                      listón escrito antes — van nueve familias medidas y nueve
+                      fallando. */}
+                  <Estacionalidad />
                 </>
               )}
               {tab === 'diario' && (

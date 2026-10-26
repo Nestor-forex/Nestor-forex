@@ -12989,3 +12989,125 @@ en los tres, y aquí está por qué importa».
 estacionalidad como una ventaja de predicción. Dice lo contrario, y ahí está su
 fuerza. Si alguien lo reescribe en plan «nuestra estacionalidad acierta más», se
 cae el único argumento que tiene.
+
+---
+
+# Estacionalidad, PR 2 (2026-10-26): la tarjeta y los 13 idiomas
+
+```
+src/components/Estacionalidad.jsx   la tarjeta             PRIMO
+src/lib/useEstacionalidad.js        la baja                PRIMO
+src/lib/estacionalidad.js           + `margenLegible`      GEMELO (68)
+```
+
+Va **la última de la pestaña Barrido** en las dos apps, y el orden tiene un
+porqué: las de arriba dicen algo del AHORA —a qué hora no entrar, qué cuesta
+abrir, qué cuesta mantener, cómo está posicionada la divisa— y ésta dice qué
+suele pasar en este día y en este mes. Es la única que no cambia de un día para
+otro.
+
+## Dos mitades, dos avisos, cada uno donde le toca
+
+Arriba lo que SÍ se puede leer (recorrido por hora, por día y por mes), con el
+aviso de que mide **cuánto** y no **hacia dónde**. Abajo, separada por una línea
+ámbar y con su **propio aviso delante**, la tabla de dirección por mes.
+
+⚠️ Juntar los dos avisos en uno dejaría el segundo lejos de la tabla que
+describe. Y el de la dirección va ANTES de la tabla, nunca después.
+
+## 📌 Los nombres de los días y los meses NO van al diccionario
+
+Se los pide al idioma con `Intl`. Serían **17 claves × 13 idiomas = 221
+traducciones** para algo que el navegador dice mejor, con sus abreviaturas y
+sus mayúsculas propias.
+
+Es la decisión CONTRARIA a la de los términos de trading (RSI, ATR, BUY), que
+sí van invariantes: aquéllos son jerga y éstos son idioma.
+
+## ⚠️⚠️ DOS DEFECTOS QUE SOLO SALIERON MIRANDO LA CAPTURA
+
+Ni el build, ni el lint, ni las 98 comprobaciones los veían. Los dos son de la
+familia exacta que esta tarjeta existe para denunciar.
+
+**1. El pie decía «cada día sale de unas 1.000 velas», escrito a mano.** En
+producción son ~700: 5.000 velas de calendario quedan en ~3.570 sesiones al
+quitar los fines de semana, repartidas entre cinco días. El arreglo no es
+corregir el número — es que **el texto lo LEA**: `pieDia`, `pieMes` y `pieHora`
+pasan de texto a FUNCIÓN del n real de las casillas. Mismo arreglo que las
+etiquetas «(hoy)» del banco y que `medicion.queSignifica`.
+
+**2. ⚠️ El margen se leía «±0.00».** Con dos decimales, un margen de 0,0046 se
+redondea a cero — y eso no dice «el margen es pequeño», dice **«este número es
+exacto»**, que es una afirmación y es falsa. Salía en 12 casillas del perfil
+por hora de Intradía.
+
+`margenLegible` escribe `<0.01` por debajo del redondeo. Misma asimetría de
+siempre: equivocarse hacia «el margen es mayor» cuesta leer con más prudencia;
+hacia «no hay margen» cuesta justo lo que esta tarjeta denuncia de la
+competencia. Vive en la matemática (GEMELA) y no en el componente, para poder
+probarla sin navegador — **romperla tumba 4 comprobaciones**.
+
+## ⚠️ OCHO veces falló mi comprobación antes que el código
+
+Van ocho en una sola tarea, y por eso se escriben:
+
+| mi comprobación | qué pasaba |
+|---|---|
+| color en verde/rojo | leía `oklch(0.93 0.005 255)` con `/\d+/` como si fuera `rgb` y marcaba media pantalla |
+| el n del pie | comparaba con el locale `es` y la app usa **es-CO**, que escribe `1.000` con punto de millar |
+| «dos decimales» | buscaba `0.94%` y `0.63%`, los valores del mercado inventado de la OTRA app |
+| conteo de decimales | contaba sobre el texto del `body`, donde los valores adyacentes se pegan («±0.010.63%») |
+
+📌 El arreglo del color salió además **mejor que el original**: en `oklch` el
+**croma** dice directamente si un color está lo bastante saturado para leerse
+como color, así que la comprobación es croma alto Y tono en la banda del rojo o
+del verde. El ÁMBAR se permite a propósito — ahí no afirma nada del mercado,
+avisa de que el número de al lado no es fiable.
+
+**Comprobado que muerde**: pintar un recorrido de verde la tumba.
+
+## El banco de navegador pasa POR EL HOOK
+
+La regla del 2026-10-07. El componente no recibe props: usa
+`useEstacionalidad`, que baja el archivo de verdad, y Playwright intercepta esa
+descarga. Un banco que monta el componente a mano y le entrega los datos **no
+puede cazar un dato que no llega** — que es lo que dejó dos tarjetas meses sin
+pintarse.
+
+⚠️ Y el comodín de rutas va **PRIMERO**: Playwright da prioridad a la ÚLTIMA
+ruta registrada, así que un comodín al final se come las buenas.
+
+## Cómo se verificó
+
+Lint **contado contra `main`** (7 y 8, los mismos), build, y **todas** las
+pruebas sin internet en los dos repos (solo falla `prueba-aviso-real`, que pide
+el secreto VAPID). Los **68 gemelos** idénticos.
+
+📌 Y el lint SUBIÓ de 7 a 11 y de 8 a 15 en la primera pasada: mi script dejó
+apóstrofos escapados (`\'`) dentro de literales de plantilla, donde no hacen
+falta. Se vio **contando**, no mirando la lista — un aviso nuevo escondido entre
+ocho de siempre no se ve leyendo.
+
+Y en **Chromium a 390 px**, los dos bancos con el archivo que escriben los
+publicadores de verdad, en español y árabe, con cuatro estados: normal, árabe,
+404 y archivo sin pares. Los dos vacíos **no pintan absolutamente nada**. Cero
+errores de consola, cero desplazamiento lateral, **cero hojas de datos en
+`rtl`** (58 en Swing, 106 en Intradía, comprobadas con el CSS calculado) y cero
+números en verde o rojo.
+
+En Intradía, además: las 24 horas ordenadas por la hora LOCAL de quien mira, el
+solape moviéndose el doble que la madrugada, y **el cruce EUR/CHF sin panel
+mensual de recorrido** pero con su tabla de dirección — que es la decisión de
+los cruces derivados, comprobada en pantalla.
+
+## 📌 Y la demostración quedó viva dentro de la propia tarjeta
+
+Con el mercado inventado de Intradía —un paseo aleatorio **sin ninguna
+estacionalidad dentro**— la tabla de dirección de la tarjeta dice:
+
+```
+mar. 79 % ±26        jun. 36 % ±26
+```
+
+**43 puntos de diferencia entre dos meses, salidos de puro azar.** No hay que
+contarlo: está en pantalla, debajo del aviso que lo explica.
