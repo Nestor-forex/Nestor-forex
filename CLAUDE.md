@@ -13206,3 +13206,183 @@ declaran «herramienta analítica, no un servicio de señales».
 ⚠️ **El precio recomendado NO se cambió.** Eso lo decide Néstor, y mi propia
 revisión salió debilitada por el hallazgo del nivel gratis: ya hacen $19 de
 fundador y dan más prueba gratis (30 días) que la que yo había propuesto (14).
+
+---
+
+# Qué es esta app y qué NO es: el aviso, y el modelo de negocio (2026-10-26)
+
+Néstor lo pidió con sus palabras, y son las que mandan sobre todo lo demás:
+
+> mis apps no venden, por ahora, señales para copiar, y eso quiero que las apps
+> lo dejen bien claro. las señales que se ven allí sencillamente son pruebas o
+> experimentos que los usuarios pueden ver que funciona o no mientras ellas
+> recopilan información […] **ellos solo pueden ver cómo evolucionan esas
+> pruebas pero nunca, jamás deberían verlas como señales para copiar**
+
+> al llegar a sus 150 operaciones en el tiempo **YO decido** si seguir midiendo
+> o cambiar a otros experimentos
+
+> las apps solo serían como de **información necesaria para ahorrar tiempo** en
+> los análisis y tomar decisiones oportunas al momento de operar
+
+Y el límite que define el trabajo: **«quiero que todo esté tal cual como están
+las apps, solo el aviso»**.
+
+```
+src/components/QueEsEstaApp.jsx   la tarjeta                    GEMELO (69)
+src/lib/i18n/textos/*.js          11 claves `queEs.*` × 13      × 2 apps
+scripts/prueba-sombra.mjs         bloque 10 (Swing) / 10 (Intradía)   PRIMO
+```
+
+⚠️ **NO CAMBIA NADA DE CÓMO FUNCIONAN LAS APPS.** Ni una señal, ni un umbral,
+ni el aviso al celular. Es texto. Swing sigue en −0,040 por unidad de riesgo e
+Intradía en −0,13.
+
+## El hueco que tapa, que no era obvio
+
+El aviso ya existía **por regla**: `AvisoSombra` debajo de cada porcentaje y
+`sombraSenales.aviso` encima de la lista. Los dos dicen que ESA regla todavía
+no se puede creer. Lo que no había en ninguna parte es **qué es la app entera,
+qué pasa cuando un experimento termina y quién decide** — y un aviso suelto por
+regla se puede leer como «ésta todavía no, las otras sí».
+
+Va **lo primero de la pestaña Barrido**, antes incluso de los avisos de datos:
+aquéllos son del día, éste es de qué es la app y se lee una vez.
+
+## Las decisiones que no hay que ablandar
+
+⚠️⚠️ **DICE «SI ALGUNO PASA SU LISTÓN», NUNCA «CUANDO».** Van **nueve familias
+medidas y nueve que no pasan**, y el registro real va en contra de los
+backtests (la reversión mide 54 % en cinco años y va al 39 % real). Escribir
+«cuando alguno pase» prometería un resultado que puede no existir, justo en la
+pantalla cuyo único argumento es no afirmar más de lo que se puede demostrar.
+Hay comprobación que falla si aparece el «cuando».
+
+⚠️ **EL LISTÓN SE LEE, NO SE ESCRIBE.** El 150 sale de `OPS_PARA_CREER`. Es
+`medicion.queSignifica` otra vez, que dijo «55 %» durante meses en los 13
+idiomas porque estaba a mano. La comprobación exige que el componente importe
+la constante Y que no lleve el número escrito en el código (ignorando los
+comentarios, donde explicarlo es documentación y no un duplicado).
+
+⚠️ **NO NOMBRA NINGUNA REGLA, NINGÚN PAR NI NINGÚN UMBRAL**, y por eso puede
+ser GEMELO: lo que dice vale igual con velas diarias que con velas de una hora.
+Meter ahí el nombre de un experimento sería una divergencia esperando a
+ocurrir.
+
+⚠️ **LA FRASE QUE DECIDE VA EN `avance`, O SEA VISIBLE CON LA TARJETA
+CERRADA.** Un aviso que solo aparece al abrir una tarjeta plegada no es un
+aviso: es una nota al pie. Lo demás sí va dentro, porque es la explicación.
+
+## 📌 El modelo de negocio, guardado tal cual porque va a la página de venta
+
+Es la primera vez que queda escrito, y cambia lo que la landing puede decir:
+
+| | |
+|---|---|
+| qué se vende HOY | **información que ahorra tiempo de análisis**, no señales |
+| qué son las señales en pantalla | **experimentos en curso**, visibles para acompañarlos |
+| cuándo termina un experimento | al llegar a **150 operaciones reales** |
+| quién decide entonces | **Néstor**: seguir midiendo, cambiar de experimento o, si el resultado es bueno, darlo como señal |
+| si el resultado es malo | **también se informa** |
+| qué gana el suscriptor | el **privilegio de acompañar las mediciones desde dentro**, viendo los mismos números el mismo día |
+| si alguno pasa su listón | esas señales **gratis unas semanas** para quien esté suscrito en ese momento, y **después sube el precio** de la suscripción |
+
+⚠️ Lo de «gratis unas semanas y después el incremento» es **suyo y literal**.
+Y la honestidad que va pegada: hoy ningún experimento ha pasado, y **puede que
+ninguno pase** — eso también es un resultado y se cuenta igual.
+
+## El texto, para suscriptores (la DUODÉCIMA de la serie)
+
+Va con las once del mismo tipo —el volumen, TradingView, la correlación, el
+swap, la actividad, el margen de error, Historial contra Diario, las apps
+contra el mercado, el oro, la rejilla y la estacionalidad— y es la **única que
+está dentro de la app**, no solo en la página:
+
+> **Qué es esta app, y qué no es.**
+>
+> Nada de lo que ves aquí es una señal para copiar: son experimentos en marcha,
+> y la app te enseña cuánto les falta para que su número signifique algo.
+>
+> Esta app es INFORMACIÓN. Reúne en un sitio lo que de otro modo te llevaría
+> una hora de mirar gráficos: qué divisas están fuertes y cuáles débiles, qué
+> noticias vienen, cuánto cuesta abrir una operación y cuánto mantenerla, qué
+> pares se mueven juntos.
+>
+> La dirección, el Stop-loss y el Take-profit que ves en pantalla son
+> EXPERIMENTOS: reglas armadas con ciertas medidas e indicadores, que la app
+> anota cada día y resuelve con precios reales para saber si funcionan o no.
+> Están ahí para que veas cómo evolucionan, no para copiarlas.
+>
+> Cada experimento tiene que llegar a 150 operaciones reales antes de que su
+> resultado signifique algo. Con menos, un número alto y un número bajo son el
+> mismo número — y eso lo dice la aritmética, no una opinión.
+>
+> Cuando un experimento llega a esas operaciones, quien decide es el
+> desarrollador de la app: seguir midiéndolo, cambiar a otros experimentos o,
+> si el resultado es bueno, empezar a darlo como señal. Si el resultado es
+> malo, también se informa.
+>
+> Mientras tanto tienes el privilegio de acompañar las mediciones desde dentro:
+> ves los mismos números que ve el desarrollador, con sus aciertos y sus
+> fallos, el mismo día. Y **si** alguno pasa su listón, quien esté suscrito en
+> ese momento tendrá esas señales gratis durante unas semanas antes de que suba
+> el precio de la suscripción.
+>
+> Y puede que ninguno lo pase. Eso también es un resultado y se cuenta igual:
+> esta app enseña sus propios números aunque salgan malos.
+>
+> Nada de esto es asesoría financiera. Operar en Forex tiene riesgo alto y
+> puedes perder tu dinero. Las decisiones son tuyas.
+
+📌 **Por qué esto vende, igual que las once anteriores:** el sector entero vende
+«señales que ganan». Esta app dice en su primera pantalla que lo que enseña
+todavía no vale para copiar, y pone al lado el número que falta para que valga.
+Quien lo lea y aun así se suscriba, se suscribe sabiendo exactamente qué compra
+— y ésa es la única clase de suscriptor que no se va a sentir engañado.
+
+## 📌 Dos tropiezos míos en el banco de navegador, ninguno en la app
+
+Van diez u once veces en el proyecto:
+
+1. **`document.querySelector('button')` midió la cabecera ENTERA.** En
+   `TarjetaPlegable` el botón es toda la cabecera y la pastilla va dentro, así
+   que salió «fondo transparente» y la comprobación de «va rellena cuando está
+   cerrada» falló sobre una app correcta. **Ya estaba escrito en esta memoria**
+   del 2026-10-20 y lo repetí igual. La pastilla es la última hoja `span` de esa
+   cabecera.
+2. **Un 404 de `/favicon.ico`** que pide Chromium solo y que mi servidor de
+   pruebas no tenía: ensuciaba la comprobación de «cero errores de consola» con
+   algo que no es de la app. Ahora se contesta vacío.
+
+## Cómo se verificó
+
+Lint **contado contra `main`** (7 en Swing y 8 en Intradía: los mismos), build,
+y **todas** las pruebas sin internet en los dos repos (45 de 46 y 34 de 35;
+solo falla `prueba-aviso-real`, que pide el secreto VAPID y manda un aviso de
+verdad). Los **69 gemelos** idénticos.
+
+**Comprobado que las comprobaciones nuevas MUERDEN**, con el daño verificado en
+el archivo antes de darlo por bueno: escribir el 150 a mano tumba 1 · poner
+«cuando alguno pase» tumba 1 · dejar la tarjeta sin enchufar tumba 1 ·
+convertir `liston` en texto tumba 1 aquí y **13 en `prueba-idiomas`**.
+
+Y en **Chromium a 390 px**, en español y en árabe, cerrada y abierta: la frase
+decisiva se lee **sin tocar nada**, la pastilla va rellena del acento de cada
+app (cian en Swing, **dorado en Intradía**) y hueca al abrir, los 7 párrafos
+heredan `rtl` en árabe con el 150 y `Stop-loss` leyéndose bien dentro de la
+frase, cero desplazamiento lateral y cero errores de consola.
+
+## ⚠️ Lo que queda pendiente, y es lo que él pidió guardar esto PARA
+
+**La página de venta**, con dos partes que todavía no existen:
+
+1. **Cada característica y bondad de las DOS apps**, descrita una por una. El
+   material está repartido por este archivo (las doce explicaciones para
+   suscriptores, la tabla contra TradingView, la de los competidores) y **nunca
+   se ha juntado**.
+2. **Un tutorial con imágenes** explicando cada cosa que tienen las apps, para
+   que el suscriptor sepa exactamente qué compra.
+
+⚠️ Y lo que la landing **no puede decir**, que sigue igual que el 2026-08-24:
+ningún número de acierto verificado, ninguna promesa de señales, y la hora de
+envío confirmada con él antes de prometerla.
