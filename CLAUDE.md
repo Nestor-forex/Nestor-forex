@@ -13111,3 +13111,98 @@ mar. 79 % ±26        jun. 36 % ±26
 
 **43 puntos de diferencia entre dos meses, salidos de puro azar.** No hay que
 contarlo: está en pantalla, debajo del aviso que lo explica.
+
+---
+
+# Añadir pares NO se hizo (2026-10-26), y por qué queda escrito
+
+Néstor pidió USD/MXN y USD/ZAR en las apps, se lo expliqué con el código
+delante en vez de con la pregunta delante, y su respuesta fue la correcta:
+**«no entiendo muy bien a qué te refieres… si crees que no es conveniente, por
+ahora, no lo hagas»**. Se descartó. Esto queda **para no volver a proponerlo
+sin el dato**, que es la única parte que vale.
+
+## ⚠️⚠️ AÑADIR UN PAR NO ES AÑADIR UNA FILA: CAMBIA LAS SEÑALES DE LAS 14
+
+```js
+CCY.forEach((b) => {
+  let s = 0
+  CCY.forEach((q) => { if (q !== b) s += 0.2*chg(b,q,1) + 0.4*chg(b,q,5) + 0.4*chg(b,q,20) })
+  raw[b] = s / 7          // ← 7 escrito a mano = CCY.length - 1
+})
+```
+
+**La fuerza de cada divisa se calcula CONTRA TODAS LAS DEMÁS.** Meter MXN y ZAR
+en `CCY` cambiaría la fuerza de **las ocho divisas que ya hay**, así que las
+señales de EUR/USD serían otras — y entrarían en el cálculo de todas dos
+monedas que se devalúan a saltos.
+
+Y ese `/ 7` se volvería **falso**: nueve términos divididos entre siete dejan
+**todas las divergencias un 29 % infladas**, el umbral de 0,5 pasaría muchas
+más señales, y **nada fallaría**.
+
+📌 Comprobado leyendo el código, con un detalle que se confunde solo: `dif` usa
+la escala **RAW** (`raw[b] - raw[q]`), no el `esc` de 0-10. Así que la
+compresión min-max que traerían dos divisas nuevas **no** afectaría a `dif` —
+pero el `/ 7` sí.
+
+⚠️ O sea que esto no es «dos filas más»: es **otra app**, y tendría que medirse
+desde cero con su listón escrito antes, como todo lo demás.
+
+## Y el prior tampoco invita, medido el 2026-10-13
+
+**Cuatro de seis emergentes NO se mueven más** que los pares que las apps ya
+tienen (USD/MXN 0,49 % al día contra 0,54 % de la mediana de Swing; USD/TRY
+0,22 %, la mitad, y es el del spread más caro del mercado minorista). Sin
+movimiento extra que lo compense, un spread emergente no tiene de dónde salir.
+
+## Lo que se construyó y se deshizo, por si alguien lo retoma
+
+Llegó a haber una versión que los metía **solo en el puente de MT5** —sin
+tocar ninguna señal— para acumular su spread real en `spreads/<fecha>.jsonl`,
+con una tercera lista `EN_OBSERVACION` en el bloque 7 de `prueba-mt5.mjs` para
+que «sobra un par» siguiera siendo un fallo. Se descartó por dos razones y
+ninguna es técnica:
+
+1. **No funcionaba sin trabajo de Néstor**: MT5 solo entrega precio de los
+   símbolos que están en su Observación del Mercado, así que sin ese paso suyo
+   el puente los salta y no se acumula ni una muestra.
+2. **El premio es pequeño** (ver el prior) y él no veía para qué servía. Pedirle
+   trabajo manual para medir algo cuyo pronóstico es malo es justo lo que ya
+   quedó escrito el 2026-09-08 que no hay que hacer.
+
+## 📌 Y el `grep` con la palabra equivocada, por CUARTA vez
+
+Al comprobar que esa prueba mordía conté los fallos con `grep -i "MAL"`. Salió
+**0** con el daño puesto, y encima cazó la palabra «no**rmal**» de otra línea.
+El marcador de ese guion es **`FALLA`**: la prueba mordía perfectamente, 2 y 2.
+
+Hermano del `grep borrar` del 2026-09-14, del `grep FALLA` del 2026-09-15 y del
+`grep MAL` del 2026-09-29. **Lo único que salvó esto es que el daño SÍ se
+verificó en el archivo antes de sacar conclusiones.**
+
+## 📌 La lección de trato, que es la que más vale de este día
+
+Le expliqué el mecanismo (`CCY`, el `/ 7`, la escala RAW) a alguien que **no
+programa**, y la respuesta fue «no entiendo muy bien a qué te refieres». Eso no
+es que no se entienda el código: es que **la pregunta que había que ponerle
+delante no era «cómo funciona» sino «qué ganas y qué pierdes»**, y en una tabla
+de dos columnas.
+
+Y el final correcto lo puso él: ante la duda, **no lo hagas**. Un cambio que no
+se entiende no se aprueba, y eso es una buena regla, no una falta de
+conocimiento.
+
+## El documento de precios, corregido el mismo día
+
+https://claude.ai/artifact/F6nS6fKu17vpCuhDrJByZk — se añadió la línea de los 14
+pares que pidió (con el corte medido +0,073 contra −0,142, y que las 28 filas de
+KairosBias son 8 scores combinados) y se arreglaron **tres cosas que ya eran
+falsas**: la estacionalidad seguía marcada «no está» en dos sitios, el precio de
+KairosBias no es «$29 y ya» (nivel gratis + $29 Pro + $19 fundador para los 10
+primeros + 30 días sin tarjeta), y no dan señales ni publican acierto — se
+declaran «herramienta analítica, no un servicio de señales».
+
+⚠️ **El precio recomendado NO se cambió.** Eso lo decide Néstor, y mi propia
+revisión salió debilitada por el hallazgo del nivel gratis: ya hacen $19 de
+fundador y dan más prueba gratis (30 días) que la que yo había propuesto (14).
