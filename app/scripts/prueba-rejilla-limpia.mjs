@@ -305,6 +305,11 @@ const LIMPIA = [
   'scripts/publicar-barrido.mjs',
   'scripts/reporte-diario.mjs',
   'scripts/publicar-oro.mjs',
+  // La estacionalidad es el guion al que MÁS le importa la rejilla de todo el
+  // repositorio, porque agrupa POR CALENDARIO: con velas crudas su perfil por
+  // día de la semana sacaría sábado y domingo como días reales, y hundiría la
+  // media de los cinco que sí existen.
+  'scripts/publicar-estacionalidad.mjs',
   'scripts/backtest.mjs',
   'scripts/medir-cot.mjs',
   'scripts/comparar-fuente.mjs',

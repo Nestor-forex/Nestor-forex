@@ -126,6 +126,8 @@ const M_PUBLICADOR_SWING = 29
 const M_REPORTE_SWING = 32
 const M_REPORTE_INTRADIA = 35
 const M_ORO_SWING = 38
+const M_ESTACIONALIDAD_SWING = 41
+const M_ESTACIONALIDAD_INTRADIA = 44
 
 // Y el minuto de todo lo que NO gasta créditos de Twelve Data: calendarios
 // (ForexFactory), tasas (BIS) y COT (CFTC). Pueden ir todos juntos porque no
@@ -256,6 +258,33 @@ export const PROGRAMAS = [
     // que más tarda (tres tandas), así que va ÚLTIMO.
     creditos: 15,
     minutoPulso: M_ORO_SWING,
+  },
+  {
+    repo: 'Nestor-forex',
+    wf: 'estacionalidad.yml',
+    nombre: 'Swing · estacionalidad',
+    programado: ['08:41'],
+    dias: HABILES,
+    mide: 'retraso',
+    pulsar: ['08:41'],
+    // Los 14 pares en dos tandas de 7. Pedir 5.000 velas cuesta lo mismo que
+    // pedir 300: el credito se paga por peticion, no por vela.
+    creditos: 14,
+    minutoPulso: M_ESTACIONALIDAD_SWING,
+  },
+  {
+    repo: 'Nestor-forex-intradia',
+    wf: 'estacionalidad.yml',
+    nombre: 'Intradia · estacionalidad',
+    programado: ['09:44'],
+    dias: HABILES,
+    mide: 'retraso',
+    pulsar: ['09:44'],
+    // DOS descargas: 7 de velas H1 (perfil por hora y por dia) y 7 de velas
+    // diarias (los dos paneles por mes), con 65 s de pausa en medio para no
+    // rozar los 8 creditos por minuto.
+    creditos: 14,
+    minutoPulso: M_ESTACIONALIDAD_INTRADIA,
   },
   {
     repo: 'Nestor-forex-intradia',

@@ -12689,3 +12689,425 @@ tamaño, no con un séptimo.
 
 ⚠️ Y **no se mide otra vez sobre este periodo**. Estos 19.903 velas ya se
 usaron; volver a barrer parámetros devolvería el mismo número por construcción.
+
+---
+
+# Estacionalidad (2026-10-26). PR 1: la matemática y el publicador
+
+Néstor la pidió tras leer en el informe de precios que la cobran dos
+competidores, y preguntó lo correcto: *«¿sería bueno ponerlo? ¿algunos traders
+lo ven para tomar decisiones? ¿serviría como atajo y ahorro de tiempo?»*.
+
+📌 **Mi primera respuesta fue «no a la mensual», y él me presionó en el punto
+exacto donde era floja.** Era buena en la estadística y naíf en el producto:
+**Seasonax vende SOLO estacionalidad** —nada más: ni señales, ni fuerza— a
+**15.000+ usuarios por $50-100 al mes**, o sea tres a seis veces lo que
+recomendé por las dos apps juntas. La demanda está probada. Y su argumento del
+atajo era más fuerte de lo que él mismo lo planteó: la mensual **TradingView no
+la trae de fábrica**, así que no es que el trader no sepa leerla — es que no
+puede conseguirla sin una hora de trabajo por par.
+
+```
+src/lib/estacionalidad.js            la matemática pura          GEMELO (68)
+scripts/prueba-estacionalidad.mjs    86 comprobaciones           GEMELO
+scripts/publicar-estacionalidad.mjs  baja y publica              PRIMO
+.github/workflows/estacionalidad.yml  Swing 08:41 · Intradía 09:44 UTC
+scripts/lib/horas-mercado.mjs        `clasificarHora`, MOVIDO    solo Intradía
+```
+
+## ⚠️⚠️ LO QUE HACE QUE ESTO NO SEA LO QUE VENDEN LOS DEMÁS: SON DOS PREGUNTAS
+
+| pregunta | observaciones | margen |
+|---|---:|---:|
+| «¿cuánto **se movió** el par en octubre?» | ~300 días | pequeño ✅ |
+| «¿cuántos **octubres** cerraron en verde?» | ~14 | **±26** ❌ |
+
+La segunda es la que se vende por ahí. Las dos se publican, cada una con **su
+margen pegado y calculado del n de ESA casilla**, y el contraste entre ellas
+enseña la lección sin que nadie tenga que argumentarla.
+
+### El reparto por app, y no es simétrico
+
+| panel | Intradía | Swing | por qué |
+|---|---|---|---|
+| por **hora** | ✅ | ❌ | en Swing una vela ES un día: no hay horas |
+| por **día de la semana** | ✅ (de H1) | ✅ (de diarias) | la pregunta de cada app es distinta |
+| **recorrido** por mes | ✅ solo 7 pares | ✅ los 14 | ver el aviso de los cruces |
+| **dirección** por mes | ✅ los 18 | ✅ los 14 | solo usa cierres: exacto |
+
+## ⚠️⚠️ EL FALLO QUE ESTUVO A PUNTO DE COLARSE: DOS MÁRGENES DISTINTOS
+
+`margen(n) = 98/√n` es el intervalo de una **PROPORCIÓN** en el peor caso, y
+sale en **puntos porcentuales**. El margen de una **MEDIA** es
+`1,96 · desviación / √n` y sale en **las unidades del dato**.
+
+Con ~420 observaciones las dos cuentas dan un número parecido (~5) y significan
+cosas distintas. **Se lo llegué a decir a Néstor en el chat con el número
+equivocado** («420 → ±5» usando la fórmula de proporciones sobre una media).
+
+Es la familia de siempre —un número bien calculado describiendo otra cosa— y
+tiene bloque propio: al sustituir uno por el otro **caen 6 comprobaciones**.
+
+## ⚠️ Las decisiones que no hay que ablandar
+
+- **Todo lo usable mide CUÁNTO se mueve, nunca hacia dónde.** Misma frase que
+  la actividad: *no elige el par, ayuda a elegir el MOMENTO*.
+- **Ningún veredicto.** Bloque dedicado que falla si el código dice «mejor
+  mes», «puntuación», «ranking», «comprar» o «vender», y que exige que no se
+  exporte nada que suene a eso. Añadir un veredicto obliga a venir a borrarlo.
+- **Una casilla floja se MARCA, no se esconde.** Esconder las débiles deja en
+  pantalla solo lo que parece significar algo.
+- **`null` y nunca 0** en `rangoRelativo`, y nunca 50 en `pct`.
+- **Las horas se agrupan en UTC** (el mecanismo son los solapes de sesión, que
+  son fijos) **y se pintan en la hora del que mira**.
+- **No filtra ni reordena ninguna señal.** Si algún día decide, es un FILTRO y
+  va al banco con su listón escrito antes — sería la décima familia.
+
+## ⚠️ Y LA REJILLA MUERDE AQUÍ MÁS QUE EN NINGÚN OTRO SITIO
+
+Porque esto agrupa **por calendario**. 5.000 velas diarias crudas traen ~1.428
+de fin de semana: un perfil por día de la semana sacaría **sábado y domingo como
+días reales** y hundiría la media de los cinco que existen.
+
+En Swing lo resuelve `obtenerVelas`, que limpia por defecto desde el
+2026-10-06. **En Intradía no**, porque allí la rejilla limpia midió `noSeMueve`
+(7 de 7) y nunca se aplicó: su publicador filtra él las horas cerradas (el
+28,7 % medido) y los fines de semana de la serie diaria. El guardián de la
+rejilla saltó solo al añadir el guion — **cuarta vez** que caza uno nuevo.
+
+⚠️ Y se quitan también las horas de **frontera** (viernes 21-22, sábado y
+domingo 21-23). Decisión propia de este panel: ahí el cambio de hora decide si
+hubo mercado, así que arrastrarían las casillas 21, 22 y 23 sin saber hacia
+dónde. Para un promedio vale más limpio que grande — se ve en el humo, donde
+esas tres horas salen con n=120 y el resto con n=150.
+
+## Dos cosas que se movieron para que el convenio no esté dos veces
+
+📌 **`clasificarHora` vivía dentro de `sonda-oro.mjs`**, y una sonda es un
+guion de usar una vez. Ahora lo necesita un publicador que corre a diario, así
+que se mueve a `lib/horas-mercado.mjs` y la sonda lo **reexporta** — el patrón
+de `perforaExtremo`. Las 100 comprobaciones de la sonda siguen pasando.
+
+📌 **Las tres fórmulas del precio de un par** (`precioDePar`, `maxDePar`,
+`minDePar`) se exportan de `marketCalc.js` de Intradía y `computarBarrido` las
+usa. El publicador las importa en vez de copiarlas. El refactor es identidad,
+comprobado con `prueba-barrido-publicado`.
+
+⚠️ Y el comentario de la propia app confirmó el criterio de los cruces antes de
+escribirlo: *«en los 7 pares contra el dólar una de las dos es constante (=1),
+así que el resultado es EXACTO; en los cruces es una cota superior»*. Por eso
+los 11 cruces de Intradía salen **sin panel mensual de recorrido**: derivar un
+máximo y un mínimo en velas diarias dio un ATR **400 % mayor** del real.
+
+## ⚠️ Tres números MÍOS que estaban mal, y los destapó el propio trabajo
+
+1. **«20 años, ±22»** → la fuente manda 5.000 velas **de calendario**, fines de
+   semana incluidos. Al quitarlos quedan ~3.570 sesiones: **~14 años y ±26**.
+   📌 Y **no merece la pena** ir a por los 20 paginando a 7 créditos: pasar de
+   ±26 a ±22 no cambia nada, porque las dos cifras dicen lo mismo.
+2. **«±5» para el recorrido mensual** → con la fórmula de proporciones sobre
+   una media. Ver el aviso de los dos márgenes.
+3. **Una comprobación mía pedía «más de 150»** y salen exactamente 150 (208
+   días menos los ~58 de fin de semana). El código estaba bien. Reescrita para
+   contar contra la serie en vez de contra un número a mano.
+
+## ⚠️ Y una comprobación que NO MORDÍA, con el daño aplicado
+
+«los meses a medias no se cuentan»: se rompió el recorte a propósito y **las 86
+siguieron en verde**. No era que el daño no se aplicara —se verificó en el
+archivo— era que mi serie empezaba el día 2, así que el mes a medias lo
+rechazaba el guardia de «menos de 10 sesiones» y el recorte quedaba sin probar.
+
+Arreglado arrancando el 10 de enero **a propósito**: ese enero trae 15 sesiones,
+pasa el guardia de las 10, y entonces lo único que puede rechazarlo es el
+recorte. Con eso sí cae.
+
+**Comprobado que las cinco MUERDEN**, con el daño verificado en el archivo:
+el margen de media con la fórmula de proporción tumba 6 · `rangoRelativo`
+devolviendo 0 tumba 2 · una vela de fin de semana colándose en lunes tumba 1 ·
+los meses a medias contando tumba 1 · `pct: 50` sin datos tumba 1.
+
+## Cómo se verificó
+
+Lint (7 avisos en Swing y 8 en Intradía, **contados contra `main`: los mismos**),
+build, y **todas** las pruebas sin internet en los dos repos (45 de 46 en Swing,
+34 de 35 en Intradía; solo falla `prueba-aviso-real`, que pide el secreto VAPID
+y manda un aviso de verdad). Los **68 gemelos** idénticos, y el reloj de fuera
+con sus dos entradas nuevas comprobadas.
+
+Y los dos publicadores **de punta a punta con mercados inventados, sin gastar un
+crédito y sin llave**: el miércoles que se mueve el doble sale al doble, el
+solape de Londres-NY sale 2,5 veces más ancho que la madrugada, las horas de
+frontera salen con n=120 frente a 150, y los 11 cruces de Intradía salen sin
+panel mensual. Swing publica 19,8 KB y Intradía 38,9 KB.
+
+## ⚠️⚠️ EL HALLAZGO DEL HUMO, Y ES EL MEJOR ARGUMENTO DE TODA LA FUNCIÓN
+
+Los dos mercados inventados son **paseos aleatorios: no tienen NINGUNA
+estacionalidad por construcción**. Y sus tablas de dirección por mes dicen:
+
+| | mes más «verde» | mes más «rojo» | diferencia |
+|---|---|---|---|
+| el inventado de Swing | enero **63 %** | marzo **32 %** | **31 puntos** |
+| el inventado de Intradía | febrero **71 %** | julio **29 %** | **42 puntos** |
+
+**Cuarenta y dos puntos de diferencia salidos de puro azar.** Eso es exactamente
+lo que le pasa a la tabla que venden Seasonax, KairosBias y MarketSentinel, y el
+margen al lado es lo único que lo delata.
+
+📌 Es una demostración reproducible en un minuto y no hace falta creerse nada:
+se corre el publicador con datos aleatorios y sale.
+
+## Lo que falta: el PR 2
+
+La tarjeta, los 13 idiomas y la comprobación en Chromium **pasando por el hook**
+(la regla del 2026-10-07: un banco que monta el componente a mano y le entrega
+los datos no puede cazar un dato que no llega).
+
+---
+
+# La estacionalidad, explicada para suscriptores (2026-10-26)
+
+Néstor la pidió con estas palabras: **«quiero que guardes esto como explicación
+para los usuarios y que digas que nadie en el mercado lo hace así (ni Seasonax,
+KairosBias, MarketSentinel) y eso de que la función deja de ser una concesión y
+pasa a ser una demostración de lo que vendo»**, y que sirva **como presentación
+de las apps**.
+
+Es la **undécima** de la serie —el volumen, TradingView, la correlación, el
+swap, la actividad, el margen de error, Historial contra Diario, las apps contra
+el mercado, el oro y la rejilla— y de todas es **la única que el lector puede
+reproducir él mismo en un minuto**.
+
+## El texto
+
+> **Estacionalidad: la tenemos, y te vamos a decir en qué parte no te la puedes
+> creer.**
+>
+> La estacionalidad es la idea de que un par se mueve distinto según el
+> calendario: según el mes, el día de la semana o la hora.
+>
+> **Y no es superstición.** Algunas tienen un mecanismo con nombre: el 31 de
+> marzo cierra el año fiscal japonés y las instituciones repatrían dinero, lo
+> que mueve el yen de verdad. A fin de mes, hacia las 4 de la tarde de Londres,
+> los fondos indexados reajustan sus carteras a una hora fija. En agosto hay
+> media Europa de vacaciones. Y Londres solapado con Nueva York mueve mucho más
+> que la madrugada de Asia.
+>
+> El problema no es el fenómeno. Es **cuánta de ella se puede medir de verdad.**
+>
+> ### Son dos preguntas, y casi nadie las separa
+>
+> | | con cuántos datos | ¿se puede leer? |
+> |---|---:|---|
+> | «¿**cuánto se movió** el par en octubre?» | ~300 días | **sí** |
+> | «¿**cuántos octubres** cerraron en verde?» | ~14 | **no** |
+>
+> La primera tiene veinte veces más datos porque cuenta **días**. La segunda
+> cuenta **octubres**, y en catorce años solo hay catorce.
+>
+> Con catorce observaciones el margen de error es de **±26 puntos**. Eso
+> significa que un «70 % de los octubres subió» y un «48 %» **son el mismo
+> número**. No se puede decidir con eso.
+>
+> ### Y aquí está la prueba, que puedes repetir tú
+>
+> Nosotros inventamos un mercado al azar —una moneda tirada veinte años, sin
+> ninguna estacionalidad dentro, por construcción— y le calculamos su tabla
+> mensual. Esto es lo que salió:
+>
+> · un mercado inventado dijo «enero sube el 63 % de las veces, marzo solo el
+>   32 %». **31 puntos de diferencia.**
+> · otro dijo «febrero el 71 %, julio el 29 %». **42 puntos.**
+>
+> **En datos donde no hay NADA.** Puro azar, dibujando un patrón de aspecto
+> convincente.
+>
+> Eso es exactamente lo que le pasa a cualquier tabla de estacionalidad mensual,
+> incluida la nuestra. La diferencia es que la nuestra lleva el ±26 al lado.
+>
+> ### Qué te damos entonces
+>
+> **Lo que sí se puede leer**, porque sale de miles de observaciones y mide
+> cuánto se mueve el par, no hacia dónde:
+>
+> · **por hora** (en la app de intradía): a qué horas el mercado está vivo y a
+>   cuáles está dormido, para tu par concreto. Sale de ~150 observaciones por
+>   hora.
+> · **por día de la semana**: de ~1.000 por día.
+> · **por mes**: de ~300 días por mes.
+>
+> **Y la tabla mensual de dirección también**, la que venden por ahí — con su
+> ±26 pegado, para que la leas sabiendo lo que es.
+>
+> ### Lo que esto NO te dice, y conviene tenerlo claro
+>
+> **Ninguno de estos números te dice si el par va a subir.** Miden recorrido:
+> cuánto se mueve. Un par puede moverse mucho y acabar donde empezó.
+>
+> Es lo mismo que te decimos de la actividad: **no elige el par, ayuda a elegir
+> el MOMENTO del par que ya elegiste por otras razones.**
+>
+> Y no hay ningún «mejor mes para comprar», ni puntuación de estacionalidad, ni
+> pares ordenados por ella. Hay una comprobación en nuestro código que **falla a
+> propósito** si alguien intenta meter una: para añadir un veredicto hay que
+> venir a borrar esa comprobación a mano.
+>
+> ### Y por qué te contamos la parte débil en vez de callarnos
+>
+> **Porque nadie en este mercado lo hace.** Seasonax vende solo estacionalidad a
+> más de 15.000 usuarios por entre 50 y 100 dólares al mes. KairosBias la
+> incluye en su plan de 29. MarketSentinel la anuncia como «diez años de
+> patrones mensuales». **Ninguno de los tres te pone al lado cuántas
+> observaciones sostienen cada casilla.**
+>
+> No es que sus números estén mal calculados. Es que un porcentaje sin su margen
+> al lado es el truco más viejo de este negocio: enseñar «87 % de acierto» sin
+> decir que son quince operaciones. No es mentira — es que no significa nada, y
+> se lee como si significara todo.
+>
+> Así que esta función, que podría haber sido una casilla más para igualar a la
+> competencia, **deja de ser una concesión y pasa a ser una demostración de
+> cómo está construida esta app**: te damos el dato que sirve, te damos también
+> el que no, y te decimos cuál es cuál.
+>
+> Si algún día te decimos que algo de esta app funciona, esta es la razón para
+> creerlo.
+
+## Por qué esta vale, y en qué se diferencia de las diez anteriores
+
+📌 **Es la única que el lector puede comprobar sin fiarse de nosotros.** Las
+otras diez se sostienen en que nosotros medimos algo y se lo contamos. Esta se
+sostiene en una demostración reproducible: datos aleatorios, tabla mensual,
+42 puntos de diferencia. Cualquiera con una hoja de cálculo lo repite.
+
+📌 **Y es la primera que nombra a los competidores por su nombre**, con su
+precio y lo que sí tienen. No dice «somos mejores»: dice «esto es lo que falta
+en los tres, y aquí está por qué importa».
+
+⚠️ **Lo que NO se puede hacer con este texto:** publicarlo presentando la
+estacionalidad como una ventaja de predicción. Dice lo contrario, y ahí está su
+fuerza. Si alguien lo reescribe en plan «nuestra estacionalidad acierta más», se
+cae el único argumento que tiene.
+
+---
+
+# Estacionalidad, PR 2 (2026-10-26): la tarjeta y los 13 idiomas
+
+```
+src/components/Estacionalidad.jsx   la tarjeta             PRIMO
+src/lib/useEstacionalidad.js        la baja                PRIMO
+src/lib/estacionalidad.js           + `margenLegible`      GEMELO (68)
+```
+
+Va **la última de la pestaña Barrido** en las dos apps, y el orden tiene un
+porqué: las de arriba dicen algo del AHORA —a qué hora no entrar, qué cuesta
+abrir, qué cuesta mantener, cómo está posicionada la divisa— y ésta dice qué
+suele pasar en este día y en este mes. Es la única que no cambia de un día para
+otro.
+
+## Dos mitades, dos avisos, cada uno donde le toca
+
+Arriba lo que SÍ se puede leer (recorrido por hora, por día y por mes), con el
+aviso de que mide **cuánto** y no **hacia dónde**. Abajo, separada por una línea
+ámbar y con su **propio aviso delante**, la tabla de dirección por mes.
+
+⚠️ Juntar los dos avisos en uno dejaría el segundo lejos de la tabla que
+describe. Y el de la dirección va ANTES de la tabla, nunca después.
+
+## 📌 Los nombres de los días y los meses NO van al diccionario
+
+Se los pide al idioma con `Intl`. Serían **17 claves × 13 idiomas = 221
+traducciones** para algo que el navegador dice mejor, con sus abreviaturas y
+sus mayúsculas propias.
+
+Es la decisión CONTRARIA a la de los términos de trading (RSI, ATR, BUY), que
+sí van invariantes: aquéllos son jerga y éstos son idioma.
+
+## ⚠️⚠️ DOS DEFECTOS QUE SOLO SALIERON MIRANDO LA CAPTURA
+
+Ni el build, ni el lint, ni las 98 comprobaciones los veían. Los dos son de la
+familia exacta que esta tarjeta existe para denunciar.
+
+**1. El pie decía «cada día sale de unas 1.000 velas», escrito a mano.** En
+producción son ~700: 5.000 velas de calendario quedan en ~3.570 sesiones al
+quitar los fines de semana, repartidas entre cinco días. El arreglo no es
+corregir el número — es que **el texto lo LEA**: `pieDia`, `pieMes` y `pieHora`
+pasan de texto a FUNCIÓN del n real de las casillas. Mismo arreglo que las
+etiquetas «(hoy)» del banco y que `medicion.queSignifica`.
+
+**2. ⚠️ El margen se leía «±0.00».** Con dos decimales, un margen de 0,0046 se
+redondea a cero — y eso no dice «el margen es pequeño», dice **«este número es
+exacto»**, que es una afirmación y es falsa. Salía en 12 casillas del perfil
+por hora de Intradía.
+
+`margenLegible` escribe `<0.01` por debajo del redondeo. Misma asimetría de
+siempre: equivocarse hacia «el margen es mayor» cuesta leer con más prudencia;
+hacia «no hay margen» cuesta justo lo que esta tarjeta denuncia de la
+competencia. Vive en la matemática (GEMELA) y no en el componente, para poder
+probarla sin navegador — **romperla tumba 4 comprobaciones**.
+
+## ⚠️ OCHO veces falló mi comprobación antes que el código
+
+Van ocho en una sola tarea, y por eso se escriben:
+
+| mi comprobación | qué pasaba |
+|---|---|
+| color en verde/rojo | leía `oklch(0.93 0.005 255)` con `/\d+/` como si fuera `rgb` y marcaba media pantalla |
+| el n del pie | comparaba con el locale `es` y la app usa **es-CO**, que escribe `1.000` con punto de millar |
+| «dos decimales» | buscaba `0.94%` y `0.63%`, los valores del mercado inventado de la OTRA app |
+| conteo de decimales | contaba sobre el texto del `body`, donde los valores adyacentes se pegan («±0.010.63%») |
+
+📌 El arreglo del color salió además **mejor que el original**: en `oklch` el
+**croma** dice directamente si un color está lo bastante saturado para leerse
+como color, así que la comprobación es croma alto Y tono en la banda del rojo o
+del verde. El ÁMBAR se permite a propósito — ahí no afirma nada del mercado,
+avisa de que el número de al lado no es fiable.
+
+**Comprobado que muerde**: pintar un recorrido de verde la tumba.
+
+## El banco de navegador pasa POR EL HOOK
+
+La regla del 2026-10-07. El componente no recibe props: usa
+`useEstacionalidad`, que baja el archivo de verdad, y Playwright intercepta esa
+descarga. Un banco que monta el componente a mano y le entrega los datos **no
+puede cazar un dato que no llega** — que es lo que dejó dos tarjetas meses sin
+pintarse.
+
+⚠️ Y el comodín de rutas va **PRIMERO**: Playwright da prioridad a la ÚLTIMA
+ruta registrada, así que un comodín al final se come las buenas.
+
+## Cómo se verificó
+
+Lint **contado contra `main`** (7 y 8, los mismos), build, y **todas** las
+pruebas sin internet en los dos repos (solo falla `prueba-aviso-real`, que pide
+el secreto VAPID). Los **68 gemelos** idénticos.
+
+📌 Y el lint SUBIÓ de 7 a 11 y de 8 a 15 en la primera pasada: mi script dejó
+apóstrofos escapados (`\'`) dentro de literales de plantilla, donde no hacen
+falta. Se vio **contando**, no mirando la lista — un aviso nuevo escondido entre
+ocho de siempre no se ve leyendo.
+
+Y en **Chromium a 390 px**, los dos bancos con el archivo que escriben los
+publicadores de verdad, en español y árabe, con cuatro estados: normal, árabe,
+404 y archivo sin pares. Los dos vacíos **no pintan absolutamente nada**. Cero
+errores de consola, cero desplazamiento lateral, **cero hojas de datos en
+`rtl`** (58 en Swing, 106 en Intradía, comprobadas con el CSS calculado) y cero
+números en verde o rojo.
+
+En Intradía, además: las 24 horas ordenadas por la hora LOCAL de quien mira, el
+solape moviéndose el doble que la madrugada, y **el cruce EUR/CHF sin panel
+mensual de recorrido** pero con su tabla de dirección — que es la decisión de
+los cruces derivados, comprobada en pantalla.
+
+## 📌 Y la demostración quedó viva dentro de la propia tarjeta
+
+Con el mercado inventado de Intradía —un paseo aleatorio **sin ninguna
+estacionalidad dentro**— la tabla de dirección de la tarjeta dice:
+
+```
+mar. 79 % ±26        jun. 36 % ±26
+```
+
+**43 puntos de diferencia entre dos meses, salidos de puro azar.** No hay que
+contarlo: está en pantalla, debajo del aviso que lo explica.
