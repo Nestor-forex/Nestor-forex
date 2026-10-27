@@ -1,0 +1,60 @@
+name: ¿Importa que el par venga comprimido?
+
+# Néstor pidió el 2026-10-27 «patrones de gráfico (triángulos, canales, cuñas,
+# Fibonacci)» y, al explicarle qué de eso se puede medir de verdad, pidió las
+# dos cosas: la tarjeta en las apps Y la medición.
+#
+# ⚠️⚠️ ES UN DIAGNÓSTICO, NO UNA REGLA NI UN FILTRO. Parte en montones las
+# señales que la app YA produce —comprimidas, expandidas y una banda muerta en
+# medio— y compara. No cambia una señal, no toca `src/`, y este workflow lleva
+# `permissions: contents: read`: no puede escribir en ninguna rama.
+#
+# El listón está en `app/scripts/lib/preregistro-compresion.mjs`, escrito el
+# 2026-10-27 ANTES de la primera corrida, con la hipótesis y su mecanismo
+# dentro. Si saliera que el montón comprimido mide peor, eso NO enciende nada:
+# sería un FILTRO, y los filtros van al banco con su propio listón — van NUEVE
+# familias medidas y nueve fallando.
+#
+# ⚠️ Y lo que de verdad decide qué significa el resultado es la columna SIN
+# COSTES. Si la diferencia desaparece al quitar el peaje, era el peaje: un ATR
+# bajo deja el stop estrecho y el spread, que es fijo en pips, pesa más. Eso
+# solo autoriza una advertencia en pantalla sobre el stop.
+#
+# Cuesta 14 créditos de Twelve Data de los 800 del día.
+#
+# ⚠️ SOLO A MANO.
+
+on:
+  workflow_dispatch:
+    inputs:
+      velas:
+        description: 'Cuántas velas diarias pedir (1500 ≈ 5 años de mercado)'
+        required: false
+        default: '1500'
+
+permissions:
+  contents: read
+
+jobs:
+  medir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Comprobar que la matemática y el listón muerden (sin internet)
+        working-directory: app
+        run: |
+          node scripts/prueba-compresion.mjs
+          node scripts/prueba-compresion-montones.mjs
+
+      - name: Medir
+        working-directory: app
+        env:
+          VELAS: ${{ inputs.velas }}
+          # ⚠️ SIN ESTO EL GUION FALLA al pedir las velas.
+          TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
+        run: node scripts/medir-compresion.mjs

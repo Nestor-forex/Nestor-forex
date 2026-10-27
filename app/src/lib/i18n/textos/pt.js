@@ -80,6 +80,25 @@ export default {
     puedeQueNo: 'E pode ser que nenhuma passe. Isso também é um resultado e conta-se da mesma maneira: esta app mostra os seus próprios números mesmo quando saem maus.',
     riesgo: 'Nada disto é consultoria financeira. Operar em Forex tem risco elevado e podes perder o teu dinheiro. As decisões são tuas.',
   },
+  compr: {
+    titulo: ({ n }) => "Compressão e amplitude (§)".replace('§', n),
+    desc: "Quanto o movimento de cada par se estreitou",
+    paraQue: "Para saber se o par vem apertado antes de abrir. Importa porque o stop desta app sai do ATR: se o par se estreitou, o stop sai mais curto do que o normal e o custo de entrar pesa mais sobre um stop curto. NÃO diz para onde o preço vai.",
+    aviso: "⚠️ Isto NÃO tem direção. Um par apertado pode soltar-se para cima ou para baixo, e também pode ficar apertado semanas. Só mede quanto se move agora comparado com antes.",
+    nivel: {
+      muy: "Muito apertado",
+      algo: "Um pouco apertado",
+      normal: "Normal",
+      ancho: "Mais solto do que o normal",
+    },
+    recorrido: ({ atr }) => "amplitude típica § pips".replace('§', atr),
+    posicion: ({ pct }) => "o preço está a § % da sua amplitude".replace('§', pct),
+    seguidas: ({ n }) => (n === 1 ? "leva 1 vela estreita" : "leva § velas estreitas seguidas".replace('§', n)),
+    avisoStop: "⚠️ Com o movimento assim, o stop sai mais curto do que o normal para este par: o custo de entrar pesa mais.",
+    fibDe: ({ desde, hasta }) => "Níveis do último movimento, de §D a §H".replace('§D', desde).replace('§H', hasta),
+    pie: "Os níveis são geometria do último movimento, não uma previsão: ninguém aqui mediu o que o preço faz ao chegar a eles. E as palavras («muito apertado», «normal») saem de cortes escolhidos à mão, sem medir — por isso o número vai sempre ao lado.",
+  },
+
   barrido: {
     titulo: 'Varredura de hoje',
     tituloLargo: 'Varredura diária · Forex',

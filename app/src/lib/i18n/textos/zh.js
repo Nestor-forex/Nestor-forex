@@ -76,6 +76,25 @@ export default {
     puedeQueNo: '也可能没有任何一个能过。那同样是一个结果，也会照样讲出来：这个应用即使自己的数字很难看，也照样显示。',
     riesgo: '以上都不是投资建议。Forex 交易风险很高，你可能亏掉自己的钱。决定在你自己。',
   },
+  compr: {
+    titulo: ({ n }) => "压缩与区间（§）".replace('§', n),
+    desc: "每个货币对的波动收窄了多少",
+    paraQue: "用来在开仓前判断这个货币对是否处于收窄状态。这很重要，因为本应用的 Stop-loss 来自 ATR：如果波动收窄，Stop-loss 就比平常更短，而入场成本在短 Stop-loss 上占比更大。它不会告诉你价格会往哪边走。",
+    aviso: "⚠️ 这个数字没有方向。收窄的货币对既可能向上也可能向下突破，也可能继续收窄好几周。它衡量的只是现在相比之前波动了多少。",
+    nivel: {
+      muy: "非常收窄",
+      algo: "略微收窄",
+      normal: "正常",
+      ancho: "比平常更宽",
+    },
+    recorrido: ({ atr }) => "典型波幅 § 点".replace('§', atr),
+    posicion: ({ pct }) => "价格位于其区间的 §%".replace('§', pct),
+    seguidas: ({ n }) => (n === 1 ? "连续 1 根窄幅 K 线" : "连续 § 根窄幅 K 线".replace('§', n)),
+    avisoStop: "⚠️ 波动这样时，这个货币对的 Stop-loss 会比平常更短：入场成本的占比更大。",
+    fibDe: ({ desde, hasta }) => "上一段走势的水平，从 §D 到 §H".replace('§D', desde).replace('§H', hasta),
+    pie: "这些水平是上一段走势的几何位置，不是预测：没有人在这里测量过价格到达时会怎么走。而那些词（「非常收窄」、「正常」）来自手工选定、未经测量的分界线——所以数字总是放在旁边。",
+  },
+
   barrido: {
     titulo: '今日扫描',
     tituloLargo: '每日扫描 · Forex',

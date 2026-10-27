@@ -318,6 +318,7 @@ export default function App() {
             setupsReversion={mercado.setupsReversion}
             setupsBollinger={mercado.setupsBollinger}
             correlaciones={mercado.correlaciones}
+            compresionPares={mercado.compresionPares}
             riesgoSenales={mercado.riesgoSenales}
             corte={mercado.corte}
           />

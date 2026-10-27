@@ -181,6 +181,11 @@ export function useMarketData({ thr = 0.5, topN = 3 } = {}) {
     // defecto, así que `Correlacion` y `RiesgoSenales` devolvían `null` sin que
     // nada fallara. Lo vigila ahora `scripts/prueba-cableado.mjs`.
     correlaciones: vista?.correlaciones ?? [],
+    // Compresión, posición en el rango y niveles del último movimiento.
+    // Pasa por el hook desde el primer día, que es la lección del 2026-10-07:
+    // dos tarjetas estuvieron MESES sin pintarse porque `derivarVista` las
+    // calculaba y el hook no las devolvía, y nada fallaba.
+    compresionPares: vista?.compresionPares ?? [],
     riesgoSenales: vista?.riesgoSenales ?? [],
     corte: vista?.corte ?? '…',
   }

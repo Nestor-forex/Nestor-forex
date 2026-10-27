@@ -13386,3 +13386,150 @@ frase, cero desplazamiento lateral y cero errores de consola.
 ⚠️ Y lo que la landing **no puede decir**, que sigue igual que el 2026-08-24:
 ningún número de acierto verificado, ninguna promesa de señales, y la hora de
 envío confirmada con él antes de prometerla.
+
+---
+
+# Compresión, rango y Fibonacci (2026-10-27). Y lo que ya existía sin verse
+
+Néstor pidió **«patrones de gráfico (triángulos, canales, cuñas, Fibonacci)»**
+y, tras explicarle qué de esa lista se puede medir de verdad, dijo **«arranca
+con las dos»** —la tarjeta y la medición— **«pero ya sabes que toda medición o
+prueba debe verse en las apps»**.
+
+⚠️ **NO CAMBIA NI UNA SEÑAL.** Swing sigue en −0,040 por unidad de riesgo e
+Intradía en −0,13.
+
+## ⚠️⚠️ LO PRIMERO: EN INTRADÍA YA EXISTÍA, NO SE VEÍA, Y **DECIDE SEÑALES**
+
+Antes de escribir una línea se buscó en el repositorio, y apareció esto:
+
+| | Swing | Intradía |
+|---|---|---|
+| compresión calculada | ❌ no existía | ✅ `atrAbs / atrMedio(12)`, desde meses atrás |
+| publicada en `barrido.json` | ❌ | ✅ |
+| se ve en pantalla | ❌ | ❌ **llegaba a la nada** |
+| **decide señales** | — | ✅ **SÍ**, las de rango (`COMPRESION_MIN = 0.75`) |
+| medida | ❌ | ⚠️ hay fila en `backtest.mjs`, **sin resultado escrito** |
+
+O sea que allí no era información: era **un filtro encendido del que no hay
+ningún número**. Es la quinta vez que se va a construir algo que ya existía (el
+puente de MT5, el comparador de diccionarios, la prueba del barrido publicado,
+el botón de borrar), y aquí ni siquiera hacía falta leer código: bastaba
+`grep compresion`.
+
+📌 Por eso `src/lib/compresion.js` usa **LA MISMA fórmula** que ya corría allí y
+no una nueva. Dos definiciones con el mismo nombre serían la etiqueta
+equivocada de siempre, **con el agravante de que una de las dos ya mueve
+señales de verdad**.
+
+## Qué entró de la lista, y el motivo medido de lo que no
+
+| | | por qué |
+|---|---|---|
+| compresión | ✅ | el stop sale del ATR |
+| posición en el rango | ✅ | sale de los extremos que ya viajan |
+| Fibonacci | ⚠️ solo NIVELES | sin flechas, sin color, sin objetivo |
+| **triángulos, cuñas, canales** | ❌ | **el NFX-LSS ES reconocimiento de patrones** y midió −0,08 / −0,14 / −0,16, y su barrido de liquidez marcó las señales **PEORES** (197 ops a −0,08 con él contra 595 a +0,05 sin él) |
+
+📌 Y hay un motivo extra para los patrones con nombre: **«triángulo ascendente»
+lleva la dirección DENTRO del nombre.** Es el error del código de divisa en rojo
+del calendario — afirmar hacia dónde va el precio sin que ningún dato lo diga.
+
+## ⚠️ POR QUÉ LA COMPRESIÓN NO ES UN ADORNO, en una línea
+
+**El stop sale del ATR.** Un par estrechado tiene el ATR bajo, así que el stop
+sale más corto de lo normal para ese par — y el coste de entrar, fijo en pips,
+pesa más sobre un stop corto. Precedente con fecha: el 2026-08-09 los stops
+salían de **12 pips en USD/CAD**, un par que se mueve 40 en un día tranquilo.
+
+## El listón, escrito ANTES (`preregistro-compresion.mjs`, 2026-10-27)
+
+Con la hipótesis **y su mecanismo**: comprimido medirá PEOR, y **no por
+dirección** sino porque el spread pesa más sobre un stop corto.
+
+⚠️⚠️ **Y EL CRITERIO QUE DECIDE QUÉ SIGNIFICA EL RESULTADO ES LA COLUMNA SIN
+COSTES:**
+
+- si la diferencia **desaparece** sin costes → era el peaje. Solo autoriza una
+  **advertencia** en pantalla sobre el stop, nunca un filtro;
+- si **sobrevive** → entonces la compresión dice algo que no es el peaje, y eso
+  sería candidato a filtro **con su propio listón**, no con éste.
+
+Es el criterio que salvó la lectura del H4 del NFX-LSS: allí la app en M15
+perdía el doble que en H1 **acertando exactamente igual**, o sea que la
+diferencia era el peaje y no la dirección. Sin esa columna las dos cosas se
+leen igual.
+
+## ⚠️ LOS CORTES DE LA ETIQUETA NO ESTÁN MEDIDOS, y se dice por qué
+
+La única distribución disponible al escribirlo eran **los 14 pares del barrido
+de HOY**, y catorce números del mismo instante **comparten el mercado entre sí**:
+no son una distribución, son un punto. Así que los cortes están elegidos a mano
+y **la pantalla enseña SIEMPRE el número al lado** — la palabra orienta, el
+número es el dato.
+
+`medir-compresion.mjs` imprime los percentiles sobre todo el periodo justo para
+poder fijarlos con datos en la siguiente vuelta. **Nunca al revés.**
+
+⚠️ Y son PRIMOS, con un motivo estructural medido: en Intradía `atrWilder`
+tiene **ventana DURA de 60 velas**, así que el ATR «de antes» solapa 48 con el
+de ahora y el cociente se mueve mucho menos — los 18 pares reales caían entre
+**0,88 y 1,12**. En Swing recorre la serie ENTERA y el rango es más ancho.
+
+## ⚠️⚠️ TRES DEFECTOS QUE SOLO SALIERON MIRANDO LA CAPTURA
+
+Ninguno lo veían el build, el lint ni las 50 pruebas.
+
+**1. «lleva 1 vela estrecha» salía en los CATORCE pares.** No era el mercado: la
+última vela del barrido es la del día **EN CURSO**, que va a medias, así que su
+rango es corto casi siempre. **Un dato bien calculado describiendo otra cosa de
+la que decía describir**, que es la familia que este archivo colecciona. Ahora
+se cuenta sin esa vela, y el banco de navegador lleva la comprobación que lo
+habría cazado: *si los 14 pares dicen lo mismo, no está midiendo el mercado*.
+
+**2. El pie de Intradía hablaba de «los niveles»** en una tarjeta que **no
+dibuja ninguno** — se copió de la hermana, que sí los tiene. «Al cambiar algo,
+mirar también quién lo NOMBRA», otra vez.
+
+**3. Con el tope de barra de la hermana (2), las 18 barras de Intradía salían
+idénticas.** Una barra que se ve igual en todas las filas no informa de nada.
+`TOPE_BARRA_COMPRESION` pasa a ser PRIMO (Swing 2, Intradía 1,3).
+
+## 📌 Y los guardianes del repositorio saltaron TRES veces, solos
+
+| guardián | qué cazó |
+|---|---|
+| `prueba-rejilla-limpia` | el guion nuevo pedía velas **sin decidir su rejilla** |
+| `prueba-umbral` | **un error MÍO**: el humo escribía el `0.5` del umbral de fuerza **a mano** |
+| `prueba-gemelos` | `Compresion.jsx` existía en las dos apps **sin clasificar** |
+
+El segundo es el que más vale: es el fallo del 2026-10-12 (el umbral que decide
+TODAS las señales, copiado en nueve guiones) **en pequeño, cometido por mí el
+día de escribirlo**. Van cuatro veces que un guardián de este repositorio hace
+su trabajo sobre algo recién añadido.
+
+## 📌 Y un humo viejo del scratchpad con la forma EQUIVOCADA
+
+Había un `humo-cruces.mjs` de una tarea anterior que construía
+`rangosPar[par] = { highs, lows }`. La forma real, comprobada en `velas.mjs` y
+no supuesta, es **`rangosPar[fecha][par] = { h, l }`**. Con la forma mal,
+`marketCalc` cae al `?? closes[i]` y **mide sobre cierres llamándolo rangos**.
+No se copió. **Un banco de pruebas que uno no escribió se lee antes de reusarlo.**
+
+## Lo que queda pendiente, y por qué
+
+⚠️ **La medición NO se ha lanzado.** Un workflow nuevo **no se puede despachar
+desde una rama**: GitHub solo deja lanzar a mano los que ya existen en la rama
+por defecto (404). Ya estaba escrito del 2026-10-21 con la sonda de
+volatilidad. Se lanza **en cuanto se fusione** — 14 créditos, solo lectura.
+
+⚠️ **Y por eso la tarjeta NO lleva ningún número de backtest.** El requisito de
+Néstor —«toda medición debe verse en las apps»— se cumple con la advertencia
+aritmética, que es cierta sin medir. El número medido se añade después y
+**LEYÉNDOLO**, como hace `medicion.js`: escribirlo antes de tenerlo sería
+inventarlo, y escribirlo a mano es lo que dejó `medicion.queSignifica`
+diciendo «55 %» durante meses.
+
+⚠️ **Y falta medir el filtro de compresión de Intradía**, que lleva meses
+decidiendo señales de rango sin un número. La fila ya existe en su
+`backtest.mjs`; solo hay que correrlo.

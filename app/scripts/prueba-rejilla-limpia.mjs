@@ -331,6 +331,12 @@ const LIMPIA = [
   // normal es que esté haciendo su trabajo y no que estorbe.
   'scripts/medir-bollinger.mjs',
   'scripts/medir-carry.mjs',
+  // Diagnóstico de la compresión. Limpia, como todos los que miden la app: lo
+  // que compara son las señales que la app daría de verdad, y la app corre con
+  // la rejilla limpia desde el 2026-10-06. Con la sucia, además, las velas de
+  // fin de semana —el 27 % del recorrido normal— hundirían el ATR y moverían
+  // justo el número que este guion parte en montones.
+  'scripts/medir-compresion.mjs',
 ]
 
 const llaman = readdirSync(new URL('./', import.meta.url))

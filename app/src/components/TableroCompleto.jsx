@@ -13,6 +13,7 @@ import Glosario from './Glosario'
 import Frescura from './Frescura'
 import ClimaMercado from './ClimaMercado'
 import Correlacion from './Correlacion'
+import Compresion from './Compresion'
 import RiesgoSenales from './RiesgoSenales'
 import AvisoSombra from './AvisoSombra'
 import MidePositivo from './MidePositivo'
@@ -149,7 +150,7 @@ function RazonList({ items, emptyText }) {
   )
 }
 
-export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], setupsBollinger = [], correlaciones = [], riesgoSenales = [], corte, generadoEl, horasViejo, costePorAntiguedad }) {
+export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], setupsBollinger = [], correlaciones = [], riesgoSenales = [], compresionPares = [], corte, generadoEl, horasViejo, costePorAntiguedad }) {
   const { t, locale } = useIdioma()
   // Cómo le va de verdad a la regla de reversión, contado en vivo. Ver el
   // porqué en `useResumenReal`: este número estuvo escrito a mano y se quedó
@@ -205,6 +206,13 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
             senal. Va antes de las tablas para que se lea al decidir cuantas
             operaciones abrir, no despues de haberlas elegido. */}
         <Correlacion correlaciones={correlaciones} />
+
+        {/* Debajo de la correlación y por el mismo criterio: es contexto de
+            RIESGO, no una señal, y va ANTES de las tablas para que se lea al
+            decidir, no después de haber elegido. La correlación dice si dos
+            operaciones son la misma apuesta; ésta, si el par viene apretado y
+            el stop va a salir corto. */}
+        <Compresion pares={compresionPares} />
 
         {stale && (
           <div style={{ padding: '12px 14px', border: '1px solid var(--amber)', borderRadius: 6, color: 'var(--amber)', fontSize: 13, lineHeight: 1.5 }}>
