@@ -1,4 +1,5 @@
 import { PARAMS_SOMBRA, posicionDe, reglaBollinger } from './bollinger.js'
+import { compresionDe } from './compresion.js'
 import { matrizCorrelacion, paresQueVanJuntos, riesgoEntreSenales } from './correlacion.js'
 import { crearT } from './i18n/crearT.js'
 import { IDIOMA_BASE } from './i18n/idiomas.js'
@@ -40,6 +41,20 @@ export const emaLast = (c, p) => {
   for (let i = p; i < c.length; i++) e = c[i] * k + e * (1 - k)
   return e
 }
+
+// Cuántas velas se dejan fuera para calcular el ATR «de antes» con el que se
+// compara el de ahora (la compresión).
+//
+// ⚠️ ES EL MISMO NÚMERO QUE EN LA APP HERMANA, y por una vez eso NO rompe la
+// regla de que lo medido en una app no vale en la otra: la pregunta es «el ATR
+// de esta ventana contra el de la anterior», y la ventana del ATR son 14
+// VELAS en las dos. Doce velas atrás es dejar la ventana anterior casi sin
+// solape — y eso se cuenta en velas, no en horas de reloj.
+//
+// Lo que sí es distinto, y por eso los umbrales de la tarjeta son PRIMOS: un
+// cociente de 0,70 en velas de un día no significa lo mismo que en velas de
+// una hora.
+export const VELAS_ATRAS_COMPRESION = 12
 
 // El ATR de siempre (Wilder), con el rango real de cada día: el mayor de
 // —cuánto se movió el día, distancia del máximo al cierre anterior, distancia
@@ -225,6 +240,25 @@ export function computarBarrido(fechas, rates, rangosPar = null) {
     const e100 = emaLast(closes, 100)
     const atrAbs = conRangos ? atrWilder(highs, lows, closes) : atrCierres(closes)
     const atrPct = (atrAbs / c) * 100
+    // La compresión: el movimiento de AHORA contra el de ANTES de las últimas
+    // velas. Misma fórmula que la app hermana, que la tiene desde meses antes
+    // (ver la cabecera de `compresion.js`): dos definiciones distintas con el
+    // mismo nombre serían la etiqueta equivocada de siempre.
+    //
+    // ⚠️ Se calcula AQUÍ y se publica porque la app NO puede recalcularla: el
+    // barrido solo le manda 20 máximos y mínimos, y esto necesita la serie
+    // entera. Es el mismo motivo por el que `correl` sí se publica.
+    const atrAntes =
+      closes.length > VELAS_ATRAS_COMPRESION + 2
+        ? conRangos
+          ? atrWilder(
+              highs.slice(0, -VELAS_ATRAS_COMPRESION),
+              lows.slice(0, -VELAS_ATRAS_COMPRESION),
+              closes.slice(0, -VELAS_ATRAS_COMPRESION),
+            )
+          : atrCierres(closes.slice(0, -VELAS_ATRAS_COMPRESION))
+        : NaN
+    const compresion = compresionDe(atrAbs, atrAntes)
     const tend = c > e20 && e20 > e50 ? 'Alcista' : c < e20 && e20 < e50 ? 'Bajista' : 'Rango'
     // La misma tendencia vista en semanal y en mensual. Son dos cadenas cortas
     // por par (28 en total), así que no engordan el barrido que baja cada
@@ -249,6 +283,7 @@ export function computarBarrido(fechas, rates, rangosPar = null) {
       rsiV: rsi(closes.slice(-60)),
       atrPct,
       atrAbs,
+      compresion,
       tend,
       tendSem,
       tendMes,
@@ -678,6 +713,15 @@ const mkSetup = (p, lado, esc = {}, t, tipo = 'tendencia') => {
       bajos20: p.bajos20,
       rsi: Math.round(p.rsiV),
       atrPct: p.atrPct,
+      // Cuánto se ha estrechado el movimiento del par. Va aquí para que el
+      // banco de pruebas pueda partir las señales por compresión sin tener que
+      // recalcularla por su cuenta — que es cómo se acaba midiendo un número
+      // distinto del que ve la app.
+      //
+      // ⚠️ NO decide nada en esta app: no aparece en `clasificar`, ni en
+      // `mkSetup`, ni en ningún filtro. Es información, y si algún día decide
+      // será con su listón escrito antes.
+      compresion: p.compresion,
       tend: p.tend,
       fuerzaB: esc[p.b],
       fuerzaQ: esc[p.q],

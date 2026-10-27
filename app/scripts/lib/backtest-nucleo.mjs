@@ -218,6 +218,11 @@ export function generarSenales(
         pipRiesgo: Math.round(Math.abs(c.precio - sl) / pip),
         pipBeneficio: Math.round(Math.abs(tp - c.precio) / pip),
         rsi: c.rsi,
+        // Cuánto se había estrechado el movimiento del par ESE día. Sirve para
+        // partir las señales en comprimidas y expandidas sin recalcular nada:
+        // recalcularlo aparte es cómo se acaba midiendo un número que no es el
+        // que la app vio. `null` si no se pudo calcular, nunca 1.
+        compresion: c.compresion ?? null,
         // Para la variante de "tierra de nadie": ¿queda algún nivel real por
         // delante, o el precio ya se salió del rango de los últimos 20 días?
         res: c.res,
