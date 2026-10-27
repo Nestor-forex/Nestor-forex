@@ -117,6 +117,25 @@ export default {
     puedeQueNo: 'Y puede que ninguno lo pase. Eso también es un resultado y se cuenta igual: esta app enseña sus propios números aunque salgan malos.',
     riesgo: 'Nada de esto es asesoría financiera. Operar en Forex tiene riesgo alto y puedes perder tu dinero. Las decisiones son tuyas.',
   },
+  compr: {
+    titulo: ({ n }) => "Compresión y rango (§)".replace('§', n),
+    desc: "Cuánto se ha estrechado el movimiento de cada par",
+    paraQue: "Para saber si el par viene apretado antes de abrir. Importa porque el stop de esta app sale del ATR: si el par se ha estrechado, el stop sale más corto de lo normal y el costo de entrar pesa más sobre un stop corto. NO dice hacia dónde va a ir el precio.",
+    aviso: "⚠️ Esto NO tiene dirección. Un par apretado puede soltarse hacia arriba o hacia abajo, y también puede seguir apretado semanas. Lo único que mide es cuánto se mueve ahora comparado con antes.",
+    nivel: {
+      muy: "Muy apretado",
+      algo: "Algo apretado",
+      normal: "Normal",
+      ancho: "Más suelto de lo normal",
+    },
+    recorrido: ({ atr }) => "recorrido típico § pips".replace('§', atr),
+    posicion: ({ pct }) => "el precio va al § % de su rango".replace('§', pct),
+    seguidas: ({ n }) => (n === 1 ? "lleva 1 vela estrecha" : "lleva § velas estrechas seguidas".replace('§', n)),
+    avisoStop: "⚠️ Con el movimiento así, el stop sale más corto de lo normal para este par: el costo de entrar pesa más.",
+    fibDe: ({ desde, hasta }) => "Niveles del último movimiento, de §D a §H".replace('§D', desde).replace('§H', hasta),
+    pie: "Los niveles son geometría del último movimiento, no una predicción: nadie ha medido aquí qué hace el precio al llegar a ellos. Y las palabras («muy apretado», «normal») salen de cortes elegidos a mano, sin medir — por eso el número va siempre al lado.",
+  },
+
   barrido: {
     titulo: 'Barrido de hoy',
     tituloLargo: 'Barrido diario · Forex',

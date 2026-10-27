@@ -76,6 +76,25 @@ export default {
     puedeQueNo: 'Ve hiçbiri geçmeyebilir. O da bir sonuçtur ve aynı şekilde anlatılır: bu uygulama kendi sayılarını kötü çıktığında bile gösterir.',
     riesgo: 'Bunların hiçbiri finansal tavsiye değildir. Forex işlemi yüksek risk taşır ve paranı kaybedebilirsin. Kararlar senin.',
   },
+  compr: {
+    titulo: ({ n }) => "Sıkışma ve aralık (§)".replace('§', n),
+    desc: "Her paritenin hareketi ne kadar daraldı",
+    paraQue: "Açmadan önce paritenin sıkışmış gelip gelmediğini bilmek için. Önemli, çünkü bu uygulamanın Stop-loss’u ATR’den çıkıyor: parite daraldıysa Stop-loss normalden kısa çıkar ve giriş maliyeti kısa bir Stop-loss üzerinde daha fazla ağırlık yapar. Fiyatın nereye gideceğini söylemez.",
+    aviso: "⚠️ Bunun yönü YOK. Sıkışmış bir parite yukarı da aşağı da boşalabilir, haftalarca sıkışık da kalabilir. Ölçtüğü tek şey, öncesine kıyasla şimdi ne kadar hareket ettiği.",
+    nivel: {
+      muy: "Çok sıkışık",
+      algo: "Biraz sıkışık",
+      normal: "Normal",
+      ancho: "Normalden geniş",
+    },
+    recorrido: ({ atr }) => "tipik aralık § pip".replace('§', atr),
+    posicion: ({ pct }) => "fiyat aralığının % § seviyesinde".replace('§', pct),
+    seguidas: ({ n }) => (n === 1 ? "üst üste 1 dar mum" : "üst üste § dar mum".replace('§', n)),
+    avisoStop: "⚠️ Bu hareketle, bu parite için Stop-loss normalden kısa çıkar: giriş maliyeti daha fazla ağırlık yapar.",
+    fibDe: ({ desde, hasta }) => "Son hareketin seviyeleri, §D ile §H arası".replace('§D', desde).replace('§H', hasta),
+    pie: "Seviyeler son hareketin geometrisidir, tahmin değil: fiyat oralara geldiğinde ne yaptığını burada kimse ölçmedi. Ve kelimeler («çok sıkışık», «normal») elle seçilmiş, ölçülmemiş eşiklerden geliyor — bu yüzden sayı hep yanında.",
+  },
+
   barrido: {
     titulo: 'Bugünün taraması',
     tituloLargo: 'Günlük tarama · Forex',

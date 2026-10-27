@@ -101,6 +101,34 @@ if (cubos.sinDato.length) {
 }
 console.log('')
 
+// ── LA DISTRIBUCIÓN, que es lo que falta para fijar los cortes con datos ──
+//
+// ⚠️ Los umbrales con los que la TARJETA pone una etiqueta («muy comprimido»,
+// «normal»…) hoy NO están medidos: son de presentación, elegidos como
+// fracciones redondas del movimiento normal. Y no se pueden derivar de una
+// foto del barrido publicado, porque los 14 pares de un mismo instante
+// comparten el mercado y están correlacionados: 14 números de hoy no son una
+// distribución, son un punto.
+//
+// Esto es lo que sí la da, y sale gratis: la compresión de TODAS las señales
+// del periodo. Con estos percentiles delante se pueden fijar los cortes de la
+// etiqueta en la siguiente vuelta — y nunca al revés.
+const compresiones = senales.map((s) => s.compresion).filter(Number.isFinite).sort((a, b) => a - b)
+if (compresiones.length) {
+  const q = (p) => compresiones[Math.min(compresiones.length - 1, Math.floor(p * compresiones.length))]
+  console.log('LA DISTRIBUCIÓN DE LA COMPRESIÓN (para fijar los cortes de la etiqueta con datos)')
+  console.log('')
+  console.log(
+    `  n=${compresiones.length}  mín ${q(0).toFixed(2)}  p10 ${q(0.1).toFixed(2)}  ` +
+      `p25 ${q(0.25).toFixed(2)}  mediana ${q(0.5).toFixed(2)}  p75 ${q(0.75).toFixed(2)}  ` +
+      `p90 ${q(0.9).toFixed(2)}  máx ${q(1).toFixed(2)}`,
+  )
+  console.log('')
+  console.log('  ⚠️ Los cortes que usa la TARJETA son de presentación y NO están')
+  console.log('     medidos. Con esta fila delante se pueden fijar con datos.')
+  console.log('')
+}
+
 const num = (x) => (x === null || !Number.isFinite(x) ? '    —' : (x >= 0 ? '+' : '') + x.toFixed(3)).padStart(7)
 const pct = (x) => (x === null || !Number.isFinite(x) ? '   — ' : `${x.toFixed(0)}%`.padStart(5))
 

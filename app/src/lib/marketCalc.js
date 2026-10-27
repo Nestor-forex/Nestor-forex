@@ -1,5 +1,5 @@
 import { PARAMS_SOMBRA, posicionDe, reglaBollinger } from './bollinger.js'
-import { compresionDe } from './compresion.js'
+import { compresionDe, fibonacci, nivelDe, posicionEnRango, velasEstrechas } from './compresion.js'
 import { matrizCorrelacion, paresQueVanJuntos, riesgoEntreSenales } from './correlacion.js'
 import { crearT } from './i18n/crearT.js'
 import { IDIOMA_BASE } from './i18n/idiomas.js'
@@ -55,6 +55,39 @@ export const emaLast = (c, p) => {
 // cociente de 0,70 en velas de un día no significa lo mismo que en velas de
 // una hora.
 export const VELAS_ATRAS_COMPRESION = 12
+
+// ⚠️⚠️ LOS CORTES DE LA ETIQUETA SON DE PRESENTACIÓN Y **NO ESTÁN MEDIDOS**.
+//
+// Viven aquí, en un archivo PRIMO, y no en `compresion.js`, que es GEMELO: un
+// cociente de 0,75 no significa lo mismo en velas de un día que en velas de
+// una hora. Lo que se comparte entre apps es la fórmula, nunca el umbral.
+//
+// Y son fracciones redondas del movimiento normal (tres cuartos, un cuarto
+// más), elegidas a mano. NO se derivaron de los datos, y el motivo importa:
+// la única distribución disponible al escribirlo eran los 14 pares del barrido
+// de HOY, y catorce números del mismo instante comparten el mercado entre sí
+// — no son una distribución, son un punto. `medir-compresion.mjs` imprime los
+// percentiles sobre todo el periodo justamente para poder fijarlos con datos
+// en la siguiente vuelta.
+//
+// Por eso la pantalla enseña SIEMPRE el número al lado de la etiqueta: la
+// palabra orienta, el número es el dato. Si la etiqueta fuera lo único
+// visible, un corte sin medir se estaría leyendo como un hecho.
+export const UMBRALES_COMPRESION = { muy: 0.75, algo: 0.9, ancho: 1.25 }
+
+// Qué fracción del rango mediano hace «estrecha» a una vela, para contar
+// cuántas seguidas lleva el par. Mismo aviso que arriba: de presentación.
+// Hasta dónde llega la barra de la tarjeta. PRIMO como los umbrales: aquí el
+// ATR recorre la serie entera, así que el cociente se mueve en un rango más
+// ancho que en la app hermana, donde la ventana dura de 60 velas lo aprieta.
+export const TOPE_BARRA_COMPRESION = 2
+
+export const FRACCION_VELA_ESTRECHA = 0.6
+
+// El movimiento mínimo, en veces el ATR, para que valga la pena dibujar
+// niveles de Fibonacci. Por debajo de esto los cinco niveles caen a décimas de
+// pip unos de otros: eso no son niveles, es ruido con cinco etiquetas encima.
+export const MIN_ATR_FIBONACCI = 2
 
 // El ATR de siempre (Wilder), con el rango real de cada día: el mayor de
 // —cuánto se movió el día, distancia del máximo al cierre anterior, distancia
@@ -1010,6 +1043,58 @@ export function derivarVista(
   // que cruzarlas hablaría de operaciones que nadie va a abrir.
   const riesgoSenales = riesgoEntreSenales(data.correl, setups)
 
+  // CUÁNTO SE HA ESTRECHADO EL MOVIMIENTO DE CADA PAR, DÓNDE ESTÁ EL PRECIO
+  // DENTRO DE SU RANGO, Y LOS NIVELES DEL ÚLTIMO MOVIMIENTO.
+  //
+  // ⚠️ Es INFORMACIÓN y no decide nada: ni aparece en `clasificar`, ni en
+  // `mkSetup`, ni en ningún filtro. En la app hermana la compresión SÍ decide
+  // (las señales de rango), y por eso allí la tarjeta tiene que rotularlo así
+  // — aquí no, y confundir las dos cosas sería afirmar algo falso.
+  //
+  // Se ordena por compresión, los más estrechos primero: es lo que hay que
+  // mirar, porque el stop de la app sale del ATR y un ATR bajo lo deja corto.
+  //
+  // ⚠️ Como `correlaciones` y al revés que `setupsCaida`: un barrido viejo sin
+  // `compresion` NO revienta. Esos pares salen sin etiqueta y la tarjeta se
+  // queda sin ellos; lo único que se pierde es ver una tarjeta informativa
+  // hasta que el vigía vuelva a correr.
+  const compresionPares = paresRaw
+    .map((p) => {
+      const fib = fibonacci({
+        altos: p.altos20,
+        bajos: p.bajos20,
+        atrAbs: p.atrAbs,
+        minATR: MIN_ATR_FIBONACCI,
+      })
+      return {
+        name: p.name,
+        dec: p.dec,
+        precio: p.c,
+        compresion: p.compresion ?? null,
+        nivel: nivelDe(p.compresion, UMBRALES_COMPRESION),
+        posicion: posicionEnRango(p.c, p.lo20, p.hi20),
+        sup: p.lo20,
+        res: p.hi20,
+        // ⚠️ SIN LA ÚLTIMA VELA, y esto salió MIRANDO LA CAPTURA: contándola,
+        // los CATORCE pares salían con «lleva 1 vela estrecha». No era el
+        // mercado — es que la última vela del barrido es la del día EN CURSO,
+        // que va a medias, así que su rango es corto en casi todos los pares
+        // casi siempre. Un dato bien calculado describiendo otra cosa de la
+        // que decía describir, que es la familia de siempre.
+        //
+        // Ya hay precedente con número: `anchoDeLaVelaEnCurso` existe justo
+        // para medir cuánto trae esa vela, y el 2026-10-07 salió al 104 % a
+        // las 17:42 UTC — o sea que a media mañana puede traer la mitad.
+        estrechas: velasEstrechas(p.altos20?.slice(0, -1), p.bajos20?.slice(0, -1), FRACCION_VELA_ESTRECHA),
+        atrPips: p.atrAbs / (p.dec === 2 ? 0.01 : 0.0001),
+        fib,
+      }
+    })
+    // Un par sin compresión calculable no se enseña: una fila con un hueco
+    // donde va el número se lee como que la app está rota.
+    .filter((x) => Number.isFinite(x.compresion))
+    .sort((a, b) => a.compresion - b.compresion)
+
   // HASTA DÓNDE LLEGÓ LA DIVERGENCIA DE HOY, Y CUÁNTO HACÍA FALTA.
   //
   // ⚠️ No decide nada. Es INFORMACIÓN, y existe porque sin ella un reporte sin
@@ -1080,6 +1165,7 @@ export function derivarVista(
     setupsBollinger,
     correlaciones,
     riesgoSenales,
+    compresionPares,
     corte,
     // El umbral EFECTIVO con el que se acaba de clasificar, no la constante:
     // si alguien llama con otro `thr`, esto dice el que se usó de verdad.
