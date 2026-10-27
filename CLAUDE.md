@@ -13533,3 +13533,120 @@ diciendo «55 %» durante meses.
 ⚠️ **Y falta medir el filtro de compresión de Intradía**, que lleva meses
 decidiendo señales de rango sin un número. La fila ya existe en su
 `backtest.mjs`; solo hay que correrlo.
+
+---
+
+# La compresión NO pasa el listón (2026-10-27). Y mi mecanismo era FALSO
+
+Lanzada en cuanto se fusionó el PR #135. 1.337 días de mercado (2021-09-07 a
+2026-10-27), 2.496 señales, vara neutra 1:1, spread por par, 14 créditos.
+
+**Veredicto calculado por `juzgar()`: ❌ NO PASA, falla 2 criterios.**
+
+| montón | ops | acierto | por 1R | 1ª mit | 2ª mit |
+|---|---:|---:|---:|---:|---:|
+| **COMPRIMIDO (< 0,8)** | **47** | 45 % ±14 | **−0,121** | −0,240 | −0,048 |
+| en medio (banda muerta) | 1.276 | 47 % ±3 | −0,080 | −0,107 | −0,052 |
+| **EXPANDIDO (> 1)** | 1.154 | 51 % ±3 | **+0,005** | +0,026 | −0,020 |
+| *TODAS juntas (la app)* | *2.477* | *49 % ±2* | *−0,041* | −0,045 | −0,037 |
+
+Los dos que fallan: **el montón comprimido tiene 47 operaciones y hacen falta
+150**, y **los márgenes SE SOLAPAN** (6,4 puntos de diferencia contra ±17,2
+sumados). Con eso no se distingue nada, y el listón lo dice sin que nadie
+argumente.
+
+## ⚠️⚠️ EL MECANISMO QUE ESCRIBÍ ANTES ERA FALSO. EL DUODÉCIMO
+
+La hipótesis, escrita en `preregistro-compresion.mjs` con fecha anterior a la
+corrida, decía: el comprimido medirá peor **y no por dirección** sino porque
+*«el stop sale del ATR, así que con el ATR bajo el stop queda estrecho y el
+spread, fijo en pips, pesa más»*.
+
+**El stop mediano de cada montón, que el propio informe imprime:**
+
+| montón | stop mediano |
+|---|---:|
+| **COMPRIMIDO** | **146,5 pips** |
+| en medio | 123 pips |
+| EXPANDIDO | 130 pips |
+
+**El comprimido tiene el stop MÁS LARGO de los tres, no el más corto.** O sea
+lo contrario exacto de lo que predije.
+
+📌 **Y la razón, mirando la fórmula y no de memoria:** el stop es
+`lo10 − 0,5 × ATR`, así que lo manda **la distancia al mínimo de 10 días**, no
+el ATR — el ATR es solo medio cojín encima (el 16,6 % del stop, medido el
+2026-09-30). Y la compresión no mide si el par se mueve poco: mide si su ATR
+**se ha encogido ÚLTIMAMENTE**. Un par cuyo ATR acaba de encogerse es
+típicamente uno que **se movió mucho y luego se calmó**, así que su mínimo de
+10 días quedó LEJOS. Las dos cosas van juntas por construcción.
+
+⚠️ Es el **duodécimo** mecanismo convincente de este proyecto que resulta falso
+al medirlo, y el agravante de este es que el razonamiento usaba un número de
+este mismo archivo (el cojín del 16,6 %) **que lo desmentía si se leía
+entero**: si el ATR es el 16,6 % del stop, el otro 83,4 % es `lo10`, y era ahí
+donde había que mirar.
+
+📌 Lo que salvó la medición es que el informe **imprime el stop mediano de cada
+montón** — se puso justo para «ver el mecanismo», y lo que enseñó fue que el
+mecanismo no existe. Un informe que solo diera el resultado habría dejado la
+hipótesis en pie, con el número a favor y la explicación equivocada.
+
+## La otra lectura, que el listón también fijó antes
+
+**La brecha SIN COSTES sobrevive: +0,129 contra un umbral de 0,02.** O sea que
+la diferencia **no es el peaje** — con el peaje quitado sigue ahí. Eso, según el
+criterio escrito antes, la haría **candidata a FILTRO con su propio listón**…
+salvo que **el montón tiene 47 operaciones**, así que no hay nada que perseguir
+todavía. Las dos mitades de la lectura van juntas o no dicen nada.
+
+## ⚠️ El montón expandido mide positivo, y NO es un hallazgo
+
+1.154 operaciones, 51 %, **+0,005 con costes y +0,023 sin ellos**. Suena a
+descubrimiento y no lo es: **no gana en las dos mitades** (+0,026 y **−0,020**),
+que es el criterio que distingue una ventaja de un reparto afortunado. No
+pasaría ningún listón de este proyecto, y sigue en pie lo de siempre — **esto es
+un DIAGNÓSTICO: parte las señales que ya existen, no enciende ninguna.**
+
+## ⚠️⚠️ LO QUE SÍ CAMBIA: los cortes de la tarjeta están MAL CALIBRADOS
+
+Para esto se imprimió la distribución, y es lo único accionable del día:
+
+```
+n=2496  mín 0.45  p10 0.87  p25 0.92  mediana 0.99  p75 1.06  p90 1.17  máx 12.64
+```
+
+**La compresión real es MUCHO más estrecha de lo que supuse.** Contra los cortes
+que la tarjeta usa hoy (`muy: 0,75 · algo: 0,9 · ancho: 1,25`):
+
+| etiqueta | corte de hoy | dónde cae de verdad |
+|---|---:|---|
+| «muy apretado» | < 0,75 | **por debajo del p10 (0,87)** — casi nunca sale |
+| «algo apretado» | < 0,9 | ~p10-p15 |
+| «ancho» | > 1,25 | **por encima del p90 (1,17)** — casi nunca sale |
+
+O sea que **dos de las cuatro etiquetas son prácticamente decorativas**: un par
+casi nunca llega a merecerlas. Los cortes se eligieron a mano a propósito —
+quedó escrito que la única distribución disponible eran los 14 pares de un día,
+que *«no son una distribución, son un punto»*— y ahora hay 2.496 observaciones
+para fijarlos.
+
+⚠️ **Fijarlos es un cambio de lo que Néstor VE**, así que no se toca sin que lo
+apruebe. Y cuando se toque: por **percentiles de esta distribución**, no por
+números redondos.
+
+⚠️ **Y los de Intradía NO se copian de aquí.** Allí el rango real medido va de
+**0,88 a 1,12** (su `atrWilder` tiene ventana dura de 60 velas y el ATR «de
+antes» solapa 48), así que necesita su propia corrida. Esa app tiene la fila en
+su `backtest.mjs` y sigue sin correrse.
+
+## ⚠️ Lo que esto NO autoriza, pase lo que pase
+
+- tocar **ninguna señal** de ninguna de las dos apps, ni un umbral, ni el aviso
+  al celular;
+- tocar **`COMPRESION_MIN` de Intradía**, que es el único sitio del proyecto
+  donde la compresión YA decide algo (las señales de rango) **y sigue sin tener
+  un solo número medido**;
+- aflojar un criterio al ver el resultado — el listón es del 2026-10-27 y la
+  corrida es de ese mismo día, unas horas después;
+- leer un montón de 47 operaciones como un diagnóstico.
