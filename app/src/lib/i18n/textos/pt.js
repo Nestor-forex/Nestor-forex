@@ -96,7 +96,7 @@ export default {
     seguidas: ({ n }) => (n === 1 ? "leva 1 vela estreita" : "leva § velas estreitas seguidas".replace('§', n)),
     avisoStop: "⚠️ Com o movimento assim, o stop sai mais curto do que o normal para este par: o custo de entrar pesa mais.",
     fibDe: ({ desde, hasta }) => "Níveis do último movimento, de §D a §H".replace('§D', desde).replace('§H', hasta),
-    pie: "Os níveis são geometria do último movimento, não uma previsão: ninguém aqui mediu o que o preço faz ao chegar a eles. E as palavras («muito apertado», «normal») saem de cortes escolhidos à mão, sem medir — por isso o número vai sempre ao lado.",
+    pie: "Os níveis são geometria do último movimento, não uma previsão: ninguém aqui mediu o que o preço faz ao chegar a eles. E as palavras («muito apertado», «normal») dizem o quão raro é o valor: os cortes saem dos percentis da distribuição medida deste mercado — «muito apertado» é os 10 % mais estreitos e «mais solto» os 10 % mais largos. O número vai sempre ao lado porque a palavra orienta e o número é o dado.",
   },
 
   barrido: {

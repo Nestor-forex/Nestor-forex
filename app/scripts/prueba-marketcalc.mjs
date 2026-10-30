@@ -7,7 +7,19 @@
 // cambio dejó de ser aditivo y estaría alterando la app en casos donde no
 // debía.
 
-import { computarBarrido, derivarVista, usaVaraSimetrica, ATR_REVERSION } from '../src/lib/marketCalc.js'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+import {
+  computarBarrido,
+  derivarVista,
+  usaVaraSimetrica,
+  ATR_REVERSION,
+  UMBRALES_COMPRESION,
+  TOPE_BARRA_COMPRESION,
+} from '../src/lib/marketCalc.js'
+
+const aqui = dirname(fileURLToPath(import.meta.url))
 
 let fallos = 0
 const comprobar = (bien, que) => {
@@ -367,6 +379,53 @@ console.log('\n7. ⚠️ «Comprar la caída» usa la vara simétrica, no la de 
       `…y el stop a ${ATR_REVERSION} × ATR exactos`
     )
   }
+}
+
+console.log('\n8. ⚠️ Los cortes de la etiqueta de compresión SALEN de la distribución medida')
+// Hasta el 2026-10-30 eran números redondos elegidos a mano y DOS de las cuatro
+// etiquetas resultaron decorativas: «muy apretado» pedía bajar de 0,75, por
+// debajo del p10 real (0,87). Ahora son percentiles de las 2.496 observaciones
+// que midió `medir-compresion.mjs`.
+//
+// Lo que este bloque vigila NO es que los números sean «los buenos» —eso lo
+// dijo la medición— sino que los cortes y la distribución que los justifica no
+// puedan separarse en silencio. Es el fallo de las etiquetas «(hoy)» del banco
+// de pruebas y de `medicion.queSignifica`, que dijo «55 %» durante meses: aquí
+// el número no se puede hacer que se LEA solo (la medición es una corrida a
+// mano), así que al menos se exige que el comentario y el código coincidan.
+{
+  const fuente = readFileSync(join(aqui, '..', 'src', 'lib', 'marketCalc.js'), 'utf8')
+
+  // Los percentiles, sacados de la línea de la distribución que está escrita en
+  // el propio comentario. Si alguien mueve un corte y no toca esa línea —o al
+  // revés— esto falla y dice cuál.
+  const linea = fuente.match(/p10\s+([\d,.]+).*?p25\s+([\d,.]+).*?p90\s+([\d,.]+)/)
+  comprobar(!!linea, 'el comentario trae la distribución medida (p10 · p25 · p90)')
+  if (linea) {
+    const [p10, p25, p90] = linea.slice(1, 4).map((s) => Number(s.replace(',', '.')))
+    comprobar(casi(UMBRALES_COMPRESION.muy, p10, 1e-9), `«muy apretado» es el p10 (${p10})`)
+    comprobar(casi(UMBRALES_COMPRESION.algo, p25, 1e-9), `«algo apretado» es el p25 (${p25})`)
+    comprobar(casi(UMBRALES_COMPRESION.ancho, p90, 1e-9), `«más suelto» es el p90 (${p90})`)
+  }
+
+  // Y la comprobación contraria, que es la que canta si alguien los devuelve a
+  // mano sin querer. Se añade al actualizar un valor, nunca se borra.
+  const viejos = { muy: 0.75, algo: 0.9, ancho: 1.25 }
+  comprobar(
+    ['muy', 'algo', 'ancho'].some((k) => UMBRALES_COMPRESION[k] !== viejos[k]),
+    'y YA NO son los números redondos elegidos a mano (0,75 · 0,9 · 1,25)',
+  )
+
+  // El tope de la barra tiene que dejar el tramo donde vive el dato dentro de
+  // algo que se pueda distinguir a simple vista. Con el tope en 2, el p10 y el
+  // p90 caían en el 43 % y el 59 %: catorce barras casi iguales, que es el
+  // defecto que la app hermana ya tuvo.
+  const anchoUtil = (UMBRALES_COMPRESION.ancho - UMBRALES_COMPRESION.muy) / TOPE_BARRA_COMPRESION
+  comprobar(anchoUtil > 0.15, `el tramo p10→p90 ocupa más del 15 % de la barra (${Math.round(anchoUtil * 100)} %)`)
+  comprobar(
+    TOPE_BARRA_COMPRESION > UMBRALES_COMPRESION.ancho,
+    'y el tope deja sitio por encima del corte de «más suelto»',
+  )
 }
 
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')

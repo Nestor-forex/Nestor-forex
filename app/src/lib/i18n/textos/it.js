@@ -92,7 +92,7 @@ export default {
     seguidas: ({ n }) => (n === 1 ? "1 candela stretta finora" : "§ candele strette di fila".replace('§', n)),
     avisoStop: "⚠️ Con un movimento così, lo stop esce più corto del normale per questa coppia: il costo di entrare pesa di più.",
     fibDe: ({ desde, hasta }) => "Livelli dell’ultimo movimento, da §D a §H".replace('§D', desde).replace('§H', hasta),
-    pie: "I livelli sono geometria dell’ultimo movimento, non una previsione: nessuno qui ha misurato cosa fa il prezzo quando li raggiunge. E le parole («molto stretta», «normale») vengono da soglie scelte a mano, non misurate — per questo il numero sta sempre accanto.",
+    pie: "I livelli sono geometria dell’ultimo movimento, non una previsione: nessuno qui ha misurato cosa fa il prezzo quando li raggiunge. E le parole («molto stretta», «normale») dicono quanto è insolito il valore: le soglie vengono dai percentili della distribuzione misurata di questo mercato — «molto stretta» è il 10 % più stretto e «più larga» il 10 % più largo. Il numero sta sempre accanto perché la parola orienta e il numero è il dato.",
   },
 
   barrido: {

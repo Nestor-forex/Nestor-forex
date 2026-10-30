@@ -13650,3 +13650,105 @@ su `backtest.mjs` y sigue sin correrse.
 - aflojar un criterio al ver el resultado — el listón es del 2026-10-27 y la
   corrida es de ese mismo día, unas horas después;
 - leer un montón de 47 operaciones como un diagnóstico.
+
+---
+
+# Los cortes de la etiqueta de compresión, calibrados con los datos (2026-10-30)
+
+Era lo único accionable que dejó la medición del 2026-10-27, y Néstor lo
+aprobó: **«si ajusta lo que tienes que ajustar y fusiona»**.
+
+⚠️ **NO CAMBIA NI UNA SEÑAL.** Cambia la PALABRA que sale al lado de cada par.
+Swing sigue midiendo −0,040/−0,041 por unidad de riesgo con la vara neutra, y
+la compresión sigue sin decidir nada en esta app.
+
+## El defecto, con los números delante
+
+Los cortes eran fracciones redondas elegidas a mano (`0,75 · 0,9 · 1,25`) y la
+medición destapó que la compresión real es **mucho más estrecha** de lo que
+supuse — 2.496 observaciones sobre 1.337 días:
+
+```
+mín 0,45 · p10 0,87 · p25 0,92 · mediana 0,99 · p75 1,06 · p90 1,17 · máx 12,64
+```
+
+Así que **dos de las cuatro etiquetas eran decorativas**: «muy apretado» pedía
+bajar de 0,75 —por debajo del p10— y «más suelto» pedía pasar de 1,25, por
+encima del p90. Un par casi nunca llegaba a merecerlas.
+
+**Ahora son percentiles: p10 · p25 · p90** (`0,87 · 0,92 · 1,17`), o sea ~10 %
+«muy apretado», ~15 % «algo», ~65 % normal y ~10 % «más suelto». La palabra
+dice **qué tan raro es el valor**, no qué hacer con él.
+
+📌 **Comprobado en el barrido REAL de producción del 2026-10-30, no afirmado.**
+Los 14 valores de hoy van de 0,84 a 1,14, y las etiquetas salen así:
+
+| | «muy» | «algo» | normal | «ancho» |
+|---|---:|---:|---:|---:|
+| cortes viejos | **0** | 3 | 11 | 0 |
+| cortes nuevos | **2** | 3 | 9 | 0 |
+
+Con los viejos, los dos pares más estrechos del día (0,84 y 0,86) salían como
+«normal» igual que uno a 0,97.
+
+## Y la barra bajó de 2 a 1,5, por el mismo motivo medido
+
+Con el tope en 2, el tramo donde de verdad vive el dato (p10→p90) ocupaba del
+**43 % al 59 %** de la barra: catorce barras casi iguales. Es el defecto que la
+app hermana ya tuvo y se arregló bajando su tope a 1,3 — aquí 1,5 porque el
+rango es algo más ancho. Lo que pase de 1,5 se queda tope a propósito: por
+encima del p90 el detalle lo aportan la etiqueta y el número, no la barra.
+
+## ⚠️ El guardián: que los cortes y la distribución no se separen en silencio
+
+`prueba-marketcalc.mjs` bloque 8 (PRIMO — los umbrales son de cada app). **Lee
+los percentiles de la línea escrita en el comentario de `marketCalc.js`** y
+exige que los tres cortes coincidan con ellos. Si alguien mueve un corte y no
+toca esa línea, o al revés, falla y dice cuál.
+
+📌 Aquí el número **no se puede hacer que se LEA solo** —la medición es una
+corrida a mano de 14 créditos—, así que lo que se exige es que el texto que lo
+justifica y el código no puedan divergir. Es el fallo de las etiquetas «(hoy)»
+del banco y de `medicion.queSignifica`, que dijo «55 %» durante meses.
+
+Más la comprobación contraria —que YA NO sean los números redondos— y dos sobre
+la barra: que el tramo p10→p90 ocupe más del 15 % y que el tope deje sitio por
+encima del corte de «más suelto».
+
+**Comprobado que MUERDEN**, con el daño verificado en el archivo antes de darlo
+por bueno: devolver los cortes viejos tumba **4** · devolver el tope a 2 tumba
+**1** (y el tramo cae justo al 15 %, que es el borde).
+
+## El texto que nombraba lo viejo, en los 13 idiomas
+
+`compr.pie` decía «las palabras salen de cortes elegidos a mano, **sin
+medir**». Era verdad el 27 y falso el 30. Ahora dice que salen de los
+percentiles de la distribución medida —el 10 % más estrecho y el 10 % más
+ancho—, y que el número va al lado porque la palabra orienta y el número es el
+dato. Es **«al cambiar algo, mirar también quién lo NOMBRA»**, aplicado en el
+mismo commit que lo cambia.
+
+⚠️ El `pie` de Intradía **no se tocó**: allí la compresión DECIDE señales de
+rango y su texto lo rotula. Y sus cortes siguen sin medir — su rango real va de
+**0,88 a 1,12** y necesita su propia corrida.
+
+## 📌 Mi banco de navegador se marcó a sí mismo, por séptima vez
+
+La comprobación de dirección en árabe señaló un elemento en `rtl`… y era **el
+contador de depuración del propio banco** (`pares: 14`), no la app. Acotada a lo
+que no es scaffolding. Van siete u ocho veces que una comprobación mía sale
+demasiado burda — y como siempre, lo que la delató fue leer QUÉ había cazado en
+vez de creerle al número.
+
+## Cómo se verificó
+
+Lint **contado contra `main`** (7 avisos, los mismos), build, las **48 pruebas**
+sin internet (solo fallan `prueba-aviso-real`, que pide el secreto VAPID, y
+`prueba-gemelos` sin la ruta de la hermana) y los **71 gemelos idénticos** con
+el clon hermano comprobado en `origin/main`.
+
+Y en **Chromium a 390 px**, banco **pasando por el hook** con el `barrido.json`
+real de producción, en español y árabe: tres etiquetas distintas en los 14
+pares, 13 anchos de barra distintos de 14, ningún dato en verde ni en rojo,
+cero hojas de datos en `rtl`, cero desplazamiento lateral y cero errores de
+consola.

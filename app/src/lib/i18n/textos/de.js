@@ -96,7 +96,7 @@ export default {
     seguidas: ({ n }) => (n === 1 ? "bisher 1 enge Kerze" : "§ enge Kerzen in Folge".replace('§', n)),
     avisoStop: "⚠️ Bei dieser Bewegung fällt der Stop für dieses Paar kürzer aus als üblich: die Einstiegskosten wiegen schwerer.",
     fibDe: ({ desde, hasta }) => "Niveaus der letzten Bewegung, von §D bis §H".replace('§D', desde).replace('§H', hasta),
-    pie: "Die Niveaus sind Geometrie der letzten Bewegung, keine Prognose: niemand hier hat gemessen, was der Kurs macht, wenn er sie erreicht. Und die Wörter („sehr eng“, „normal“) stammen aus handgewählten, ungemessenen Grenzen — deshalb steht die Zahl immer daneben.",
+    pie: "Die Niveaus sind Geometrie der letzten Bewegung, keine Prognose: niemand hier hat gemessen, was der Kurs macht, wenn er sie erreicht. Und die Wörter („sehr eng“, „normal“) sagen, wie ungewöhnlich der Wert ist: die Grenzen stammen aus den Perzentilen der gemessenen Verteilung dieses Marktes — „sehr eng“ sind die engsten 10 % und „weiter“ die weitesten 10 %. Die Zahl steht immer daneben, weil das Wort einordnet und die Zahl das Datum ist.",
   },
 
   barrido: {

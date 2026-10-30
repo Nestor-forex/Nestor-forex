@@ -56,31 +56,54 @@ export const emaLast = (c, p) => {
 // una hora.
 export const VELAS_ATRAS_COMPRESION = 12
 
-// ⚠️⚠️ LOS CORTES DE LA ETIQUETA SON DE PRESENTACIÓN Y **NO ESTÁN MEDIDOS**.
+// ⚠️⚠️ LOS CORTES DE LA ETIQUETA SON DE PRESENTACIÓN: dicen QUÉ TAN RARO es un
+// valor, nunca qué hacer con él.
 //
 // Viven aquí, en un archivo PRIMO, y no en `compresion.js`, que es GEMELO: un
-// cociente de 0,75 no significa lo mismo en velas de un día que en velas de
+// cociente de 0,87 no significa lo mismo en velas de un día que en velas de
 // una hora. Lo que se comparte entre apps es la fórmula, nunca el umbral.
 //
-// Y son fracciones redondas del movimiento normal (tres cuartos, un cuarto
-// más), elegidas a mano. NO se derivaron de los datos, y el motivo importa:
-// la única distribución disponible al escribirlo eran los 14 pares del barrido
-// de HOY, y catorce números del mismo instante comparten el mercado entre sí
-// — no son una distribución, son un punto. `medir-compresion.mjs` imprime los
-// percentiles sobre todo el periodo justamente para poder fijarlos con datos
-// en la siguiente vuelta.
+// ⚠️ AHORA SÍ SALEN DE LOS DATOS, y la primera versión NO. Hasta el
+// 2026-10-30 eran fracciones redondas elegidas a mano (0,75 · 0,9 · 1,25),
+// porque la única distribución disponible al escribirlas eran los 14 pares del
+// barrido de HOY — y catorce números del mismo instante comparten el mercado
+// entre sí: no son una distribución, son un punto. `medir-compresion.mjs`
+// midió 2.496 observaciones sobre 1.337 días y salió esto:
 //
-// Por eso la pantalla enseña SIEMPRE el número al lado de la etiqueta: la
-// palabra orienta, el número es el dato. Si la etiqueta fuera lo único
-// visible, un corte sin medir se estaría leyendo como un hecho.
-export const UMBRALES_COMPRESION = { muy: 0.75, algo: 0.9, ancho: 1.25 }
+//   mín 0,45 · p10 0,87 · p25 0,92 · mediana 0,99 · p75 1,06 · p90 1,17 · máx 12,64
+//
+// La compresión real es MUCHO más estrecha de lo que supuse, así que dos de
+// las cuatro etiquetas eran decorativas: «muy apretado» pedía bajar de 0,75
+// —por debajo del p10— y «más suelto» pedía pasar de 1,25, por encima del p90.
+// Un par casi nunca llegaba a merecerlas.
+//
+// Los cortes son ahora PERCENTILES de esa distribución y no números redondos:
+// p10 · p25 · p90. O sea ~10 % «muy apretado», ~15 % «algo», ~65 % normal y
+// ~10 % «más suelto», con lo que cada palabra aparece y significa «esto está
+// en el 10 % más estrecho de lo que hace este mercado».
+//
+// ⚠️ Lo que NO cambia con esto: la pantalla enseña SIEMPRE el número al lado
+// de la etiqueta. La palabra orienta, el número es el dato. Y la compresión
+// sigue sin decidir ni una señal en esta app — el filtro se midió el
+// 2026-10-27 y NO pasó el listón (47 operaciones en el montón comprimido, y
+// los márgenes se solapan).
+export const UMBRALES_COMPRESION = { muy: 0.87, algo: 0.92, ancho: 1.17 }
 
 // Qué fracción del rango mediano hace «estrecha» a una vela, para contar
 // cuántas seguidas lleva el par. Mismo aviso que arriba: de presentación.
 // Hasta dónde llega la barra de la tarjeta. PRIMO como los umbrales: aquí el
 // ATR recorre la serie entera, así que el cociente se mueve en un rango más
 // ancho que en la app hermana, donde la ventana dura de 60 velas lo aprieta.
-export const TOPE_BARRA_COMPRESION = 2
+//
+// ⚠️ Baja de 2 a 1,5 el 2026-10-30, por el mismo motivo medido que movió los
+// cortes: con el tope en 2, el tramo donde de verdad vive el dato (p10 0,87 a
+// p90 1,17) ocupaba del 43 % al 59 % de la barra, o sea que catorce barras se
+// veían casi iguales. Es el defecto que la app hermana ya tuvo y se arregló
+// bajando su tope a 1,3 — aquí 1,5 porque el rango es algo más ancho.
+//
+// Lo que pasa de 1,5 se queda tope, a propósito: por encima del p90 el detalle
+// no lo aporta la barra, lo aportan la etiqueta y el número de al lado.
+export const TOPE_BARRA_COMPRESION = 1.5
 
 export const FRACCION_VELA_ESTRECHA = 0.6
 
