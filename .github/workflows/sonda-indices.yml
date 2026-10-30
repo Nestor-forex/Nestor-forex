@@ -1,0 +1,78 @@
+name: Sonda de los índices (dólar y bolsa)
+
+# ¿Se puede tener el índice del dólar (DXY) y un par de índices de bolsa, y
+# APORTARÍAN algo sobre lo que la app ya enseña?
+#
+# Lo pidió Néstor el 2026-10-30: «calculas la fuerza del dólar y no enseñas el
+# índice del dólar». Va por el mismo camino que el calendario, las tasas, el
+# COT, el sentimiento y el oro: SONDA PRIMERO, LECTOR DESPUÉS. Pide, cuenta y
+# enseña; con la forma real delante se escribe el lector, nunca al revés.
+#
+# ⚠️⚠️ CONTESTA DOS PREGUNTAS, Y LA SEGUNDA ES LA QUE DECIDE:
+#
+#   (1) ¿existe el dato en el plan gratuito, y es de verdad lo que dice ser?
+#   (2) ¿aporta algo sobre lo que la app YA enseña?
+#
+# La hipótesis de la (2) está escrita en `scripts/lib/indices.mjs` con fecha
+# ANTERIOR a esta corrida, y va EN CONTRA de construir la tarjeta: el DXY es una
+# media ponderada de seis pares y cinco ya están en esta app, así que lo más
+# probable es que sea la fuerza del dólar de la app con otro nombre. Si la
+# correlación sale por encima de 0,9 en valor absoluto, la respuesta honesta es
+# «ya lo estás viendo, con otro rótulo».
+#
+# ⚠️ NO CAMBIA NADA, y no es una promesa: es el permiso. `permissions:
+# contents: read` — no puede escribir en ninguna rama aunque quisiera. No toca
+# un archivo de la app, ni una señal, ni el barrido publicado, ni el historial.
+#
+# ⚠️ Y aunque algún día entre, sería INFORMACIÓN, no un FILTRO. Apagar señales
+# con el DXY o con el VIX iría al banco de pruebas con su propio listón escrito
+# antes. Van DIEZ familias de filtros medidas y diez que no aportan nada.
+#
+# ⚠️ SOLO A MANO. Contesta una pregunta de una vez; no vigila nada.
+#
+# ⚠️⚠️ NECESITA EL SECRETO. Son unos 25 créditos de Twelve Data (los símbolos
+# candidatos más los 14 pares para poder contestar la segunda pregunta), así que
+# sin el `env` de abajo `leerLlave` no encuentra la llave y el guion falla.
+# Cualquier workflow nuevo que llame a estos guiones tiene que pasársela — ya
+# pasó de verdad con `comparar-reglas.yml`.
+
+on:
+  workflow_dispatch:
+
+# Solo lee. No aflojar esto para «aprovechar y guardar el resultado»: lo que
+# este trabajo NO puede hacer es escribir.
+permissions:
+  contents: read
+
+jobs:
+  sondear:
+    runs-on: ubuntu-latest
+    # Sin esto GitHub deja correr un trabajo hasta SEIS HORAS. Aquí lo normal
+    # son dos o tres minutos: las pausas entre tandas para no pasarse de las 8
+    # consultas por minuto del plan gratuito, y la reconstrucción de la fuerza
+    # del dólar día a día.
+    timeout-minutes: 20
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Primero el juicio, sin internet. Lo que esto vigila no es que el dato
+      # exista —eso lo contesta la sonda— sino que el VEREDICTO no pueda mentir
+      # en las dos direcciones que ya mordieron en este repositorio: aprobar una
+      # ACCIÓN creyendo que es un índice (`GOLD` y `CL` contestaron 200 con
+      # cinco velas válidas y eran acciones de Nueva York) y decir «no existe»
+      # habiendo leído CERO.
+      - name: Comprobar el juicio (sin internet)
+        working-directory: app
+        run: node scripts/prueba-indices.mjs
+
+      - name: Sondear
+        working-directory: app
+        env:
+          # ⚠️ SIN ESTO EL GUION FALLA. Ver la cabecera.
+          TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
+        run: node scripts/sonda-indices.mjs
