@@ -147,6 +147,20 @@ console.log('\n6. La sonda está cableada a este juicio, no a una copia')
     'no lleva su propia lista de tipos de acción',
     !TIPOS_DE_ACCION.some((t) => new RegExp(`'${t}'`, 'i').test(s)),
   )
+
+  // ⚠️⚠️ EL FRENO, que existe por el fallo de la primera corrida: yo di
+  // `symbol_search` por gratis y no la contaba. Sí consume crédito —el propio
+  // 429 lo dijo— y cinco de seis candidatos salieron 429.
+  comprobar('TODA consulta pasa por el freno', /await esperarHueco\(\)/.test(s))
+  comprobar(
+    '`symbol_search` NO está marcada como gratis',
+    !/symbol_search'[^)]*\}, false\)/.test(s) && !/gasta = true/.test(s),
+  )
+  // ⚠️ Y un 429 no es una respuesta sobre el símbolo: es «no se pudo mirar».
+  // Sin reintento, un choque con otro workflow convierte la sonda en un
+  // informe de «no existe» — que es lo que pasó de verdad.
+  comprobar('un 429 se reintenta en vez de darse por respuesta', /429[\s\S]{0,400}reintento/.test(s))
+  comprobar('y el 429 no marca la ficha como leída', !/429[\s\S]{0,200}respondio = true/.test(s))
 }
 
 console.log('')
