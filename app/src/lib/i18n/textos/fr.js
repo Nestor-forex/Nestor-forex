@@ -96,7 +96,7 @@ export default {
     seguidas: ({ n }) => (n === 1 ? "1 bougie étroite pour l’instant" : "§ bougies étroites de suite".replace('§', n)),
     avisoStop: "⚠️ Avec un mouvement comme celui-ci, le stop tombe plus court que d’habitude pour cette paire : le coût d’entrée pèse davantage.",
     fibDe: ({ desde, hasta }) => "Niveaux du dernier mouvement, de §D à §H".replace('§D', desde).replace('§H', hasta),
-    pie: "Les niveaux sont la géométrie du dernier mouvement, pas une prédiction : personne ici n’a mesuré ce que fait le prix quand il les atteint. Et les mots (« très resserrée », « normale ») viennent de seuils choisis à la main, non mesurés — c’est pourquoi le chiffre est toujours à côté.",
+    pie: "Les niveaux sont la géométrie du dernier mouvement, pas une prédiction : personne ici n’a mesuré ce que fait le prix quand il les atteint. Et les mots (« très resserrée », « normale ») disent à quel point la valeur est inhabituelle : les seuils viennent des centiles de la distribution mesurée de ce marché — « très resserrée » correspond aux 10 % les plus serrés et « plus large » aux 10 % les plus larges. Le chiffre reste toujours à côté parce que le mot oriente et le chiffre est la donnée.",
   },
 
   barrido: {

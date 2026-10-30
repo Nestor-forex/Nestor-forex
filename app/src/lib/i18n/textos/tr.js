@@ -92,7 +92,7 @@ export default {
     seguidas: ({ n }) => (n === 1 ? "üst üste 1 dar mum" : "üst üste § dar mum".replace('§', n)),
     avisoStop: "⚠️ Bu hareketle, bu parite için Stop-loss normalden kısa çıkar: giriş maliyeti daha fazla ağırlık yapar.",
     fibDe: ({ desde, hasta }) => "Son hareketin seviyeleri, §D ile §H arası".replace('§D', desde).replace('§H', hasta),
-    pie: "Seviyeler son hareketin geometrisidir, tahmin değil: fiyat oralara geldiğinde ne yaptığını burada kimse ölçmedi. Ve kelimeler («çok sıkışık», «normal») elle seçilmiş, ölçülmemiş eşiklerden geliyor — bu yüzden sayı hep yanında.",
+    pie: "Seviyeler son hareketin geometrisidir, tahmin değil: fiyat oralara geldiğinde ne yaptığını burada kimse ölçmedi. Ve kelimeler («çok sıkışık», «normal») değerin ne kadar sıra dışı olduğunu söyler: eşikler bu piyasanın ölçülmüş dağılımının yüzdeliklerinden gelir — «çok sıkışık» en dar %10, «normalden geniş» ise en geniş %10'dur. Sayı hep yanındadır, çünkü kelime yön verir ve veri olan sayıdır.",
   },
 
   barrido: {

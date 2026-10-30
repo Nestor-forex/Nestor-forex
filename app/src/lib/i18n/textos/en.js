@@ -96,7 +96,7 @@ export default {
     seguidas: ({ n }) => (n === 1 ? "1 narrow candle so far" : "§ narrow candles in a row".replace('§', n)),
     avisoStop: "⚠️ With movement like this the stop lands shorter than usual for this pair: the cost of entering weighs more.",
     fibDe: ({ desde, hasta }) => "Levels of the last move, from §D to §H".replace('§D', desde).replace('§H', hasta),
-    pie: "The levels are geometry of the last move, not a prediction: nobody here has measured what price does when it reaches them. And the words (“very tight”, “normal”) come from cut-offs chosen by hand, unmeasured — which is why the number is always next to them.",
+    pie: "The levels are geometry of the last move, not a prediction: nobody here has measured what price does when it reaches them. And the words (“very tight”, “normal”) say how unusual the value is: the cut-offs come from the percentiles of this market's measured distribution — “very tight” is the tightest 10 % and “looser” the widest 10 %. The number is always next to them because the word orients and the number is the data.",
   },
 
   barrido: {

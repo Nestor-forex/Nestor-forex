@@ -40,9 +40,13 @@ import { TOPE_BARRA_COMPRESION } from '../lib/marketCalc'
 //    usa, y solo para avisar de que el número de al lado pide cuidado.
 //
 // 2. **EL NÚMERO VA SIEMPRE AL LADO DE LA ETIQUETA.** Los cortes que deciden
-//    si algo es «muy apretado» o «normal` son de PRESENTACIÓN y no están
-//    medidos (ver `UMBRALES_COMPRESION`). Si la palabra fuera lo único
-//    visible, un corte elegido a mano se leería como un hecho.
+//    si algo es «muy apretado» o «normal» son de PRESENTACIÓN: desde el
+//    2026-10-30 salen de los percentiles de 2.496 observaciones medidas (p10 ·
+//    p25 · p90, ver `UMBRALES_COMPRESION`), así que la palabra dice QUÉ TAN
+//    RARO es el valor — nunca qué hacer con él. Antes eran números redondos
+//    elegidos a mano y dos de las cuatro etiquetas casi no salían nunca. El
+//    número sigue al lado por la misma razón de siempre: una palabra sola se
+//    leería como un veredicto.
 //
 // 3. **FIBONACCI SON NIVELES Y NADA MÁS.** Sin flechas, sin color por lado,
 //    sin objetivos y sin decir qué hacer al llegar. Lo que el precio haga en
