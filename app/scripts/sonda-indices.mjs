@@ -47,24 +47,54 @@ const LLAVE = leerLlave()
 const BASE = 'https://api.twelvedata.com'
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms))
 
-// ⚠️ El plan gratuito da 8 consultas por minuto. Se va de una en una con una
-// pausa corta y se cuenta el gasto, para que un 429 no deje la sonda a medias
-// diciendo «no existe» cuando lo que pasó es que no se pudo mirar.
+// ⚠️⚠️ EL FRENO, Y EXISTE POR UN FALLO MÍO DE LA PRIMERA CORRIDA
+//
+// La primera versión daba `symbol_search` por GRATIS y no la contaba. **Sí
+// consume crédito**: el propio 429 lo dijo («9 API credits were used» cuando mi
+// contador iba por 1). Resultado: cinco de los seis candidatos salieron 429 y
+// la sonda no pudo mirar nada.
+//
+// Y la otra mitad del fallo fue mía también: lancé este workflow 17 segundos
+// después del de la compresión, que acababa de gastar 14 créditos. Es el mismo
+// choque documentado el 2026-10-07, provocado otra vez.
+//
+// Así que ahora: TODO cuenta, se respeta una ventana deslizante de verdad, y
+// si llega un 429 **se le cree a la API y no a mi contador** — el cuerpo dice
+// cuántos créditos se usaron, y con eso se resincroniza y se reintenta.
+const LIMITE_POR_MINUTO = 6 // el techo son 8; se deja margen a propósito
+const marcas = []
 let gastados = 0
-async function pedir(ruta, params, gasta = true) {
+
+async function esperarHueco() {
+  for (;;) {
+    const ahora = Date.now()
+    while (marcas.length && ahora - marcas[0] > 65_000) marcas.shift()
+    if (marcas.length < LIMITE_POR_MINUTO) return
+    const faltan = 65_000 - (ahora - marcas[0]) + 500
+    console.log(`    (pausa de ${Math.ceil(faltan / 1000)} s: el plan gratuito da 8 consultas por minuto)`)
+    await esperar(faltan)
+  }
+}
+
+async function pedir(ruta, params, reintento = false) {
   const u = new URL(`${BASE}/${ruta}`)
   for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v)
   u.searchParams.set('apikey', LLAVE)
-  if (gasta) {
-    if (gastados > 0 && gastados % 6 === 0) {
-      console.log(`    (pausa de 65 s: van ${gastados} consultas)`)
-      await esperar(65_000)
-    }
-    gastados++
-  }
+  await esperarHueco()
+  marcas.push(Date.now())
+  gastados++
   try {
     const r = await fetch(u)
     const j = await r.json().catch(() => null)
+    // ⚠️ Un 429 NO es una respuesta sobre el símbolo: es que no se pudo mirar.
+    // Se espera el minuto entero y se reintenta UNA vez. Sin esto, un choque
+    // con otro workflow convierte la sonda en un informe de «no existe».
+    if ((r.status === 429 || j?.code === 429) && !reintento) {
+      console.log('    (429: no se pudo mirar. Se espera el minuto entero y se reintenta una vez)')
+      marcas.length = 0
+      await esperar(66_000)
+      return pedir(ruta, params, true)
+    }
     return { http: r.status, cuerpo: j }
   } catch (e) {
     // ⚠️ Un fallo de red NO es «no existe». Se devuelve marcado.
@@ -90,12 +120,29 @@ console.log('')
 
 // ── 1. PREGUNTARLE a la fuente cómo se llaman las cosas ───────────────────
 
+// ⚠️ PAUSA INICIAL, y no es prudencia de más: la primera corrida arrancó 17
+// segundos después del workflow de la compresión, que acababa de gastar 14
+// créditos en el mismo minuto, y cinco de los seis candidatos salieron 429.
+// Esperar un minuto antes de la primera consulta cuesta un minuto; no esperarlo
+// costó la corrida entera. Se puede saltar con SIN_PAUSA=1 para probar en local.
+if (!process.env.SIN_PAUSA) {
+  console.log('(pausa inicial de 65 s, por si otro workflow acaba de gastar créditos)')
+  console.log('')
+  await esperar(65_000)
+}
+
 console.log('1. ¿CÓMO SE LLAMAN? (`symbol_search`, sin adivinar)')
 console.log('')
+// ⚠️ La primera corrida (2026-10-30) ya contestó esto, y el resultado importa:
+// de las cuatro búsquedas NO salió ni UN instrumento de tipo `Index`. «dollar
+// index» devolvió solo `UUP` y `UDN`, los dos ETF de Invesco; «S&P 500», ocho
+// ETF; «volatility index», ETF y fondos que no son el VIX; «DAX», ETF. O sea
+// el mismo patrón que con el petróleo: lo único gratis son los ETF que SIGUEN
+// al índice, que no son el índice. Se repite la búsqueda para dejarlo
+// comprobado y no de memoria.
+let tiposVistos = new Set()
 for (const texto of ['dollar index', 'S&P 500', 'volatility index', 'DAX']) {
-  // `symbol_search` no consume crédito de serie; se marca como gratis y si
-  // resultara que sí cuenta, el total impreso al final lo dirá de todas formas.
-  const { http, cuerpo, error } = await pedir('symbol_search', { symbol: texto, outputsize: 12 }, false)
+  const { http, cuerpo, error } = await pedir('symbol_search', { symbol: texto, outputsize: 12 })
   console.log(`  «${texto}» → HTTP ${http}${error ? ` (${sinLlave(error)})` : ''}`)
   const datos = cuerpo?.data
   if (!Array.isArray(datos) || !datos.length) {
@@ -103,11 +150,20 @@ for (const texto of ['dollar index', 'S&P 500', 'volatility index', 'DAX']) {
     continue
   }
   for (const d of datos.slice(0, 8)) {
+    tiposVistos.add(String(d.instrument_type ?? '—'))
     console.log(
       `    ${String(d.symbol ?? '—').padEnd(12)} ${String(d.instrument_type ?? '—').padEnd(16)} ` +
         `${String(d.exchange ?? '—').padEnd(10)} ${String(d.instrument_name ?? '—').slice(0, 40)}`,
     )
   }
+}
+console.log('')
+console.log(`  Tipos que devolvió la búsqueda: ${[...tiposVistos].join(', ') || '—'}`)
+if (tiposVistos.size && ![...tiposVistos].some((t) => /index/i.test(t))) {
+  console.log('  ⚠️ NI UNO es de tipo `Index`: solo ETF y fondos que SIGUEN al índice.')
+  console.log('     Un ETF no es el índice —tiene comisión, se desvía y cierra cuando')
+  console.log('     cierra su bolsa—, así que llamarlo «el índice del dólar» sería')
+  console.log('     justo la etiqueta equivocada. Es lo mismo que pasó con el petróleo.')
 }
 console.log('')
 
