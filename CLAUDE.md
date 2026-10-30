@@ -13752,3 +13752,135 @@ real de producción, en español y árabe: tres etiquetas distintas en los 14
 pares, 13 anchos de barra distintos de 14, ningún dato en verde ni en rojo,
 cero hojas de datos en `rtl`, cero desplazamiento lateral y cero errores de
 consola.
+
+---
+
+# La compresión de Intradía, medida (2026-10-30). Y mi motivo era FALSO al revés
+
+Néstor lo pidió citando lo que había quedado escrito horas antes al calibrar
+Swing: *«los cortes de Intradía no los toqué, y a propósito: allí este número
+SÍ decide señales (las de rango) y su rango real es distinto — necesita su
+propia medición, que sigue pendiente»*.
+
+⚠️ **NO CAMBIA NI UNA SEÑAL de ninguna de las dos apps.** Intradía sigue en
+−0,13 por unidad de riesgo y Swing en −0,04.
+
+```
+app/scripts/medir-compresion.mjs        PRIMO (su gemelo de nombre mide otra cosa)
+app/scripts/lib/compresion-dist.mjs     las cuentas, probables sin red
+app/scripts/prueba-compresion-dist.mjs  30 comprobaciones sin internet
+.github/workflows/compresion.yml        solo a mano, permiso de LECTURA, 7 créditos
+```
+
+## La distribución, 25.380 observaciones (18 pares × 1.410 velas H1)
+
+```
+mín 0,46 · p10 0,67 · p25 0,82 · mediana 0,97 · p75 1,17 · p90 1,48 · máx 9,79
+```
+
+## ⚠️⚠️ EL COMENTARIO QUE LA JUSTIFICABA ERA FALSO, Y AL REVÉS
+
+Decía que aquí el cociente «se mueve MUCHO MENOS» que en Swing, razonando que
+`atrWilder` tiene ventana DURA de 60 velas y el ATR «de antes» solapa 48 con el
+de ahora. Suena estructural y usa un hecho verdadero.
+
+**Comprobado en el código de las dos apps: en Swing `atrWilder` recorre la
+SERIE ENTERA**, así que allí el solape es casi total y el cociente se mueve
+mucho menos. El de Intradía es **2,7 veces más ancho**:
+
+| | p10 | mediana | p90 | ancho p10→p90 |
+|---|---:|---:|---:|---:|
+| Swing | 0,87 | 0,99 | 1,17 | **0,30** |
+| **Intradía** | **0,67** | **0,97** | **1,48** | **0,81** |
+
+📌 El razonamiento partía de un hecho real y sacaba la conclusión contraria por
+no mirar el otro lado de la comparación. **Un mecanismo que usa un dato
+verdadero no es por eso un resultado.**
+
+**Efecto en pantalla:** con los cortes viejos (0,85 · 0,93 · 1,1) la tarjeta
+repartía **30 % «muy apretado»** · 13 % «algo» · 25 % «normal» · 33 % «más
+suelto». La palabra que debía ser rara salía en uno de cada tres pares. Es el
+mismo defecto de Swing **por el lado contrario**: allí dos etiquetas casi no
+salían nunca, aquí dos salían casi siempre.
+
+Ahora son percentiles (p10 · p25 · p90 → 0,67 · 0,82 · 1,48) y el tope de la
+barra sube de 1,3 a **1,8**, porque con 1,3 más del 10 % de las lecturas salía
+con la barra llena.
+
+⚠️ El guardián (`prueba-compresion-dist.mjs` bloque 7) **lee los percentiles de
+la línea escrita en el comentario** y exige que los tres cortes coincidan.
+Muerde: devolver los viejos tumba 5.
+
+## ⚠️ El filtro que SÍ decide: cuánto filtra, y si ayuda
+
+`COMPRESION_MIN = 0.75` es el **único sitio del proyecto donde la compresión
+decide una señal** (`clasificarRango`), y llevaba meses sin un número.
+
+**Cuánto filtra:** el **16,72 %** de las observaciones cae por debajo de 0,75
+(los que más lo tocan: GBP/USD 21 %, USD/JPY 20 %, EUR/GBP 20 %). No es un
+adorno.
+
+**Si ayuda** — del banco de pruebas, 5.000 velas H1, vara neutra, con spread:
+
+| versión | ops | acierto | pips | por 1R |
+|---|---:|---:|---:|---:|
+| como está hoy | 7.563 | 49 % | −10.657 | **−0,02** |
+| **sin el filtro de compresión** | 7.934 | 49 % | −11.335 | **−0,02** |
+
+**Quita 371 señales (el 4,7 %) y el resultado por operación no se mueve ni una
+centésima.** Los pips totales empeoran solo porque hay más operaciones.
+
+⚠️ **Décima familia de filtros medida en este proyecto y décima que no aporta
+nada.** El patrón lleva meses siendo el mismo: **en estas apps los filtros no
+funcionan**; lo único que ha medido positivo son reglas de ENTRADA distintas.
+
+⚠️ **Esto NO autoriza apagarlo.** Apagarlo cambia lo que la app propone, así
+que iría al banco con su propio listón escrito antes — y el número dice que no
+cambiaría nada, o sea que tampoco hay premio. Queda medido y escrito, que es lo
+que faltaba.
+
+## ⚠️⚠️ EL FALLO QUE COSTÓ 7 CRÉDITOS, Y LO PEOR NO FUE EL FALLO
+
+La primera versión del guion falló en producción:
+
+```
+const L = fechas.length - 1
+TypeError: Cannot read properties of undefined (reading 'length')
+```
+
+`obtenerVelas` de Intradía devuelve `{ barras, rates, rangos }`; yo lo escribí
+con `{ fechas, rates, rangosPar }`, que son **los de Swing**. Es la regla de
+siempre —lo de una app no vale en la otra— por una cara nueva: **no era un
+número prestado, era un NOMBRE prestado.**
+
+📌 **Y la prueba de humo lo CONFIRMÓ**, porque el mercado inventado lo había
+escrito yo con los mismos nombres equivocados. «Antes de creerse un resultado,
+comprobar que el banco mide lo que dice medir» con el agravante de que el banco
+y el fallo tenían el mismo autor.
+
+**El arreglo no es renombrar:** las cuentas salen a `lib/compresion-dist.mjs` y
+el bloque 1 de su prueba **lee `velas.mjs`**, saca las claves de su `return`, y
+exige (a) que estén las que la librería lee, (b) que NO estén las de la app
+hermana y (c) —la mitad que ata las dos puntas— **que la firma de
+`distribucionDeCompresion` lea exactamente ésas**. Comprobar solo lo que
+devuelve `velas.mjs` habría dejado pasar este fallo, porque el error no estaba
+allí sino en quien lo leía. Muerde: devolver la lectura vieja tumba 2.
+
+Y la FIDELIDAD pasa de afirmación a comprobación: los 18 pares dan el mismo
+número que `computarBarrido` hasta el último decimal, serie entera contra
+últimas 300 velas.
+
+## 📌 Una diferencia metodológica que queda dicha, no callada
+
+Aquí la distribución se mide sobre **un par y una vela**, que es lo que la
+tarjeta enseña. **En Swing los cortes se fijaron el 2026-10-30 sobre las
+SEÑALES**, que son una selección (exigen divergencia de fuerza). Las dos no
+tienen por qué coincidir, y comprobarlo en Swing es trabajo aparte.
+
+## 📌 Dos veces más la comprobación salió antes que el código
+
+El banco de navegador exigía ver **varias etiquetas distintas HOY**, y los 18
+valores de un instante comparten el mercado: hoy van de 0,91 a 1,17 y salir los
+18 «Normal» es el resultado CORRECTO. Y el tercer bloque no fijaba el idioma,
+así que la app caía al inglés y una comprobación en español marcaba en rojo una
+app correcta. Van unas diez.
