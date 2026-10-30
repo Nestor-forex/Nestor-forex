@@ -13884,3 +13884,233 @@ valores de un instante comparten el mercado: hoy van de 0,91 a 1,17 y salir los
 18 «Normal» es el resultado CORRECTO. Y el tercer bloque no fijaba el idioma,
 así que la app caía al inglés y una comprobación en español marcaba en rojo una
 app correcta. Van unas diez.
+
+---
+
+# Los cortes de Swing, confirmados; y el índice del dólar NO se puede tener (2026-10-30, tarde)
+
+Néstor pidió tres cosas: **«ahora pon esos mismos cortes medidos en swing»**,
+**«arranquemos con esto: DXY y un par de índices — calculas la fuerza del dólar
+y no enseñas el índice del dólar»**, y **«si tú dices que por cada dólar
+arriesgado es −0,02 dime si puedes calcular alguna medida o solución para pasar
+de ese −0,02 a +…»**.
+
+⚠️ **NADA DE ESTO CAMBIÓ UNA SEÑAL.** Cero archivos de `src/` tocados. Swing
+sigue en −0,040/−0,041 por unidad de riesgo con la vara neutra.
+
+## 1. «Los mismos cortes»: copiarlos habría sido el error cardinal
+
+Los cortes de Swing **ya estaban medidos esa misma mañana** sobre su propia
+distribución (p10 0,87 · p25 0,92 · p90 1,17). Copiar los de Intradía
+(0,67 · 0,82 · 1,48) habría puesto en Swing una distribución ajena: allí
+`atrWilder` tiene ventana **dura** de 60 velas y aquí **recorre la serie
+entera**, y por eso el cociente de allá es 2,7 veces más ancho. Las etiquetas
+extremas de Swing casi no habrían salido nunca.
+
+**Lo que SÍ era portable era el MÉTODO**, y era la única pregunta que quedaba
+escrita como trabajo aparte: allá se midió sobre **un par y una vela** —lo que
+la tarjeta enseña— y aquí sobre las **SEÑALES**, que son una selección (exigen
+divergencia de fuerza, tendencia, y los 5 mejores por lado).
+
+### ✅ Y el resultado es que los cortes de hoy VALEN. 15.736 observaciones
+
+Corrida del 2026-10-30, 1.338 días de mercado, ventana de producción de 215
+velas:
+
+| | n | mín | p10 | p25 | mediana | p75 | p90 | máx |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| (a) sobre las **SEÑALES** | 2.500 | 0,45 | **0,87** | **0,92** | 0,99 | 1,07 | **1,17** | 12,64 |
+| (b) sobre **un par y una vela** | 15.736 | 0,45 | **0,86** | **0,91** | 0,98 | 1,06 | **1,16** | 13,48 |
+
+**Una centésima de diferencia en cada percentil.** Y el reparto de las cuatro
+etiquetas con los cortes de hoy:
+
+| | «muy apretado» | «algo» | normal | «más suelto» |
+|---|---:|---:|---:|---:|
+| (a) señales | 10,3 % | 13,6 % | 66,2 % | 9,9 % |
+| **(b) lo que se ve en pantalla** | **12,5 %** | **15,4 %** | **62,8 %** | **9,3 %** |
+
+📌 **Los cortes NO se tocan**, y por una vez eso es un resultado y no una
+pereza: mover un corte una centésima cambiaría lo que Néstor ve a cambio de
+nada. La población que describen y la que la pantalla enseña son la misma.
+
+⚠️ **LO QUE SÍ DEJA ABIERTO, y no se toca sin decidirlo:** el corte es UNO para
+los catorce pares, y por par el reparto NO es parecido.
+
+| par | «muy apretado» | «más suelto» |
+|---|---:|---:|
+| **EUR/CHF** | **21 %** | 13 % |
+| **USD/JPY** | **20 %** | **16 %** |
+| GBP/JPY | 19 % | 15 % |
+| … | | |
+| **NZD/CAD** | **6 %** | 7 % |
+| AUD/USD | 7 % | 6 % |
+
+O sea que en EUR/CHF la etiqueta «muy apretado» sale **tres veces más a menudo**
+que en NZD/CAD. Unos cortes por par la harían igual de rara en todos — y
+también harían la tarjeta más difícil de explicar. Es una decisión de Néstor,
+no una mejora obvia.
+
+### `lib/compresion-dist.mjs` es PRIMO, con las dos razones medidas dentro
+
+⚠️ **LA VENTANA IMPORTA AQUÍ Y ALLÁ NO.** El `atrWilder` de Swing recorre todo
+lo que recibe, así que hay que darle el **mismo tramo que el barrido de
+producción**. De ahí `ventanaDeProduccion`, que **se deriva de las fechas** (300
+de calendario → 215 de mercado) en vez de escribirse a mano: un 215 fijo
+envejecería solo con el calendario y sin que nada falle.
+
+⚠️ **Y EL LECTOR DE VELAS DEVUELVE OTROS NOMBRES.** Aquí
+`{ fechas, rates, rangosPar }` con los rangos por **nombre de par** (esta app
+pide los 14 directos); allá `{ barras, rates, rangos }` por divisa, con los
+cruces derivados. Confundirlos **costó 7 créditos en producción** en Intradía,
+así que el bloque 1 de la prueba exige el contrato de ESTE lector y que NO sean
+los de la hermana.
+
+La comprobación de fidelidad es **exacta** (14/14 pares idénticos a
+`computarBarrido`) y lleva **la contraria al lado**: con la serie entera el
+número cambia en los 14. Sin eso la ventana sería decorativa y la fidelidad
+saldría por casualidad.
+
+## 2. ⚠️⚠️ EL ÍNDICE DEL DÓLAR NO EXISTE EN EL PLAN GRATUITO. Y la trampa del oro mordió DOS VECES
+
+Sonda primero, lector después. Y la hipótesis quedó escrita **antes de ver un
+número, EN CONTRA de construir la tarjeta**: el DXY es una media ponderada de
+seis pares y **cinco ya están en esta app** (EUR 57,6 % · JPY 13,6 % ·
+GBP 11,9 % · CAD 9,1 % · CHF 3,6 %), así que lo más probable es que sea la
+fuerza del dólar que la app ya calcula, con otro nombre.
+
+**Nunca se llegó a medir eso**, porque la pregunta anterior salió «no»:
+
+| símbolo | qué pasó |
+|---|---|
+| `DXY` | **404** — «symbol or figi parameter is missing or invalid» |
+| **`DX`** | **200 con precio 10,835 → «Dynex Capital Inc.», ACCIÓN de NYSE** |
+| **`USDX`** | **200 con precio 25,605 → «SGI Enhanced Core ETF»** |
+| `SPX` | **404: «This symbol is available starting with the Pro or Venture plan»** |
+| `IXIC` · `VIX` | 404, símbolo inválido |
+
+📌 **`DX` y `USDX` son la trampa del oro exacta, repetida:** dos respuestas 200
+con un precio perfectamente válido que NO es lo que uno pidió. Un lector que
+aceptara «200 con precio» habría publicado **«índice del dólar: 10,84»** — con
+su fecha y completamente falso. Las cazó mirar `type` (venía vacío) y el rango
+plausible (70-130).
+
+Y las cuatro búsquedas de `symbol_search` lo dicen por el otro lado: **de las
+cuatro no salió ni UN instrumento de tipo `Index`.** «dollar index» devolvió
+solo `UUP` y `UDN`, los dos ETF de Invesco; «S&P 500», ocho ETF; «volatility
+index», ETF y fondos que no son el VIX; «DAX», ETF.
+
+> **Es el mismo patrón que con el petróleo: lo único gratis son los ETF que
+> SIGUEN al índice, y un ETF no es el índice** — tiene comisión, se desvía y
+> cierra cuando cierra su bolsa. Llamarlo «el índice del dólar» sería justo la
+> etiqueta equivocada.
+
+### El veredicto, y lo que haría falta para retomarlo
+
+**No entra.** Y **no es una derrota técnica**: es el listón haciendo su trabajo,
+igual que con el sentimiento minorista. Lo que habría que decidir para volver
+sobre esto:
+
+1. **pagar el plan Pro de Twelve Data** (`SPX` lo dice con esas palabras), que
+   es dinero al mes y lo decide Néstor;
+2. o **buscar otra fuente** con una sonda nueva — y entonces seguiría en pie la
+   pregunta que nunca se llegó a contestar: **si el índice aporta algo sobre la
+   fuerza del dólar que la app ya enseña.** La sonda ya sabe medirlo
+   (correlación sobre cambios diarios, cruzando fechas); lo que faltó fue el
+   dato.
+
+⚠️ Y si algún día entra, **sería INFORMACIÓN y no un FILTRO**. Van **diez
+familias de filtros medidas y diez que no aportan nada**.
+
+### ⚠️⚠️ DOS FALLOS MÍOS EN LA PRIMERA CORRIDA, Y LOS DOS DE LA MISMA FAMILIA
+
+**1. Di `symbol_search` por GRATIS y no la contaba.** Sí consume crédito, y
+**lo dijo el propio 429**: «9 API credits were used» cuando mi contador iba por
+1. Cinco de los seis candidatos salieron 429.
+
+**2. Lancé la sonda 17 segundos después del workflow de la compresión**, que
+acababa de gastar 14 créditos en el mismo minuto. **Es el choque documentado el
+2026-10-07, provocado otra vez por mí.**
+
+El arreglo no es «tener más cuidado»: ventana deslizante de verdad (6 por 65 s,
+con el techo en 8 a propósito), pausa inicial de un minuto por si otro workflow
+acaba de correr, y —lo que de verdad lo cierra— **ante un 429 se le cree a la
+API y no a mi contador**: se espera el minuto entero y se reintenta una vez.
+
+📌 **Y EL VEREDICTO HIZO SU TRABAJO:** con cinco 429 dijo **«NO SE PUDO MIRAR:
+esto NO dice que no exista»** en vez de «no existe». Para eso se escribió esa
+asimetría el 2026-09-14, cuando mi propio informe escribió «no la publican»
+habiendo leído CERO páginas. Sin ella, esta memoria diría hoy que el índice del
+dólar no existe en Twelve Data — y la verdad es que **el S&P 500 sí existe, pero
+de pago**.
+
+## 3. «De −0,02 a +»: el número NO es de Swing, y la respuesta ya está medida
+
+⚠️ **PRIMERO LA CORRECCIÓN, porque es la que más importa.** Ese −0,02 es de
+**INTRADÍA**, de la fila «como está hoy» de su banco de pruebas con la vara
+neutra. **Swing mide −0,040/−0,041.** Es la tercera vez en el mes que mezclo
+números de dos fuentes en una frase (2026-10-07 con el backtest y el historial,
+2026-10-12 con la lista de reglas), y es el fallo que más cuesta porque
+ninguna de las dos mitades es falsa por separado.
+
+### Lo que YA está medido y cerrado, para no volver a proponerlo
+
+| se probó | resultado |
+|---|---|
+| mover el stop y el objetivo (rejilla de **12** combinaciones) | **las doce pierden** |
+| breakeven (5 niveles de armado) | **0 de 5 mejoran**, falla 3 de 6 criterios |
+| **diez familias de FILTROS** (RSI, ADX, confluencia, barrido de liquidez, COT, compresión, carry, Bollinger…) | **diez que no aportan nada** |
+| subir de temporalidad (H4, M15, semanal) | mejora **hacia cero**, no hacia positivo |
+| buscar mejor bróker (Intradía) | el peaje es 2,4 veces la mejor ventaja: **no hay bróker que la salve** |
+| pares emergentes | 4 de 6 **no se mueven más** que los que ya hay |
+
+### Y lo ÚNICO que ha pasado un preregistro completo
+
+**La app de Swing restringida a los 7 pares con dólar: de −0,040 a +0,073**,
+los seis criterios, ganando en las dos mitades, aguantando el swap (+0,033), y
+con el CONTROL (los cruces) derrumbándose a **−0,142**.
+
+⚠️ **Y NO está encendido, por tres razones escritas:** el corte se encontró **a
+posteriori** sobre los mismos 1.341 días; los 7 pares con dólar están **muy
+correlacionados** entre sí (está medido que cinco señales con dólar eran *una
+sola apuesta dicha cinco veces*); y en este proyecto **nunca se ha encendido
+nada solo con un backtest**. Néstor ya decidió el 2026-10-23 no quitar los
+cruces y añadir en su lugar la tarjeta «Lo que mide positivo», y esa decisión
+sigue siendo la correcta.
+
+📌 **La respuesta honesta a su pregunta, entonces:** lo que falta **no es otra
+medición sobre estos cinco años** — ese pozo está agotado y volver a barrerlo
+devuelve el mismo número por construcción. Es que **el registro hacia adelante
+llegue a 150 operaciones** en alguna de las reglas que ya corren en la sombra.
+Eso es tiempo, no código.
+
+## Lo que se gastó y cómo se verificó
+
+**Créditos de Twelve Data en Swing hoy: 94 de 800** (64 de los workflows
+diarios + 14 la compresión + 6 la sonda fallida + 10 la buena).
+
+Lint **contado contra `main`** (7 avisos, los mismos), build, **49 de 50
+pruebas** sin internet (solo falla `prueba-aviso-real`, que pide el secreto
+VAPID y manda un aviso de verdad) y los **71 gemelos idénticos**.
+
+**Comprobado que las pruebas MUERDEN**, con el daño verificado en el archivo
+antes de darlo por bueno: ignorar la ventana tumba 1 · invertir el precio del
+par tumba 2 (y nombra 0 de 14) · aprobar un `type` desconocido tumba 1 · quitar
+la lista de tipos de acción tumba 1 · quitar el freno de la sonda tumba 1.
+
+📌 **Y el guardián de la rejilla saltó solo por QUINTA vez** al añadir la sonda
+(«GUIONES SIN DECIDIR su rejilla»). Registrada en LIMPIA con el motivo escrito.
+
+📌 **Un detalle del entorno que me engañó:** al comprobar un daño usé
+`grep -c` dentro de un `&&`, y `grep -c` con cero coincidencias **sale con
+estado 1**, así que la prueba nunca llegó a correr y pareció «no muerde».
+Hermano de los tres `grep` con la palabra equivocada (`borrar`, `FALLA`, `MAL`).
+**Antes de concluir que algo no muerde, comprobar que el comando llegó a
+ejecutarse.**
+
+📌 **Y un hallazgo sobre mi propia comprobación:** `TIPOS_DE_ACCION` **no es la
+red que decide** —un tipo desconocido se rechaza igual, comprobado quitando la
+lista— así que la comprobación de «una acción se rechaza» pasaba sin ella. Lo
+que la lista aporta es **el motivo en el log**, y eso no es cosmético: «es una
+acción» CIERRA la pregunta y «no sé qué es esto» la DEJA ABIERTA. Hay una
+comprobación dedicada a distinguir los dos caminos.
