@@ -126,6 +126,111 @@ comprobar('desde y hasta en orden', c2.desde === '2026-10-05' && c2.hasta === '2
 comprobar('⚠️ sin corridas → null, no una cobertura de cero', horasCubiertas([]) === null)
 comprobar('fechas ilegibles se saltan sin tumbar la cuenta', horasCubiertas(['no es fecha', '2026-10-05T09:00:00Z']).dias === 1)
 
+console.log('\n7b. ⚠️⚠️ SOLO SE PROMEDIAN DÍAS COMPLETOS (la falsa alarma del 2026-10-30)')
+{
+  // El caso REAL: el vigía de Intradía cubría 24 de 24 horas los días
+  // completos, y la herramienta decía «19,0 (79 %)» porque contaba como día
+  // de verdad (a) el más viejo, que la descarga de 3 páginas dejó a medias, y
+  // (b) el de hoy, que por definición va a medias.
+  const ahora = new Date('2026-10-30T10:30:00Z')
+  const hs = (dia, cuantas) =>
+    Array.from({ length: cuantas }, (_, h) => `${dia}T${String(h).padStart(2, '0')}:23:00Z`)
+
+  const serie = [
+    ...hs('2026-10-27', 2), // el más viejo, a medias por la descarga
+    ...hs('2026-10-28', 24),
+    ...hs('2026-10-29', 24),
+    ...hs('2026-10-30', 11), // hoy, a medias por el reloj
+  ]
+
+  const malo = horasCubiertas(serie) // como antes: sin avisar de nada
+  comprobar(
+    `sin los avisos sale hundido (${malo.mediaHorasPorDia.toFixed(1)} de 24)`,
+    malo.mediaHorasPorDia < 20,
+  )
+
+  const bueno = horasCubiertas(serie, { truncado: true, ahora })
+  comprobar(
+    `con los avisos sale 24 de 24 (${bueno.mediaHorasPorDia})`,
+    bueno.mediaHorasPorDia === 24 && bueno.dias === 2,
+  )
+  comprobar('el peor día completo también es 24', bueno.peorDia === 24)
+  // ⚠️ Quitar días MEJORA el número, así que los omitidos se NOMBRAN: un
+  // descarte que no se dice es un descarte en el que nadie puede confiar.
+  comprobar(
+    'y NOMBRA los dos días que dejó fuera',
+    bueno.omitidos.length === 2 &&
+      bueno.omitidos.some((o) => o.includes('2026-10-30') && /hoy/.test(o)) &&
+      bueno.omitidos.some((o) => o.includes('2026-10-27') && /corta/.test(o)),
+  )
+  // El de hoy no se tira en silencio: se devuelve aparte y medido contra las
+  // horas transcurridas, para que un reloj que muera esta mañana se siga viendo.
+  comprobar(
+    'hoy va aparte, contra las horas transcurridas (11 de 11)',
+    bueno.hoy.horas === 11 && bueno.hoy.deLasPosibles === 11,
+  )
+
+  // ⚠️⚠️ LA QUE DE VERDAD IMPORTA: quitar días NO puede tapar un fallo real.
+  const roto = [
+    ...hs('2026-10-27', 2),
+    ...hs('2026-10-28', 6),
+    ...hs('2026-10-29', 5),
+    ...hs('2026-10-30', 2),
+  ]
+  const vr = horasCubiertas(roto, { truncado: true, ahora })
+  comprobar(
+    `un reloj que de verdad falla SIGUE saliendo mal (${vr.mediaHorasPorDia.toFixed(1)} de 24)`,
+    vr.mediaHorasPorDia < 12,
+  )
+
+  // Sin `truncado` el día más viejo NO se tira: ahí sí es cobertura perdida.
+  const sinTruncar = horasCubiertas(serie, { truncado: false, ahora })
+  comprobar(
+    'si la descarga NO se quedó corta, el día más viejo cuenta',
+    sinTruncar.dias === 3 && sinTruncar.peorDia === 2,
+  )
+
+  // Y el caso límite: si lo único que hay es hoy, no hay nada que juzgar.
+  const soloHoy = horasCubiertas(hs('2026-10-30', 11), { truncado: false, ahora })
+  comprobar('solo hoy → no hay día completo que medir, y lo dice', soloHoy.mediaHorasPorDia === null)
+
+  // ⚠️ EL TERCER ARTEFACTO: el SÁBADO. Las corridas que GitHub dispara con
+  // horas de retraso el viernes por la noche caen en sábado, y aparecía un
+  // «sábado con 2 horas de 24» en un programa que corre de lunes a viernes.
+  const HABILES = [1, 2, 3, 4, 5]
+  const conSabado = [
+    ...hs('2026-10-26', 24), // lunes
+    ...hs('2026-10-27', 24), // martes
+    ...['2026-10-24T00:10:00Z', '2026-10-24T01:40:00Z'], // sábado: desbordamiento del viernes
+    ...hs('2026-10-23', 24), // viernes
+  ]
+  const conS = horasCubiertas(conSabado, { truncado: false, ahora })
+  comprobar(
+    `contando el sábado sale hundido (${conS.mediaHorasPorDia.toFixed(1)} de 24)`,
+    conS.mediaHorasPorDia < 20,
+  )
+  const sinS = horasCubiertas(conSabado, { truncado: false, ahora, diasQueToca: HABILES })
+  comprobar(
+    `sin el sábado sale 24 de 24 (${sinS.mediaHorasPorDia})`,
+    sinS.mediaHorasPorDia === 24 && sinS.dias === 3,
+  )
+  comprobar(
+    'y NOMBRA el sábado que dejó fuera',
+    sinS.omitidos.some((o) => o.includes('2026-10-24') && /no le toca/.test(o)),
+  )
+  // ⚠️ La contraria: a un programa que SÍ corre los siete días no se le quita
+  // nada. Sin esto, `diasQueToca` podría tirar días de verdad.
+  const TODOS = [0, 1, 2, 3, 4, 5, 6]
+  comprobar(
+    'a uno que corre los 7 días no se le quita el sábado',
+    horasCubiertas(conSabado, { truncado: false, ahora, diasQueToca: TODOS }).dias === 4,
+  )
+  comprobar(
+    'y sin decirle qué días le tocan, tampoco se le quita nada',
+    horasCubiertas(conSabado, { truncado: false, ahora }).dias === 4,
+  )
+}
+
 console.log('\n8. Los números REALES del 2026-10-06, como caso de regresión')
 // Las horas crudas leídas de la API ese día para `tasas` de Swing, pedido a
 // las 06:20 UTC. Si algún día esto deja de dar «inservible», o el reloj de

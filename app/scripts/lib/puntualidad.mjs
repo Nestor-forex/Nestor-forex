@@ -248,7 +248,38 @@ export function juzgar(res, racha = 0) {
 // que diez corridas pueden cubrir cinco horas. Para el historial lo que vale es
 // cuántas horas distintas se miraron, porque una señal que vive una hora solo
 // queda anotada si alguien miró ESA hora.
-export function horasCubiertas(creadosISO) {
+// ⚠️⚠️ Y SOLO SE PROMEDIAN DÍAS COMPLETOS. Esto se arregló el 2026-10-30
+// porque la herramienta dio una falsa alarma: decía que el vigía de Intradía
+// cubría «19,0 de 24 horas (79 %)» cuando los días completos cubrían **24 de
+// 24**. Dos artefactos la hundían, y ninguno era de las apps:
+//
+//   · `corridas()` trae como mucho 3 páginas = 300 corridas, y ese vigía deja
+//     ~43 al día, así que el día MÁS VIEJO de la ventana llega a medias. La
+//     herramienta lo contaba como un día de verdad con dos horas («peor día 2»).
+//   · y el día de HOY va a medias por definición: a las 10 de la mañana no
+//     puede haber mirado 24 horas.
+//
+// 📌 Es el tercer artefacto de medición de ese mismo día, y el patrón es
+// siempre el mismo: un número bien calculado que describe otra cosa de la que
+// dice describir. Antes de creer que una app está mal, comprobar que la
+// herramienta mide lo que dice medir.
+//
+// ⚠️ Quitar días hace que el número salga MEJOR, que es la dirección
+// peligrosa: esta herramienta existe para cazar un reloj muerto. Por eso el
+// día de hoy NO se tira en silencio — se devuelve aparte en `hoy`, medido
+// contra las horas que de verdad han transcurrido, así que un reloj que muera
+// esta mañana se sigue viendo. Y los días omitidos se NOMBRAN en el informe:
+// un descarte que no se dice es un descarte en el que nadie puede confiar.
+// ⚠️⚠️ Y EL TERCER ARTEFACTO, EL MÁS TONTO: LOS FINES DE SEMANA. El vigía de
+// Intradía corre de lunes a viernes, pero las corridas que GitHub dispara con
+// cinco horas de retraso el viernes por la noche **caen en sábado**, así que
+// aparecía un «sábado con 2 horas de 24» que era puro desbordamiento. Medido el
+// 2026-10-30: los cinco días hábiles iban a 24 de 24 y el sábado a 2, y de ahí
+// salía el «85 %». Por eso ahora se le pasan los días que al programa le TOCA
+// correr —los mismos que `worker.js` tiene en su `dias`— y los demás se nombran
+// y se dejan fuera. Contar como «cobertura perdida» un día en que el programa
+// no debe correr es medir otra cosa.
+export function horasCubiertas(creadosISO, { truncado = false, ahora = new Date(), diasQueToca = null } = {}) {
   const porDia = new Map()
   for (const iso of creadosISO) {
     const t = new Date(iso)
@@ -258,13 +289,43 @@ export function horasCubiertas(creadosISO) {
     porDia.get(dia).add(t.getUTCHours())
   }
   if (!porDia.size) return null
-  const dias = [...porDia.keys()].sort()
-  const cuentas = dias.map((d) => porDia.get(d).size)
+
+  const todos = [...porDia.keys()].sort()
+  const omitidos = []
+
+  // El día de hoy, aparte y contra las horas transcurridas.
+  const diaDeHoy = ahora.toISOString().slice(0, 10)
+  let hoy = null
+  if (porDia.has(diaDeHoy)) {
+    hoy = { dia: diaDeHoy, horas: porDia.get(diaDeHoy).size, deLasPosibles: ahora.getUTCHours() + 1 }
+    omitidos.push(`${diaDeHoy} (hoy, va a medias)`)
+  }
+
+  // Los días en que al programa no le toca correr.
+  let completos = todos.filter((d) => d !== diaDeHoy)
+  if (Array.isArray(diasQueToca) && diasQueToca.length) {
+    const noToca = completos.filter((d) => !diasQueToca.includes(new Date(`${d}T12:00:00Z`).getUTCDay()))
+    if (noToca.length) omitidos.push(`${noToca.join(', ')} (no le toca correr)`)
+    completos = completos.filter((d) => !noToca.includes(d))
+  }
+
+  // El más viejo, solo si la descarga se quedó corta: ahí no falta cobertura,
+  // falta archivo.
+  if (truncado && completos.length > 1) {
+    omitidos.push(`${completos[0]} (la descarga se quedó corta)`)
+    completos.shift()
+  }
+
+  if (!completos.length) return { dias: 0, omitidos, hoy, mediaHorasPorDia: null, peorDia: null }
+
+  const cuentas = completos.map((d) => porDia.get(d).size)
   return {
-    dias: dias.length,
-    desde: dias[0],
-    hasta: dias[dias.length - 1],
+    dias: completos.length,
+    desde: completos[0],
+    hasta: completos[completos.length - 1],
     mediaHorasPorDia: cuentas.reduce((a, b) => a + b, 0) / cuentas.length,
     peorDia: Math.min(...cuentas),
+    omitidos,
+    hoy,
   }
 }
