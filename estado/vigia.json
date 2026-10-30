@@ -1,9 +1,7 @@
 {
-  "actualizadoEl": "2026-10-29T15:21:11.320Z",
-  "cierre": "2026-10-29",
+  "actualizadoEl": "2026-10-30T15:21:12.911Z",
+  "cierre": "2026-10-30",
   "senales": [
-    "GBP/JPY|COMPRA|tendencia",
-    "AUD/USD|COMPRA|tendencia",
     "GBP/USD|COMPRA|tendencia",
     "EUR/CAD|VENTA|tendencia",
     "NZD/CAD|VENTA|tendencia",
@@ -11,6 +9,7 @@
     "EUR/CAD|COMPRA|reversion",
     "NZD/CAD|COMPRA|reversion",
     "USD/CAD|COMPRA|reversion",
+    "USD/CAD|COMPRA|caida",
     "NZD/CAD|COMPRA|bollinger"
   ]
 }
