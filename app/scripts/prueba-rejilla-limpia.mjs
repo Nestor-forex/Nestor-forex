@@ -320,6 +320,12 @@ const LIMPIA = [
   // había DECIDIDO su rejilla por escrito, que es justo lo que este bloque
   // existe para exigir. Se encontró el 2026-10-12 al correr todas las pruebas.
   'scripts/medir-breakeven.mjs',
+  // ⚠️ La sonda de los índices (2026-10-30). Va en LIMPIA aunque no mida una
+  // regla: reconstruye la fuerza del dólar que la app ENSEÑA para ver si el
+  // índice del dólar añade algo, y la app corre sobre la rejilla limpia. Con
+  // velas crudas la fuerza saldría de días que no existieron y la correlación
+  // describiría otra cosa — la familia de fallo de siempre.
+  'scripts/sonda-indices.mjs',
   // Los tres del 2026-10-13. Van en limpia porque miden la app (o una regla
   // candidata) tal como existiría, y la app ya corre sobre la rejilla limpia
   // desde el PR #106: medirlas sobre la sucia sería medir otra app.

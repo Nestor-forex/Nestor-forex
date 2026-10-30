@@ -18,7 +18,12 @@
 // filtros medidas y nueve que no pasan.
 
 import { leerLlave, obtenerVelas } from './lib/velas.mjs'
-import { computarBarrido, UMBRAL_FUERZA } from '../src/lib/marketCalc.js'
+import { computarBarrido, UMBRAL_FUERZA, UMBRALES_COMPRESION } from '../src/lib/marketCalc.js'
+import {
+  distribucionDeCompresion,
+  percentiles,
+  repartoDeEtiquetas,
+} from './lib/compresion-dist.mjs'
 import { generarSenales, medir } from './lib/backtest-nucleo.mjs'
 import { resolver } from './lib/resolver.mjs'
 import { simetrica } from './lib/geometrias.mjs'
@@ -101,33 +106,91 @@ if (cubos.sinDato.length) {
 }
 console.log('')
 
-// ── LA DISTRIBUCIÓN, que es lo que falta para fijar los cortes con datos ──
+// ── LAS DOS DISTRIBUCIONES, y por qué son DOS ────────────────────────────
 //
-// ⚠️ Los umbrales con los que la TARJETA pone una etiqueta («muy comprimido»,
-// «normal»…) hoy NO están medidos: son de presentación, elegidos como
-// fracciones redondas del movimiento normal. Y no se pueden derivar de una
-// foto del barrido publicado, porque los 14 pares de un mismo instante
-// comparten el mercado y están correlacionados: 14 números de hoy no son una
-// distribución, son un punto.
+// ⚠️⚠️ ÉSTE ES EL AÑADIDO DEL 2026-10-30 POR LA TARDE, y la razón importa.
 //
-// Esto es lo que sí la da, y sale gratis: la compresión de TODAS las señales
-// del periodo. Con estos percentiles delante se pueden fijar los cortes de la
-// etiqueta en la siguiente vuelta — y nunca al revés.
-const compresiones = senales.map((s) => s.compresion).filter(Number.isFinite).sort((a, b) => a - b)
-if (compresiones.length) {
-  const q = (p) => compresiones[Math.min(compresiones.length - 1, Math.floor(p * compresiones.length))]
-  console.log('LA DISTRIBUCIÓN DE LA COMPRESIÓN (para fijar los cortes de la etiqueta con datos)')
-  console.log('')
-  console.log(
-    `  n=${compresiones.length}  mín ${q(0).toFixed(2)}  p10 ${q(0.1).toFixed(2)}  ` +
-      `p25 ${q(0.25).toFixed(2)}  mediana ${q(0.5).toFixed(2)}  p75 ${q(0.75).toFixed(2)}  ` +
-      `p90 ${q(0.9).toFixed(2)}  máx ${q(1).toFixed(2)}`,
-  )
-  console.log('')
-  console.log('  ⚠️ Los cortes que usa la TARJETA son de presentación y NO están')
-  console.log('     medidos. Con esta fila delante se pueden fijar con datos.')
+// Los cortes de la etiqueta («muy apretado», «normal»…) se fijaron esa misma
+// mañana con la distribución de las SEÑALES del periodo. Pero una señal es una
+// SELECCIÓN: exige divergencia de fuerza, tendencia, y se queda con los 5
+// mejores por lado.
+//
+// Y la tarjeta no pone etiqueta a las señales: la pone a LOS 14 PARES en TODAS
+// las lecturas. Así que la población que describe lo que se VE es «un par, una
+// vela», no «una señal». Esa diferencia quedó escrita como trabajo aparte al
+// medir la app hermana (que sí lo midió así), y es lo que esto cierra.
+//
+// 📌 Que las dos coincidan o no ES el resultado. Iguales → los cortes de hoy
+// valen y queda comprobado. Distintas → los cortes están descritos por una
+// población que no es la que la pantalla enseña, que es la familia de fallo de
+// siempre: un número bien calculado describiendo otra cosa.
+//
+// ⚠️ NO CUESTA UN CRÉDITO MÁS. Sale de las mismas velas ya descargadas.
+const filaPercentiles = (p) =>
+  `  n=${p.n}  mín ${p.min.toFixed(2)}  p10 ${p.p10.toFixed(2)}  p25 ${p.p25.toFixed(2)}  ` +
+  `mediana ${p.p50.toFixed(2)}  p75 ${p.p75.toFixed(2)}  p90 ${p.p90.toFixed(2)}  ` +
+  `máx ${p.max.toFixed(2)}`
+
+const filaReparto = (r) =>
+  `  «muy apretado» ${r.muy.toFixed(1)} %  ·  «algo» ${r.algo.toFixed(1)} %  ·  ` +
+  `normal ${r.normal.toFixed(1)} %  ·  «más suelto» ${r.ancho.toFixed(1)} %`
+
+console.log('LAS DOS DISTRIBUCIONES DE LA COMPRESIÓN')
+console.log('')
+
+// (a) Sobre las SEÑALES: la población con la que se fijaron los cortes.
+const pSenales = percentiles(senales.map((s) => s.compresion))
+if (pSenales) {
+  console.log('(a) sobre las SEÑALES — con ésta se fijaron los cortes de hoy')
+  console.log(filaPercentiles(pSenales))
   console.log('')
 }
+
+// (b) Sobre UN PAR Y UNA VELA: la población que la tarjeta enseña de verdad.
+const dist = distribucionDeCompresion({ fechas, rates, rangosPar })
+const pTodo = percentiles(dist.todas)
+if (pTodo) {
+  console.log(`(b) sobre UN PAR Y UNA VELA — lo que la tarjeta enseña (ventana ${dist.ventana} velas, la de producción)`)
+  console.log(filaPercentiles(pTodo))
+  console.log('')
+}
+
+// ⚠️ Y el reparto de las cuatro etiquetas con los cortes que la app usa HOY.
+// Es lo que de verdad dice si están en su sitio: una etiqueta que sale en uno
+// de cada tres pares no es «rara», y una que no sale nunca es decorativa. Los
+// dos defectos han pasado ya, uno en cada app.
+console.log(
+  `CON LOS CORTES DE HOY (muy < ${UMBRALES_COMPRESION.muy} · algo < ${UMBRALES_COMPRESION.algo} · ` +
+    `ancho > ${UMBRALES_COMPRESION.ancho}), ¿cómo reparten?`,
+)
+console.log('')
+const rSenales = repartoDeEtiquetas(senales.map((s) => s.compresion), UMBRALES_COMPRESION)
+const rTodo = repartoDeEtiquetas(dist.todas, UMBRALES_COMPRESION)
+if (rSenales) {
+  console.log('(a) señales:')
+  console.log(filaReparto(rSenales))
+}
+if (rTodo) {
+  console.log('(b) un par, una vela  ← ES LO QUE SE VE EN PANTALLA:')
+  console.log(filaReparto(rTodo))
+}
+console.log('')
+console.log('  ⚠️ Si (b) reparte muy distinto de (a), los cortes describen una')
+console.log('     población que no es la que la tarjeta enseña, y hay que fijarlos')
+console.log('     con (b). Esa decisión es de Néstor: cambia lo que él VE.')
+console.log('')
+console.log(`  Y por par (sobre un par y una vela, ventana ${dist.ventana}):`)
+for (const [nombre, vals] of dist.porPar) {
+  const p = percentiles(vals)
+  const r = repartoDeEtiquetas(vals, UMBRALES_COMPRESION)
+  if (!p || !r) continue
+  console.log(
+    `    ${nombre.padEnd(8)} n=${String(p.n).padStart(4)}  p10 ${p.p10.toFixed(2)}  ` +
+      `mediana ${p.p50.toFixed(2)}  p90 ${p.p90.toFixed(2)}   ` +
+      `muy ${r.muy.toFixed(0).padStart(2)} % · ancho ${r.ancho.toFixed(0).padStart(2)} %`,
+  )
+}
+console.log('')
 
 const num = (x) => (x === null || !Number.isFinite(x) ? '    —' : (x >= 0 ? '+' : '') + x.toFixed(3)).padStart(7)
 const pct = (x) => (x === null || !Number.isFinite(x) ? '   — ' : `${x.toFixed(0)}%`.padStart(5))

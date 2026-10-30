@@ -50,6 +50,7 @@ jobs:
         run: |
           node scripts/prueba-compresion.mjs
           node scripts/prueba-compresion-montones.mjs
+          node scripts/prueba-compresion-dist.mjs
 
       - name: Medir
         working-directory: app
