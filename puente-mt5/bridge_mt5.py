@@ -228,11 +228,21 @@ def una_vuelta(token):
     # 1. Lo ultimo, para la pantalla.
     estado = {
         "actualizadoEl": ahora.isoformat(),
-        # ⚠️ De quien es este spread. Va DENTRO del archivo para que la app no
-        # tenga que acordarse: es la cuenta de Nestor en AvaTrade, no la del
-        # suscriptor. Un suscriptor con otro broker vera numeros que no son los
-        # suyos, y tiene derecho a saberlo.
-        "cuenta": "AvaTrade (cuenta de Nestor)",
+        # ⚠️ De quien es este spread. Va DENTRO del archivo para que el dato
+        # diga su propio origen aunque alguien lo lea fuera de la app: es una
+        # cuenta real del desarrollador, NO la del suscriptor. Quien tenga otro
+        # broker vera numeros que no son los suyos, y tiene derecho a saberlo.
+        #
+        # 📌 NO SE NOMBRA AL BROKER, y lo pidio Nestor el 2026-10-30: «mejor
+        # que diga que el precio es del broker que usan las apps o el
+        # desarrollador». Lo honesto es decir que NO es el tuyo, y eso se dice
+        # entero sin nombrar a una empresa en un repositorio publico.
+        #
+        # ⚠️ Y LA PANTALLA YA NO LEE ESTE CAMPO: usa su propia frase traducida.
+        # El motivo es que esto es texto en espanol y la app esta en 13
+        # idiomas, asi que un suscriptor en coreano leia una frase en espanol.
+        # Aqui se queda como documentacion del origen DENTRO del archivo.
+        "cuenta": "cuenta real del desarrollador de las apps",
         "pares": datos,
     }
     publicar(
