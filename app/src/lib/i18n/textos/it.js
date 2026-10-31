@@ -101,6 +101,8 @@ export default {
     msgBandaAbajo: (v) => `${v.par}: il %B è arrivato a ${v.valor} (avevi chiesto ${v.nivel} o meno).`,
     msgRsiArriba: (v) => `${v.par}: il RSI è arrivato a ${v.valor} (avevi chiesto ${v.nivel} o più).`,
     msgRsiAbajo: (v) => `${v.par}: il RSI è arrivato a ${v.valor} (avevi chiesto ${v.nivel} o meno).`,
+    notiTitulo: (v) => `Il tuo avviso · ${v.par}`,
+    notiTituloRecordatorio: (v) => `Promemoria · ${v.par}`,
     err_vacio: "L'avviso è incompleto.",
     err_sinPar: "Scegli una coppia.",
     err_parDesconocido: "Quella coppia non c’è in questa app.",

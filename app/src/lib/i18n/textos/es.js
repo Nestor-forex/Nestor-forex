@@ -144,6 +144,11 @@ export default {
     msgBandaAbajo: (v) => `${v.par}: el %B llegó a ${v.valor} (pediste ${v.nivel} o menos).`,
     msgRsiArriba: (v) => `${v.par}: el RSI llegó a ${v.valor} (pediste ${v.nivel} o más).`,
     msgRsiAbajo: (v) => `${v.par}: el RSI llegó a ${v.valor} (pediste ${v.nivel} o menos).`,
+    // El titulo de la notificacion. El de RECORDATORIO es distinto a
+    // proposito: sin eso, el segundo aviso se leeria como que el precio
+    // volvio a tocar el nivel, y `tocaRepetir` NO vuelve a mirar el precio.
+    notiTitulo: (v) => `Tu aviso · ${v.par}`,
+    notiTituloRecordatorio: (v) => `Recordatorio · ${v.par}`,
 
     // Lo que puede salir mal al guardar. Son CODIGOS y no frases porque los
     // decide `alertas.js`, que corre tambien fuera del navegador.

@@ -34,7 +34,7 @@
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { PROGRAMAS, toca, tocaEnEsteMinuto } from '../../reloj-externo/worker.js'
+import { PROGRAMAS, minutosDe, toca, tocaEnEsteMinuto } from '../../reloj-externo/worker.js'
 
 // Para los casos inventados del bloque 7e.
 const TODOS_DIAS = [0, 1, 2, 3, 4, 5, 6]
@@ -186,10 +186,16 @@ for (const p of PROGRAMAS) {
       `${p.wf} de ${p.repo}: la lista dice «cada hora» y el cron cubre las 24 (${porHora.size} entradas${hayComodin ? ' + comodín' : ''})`,
       hayComodin || porHora.size === 24
     )
-    const minutos = new Set(entradas.map((e) => e.min))
+    // ⚠️ `minuto` puede ser una LISTA: los avisos de los usuarios se miran
+    // cada 15 minutos, así que su cron tiene cuatro entradas. Se comparan los
+    // dos conjuntos en las DOS direcciones — si solo se mirara una, un cron
+    // nuevo no se enteraría nadie, que es el fallo que este bloque ya cazó una
+    // vez con la hora del reporte diario.
+    const minutosLista = [...new Set(Array.isArray(p.minuto) ? p.minuto : [p.minuto])].sort((a, b) => a - b)
+    const minutosCron = [...new Set(entradas.map((e) => Number(e.min)))].sort((a, b) => a - b)
     comprobar(
-      `${p.wf} de ${p.repo}: la lista dice minuto ${p.minuto} y el cron también`,
-      minutos.size === 1 && Number([...minutos][0]) === p.minuto
+      `${p.wf} de ${p.repo}: la lista dice minuto(s) [${minutosLista.join(' ')}] y el cron [${minutosCron.join(' ')}]`,
+      minutosCron.every((m) => Number.isFinite(m)) && JSON.stringify(minutosLista) === JSON.stringify(minutosCron)
     )
   } else {
     // Hora fija: cada 'HH:MM' de la lista tiene que salir del cron, y cada
@@ -344,9 +350,14 @@ console.log('\n7b. Todo lo que se pulsa tiene su minuto escrito')
 // Sin esto se caería al respaldo del minuto 20, que es seguro pero deshace el
 // arreglo en silencio.
 for (const p of PROGRAMAS.filter((x) => x.pulsar)) {
+  // ⚠️ Puede ser un número o una LISTA de minutos (los avisos de los usuarios
+  // van cuatro veces por hora). Lo que no puede es faltar ni salirse del reloj.
+  const ms = minutosDe(p)
   comprobar(
-    `${p.nombre}: minutoPulso = ${p.minutoPulso}`,
-    typeof p.minutoPulso === 'number' && p.minutoPulso >= 0 && p.minutoPulso < 60
+    `${p.nombre}: minutoPulso = ${ms.join(',')}`,
+    (typeof p.minutoPulso === 'number' || Array.isArray(p.minutoPulso)) &&
+      ms.length > 0 &&
+      ms.every((m) => typeof m === 'number' && m >= 0 && m < 60)
   )
 }
 
@@ -359,7 +370,7 @@ let minSeparacion = 99
 for (let d = 0; d <= 6; d++) {
   for (let h = 0; h < 24; h++) {
     const conCreditos = toca(PROGRAMAS, h, d).filter((p) => p.creditos)
-    const minutos = conCreditos.map((p) => p.minutoPulso ?? 20).sort((a, b) => a - b)
+    const minutos = conCreditos.flatMap(minutosDe).sort((a, b) => a - b)
     for (let i = 1; i < minutos.length; i++) {
       const sep = minutos[i] - minutos[i - 1]
       if (sep < minSeparacion) {

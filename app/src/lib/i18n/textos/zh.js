@@ -101,6 +101,8 @@ export default {
     msgBandaAbajo: (v) => `${v.par}：%B 达到了 ${v.valor}（你要求 ${v.nivel} 或以下）。`,
     msgRsiArriba: (v) => `${v.par}：RSI 达到了 ${v.valor}（你要求 ${v.nivel} 或以上）。`,
     msgRsiAbajo: (v) => `${v.par}：RSI 达到了 ${v.valor}（你要求 ${v.nivel} 或以下）。`,
+    notiTitulo: (v) => `你的提醒 · ${v.par}`,
+    notiTituloRecordatorio: (v) => `再次提醒 · ${v.par}`,
     err_vacio: "提醒还没填完。",
     err_sinPar: "请选择一个货币对。",
     err_parDesconocido: "这个应用里没有该货币对。",

@@ -105,6 +105,8 @@ export default {
     msgBandaAbajo: (v) => `${v.par}: o %B chegou a ${v.valor} (você pediu ${v.nivel} ou menos).`,
     msgRsiArriba: (v) => `${v.par}: o RSI chegou a ${v.valor} (você pediu ${v.nivel} ou mais).`,
     msgRsiAbajo: (v) => `${v.par}: o RSI chegou a ${v.valor} (você pediu ${v.nivel} ou menos).`,
+    notiTitulo: (v) => `Seu aviso · ${v.par}`,
+    notiTituloRecordatorio: (v) => `Lembrete · ${v.par}`,
     err_vacio: "Falta preencher o alerta.",
     err_sinPar: "Escolha um par.",
     err_parDesconocido: "Esse par não existe neste aplicativo.",

@@ -101,6 +101,8 @@ export default {
     msgBandaAbajo: (v) => `${v.par}: %B ${v.valor} पर पहुँचा (आपने ${v.nivel} या उससे नीचे माँगा था)।`,
     msgRsiArriba: (v) => `${v.par}: RSI ${v.valor} पर पहुँचा (आपने ${v.nivel} या उससे ऊपर माँगा था)।`,
     msgRsiAbajo: (v) => `${v.par}: RSI ${v.valor} पर पहुँचा (आपने ${v.nivel} या उससे नीचे माँगा था)।`,
+    notiTitulo: (v) => `आपका अलर्ट · ${v.par}`,
+    notiTituloRecordatorio: (v) => `रिमाइंडर · ${v.par}`,
     err_vacio: "अलर्ट अधूरा है।",
     err_sinPar: "एक जोड़ी चुनें।",
     err_parDesconocido: "इस ऐप में वह जोड़ी नहीं है।",

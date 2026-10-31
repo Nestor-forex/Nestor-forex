@@ -101,6 +101,8 @@ export default {
     msgBandaAbajo: (v) => `${v.par}: %B 가 ${v.valor} 에 도달했습니다 (${v.nivel} 이하 요청).`,
     msgRsiArriba: (v) => `${v.par}: RSI 가 ${v.valor} 에 도달했습니다 (${v.nivel} 이상 요청).`,
     msgRsiAbajo: (v) => `${v.par}: RSI 가 ${v.valor} 에 도달했습니다 (${v.nivel} 이하 요청).`,
+    notiTitulo: (v) => `내 알림 · ${v.par}`,
+    notiTituloRecordatorio: (v) => `다시 알림 · ${v.par}`,
     err_vacio: "알림이 비어 있습니다.",
     err_sinPar: "통화쌍을 고르세요.",
     err_parDesconocido: "이 앱에는 그 통화쌍이 없습니다.",
