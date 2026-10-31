@@ -101,6 +101,8 @@ export default {
     msgBandaAbajo: (v) => `${v.par}: %B が ${v.valor} に達しました (${v.nivel} 以下を指定)。`,
     msgRsiArriba: (v) => `${v.par}: RSI が ${v.valor} に達しました (${v.nivel} 以上を指定)。`,
     msgRsiAbajo: (v) => `${v.par}: RSI が ${v.valor} に達しました (${v.nivel} 以下を指定)。`,
+    notiTitulo: (v) => `あなたのアラート · ${v.par}`,
+    notiTituloRecordatorio: (v) => `リマインダー · ${v.par}`,
     err_vacio: "アラートが未入力です。",
     err_sinPar: "通貨ペアを選んでください。",
     err_parDesconocido: "このアプリにその通貨ペアはありません。",

@@ -102,6 +102,8 @@ export default {
     msgBandaAbajo: (v) => `${v.par}: بلغ %B القيمة ${v.valor} (طلبت ${v.nivel} أو أقل).`,
     msgRsiArriba: (v) => `${v.par}: بلغ RSI القيمة ${v.valor} (طلبت ${v.nivel} أو أكثر).`,
     msgRsiAbajo: (v) => `${v.par}: بلغ RSI القيمة ${v.valor} (طلبت ${v.nivel} أو أقل).`,
+    notiTitulo: (v) => `تنبيهك · ${v.par}`,
+    notiTituloRecordatorio: (v) => `تذكير · ${v.par}`,
     err_vacio: "التنبيه غير مكتمل.",
     err_sinPar: "اختر زوجاً.",
     err_parDesconocido: "هذا الزوج غير موجود في هذا التطبيق.",

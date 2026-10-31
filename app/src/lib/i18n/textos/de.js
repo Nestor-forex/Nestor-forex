@@ -105,6 +105,8 @@ export default {
     msgBandaAbajo: (v) => `${v.par}: %B erreichte ${v.valor} (du wolltest ${v.nivel} oder weniger).`,
     msgRsiArriba: (v) => `${v.par}: RSI erreichte ${v.valor} (du wolltest ${v.nivel} oder mehr).`,
     msgRsiAbajo: (v) => `${v.par}: RSI erreichte ${v.valor} (du wolltest ${v.nivel} oder weniger).`,
+    notiTitulo: (v) => `Dein Alarm · ${v.par}`,
+    notiTituloRecordatorio: (v) => `Erinnerung · ${v.par}`,
     err_vacio: "Der Alarm ist unvollständig.",
     err_sinPar: "Wähle ein Paar.",
     err_parDesconocido: "Dieses Paar gibt es in dieser App nicht.",

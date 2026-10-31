@@ -101,6 +101,8 @@ export default {
     msgBandaAbajo: (v) => `${v.par}: %B ${v.valor} değerine ulaştı (${v.nivel} veya altını istemiştin).`,
     msgRsiArriba: (v) => `${v.par}: RSI ${v.valor} değerine ulaştı (${v.nivel} veya üstünü istemiştin).`,
     msgRsiAbajo: (v) => `${v.par}: RSI ${v.valor} değerine ulaştı (${v.nivel} veya altını istemiştin).`,
+    notiTitulo: (v) => `Uyarın · ${v.par}`,
+    notiTituloRecordatorio: (v) => `Hatırlatma · ${v.par}`,
     err_vacio: "Uyarı eksik.",
     err_sinPar: "Bir parite seç.",
     err_parDesconocido: "Bu uygulamada o parite yok.",

@@ -1,0 +1,91 @@
+name: Mandar los avisos de los usuarios
+
+# Hace sonar en el celular los avisos que cada persona se programó en la
+# pestaña «Mis avisos»: un precio, un RSI o un %B con el nivel que ella puso.
+#
+# ⚠️ ESTO NO MANDA SEÑALES DE LA APP. Las señales las manda el vigía
+# (`vigia.yml`) y están EN PAUSA mientras las reglas se revisan. Aquí el nivel
+# lo puso la persona, así que no hay nada nuestro que validar y esa pausa no le
+# aplica — el porqué entero está en `app/scripts/lib/avisos-usuario.mjs`.
+#
+# ⚠️ VIVE SOLO EN SWING, como el robot de vencimientos y por el mismo motivo:
+# las DOS apps comparten la colección `users` del mismo proyecto de Firebase.
+# Dos programas mandando los mismos avisos los harían sonar dos veces. Este lee
+# los barridos de las dos (son públicos) para juzgar un aviso de RSI con la
+# temporalidad que le corresponde.
+#
+# ⚠️ NO GASTA UN CRÉDITO DE TWELVE DATA, y por eso NO lleva `TWELVEDATA_KEY`:
+# solo lee tres archivos ya publicados (el del puente de MT5 y los dos
+# barridos) y habla con Firestore y con los servicios de push.
+
+on:
+  schedule:
+    # Cada 15 minutos, que es la cadencia a la que publica el puente de MT5 y
+    # la misma que separa los recordatorios (`MINUTOS_ENTRE_REPETICIONES`). No
+    # tiene sentido mirar más seguido que el dato.
+    #
+    # ⚠️ Estos cuatro crones son el SUELO, no el reloj de verdad. Está medido
+    # (2026-10-06) que una entrada de cron que dispara cada hora solo lo hace
+    # el 21 % de las veces, así que quien hace sonar esto puntual es el reloj
+    # de Cloudflare (`reloj-externo/`), que lo pulsa a los minutos 9, 24, 39 y
+    # 54. Si ese reloj se cayera, estos cuatro siguen puestos.
+    - cron: '9 * * * *'
+    - cron: '24 * * * *'
+    - cron: '39 * * * *'
+    - cron: '54 * * * *'
+  workflow_dispatch:
+    inputs:
+      aplicar:
+        description: '¿Mandar de verdad? Sin marcar, solo mira y dice qué habría mandado.'
+        type: boolean
+        default: false
+
+# No escribe en el repositorio: lo que toca está en Firestore.
+permissions:
+  contents: read
+
+# ⚠️ Sin esto, una corrida lenta se solaparía con la siguiente y las dos
+# leerían los mismos avisos sin marcar — y los dos mandarían. `cancel-in-progress`
+# en false porque la que ya está corriendo puede estar a medio marcar fichas.
+concurrency:
+  group: avisos
+  cancel-in-progress: false
+
+jobs:
+  mandar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Instalar
+        working-directory: app
+        run: npm ci
+
+      - name: Mandar los avisos
+        working-directory: app
+        env:
+          # La misma cuenta de servicio que usa el vigía. Se salta las reglas de
+          # Firestore a propósito: es la única forma de leer los avisos de todo
+          # el mundo.
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          # Y las mismas claves VAPID con las que el vigía cifra sus avisos. La
+          # pública va en el código (la necesita el navegador); la privada es
+          # secreta y es la que firma el envío.
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+        # ⚠️ La corrida AUTOMÁTICA siempre manda; la de a mano solo si se marca
+        # la casilla. Así el botón sirve para mirar sin despertar a nadie, que es
+        # para lo que se va a usar casi siempre.
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.aplicar }}" = "true" ]; then
+            node scripts/mandar-avisos.mjs --aplicar
+          else
+            node scripts/mandar-avisos.mjs
+          fi

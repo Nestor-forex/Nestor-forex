@@ -101,6 +101,8 @@ export default {
     msgBandaAbajo: (v) => `${v.par}: %B достиг ${v.valor} (вы просили ${v.nivel} или меньше).`,
     msgRsiArriba: (v) => `${v.par}: RSI достиг ${v.valor} (вы просили ${v.nivel} или больше).`,
     msgRsiAbajo: (v) => `${v.par}: RSI достиг ${v.valor} (вы просили ${v.nivel} или меньше).`,
+    notiTitulo: (v) => `Ваше оповещение · ${v.par}`,
+    notiTituloRecordatorio: (v) => `Напоминание · ${v.par}`,
     err_vacio: "Алерт заполнен не полностью.",
     err_sinPar: "Выберите пару.",
     err_parDesconocido: "В этом приложении такой пары нет.",

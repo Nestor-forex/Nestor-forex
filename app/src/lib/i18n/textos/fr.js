@@ -105,6 +105,8 @@ export default {
     msgBandaAbajo: (v) => `${v.par} : le %B a atteint ${v.valor} (tu voulais ${v.nivel} ou moins).`,
     msgRsiArriba: (v) => `${v.par} : le RSI a atteint ${v.valor} (tu voulais ${v.nivel} ou plus).`,
     msgRsiAbajo: (v) => `${v.par} : le RSI a atteint ${v.valor} (tu voulais ${v.nivel} ou moins).`,
+    notiTitulo: (v) => `Ton alerte · ${v.par}`,
+    notiTituloRecordatorio: (v) => `Rappel · ${v.par}`,
     err_vacio: "L'alerte est incomplète.",
     err_sinPar: "Choisis une paire.",
     err_parDesconocido: "Cette paire n'est pas dans cette appli.",

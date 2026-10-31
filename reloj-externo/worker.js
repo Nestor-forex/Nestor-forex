@@ -129,6 +129,15 @@ const M_ORO_SWING = 38
 const M_ESTACIONALIDAD_SWING = 41
 const M_ESTACIONALIDAD_INTRADIA = 44
 
+// Y el único programa que se pulsa VARIAS VECES por hora: los avisos que cada
+// persona se programó, que se miran cada 15 minutos porque es la cadencia a la
+// que publica el puente de MT5.
+//
+// ⚠️ No gasta créditos de Twelve Data, así que no entra en el reparto de
+// arriba — pero igual se le dan minutos libres para que el registro del reloj
+// se lea de un golpe y no haya dos cosas en el mismo renglón.
+const M_AVISOS_SWING = [9, 24, 39, 54]
+
 // Y el minuto de todo lo que NO gasta créditos de Twelve Data: calendarios
 // (ForexFactory), tasas (BIS) y COT (CFTC). Pueden ir todos juntos porque no
 // comparten ninguna cuota con nadie.
@@ -338,6 +347,33 @@ export const PROGRAMAS = [
   },
 
   // ───────────────────────────────────────────────────────────────────────
+  // El único que se mira CUATRO VECES por hora: los avisos de los usuarios.
+  // ───────────────────────────────────────────────────────────────────────
+  {
+    repo: 'Nestor-forex',
+    wf: 'avisos.yml',
+    nombre: 'Swing · avisos de los usuarios',
+    programado: 'cada',
+    // ⚠️ Cuatro minutos, no uno: es el único programa del proyecto que trabaja
+    // cada 15 minutos. Ésa es la cadencia a la que publica el puente de MT5 y
+    // la que separa los recordatorios de un aviso que nadie ha visto, así que
+    // mirar más seguido no traería un dato nuevo.
+    minuto: [9, 24, 39, 54],
+    // ⚠️ TODOS los días. El mercado abre el domingo por la noche, y un aviso
+    // que no suena el domingo porque «es fin de semana» es un aviso roto. Lo
+    // que impide que suene con un precio parado del sábado no es el calendario
+    // —es `EDAD_MAXIMA_PRECIO_MIN`, que mira la hora del dato.
+    dias: TODOS,
+    mide: 'cobertura',
+    cadaHoras: 1,
+    pulsar: 'cada',
+    // ⚠️ SIN CRÉDITOS a propósito: lee tres archivos ya publicados y no llama a
+    // Twelve Data. Por eso puede compartir minuto con cualquiera sin riesgo de
+    // 429, y por eso su `.yml` no lleva `TWELVEDATA_KEY`.
+    minutoPulso: M_AVISOS_SWING,
+  },
+
+  // ───────────────────────────────────────────────────────────────────────
   // LOS QUE EL RELOJ NO PULSA, CON EL MOTIVO. No sobra: sin esta mitad, un
   // programa nuevo se quedaría fuera por olvido y parecería una decisión.
   // ───────────────────────────────────────────────────────────────────────
@@ -446,8 +482,20 @@ export function toca(programas, hora, diaSemana) {
 // justo lo que este reloj existe para evitar. Y hay una comprobación en
 // `prueba-reloj-externo.mjs` que falla si alguno se queda sin minuto, para que
 // este respaldo no se use nunca de verdad.
+// ⚠️ `minutoPulso` puede ser UNA LISTA, y no es un adorno: los avisos de los
+// usuarios se miran cada 15 minutos, así que ese programa se pulsa cuatro veces
+// por hora. Un solo número no podía expresarlo, y la alternativa —cuatro
+// entradas iguales en la lista cambiando solo el minuto— habría roto la
+// comprobación de «ningún programa repetido» y, peor, habría dejado el mismo
+// workflow descrito cuatro veces.
+export function minutosDe(p) {
+  const m = p?.minutoPulso
+  if (Array.isArray(m)) return m
+  return [m ?? 20]
+}
+
 export function tocaEnEsteMinuto(programas, hora, minuto, diaSemana) {
-  return toca(programas, hora, diaSemana).filter((p) => (p.minutoPulso ?? 20) === minuto)
+  return toca(programas, hora, diaSemana).filter((p) => minutosDe(p).includes(minuto))
 }
 
 async function pulsar(p, token) {
@@ -532,8 +580,8 @@ export default {
         `en esta hora tocarían ${pendientes.length}, cada uno en su minuto:\n` +
         pendientes
           .slice()
-          .sort((a, b) => (a.minutoPulso ?? 20) - (b.minutoPulso ?? 20))
-          .map((p) => `  :${String(p.minutoPulso ?? 20).padStart(2, '0')}  ${p.repo} · ${p.wf}`)
+          .sort((a, b) => minutosDe(a)[0] - minutosDe(b)[0])
+          .map((p) => `  ${minutosDe(p).map((m) => ':' + String(m).padStart(2, '0')).join(' ')}  ${p.repo} · ${p.wf}`)
           .join('\n') +
         `\n\nEsta página NO pulsa nada. Para saber si el reloj funciona de verdad:\n` +
         `Actions → «¿Llegan a su hora los programas?» en Nestor-forex.\n`,
