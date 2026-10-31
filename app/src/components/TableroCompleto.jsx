@@ -150,7 +150,7 @@ function RazonList({ items, emptyText }) {
   )
 }
 
-export default function TableroCompleto({ onVolver, onVerSetup, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], setupsBollinger = [], correlaciones = [], riesgoSenales = [], compresionPares = [], corte, generadoEl, horasViejo, costePorAntiguedad }) {
+export default function TableroCompleto({ onVolver, onVerSetup, filtro = null, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], setupsBollinger = [], correlaciones = [], riesgoSenales = [], compresionPares = [], corte, generadoEl, horasViejo, costePorAntiguedad }) {
   const { t, locale } = useIdioma()
   // Cómo le va de verdad a la regla de reversión, contado en vivo. Ver el
   // porqué en `useResumenReal`: este número estuvo escrito a mano y se quedó
@@ -188,6 +188,12 @@ export default function TableroCompleto({ onVolver, onVerSetup, loading, error, 
       </header>
 
       <main style={{ flex: 1, padding: '20px 18px 48px', display: 'flex', flexDirection: 'column', gap: 32 }}>
+        {/* El mismo control que en la pestaña Barrido, y con el mismo estado:
+            quien filtra allí llega aquí filtrado, y lo ve dicho. Si el
+            contador solo saliera en una de las dos pantallas, la otra
+            enseñaría tres filas de catorce sin explicar por qué. */}
+        {filtro}
+
         <section>
           <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700 }}>{fecha}</h1>
           <div className="mono" style={{ fontSize: 12.5, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 3 }}>
