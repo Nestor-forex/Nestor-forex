@@ -76,7 +76,11 @@ async function corridas(repo, wf) {
     salida.push(...lote)
     if (lote.length < 100) break
   }
-  return { corridas: salida }
+  // ⚠️ Si se llenaron las tres páginas, la descarga SE QUEDÓ CORTA y el día más
+  // viejo llega a medias. Sin este aviso, `horasCubiertas` lo contaba como un
+  // día de verdad con dos horas y hundía el promedio — la falsa alarma del
+  // «79 % de cobertura» del 2026-10-30.
+  return { corridas: salida, truncado: salida.length >= 300 }
 }
 
 const hace = (dias) => new Date(Date.now() - dias * 864e5).toISOString()
@@ -111,16 +115,29 @@ const veredictos = []
 //
 // ⚠️ `todas` incluye los lanzamientos A MANO. Mientras el reloj de fuera no
 // esté puesto, ese número puede estar halagado por las pruebas de una sesión.
-const esquemaDe = (p, corridasUsadas, etiqueta) => {
+const esquemaDe = (p, corridasUsadas, etiqueta, truncado = false) => {
   if (p.mide === 'cobertura') {
-    const cob = horasCubiertas(corridasUsadas.map((c) => c.created_at))
+    const cob = horasCubiertas(
+      corridasUsadas.map((c) => c.created_at),
+      { truncado, diasQueToca: p.dias },
+    )
     if (!cob) return null
     const deberia = 24 / p.cadaHoras
+    // ⚠️ Los días omitidos se NOMBRAN. Quitar días mejora el número, y un
+    // descarte que no se dice es un descarte en el que nadie puede confiar.
+    const omitidos = cob.omitidos?.length ? ` · sin contar: ${cob.omitidos.join(' y ')}` : ''
+    const hoy = cob.hoy
+      ? ` · hoy ${cob.hoy.horas} de ${cob.hoy.deLasPosibles} horas transcurridas`
+      : ''
+    if (cob.mediaHorasPorDia === null) {
+      console.log(`    ${etiqueta.padEnd(16)} ningún día COMPLETO que medir${omitidos}${hoy}`)
+      return null
+    }
     const pct = (100 * cob.mediaHorasPorDia) / deberia
     console.log(
-      `    ${etiqueta.padEnd(16)} ${corridasUsadas.length} corridas en ${cob.dias} días · ` +
+      `    ${etiqueta.padEnd(16)} ${corridasUsadas.length} corridas · ${cob.dias} días COMPLETOS · ` +
         `HORAS DISTINTAS al día ${cob.mediaHorasPorDia.toFixed(1)} de ${deberia} ` +
-        `(${pct.toFixed(0)} %) · peor día ${cob.peorDia}`
+        `(${pct.toFixed(0)} %) · peor día ${cob.peorDia}${hoy}${omitidos}`
     )
     return { veredicto: pct >= 85 ? 'aTiempo' : pct >= 50 ? 'tarde' : 'inservible', porque: `${pct.toFixed(0)} % de cobertura` }
   }
@@ -134,8 +151,24 @@ const esquemaDe = (p, corridasUsadas, etiqueta) => {
   // no apaga el de GitHub, así que cada día hay una corrida puntual y otra de
   // cinco horas más tarde. Resumiéndolas juntas, la del medio es siempre la
   // tarde y el número no podía ponerse verde nunca.
+  // ⚠️⚠️ Y LAS HORAS CONTRA LAS QUE SE MIDE INCLUYEN LA DEL PULSO, no solo la
+  // del cron. Arreglado el 2026-10-30: el reporte de Intradía salía
+  // «INSERVIBLE» llevando semanas llegando clavado. Su cron es 13:00 y el
+  // reloj lo pulsa a las 13:35 **a propósito** —cada programa tiene su minuto
+  // para que no choquen y se lleven un 429 de Twelve Data—, así que la
+  // herramienta lo contaba 35 minutos tarde todos los días.
+  //
+  // 📌 Era un rojo permanente de mi propio rótulo, y eso es peor que no medir:
+  // una alarma que siempre suena enseña a ignorarla. No afloja nada —si el
+  // reloj deja de pulsar, la corrida de GitHub sigue llegando horas tarde y se
+  // ve igual—; lo único que cambia es que se compara contra la hora a la que
+  // de verdad toca.
+  const horasEsperadas =
+    p.pulsar?.length && p.programado !== 'cada'
+      ? [...new Set([...p.programado, ...p.pulsar.map((h) => `${h.slice(0, 3)}${String(p.minutoPulso ?? 20).padStart(2, '0')}`)])]
+      : p.programado
   const porDia = mejorPorDia(
-    corridasUsadas.map((c) => ({ creadoISO: c.created_at, retraso: retrasoMasProbable(p.programado, c.created_at) }))
+    corridasUsadas.map((c) => ({ creadoISO: c.created_at, retraso: retrasoMasProbable(horasEsperadas, c.created_at) }))
   )
   const res = resumir(porDia.map((d) => d.retraso))
   if (!res) return null
@@ -149,7 +182,7 @@ const esquemaDe = (p, corridasUsadas, etiqueta) => {
 }
 
 for (const p of PROGRAMAS) {
-  const { corridas: cs, error } = await corridas(p.repo, p.wf)
+  const { corridas: cs, error, truncado } = await corridas(p.repo, p.wf)
   const pedido = p.programado === 'cada' ? `cada hora al minuto ${p.minuto}` : `${p.programado.join(', ')} UTC`
   const sello = p.pulsar ? 'lo pulsa el reloj de fuera' : 'NO lo pulsa el reloj'
 
@@ -171,8 +204,8 @@ for (const p of PROGRAMAS) {
   const enVentana = cs.filter((c) => c.created_at >= desde && (c.event === 'schedule' || c.event === 'workflow_dispatch'))
   const soloCron = enVentana.filter((c) => c.event === 'schedule')
 
-  esquemaDe(p, soloCron, 'solo schedule:')
-  const jTodas = esquemaDe(p, enVentana, 'TODAS:')
+  esquemaDe(p, soloCron, 'solo schedule:', truncado)
+  const jTodas = esquemaDe(p, enVentana, 'TODAS:', truncado)
 
   if (!jTodas) {
     console.log('    ⚠️ ninguna corrida en la ventana — no se puede juzgar')
@@ -251,9 +284,28 @@ if (malos.length) {
   const porRacha = malos.filter((v) => /días con corrida/.test(v.detalle || ''))
   if (porRacha.length) {
     console.log(`    ⚠️ ${porRacha.length} de ellos llevan ${RACHA_MALA}+ DÍAS SEGUIDOS sin llegar a su hora.`)
-    console.log('       Eso NO es la ventana de 30 días: apunta a que el reloj de fuera dejó')
-    console.log('       de pulsar. Lo más probable es que su token de GitHub haya caducado.')
-    console.log('       Comprobar en Cloudflare → Workers → el worker → Logs.')
+    console.log('       Eso NO es la ventana de 30 días: apunta a que el reloj de fuera no')
+    console.log('       los está pulsando.')
+    // ⚠️⚠️ Y AQUÍ HAY DOS CAUSAS QUE SE CONFUNDEN, arreglado el 2026-10-30
+    // porque la herramienta mandó a Néstor a buscar un token caducado que
+    // estaba perfectamente vivo. La pregunta que las separa es si OTROS
+    // programas pulsados sí llegan: si llegan, la llave funciona.
+    const pulsadosBien = veredictos.filter((v) => v.pulsa && v.veredicto === 'aTiempo')
+    if (pulsadosBien.length) {
+      console.log('')
+      console.log(`       📌 PERO ${pulsadosBien.length} programas que el reloj pulsa SÍ llegan a su hora`)
+      console.log(`          (${pulsadosBien.slice(0, 3).map((v) => v.nombre).join(', ')}…), así que`)
+      console.log('          LA LLAVE NO ESTÁ CADUCADA — si lo estuviera no llegaría ninguno.')
+      console.log('          Lo más probable es que el programita pegado en Cloudflare sea una')
+      console.log('          versión vieja que todavía no conoce estos programas. El código del')
+      console.log('          reloj vive PEGADO allí, así que cambiarlo en el repositorio no lo')
+      console.log('          cambia en Cloudflare: hay que volver a pegarlo.')
+      console.log('          Los pasos están en `reloj-externo/README.md`, al final.')
+    } else {
+      console.log('       NINGÚN programa pulsado llega a su hora, así que lo más probable es')
+      console.log('       que su token de GitHub haya caducado.')
+      console.log('       Comprobar en Cloudflare → Workers → el worker → Logs.')
+    }
   } else {
     console.log('    📌 NINGUNO lleva varios días seguidos tarde, así que el reloj de fuera')
     console.log('       parece estar pulsando. Lo que arrastra el número son los días')
