@@ -7,6 +7,7 @@ import Header from './components/Header'
 import BottomNav from './components/BottomNav'
 import BarridoTab from './components/BarridoTab'
 import AvisosCard from './components/AvisosCard'
+import MisAvisos from './components/MisAvisos'
 import CotizacionesVivo from './components/CotizacionesVivo'
 import Tasas from './components/Tasas'
 import Cot from './components/Cot'
@@ -52,7 +53,10 @@ function SinConfigurar() {
 
 export default function App() {
   const t = useT()
-  const { authUser, cargandoAuth, perfilEstado, esAdmin, registrar, ingresar, salir } = useAuthUser()
+  // `perfil` es la ficha de Firestore en vivo, y de ahí salen los avisos y la
+  // lista de pares de cada persona: `useAvisos` la lee de aquí en vez de abrir
+  // una segunda escucha del MISMO documento.
+  const { authUser, cargandoAuth, perfil, perfilEstado, esAdmin, registrar, ingresar, salir } = useAuthUser()
   const mercado = useMarketData()
   // El calendario va en su propio archivo y con su propio horario: el barrido
   // lo publica el vigía una vez al día de lunes a viernes, y el calendario
@@ -285,6 +289,7 @@ export default function App() {
                 />
               )}
               {tab === 'historial' && <HistorialTab />}
+              {tab === 'avisos' && <MisAvisos uid={authUser.uid} perfil={perfil} />}
               {tab === 'calc' && <CalculadoraTab ratesUSD={mercado.ratesUSD} loadingTasas={mercado.loading} errorTasas={mercado.error} />}
               {tab === 'admin' && esAdmin && (
                 <MiembrosTab usuarios={miembros.usuarios} cargando={miembros.cargando} onAprobar={miembros.aprobar} onRetirar={miembros.retirar} onFijarVence={miembros.fijarVence} />
