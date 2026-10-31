@@ -14114,3 +14114,225 @@ lista— así que la comprobación de «una acción se rechaza» pasaba sin ella
 que la lista aporta es **el motivo en el log**, y eso no es cosmético: «es una
 acción» CIERRA la pregunta y «no sé qué es esto» la DEJA ABIERTA. Hay una
 comprobación dedicada a distinguir los dos caminos.
+
+---
+
+# «Mis avisos» y «Mis pares»: las dos herramientas que el usuario maneja (2026-10-31)
+
+Hasta hoy las dos apps eran **para leer**. Estas dos son las primeras que el
+suscriptor **maneja**: elige sus pares y programa sus propios avisos. Néstor
+lo pidió con esas palabras — *«quiero que la pantalla se convierta en una
+herramienta para que el usuario pueda interactuar en ella según su gusto o
+necesidades»*— y lo cerró con la que manda sobre el diseño:
+
+> «sé que hay trader que operan con pocos pares, otros solamente con uno y
+> otros con muchos. **Las apps deben satisfacer todos los gustos.**»
+
+⚠️ **NINGUNA CAMBIA UNA SEÑAL.** Swing sigue en −0,040 por unidad de riesgo e
+Intradía en −0,13. El filtro es solo de PINTADO y los avisos no proponen nada.
+
+## Lo construido, en tres piezas
+
+| | pieza | estado |
+|---|---|---|
+| 1 | `src/lib/alertas.js` + sus 94 comprobaciones — la lógica de cuándo suena | ✅ PR #142 / #105 |
+| 2 | `src/components/MisAvisos.jsx` + `useAvisos.js` — la pantalla | ✅ PR #143 / #106 |
+| 2b | `src/lib/vistaPares.js` + `FiltroPares.jsx` — ver todos o solo los míos | ✅ PR #144 / #107 |
+| **3** | **el programa que lee el precio cada 15 min y manda el aviso** | ❌ **FALTA** |
+
+⚠️ **Hoy la pantalla PROGRAMA avisos y todavía no suena ninguno.** Falta el
+cartero, que necesita un hueco de `minutoPulso` en `worker.js` y, por tanto,
+otro pegado de Néstor en Cloudflare.
+
+## ⚠️⚠️ EL FALLO QUE DIO ORIGEN A LA SEGUNDA, Y LO CAZÓ ÉL
+
+La tarjeta «Mis pares» decía desde el día que se escribió: *«los avisos y el
+tablero se quedan solo con ésos»*. **Era falso.** `soloSeguidos` estaba
+escrita, **probada** y no la llamaba nadie. Néstor eligió tres pares, abrió el
+tablero y vio los catorce.
+
+Es la familia que este archivo lleva meses coleccionando —**una etiqueta que
+describe algo que el código no hace**— con dos agravantes propios:
+
+📌 **Las pruebas de la función pasaban todas.** Medían bien una capacidad que
+nadie usaba. Una prueba unitaria no puede distinguir «esto funciona» de «esto
+funciona y no se usa».
+
+📌 **Y `prueba-cableado.mjs`, escrito el 2026-10-07 EXACTAMENTE para esto, no
+lo vio**: mira lo que `derivarVista` calcula y el hook tira, no una función
+que nadie llama. El guardián existía y miraba al lado.
+
+**El arreglo no es «tener más cuidado»:** el bloque 7 nuevo exige que cada
+cosa que `derivarVista` calcula tenga una respuesta ESCRITA a «¿esto se
+filtra?» (`LISTAS_POR_PAR`, `LISTAS_POR_PAREJA` o `NO_SE_FILTRAN` con su
+motivo), y que el filtro esté enchufado a la pantalla. Comprobado que muerde:
+desenchufarlo tumba 1 · quitar una lista del manifiesto tumba 1 y la nombra ·
+filtrar el ranking de fuerza tumba 3.
+
+## Las decisiones que no hay que ablandar
+
+⚠️ **EL AVISO DE QUE ESTO NO SON SEÑALES VA ANTES DE CUALQUIER CONTROL.** Aquí
+lo caro no es leer mal un número: es creer que lo que suena es una
+recomendación de la app. Mismo criterio que las tasas, el COT y la actividad.
+
+⚠️ **NINGUNA FRASE DICE QUÉ HACER.** Un aviso dice **qué pasó**. Los niveles
+los pone la persona; la app **no sugiere ninguno a propósito** — si los
+sugiriera dejaría de ser un aviso suyo y pasaría a ser una señal nuestra.
+
+⚠️ **ANTE LA DUDA SE ENSEÑA TODO.** Sin lista, con un valor guardado ilegible
+o cuando el teléfono no deja leer, se ven todos los pares. Los dos errores no
+cuestan lo mismo: enseñar de más molesta y **se ve**; enseñar de menos hace
+que alguien abra la app, vea 3 filas de 14 y crea que se rompió. Misma forma
+que `yaCorrioHoy` y `esSombra`. **La única excepción es deliberada:** «tengo
+lista y nunca he elegido» NO es duda — es justo lo que Néstor esperaba.
+
+⚠️ **EL CONTADOR SE VE SIEMPRE**, también sin filtrar. Es lo que impide que
+esto se vuelva un misterio: un filtro puesto hace meses se lee como una app
+rota si no hay un «viendo 3 de 14» justo encima.
+
+⚠️⚠️ **EL RANKING DE FUERZA NO SE FILTRA NUNCA.** Se calcula comparando cada
+divisa contra las otras SIETE: recortado **cambiaría de valor** y dejaría de
+medir lo que dice medir. No enseñaría menos — enseñaría **otra cosa con el
+mismo rótulo**. Lo mismo con las tarjetas de información y con `umbral`,
+`difMax` y `bloqueados`, que hablan del mercado entero.
+
+⚠️ **LA PREFERENCIA DE VISTA VIVE EN EL TELÉFONO; LA LISTA, EN FIRESTORE.** La
+vista es una conveniencia de quien mira, como el idioma. La lista es de la
+persona y la necesita el programa que manda los avisos.
+
+⚠️ **LAS REGLAS DE FIRESTORE SE AMPLIARON CON LISTA BLANCA**, no por descarte:
+`['nombre', 'seguimiento', 'avisos']` y nada más, con tope de tamaño (20 y 40)
+porque eso una regla lo comprueba y la app no — la app corre en el teléfono de
+la persona y se puede saltar. Publicadas el 2026-10-31 a las 04:44.
+
+## 📌 Dos fallos de los que no hay que perder la lección
+
+**El bloque `avisos:` duplicado en los 13 idiomas.** Metí un espacio nuevo con
+el mismo nombre que el del interruptor de notificaciones. En JavaScript un
+objeto con la misma clave dos veces **se queda con la última y tira la otra en
+silencio**, y `t()` de una clave que no existe **devuelve vacío**: el
+interruptor se habría quedado sin textos en los 13 idiomas sin que el build ni
+el linter dijeran nada. Hoy `prueba-idiomas.mjs` falla si una clave de primer
+nivel aparece dos veces (tumba 14 al reintroducirlo).
+
+**`Number(null) === 0` y `Number('   ') === 0`.** Un nivel en blanco habría
+hecho sonar un aviso de «RSI por encima de 0» al instante. Hermano de
+`new Date(null) === 1970`, que ya mordió en `minutosDesde`.
+
+---
+
+# Las dos herramientas, explicadas para suscriptores (2026-10-31)
+
+Néstor la pidió con las otras doce —el volumen, TradingView, la correlación,
+el swap, la actividad, el margen de error, Historial contra Diario, las apps
+contra el mercado, el oro, la rejilla, la estacionalidad y qué es esta app—.
+Es la **decimotercera**, y la primera que no habla de un dato sino de **lo que
+el suscriptor puede hacer con la app**.
+
+## El texto
+
+> **Dos herramientas para que la app se adapte a ti, y no al revés.**
+>
+> Todo lo demás de esta app es información para leer. Estas dos son para
+> **usarlas**: una decide qué ves, la otra decide cuándo te avisa.
+>
+> ### 1 · Mis pares — ver solo lo tuyo, o verlo todo
+>
+> Tocas los pares que te interesan y el barrido se queda con ésos. Un toque
+> más y vuelves a verlos todos. Arriba siempre dice **«viendo 3 de 14»**, así
+> que nunca te vas a preguntar por qué hay pocas filas.
+>
+> **Por qué existe:** no todo el mundo opera igual. Hay quien sigue dieciocho
+> pares y quien lleva años operando solo EUR/USD. Una app que te obliga a las
+> dos cosas estorba a los dos.
+>
+> **En qué te ayuda cuando vas a operar:**
+>
+> · **Menos ruido en la decisión.** Si solo operas cuatro pares, las otras
+>   diez filas no son información: son diez oportunidades de distraerte con
+>   algo que no vas a tocar.
+> · **Menos tentación.** Un par que se ve bonito y que no es tuyo es la forma
+>   más barata de acabar operando algo que no conoces.
+> · **Más rápido por la mañana.** Abres, ves tus cuatro, decides. El barrido
+>   completo sigue a un toque de distancia cuando quieras mirar el mercado
+>   entero.
+>
+> ⚠️ **Y lo que NO se recorta nunca, aunque filtres: el ranking de fuerza de
+> las ocho divisas.** Ese número sale de comparar cada divisa **contra las
+> otras siete**. Si lo recortáramos a tus tres pares, los valores cambiarían y
+> dejaría de medir lo que dice medir — no estarías viendo menos, estarías
+> viendo **otra cosa con el mismo nombre**. Lo mismo con el calendario, las
+> tasas, el COT y la correlación: comparan unos pares con otros.
+>
+> Te lo decimos en la pantalla, debajo del botón. No queremos que lo adivines.
+>
+> ### 2 · Mis avisos — que el mercado te llame a ti
+>
+> Programas tus propios avisos y el teléfono te suena cuando pasa lo que
+> pediste. Hasta veinte. Cada uno se lee como una frase:
+>
+> > *«En EUR/USD, avísame cuando el **precio** **suba hasta** **1.1550**»*
+> > *«En GBP/JPY, avísame cuando el **RSI** **baje hasta** **30**»*
+> > *«En USD/CAD, avísame cuando el **%B** **suba hasta** **1**»*
+>
+> Tres cosas se pueden vigilar: el **precio**, el **RSI** (de 0 a 100: por
+> debajo de 30 se dice que se cayó fuerte, por encima de 70 que subió fuerte)
+> y el **%B**, que dice dónde está el precio entre las Bandas de Bollinger —
+> **0** es la banda de abajo, **1** la de arriba, más de 1 es que se salió.
+>
+> **En qué te ayuda cuando vas a operar:**
+>
+> · **No tienes que estar mirando.** La razón de ser de la herramienta. Viste
+>   un nivel en el gráfico, lo programas y te vas a trabajar.
+> · **Decides el nivel en frío.** Esto es más importante de lo que parece: el
+>   sitio donde quieres entrar se piensa mejor con el mercado quieto que con
+>   la vela corriendo. Dejarlo escrito la noche anterior te quita la
+>   improvisación de encima.
+> · **Suena dos veces más si no lo ves, y se calla al abrir la app.** No te
+>   persigue: si no miraste, vuelve a los 15 minutos y una segunda y última
+>   vez a los 15 siguientes. Y ya.
+>
+> ### ⚠️ Lo que estas dos herramientas NO son
+>
+> **No son señales, y los niveles no te los sugerimos.** Un aviso te dice
+> **qué pasó** —«EUR/USD tocó 1.1550»— y nunca qué hacer con ello. El número
+> lo pones tú.
+>
+> Eso es deliberado. El día que la app te sugiriera el nivel, dejaría de ser
+> **tu** aviso y pasaría a ser **nuestra** señal — y lo que esta app dice sobre
+> sus propias señales lo tienes en la pantalla de mediciones: son
+> experimentos, todavía no sirven para copiar, y les falta llegar a 150
+> operaciones para que su número signifique algo.
+>
+> Una herramienta que te deja programar tu criterio y una que te vende el suyo
+> son cosas distintas. Ésta es la primera.
+>
+> ### Y una cosa que pasó por el camino, porque también cuenta
+>
+> La tarjeta de «Mis pares» decía, desde el día que se escribió, que el
+> tablero se quedaba solo con los pares elegidos. **No era verdad**: el código
+> que filtraba estaba escrito, estaba probado, y no lo llamaba nadie. Lo
+> descubrió el propio dueño de la app eligiendo tres pares y viendo los
+> catorce.
+>
+> Se arregló el mismo día, y se le puso encima una comprobación automática
+> para que no pueda volver a pasar en silencio. Lo contamos porque es
+> exactamente lo que esta app hace con todo lo demás: **cuando algo no
+> cuadra, se dice y se arregla, no se maquilla.**
+
+## Por qué esta vale, y en qué se diferencia de las doce anteriores
+
+📌 Las doce anteriores explican **un dato** y por qué no se exagera. Ésta
+explica **un control**, y su argumento es otro: no es «este número es
+honesto», es **«esta app no decide por ti»**. En un sector donde el producto
+normal es que alguien te diga qué comprar, una herramienta cuyo valor es que
+el criterio lo pones tú se explica sola.
+
+📌 Y el cierre —el fallo contado— es del mismo tipo que el de la rejilla: un
+caso con fecha, encontrado por el usuario, arreglado y con un guardián encima.
+Es lo único que hace creíble todo lo demás.
+
+⚠️ **Lo que NO se puede hacer con este texto:** publicarlo diciendo que los
+avisos ya suenan. **Falta la pieza 3** — el programa que lee el precio cada 15
+minutos y manda la notificación. Hoy la pantalla PROGRAMA avisos y no suena
+ninguno. Decir lo contrario sería justo lo que este texto presume de no hacer.
