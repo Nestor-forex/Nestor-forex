@@ -14531,3 +14531,123 @@ encendido**; uno de RSI o %B no.
    `conAvisos`.
 3. Y sigue en pie que la landing **no puede decir todavía** nada sobre avisos
    hasta que haya sonado uno de verdad.
+
+---
+
+# El reloj pulsaba los avisos EN MODO ENSAYO (2026-11-01). Y el vigía, sin guardián
+
+Néstor pegó el Worker nuevo en Cloudflare y el reloj pulsó por primera vez el
+programa de los avisos, a las **17:24:40 UTC** — su minuto, clavado. La primera
+línea del registro de esa corrida:
+
+```
+Avisos de los usuarios — solo mirar
+```
+
+⚠️⚠️ **Los pulsos del reloj no habrían mandado NADA, y cada corrida habría
+salido en verde cuatro veces por hora.** El silencio que se lee como éxito, que
+es la familia de fallo que este archivo lleva meses coleccionando.
+
+## La causa, en una línea
+
+El reloj llama a `POST .../dispatches` con `{ ref: 'main' }` y **ningún input**.
+Y `avisos.yml` decía:
+
+```yaml
+if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.aplicar }}" = "true" ]
+```
+
+O sea que trataba `schedule` como «de verdad» y todo lo demás como ensayo. **El
+reloj no llega por `schedule`: llega por `workflow_dispatch`**, igual que el
+botón. Lo único que habría mandado avisos eran los cuatro crones de GitHub, que
+están medidos al **21 %** de fiabilidad y con horas de retraso — justo lo que el
+reloj venía a arreglar.
+
+📌 **Y es un fallo de diseño mío, no un descuido de escritura.** Copié el patrón
+de `vencimientos.yml` y de `reglas.yml`, donde es correcto porque **a ésos el
+reloj no los pulsa** (están en la lista de «LOS QUE EL RELOJ NO PULSA», con su
+motivo). El patrón era bueno; el sitio, no.
+
+## El arreglo: el valor por defecto tiene que ser el de PRODUCCIÓN
+
+La casilla se invierte. `solo_mirar`, por defecto **sin marcar**:
+
+| quién | qué pasa |
+|---|---|
+| el reloj (sin inputs) | **manda** ✅ |
+| los crones de GitHub | **manda** ✅ |
+| Néstor con el botón, sin marcar | manda |
+| Néstor marcando «solo mirar» | ensaya sin despertar a nadie |
+
+⚠️ **Lo que se marca a mano es la EXCEPCIÓN, nunca el funcionamiento normal.**
+Es el mismo patrón que `publicar-barrido.yml` ya usaba con `forzar`, y la
+diferencia con el de `vencimientos.yml` no es de gusto: depende de si el reloj
+pulsa ese workflow o no.
+
+## ⚠️⚠️ Y EL GUARDIÁN NUEVO CAZÓ UN SEGUNDO CASO AL ESTRENARSE: el vigía de Swing
+
+`vigia.yml` tenía `VIGIA_SOLO_SI_FALTA: ${{ github.event_name == 'schedule' && '1' || '' }}`,
+escrito el 2026-09-07 con un motivo bueno: *«lanzarlo a mano SIEMPRE corre, que
+es para lo que sirve el botón»*. Era cierto cuando el único que pulsaba el botón
+era una persona.
+
+**Desde que el reloj lo pulsa, el pulso del reloj corría SIN GUARDIÁN.** Hoy no
+pasa nada —se pulsa una vez al día y gasta sus 14 créditos—, pero el día que
+pulsara dos veces, el vigía anotaría señales nuevas **con la misma fecha**: en
+Swing una señal se identifica por `id@vistoEl` con `vistoEl` a DÍA, así que el
+historial dejaría de describir una cosa sola. Y el historial es **lo único
+irrecuperable del proyecto**.
+
+Ahora el guardián va puesto por defecto y la recuperación de un día saltado se
+pide con la casilla `forzar`. El día a día no cambia: el reloj pulsa una vez,
+`yaCorrioHoy` lo deja pasar, y los tres crones de GitHub siguen siendo el suelo.
+
+📌 **La lección general: una premisa que era verdad puede dejar de serlo sin que
+nadie toque esa línea.** «Al botón solo le da una persona» era cierto hasta que
+se construyó el reloj. Es hermana de «al cambiar algo, mirar también quién lo
+NOMBRA», pero más difícil de ver: aquí lo que cambió no fue un número ni un
+nombre, fue **quién llama**.
+
+## El guardián: `prueba-reloj-externo.mjs` bloque 8
+
+Para cada workflow que el reloj PULSA, exige que haga su trabajo **sin ningún
+input**. Dos firmas, las dos del mismo error:
+
+- **(a)** que condicione con `github.event_name == 'schedule'` — el reloj no
+  llega por ahí;
+- **(b)** que tenga un input con nombre de los que activan (`aplicar`,
+  `publicar`, `mandar`, `enviar`, `escribir`, `ejecutar`) y que no venga
+  encendido por defecto.
+
+Con la guarda de siempre —si no revisó ni un workflow, falla— y una segunda que
+comprueba que el lector de inputs **encuentra algo**: si devolviera siempre una
+lista vacía, la mitad (b) sería decorativa.
+
+⚠️ La lista de nombres va **A MANO**, como GEMELOS y PRIMOS. Una lista calculada
+se adaptaría a lo que encuentre.
+
+**Comprobado que MUERDE**, con el daño verificado en el archivo antes de darlo
+por bueno: devolver el input `aplicar` tumba 1 · devolver la condición por
+`schedule` tumba 1 · devolver el guardián viejo del vigía tumba 1 aquí **y 2 en
+`prueba-vigia.mjs`**.
+
+📌 **Y el tropiezo de siempre, por quinta vez:** el primer intento del daño al
+vigía usaba `sed` con una expresión que falló (`unknown option to 's'`), así que
+el archivo quedó intacto y la prueba dijo «0 MAL». Si no llego a mirar el
+archivo con el daño puesto, habría concluido que la comprobación no muerde. **Es
+exactamente lo que está escrito del 2026-09-03 y sigue costando.**
+
+## La comprobación de `prueba-vigia.mjs` se actualizó, no se borró
+
+Fijaba el valor viejo y eso es justo su trabajo: avisar de que la app cambia. Se
+le puso el valor nuevo **y la comprobación contraria** —que YA NO dependa de
+`github.event_name`— más una tercera de que la casilla `forzar` exista: sin
+ella, un día saltado no se podría recuperar y el guardián lo impediría para
+siempre.
+
+## ✅ Lo que esto NO obliga a hacer
+
+**No hay que volver a pegar el Worker.** El arreglo entero está en los dos
+`.yml` del repositorio, así que se aplica solo al fusionar. El Worker que Néstor
+pegó hoy está bien — y se comprobó que funciona con su propio pulso:
+`workflow_dispatch` a las 17:24:40, minuto :24 de los cuatro que le tocan.

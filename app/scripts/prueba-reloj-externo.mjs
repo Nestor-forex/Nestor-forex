@@ -432,5 +432,106 @@ console.log('\n7f. En la gran mayoría de los minutos el reloj no hace nada')
   comprobar('al menos 50 de los 60 minutos están vacíos', vacios >= 50)
 }
 
+console.log('\n8. ⚠️⚠️ Un programa que el reloj PULSA hace su trabajo SIN NINGÚN INPUT')
+// ─────────────────────────────────────────────────────────────────────────
+// 📌 ESTO NO ES HIPOTÉTICO: cazó el fallo el 2026-11-01, en la primera corrida
+// real del reloj con el programa de los avisos dentro.
+//
+// El reloj llama a `POST .../dispatches` con `{ ref: 'main' }` y **ningún
+// input**. Así que un workflow cuyo trabajo dependa de una casilla marcada
+// corre en modo ensayo CUATRO VECES POR HORA, sale en verde cada vez, y no
+// hace nada. El silencio que se lee como éxito.
+//
+// Dos firmas, y las dos son del mismo error:
+//   a) condicionar con `github.event_name == schedule` — el reloj NO llega por
+//      ahí, llega por `workflow_dispatch`;
+//   b) un input cuyo nombre significa «sin esto no trabajo» (`aplicar`,
+//      `mandar`…) y que por defecto está apagado.
+//
+// ⚠️ Lo que se marca a mano tiene que ser la EXCEPCIÓN (`solo_mirar`,
+// `forzar`), nunca el funcionamiento normal.
+{
+  // Nombres que significan «sin esto no hago el trabajo». Van a mano, como
+  // GEMELOS y PRIMOS: una lista calculada se adaptaría a lo que encuentre.
+  const NOMBRES_QUE_ACTIVAN = ['aplicar', 'publicar', 'mandar', 'enviar', 'escribir', 'ejecutar']
+
+  // Lee los inputs declarados y su valor por defecto. No es YAML de verdad —
+  // igual que `cronesDe`, saca lo justo como texto. Si algún día un workflow
+  // los escribe de otra forma, este bloque no los encontrará: y entonces la
+  // guarda de abajo falla, que es lo correcto.
+  function inputsDe(texto) {
+    const lineas = texto.split('\n')
+    const salida = []
+    let sangria = -1
+    for (let i = 0; i < lineas.length; i++) {
+      const l = lineas[i]
+      if (/^\s*inputs:\s*$/.test(l)) {
+        sangria = l.search(/\S/)
+        continue
+      }
+      if (sangria < 0) continue
+      if (!l.trim() || l.trim().startsWith('#')) continue
+      if (l.search(/\S/) <= sangria) {
+        sangria = -1
+        continue
+      }
+      const m = /^(\s*)([A-Za-z_][\w-]*):\s*$/.exec(l)
+      if (!m || m[1].length !== sangria + 2) continue
+      let porDefecto = null
+      for (let j = i + 1; j < lineas.length; j++) {
+        const q = lineas[j]
+        if (!q.trim() || q.trim().startsWith('#')) continue
+        if (q.search(/\S/) <= m[1].length) break
+        const d = /^\s*default:\s*(\S+)/.exec(q)
+        if (d) porDefecto = d[1].replace(/['"]/g, '')
+      }
+      salida.push({ nombre: m[2], porDefecto })
+    }
+    return salida
+  }
+
+  let revisados = 0
+  for (const p of PROGRAMAS) {
+    if (!p.pulsar) continue
+    const ruta = `${RAICES[p.repo]}.github/workflows/${p.wf}`
+    if (!existsSync(ruta)) continue
+    revisados++
+    const texto = readFileSync(ruta, 'utf8')
+
+    // (a) El reloj no llega por `schedule`, así que tratar `schedule` como «de
+    //     verdad» deja fuera al reloj.
+    comprobar(
+      `${p.repo} · ${p.wf} no decide su trabajo mirando si viene de «schedule»`,
+      !/github\.event_name[^\n]*schedule/.test(texto)
+    )
+
+    // (b) Ningún input con nombre de los que activan, salvo que venga
+    //     encendido por defecto.
+    for (const inp of inputsDe(texto)) {
+      if (!NOMBRES_QUE_ACTIVAN.includes(inp.nombre)) continue
+      comprobar(
+        `${p.repo} · ${p.wf}: el input «${inp.nombre}» tendría que venir encendido ` +
+          `(está en «${inp.porDefecto}») — el reloj no manda inputs`,
+        inp.porDefecto === 'true'
+      )
+    }
+  }
+
+  // ⚠️ La guarda de siempre: sin esto, renombrar la lista o romper el lector
+  // dejaría el bloque en verde sin haber mirado ni un workflow.
+  comprobar(`se revisó al menos un workflow pulsado (fueron ${revisados})`, revisados > 0)
+
+  // Y que el lector de inputs lee de verdad: si devolviera siempre una lista
+  // vacía, la mitad (b) de este bloque sería decorativa.
+  const avisos = `${RAICES['Nestor-forex']}.github/workflows/avisos.yml`
+  if (existsSync(avisos)) {
+    const leidos = inputsDe(readFileSync(avisos, 'utf8'))
+    comprobar(
+      `el lector de inputs encuentra los de avisos.yml (${leidos.map((x) => x.nombre).join(', ') || 'ninguno'})`,
+      leidos.length > 0
+    )
+  }
+}
+
 console.log(fallos === 0 ? '\n✓ todo bien.\n' : `\n✗ ${fallos} comprobación(es) fallaron.\n`)
 process.exit(fallos === 0 ? 0 : 1)
