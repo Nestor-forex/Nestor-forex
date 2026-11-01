@@ -8,6 +8,7 @@ dijo cada día concreto. No borres carpetas viejas.
 
 | copia | señales | resultados |
 |---|---:|---:|
+| 2026-11-01 | 207 | 164 |
 | 2026-10-25 | 184 | 146 |
 | 2026-10-18 | 157 | 126 |
 | 2026-10-11 | 132 | 109 |
