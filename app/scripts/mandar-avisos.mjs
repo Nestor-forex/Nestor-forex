@@ -72,20 +72,31 @@ const [mt5, bSwing, bIntradia] = await Promise.all([
   bajar(FUENTES.intradia, 'barrido de Intradía'),
 ])
 
-// ⚠️ SIN PRECIO NO SE HACE NADA, y se sale en VERDE. El puente de MT5 corre en
-// el computador de Néstor: apagado por la noche es lo NORMAL, no una avería. Un
-// rojo cada noche enseñaría a ignorar este workflow, que es justo lo que está
-// escrito del rojo permanente de la herramienta de puntualidad.
+// ⚠️⚠️ SE PARA SOLO SI NO LLEGÓ **NINGUNA** DE LAS TRES FUENTES, y se sale en
+// VERDE.
 //
-// Y lo que de verdad protege de un aviso falso no es esto: es
+// La primera versión se paraba en cuanto faltaba el precio del puente, y eso
+// era demasiado: el puente corre en el computador de Néstor, así que apagado
+// por la noche es lo NORMAL — pero un aviso de RSI o de %B **no necesita el
+// puente**, sale del barrido. Parar por falta de precio habría dejado sin sonar
+// unos avisos que sí se podían juzgar, y sin decir por qué.
+//
+// Ahora falta lo que falte: los pares sin precio devuelven `sinDato` para los
+// avisos de precio y siguen sirviendo para los de indicador. Es el motor el que
+// decide, no un `return` de aquí.
+//
+// ⚠️ Y lo que de verdad protege de un aviso falso no es esto: es
 // `EDAD_MAXIMA_PRECIO_MIN` dentro de `estadoDe`. Aunque el archivo esté, si el
 // precio es viejo no dispara.
-if (!mt5?.pares) {
-  console.log('\nNo hay precios del puente. No se manda nada.\n')
+//
+// Se sale en verde porque un rojo cada noche enseñaría a ignorar el workflow,
+// que es justo lo que está escrito del rojo permanente de la puntualidad.
+if (!mt5?.pares && !bSwing?.pares && !bIntradia?.pares) {
+  console.log('\nNo llegó ninguna de las tres fuentes. No se manda nada.\n')
   process.exit(0)
 }
 
-console.log(`  precio del puente: ${mt5.actualizadoEl} · ${Object.keys(mt5.pares).length} pares`)
+console.log(`  precio del puente: ${mt5?.actualizadoEl || '—'} · ${Object.keys(mt5?.pares || {}).length} pares`)
 console.log(`  barrido Swing:     ${bSwing?.generadoEl || '—'}`)
 console.log(`  barrido Intradía:  ${bIntradia?.generadoEl || '—'}`)
 
