@@ -35,8 +35,22 @@ on:
     - cron: '54 * * * *'
   workflow_dispatch:
     inputs:
-      aplicar:
-        description: '¿Mandar de verdad? Sin marcar, solo mira y dice qué habría mandado.'
+      # ⚠️⚠️ LA CASILLA VA AL REVÉS QUE EN `vencimientos.yml` O `reglas.yml`, Y
+      # NO ES UN CAPRICHO: **el reloj de Cloudflare pulsa por aquí**, con un
+      # `POST .../dispatches` que manda `{ ref: 'main' }` y NINGÚN input. Así
+      # que lo que pase por defecto es lo que pasa cuatro veces por hora.
+      #
+      # Con la casilla escrita como «¿mandar de verdad?» (por defecto NO), los
+      # pulsos del reloj corrían en modo ensayo y **no mandaban nada, saliendo
+      # en verde cada vez**. Se vio en la primera corrida real del reloj
+      # (2026-11-01 17:24 UTC): «Avisos de los usuarios — solo mirar».
+      #
+      # 📌 La regla que sale de aquí, y vale para cualquier workflow que el
+      # reloj pulse: **sin inputs tiene que hacer su trabajo completo.** Lo que
+      # se marca es la EXCEPCIÓN, nunca el funcionamiento normal.
+      # `prueba-reloj-externo.mjs` (bloque 8) falla si alguien lo da la vuelta.
+      solo_mirar:
+        description: '¿Solo mirar? Sin marcar MANDA de verdad. Márcalo para ensayar sin despertar a nadie.'
         type: boolean
         default: false
 
@@ -80,12 +94,13 @@ jobs:
           # pública va en el código (la necesita el navegador); la privada es
           # secreta y es la que firma el envío.
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
-        # ⚠️ La corrida AUTOMÁTICA siempre manda; la de a mano solo si se marca
-        # la casilla. Así el botón sirve para mirar sin despertar a nadie, que es
-        # para lo que se va a usar casi siempre.
+        # ⚠️ MANDA SIEMPRE salvo que alguien marque la casilla a mano. No se
+        # mira `github.event_name`: los dos relojes (el cron de GitHub y el de
+        # Cloudflare) llegan por puertas distintas —`schedule` y
+        # `workflow_dispatch`— y distinguirlas aquí fue justo el fallo.
         run: |
-          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.aplicar }}" = "true" ]; then
-            node scripts/mandar-avisos.mjs --aplicar
-          else
+          if [ "${{ inputs.solo_mirar }}" = "true" ]; then
             node scripts/mandar-avisos.mjs
+          else
+            node scripts/mandar-avisos.mjs --aplicar
           fi

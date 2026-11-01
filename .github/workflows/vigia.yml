@@ -40,6 +40,22 @@ on:
     - cron: '20 16 * * 1-5'
     - cron: '50 16 * * 1-5'
   workflow_dispatch:
+    inputs:
+      # ⚠️ La casilla es la EXCEPCIÓN, no el funcionamiento normal, y el motivo
+      # cambió el 2026-11-01: **el reloj de Cloudflare pulsa por aquí**, con un
+      # `dispatches` que no manda ningún input. Antes el guardián se ponía solo
+      # cuando el disparo era `schedule`, así que el pulso del reloj corría
+      # SIEMPRE sin guardián — y el día que el reloj pulsara dos veces, el
+      # vigía anotaría señales nuevas con la misma fecha y partiría el
+      # historial en dos, que es lo único irrecuperable del proyecto.
+      #
+      # Con el guardián puesto por defecto no cambia nada en el día a día (el
+      # reloj pulsa una vez y `yaCorrioHoy` lo deja pasar), y se gana que un
+      # pulso de más no cueste nada. Mismo patrón que `publicar-barrido.yml`.
+      forzar:
+        description: 'Correr aunque hoy ya haya corrido (para recuperar un día que se saltó)'
+        type: boolean
+        default: false
 
 # El vigía escribe en la rama `datos`, así que necesita permiso de escritura:
 # por defecto el token de Actions es de solo lectura.
@@ -89,13 +105,15 @@ jobs:
           TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          # El guardián de los tres intentos, y SOLO para los automáticos: si
-          # hoy ya corrió, este intento se sale sin pedir precios.
+          # El guardián de los tres intentos: si hoy ya corrió, este intento se
+          # sale sin pedir precios. Va PUESTO por defecto, también para los
+          # pulsos del reloj de Cloudflare, que llegan por `workflow_dispatch`
+          # y sin inputs — ver el porqué arriba, en la casilla `forzar`.
           #
-          # Lanzarlo a mano (`workflow_dispatch`) no pone la variable, así que
-          # siempre corre. Es lo que uno espera al darle al botón, y es como se
-          # recuperó el día que GitHub se saltó.
-          VIGIA_SOLO_SI_FALTA: ${{ github.event_name == 'schedule' && '1' || '' }}
+          # ⚠️ `'0' || '1'` y no `'' || '1'`: una cadena vacía es FALSA en las
+          # expresiones de GitHub, así que con `''` marcar «forzar» no forzaría
+          # nada, en silencio. Mismo cuidado que en `publicar-barrido.yml`.
+          VIGIA_SOLO_SI_FALTA: ${{ inputs.forzar && '0' || '1' }}
         run: node scripts/vigia.mjs
 
       - name: Guardar lo que vio

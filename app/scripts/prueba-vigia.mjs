@@ -286,15 +286,31 @@ console.log('\n12. Los tres intentos del día son UNA corrida, y la duda se resu
   comprobar('y sigue trayendo las señales de siempre', leido.senales.length === 1)
   comprobar('con lo leído del disco, el guardián se activa', yaCorrioHoy(leido, hoy) === true)
 
-  // El workflow solo pone la variable cuando el disparo es automático. Si eso
-  // se cayera, lanzarlo a mano no serviría para recuperar un día saltado —que
-  // es exactamente para lo que se usa el botón.
+  // ⚠️ CAMBIÓ EL 2026-11-01, y la comprobación se actualiza en vez de borrarse.
+  //
+  // Antes el guardián se ponía SOLO cuando el disparo era `schedule`, para que
+  // el botón sirviera siempre para recuperar un día saltado. Pero desde que el
+  // reloj de Cloudflare pulsa este workflow —y pulsa por `workflow_dispatch`,
+  // sin mandar inputs—, esa condición dejaba el pulso del reloj SIN GUARDIÁN:
+  // un pulso de más anotaría señales nuevas con la misma fecha y partiría el
+  // historial, que es lo único irrecuperable del proyecto.
+  //
+  // Ahora el guardián va puesto por defecto y la recuperación a mano se pide
+  // con la casilla `forzar`, igual que en `publicar-barrido.yml`.
   const wf = readFileSync(new URL('../../.github/workflows/vigia.yml', import.meta.url), 'utf8')
   comprobar('el workflow tiene los tres intentos', (wf.match(/- cron:/g) || []).length === 3)
   comprobar(
-    'y el guardián solo se enciende con `schedule` (a mano siempre corre)',
-    /VIGIA_SOLO_SI_FALTA:.*github\.event_name == 'schedule'/.test(wf)
+    'el guardián va PUESTO por defecto, también para el pulso del reloj',
+    /VIGIA_SOLO_SI_FALTA:\s*\$\{\{\s*inputs\.forzar\s*&&\s*'0'\s*\|\|\s*'1'\s*\}\}/.test(wf)
   )
+  // La contraria, para que nadie lo devuelva sin querer al valor viejo.
+  comprobar(
+    'y YA NO depende de que el disparo sea `schedule`',
+    !/VIGIA_SOLO_SI_FALTA:.*github\.event_name/.test(wf)
+  )
+  // ⚠️ Sin la casilla no habría forma de recuperar un día saltado: el guardián
+  // se saltaría la corrida y no habría manera de decirle que corra igual.
+  comprobar('y existe la casilla `forzar` para recuperar un día saltado', /^\s{6}forzar:$/m.test(wf))
   // Sin `concurrency` dos intentos retrasados podrían solaparse y anotar la
   // misma señal dos veces, que es peor que no anotarla.
   comprobar('y sigue habiendo `concurrency` para que no se solapen', /concurrency:/.test(wf))
