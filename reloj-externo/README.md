@@ -238,11 +238,18 @@ entera**. Cada vez que este archivo cambie hay que repetir dos pasos:
 
 1. **Pegar el `worker.js` nuevo** (Workers & Pages → tu Worker → **Edit code**
    → `Ctrl+A` dentro del editor → pegar encima → **Deploy**).
-2. **Cambiar el horario** a `* * * * *` como dice el paso 17.
+2. **Mirar el horario**: tiene que decir `* * * * *` («Every minute»). Si ya lo
+   dice —Néstor lo cambió el 2026-10-10— no hay que tocar nada; si dice otra
+   cosa, se cambia como dice el paso 17.
 
 📌 Cómo saber si tu Worker está al día: abre su dirección `.workers.dev` en
 Chrome. Si la lista que sale **no** enseña un minuto delante de cada programa
-(`:20`, `:23`, `:26`…), tienes la versión vieja pegada.
+(`:20`, `:23`, `:26`…), tienes una versión vieja pegada. Y desde el 2026-10-31
+la versión al día enseña además **«Swing · avisos de los usuarios»** con
+**cuatro** minutos (`:09 :24 :39 :54`): es el único programa que se mira cuatro
+veces por hora, y si no sale, los avisos que programa la gente en la app solo
+los dispara el cron de GitHub — o sea el 21 % de las veces y con horas de
+retraso.
 
 ### 📌 Por qué el paso 16 es el que más importa
 
