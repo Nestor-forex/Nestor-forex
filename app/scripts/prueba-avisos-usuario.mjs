@@ -204,7 +204,7 @@ console.log('\n6. Lo que se marca en la ficha después de mandar')
   comprobar('con la hora del disparo', marcado.disparadaEl === AHORA.toISOString())
   comprobar('y la de la última vez que sonó', marcado.sonadaEl === AHORA.toISOString())
   comprobar('contando una vez', marcado.veces === 1)
-  // ⚠️ El que no se manda NO se toca. Marcarlo lo esconderí­a para siempre.
+  // ⚠️ El que no se manda NO se toca. Marcarlo lo escondería para siempre.
   comprobar('el que espera queda igual que estaba', r.avisos.find((a) => a.id === 'e') === esperando)
   comprobar('la lista mantiene el orden y el tamaño', r.avisos.length === 2)
 }
@@ -324,7 +324,7 @@ console.log('\n9. ⚠️⚠️ EL BUCLE DE VERDAD, CON FIRESTORE Y EL PUSH DE ME
     comprobar(`estado «${estado}»: no se manda ni se marca`, r.enviados === 0 && !mandados.length && !escritos.length)
   }
 
-  // ⚠️ SIN APARATO NO SE MARCA. Marcarlo lo esconderí­a detrás de un «ya sonó»
+  // ⚠️ SIN APARATO NO SE MARCA. Marcarlo lo escondería detrás de un «ya sonó»
   // de algo que nunca llegó.
   {
     const { r, escritos } = await correr([{ id: 'u1', ruta: 'users/u1', estado: 'aprobado', avisos: [aviso('a')] }], new Map())
@@ -403,6 +403,33 @@ console.log('\n10. ⚠️ ESTO NO HEREDA LA PAUSA DE LAS SEÑALES DE LA APP')
   // Y no filtra las suscripciones por app: un aviso es de la PERSONA, así que
   // va a todos sus aparatos. Es la decisión contraria a `push-envio.mjs`.
   comprobar('el guion no filtra los aparatos por app', !/s\.app === |\.app === APP/.test(guion))
+
+  // ⚠️⚠️ NO SE PARA POR FALTA DEL PUENTE. Un aviso de RSI o de %B sale del
+  // BARRIDO y no necesita el precio del bróker, así que pararse en cuanto
+  // falta el puente —que corre en el computador de Néstor y de noche está
+  // apagado— dejaría sin sonar unos avisos que sí se podían juzgar, y sin
+  // decir por qué. Solo se para si no llegó NINGUNA de las tres fuentes.
+  comprobar(
+    'solo se para si faltan las TRES fuentes',
+    /if \(!mt5\?\.pares && !bSwing\?\.pares && !bIntradia\?\.pares\)/.test(guion)
+  )
+}
+
+console.log('\n11. ⚠️ SIN EL PUENTE, LOS AVISOS DE INDICADOR SIGUEN PUDIENDO SONAR')
+// La otra mitad de lo de arriba, comprobada de verdad y no leyendo el texto:
+// con el precio ausente, un aviso de RSI se juzga igual y uno de precio dice
+// «no lo sé» en vez de disparar.
+{
+  const soloBarrido = datosPorPar(null, barridoDe(haceMin(30), 25, 1.08))
+  comprobar('sin puente hay RSI', soloBarrido['EUR/USD'].rsi === 25)
+  comprobar('…y no hay precio', !Number.isFinite(soloBarrido['EUR/USD'].bid))
+
+  const datos = { swing: soloBarrido, intradia: {}, soloPrecio: datosPorPar(null, null) }
+  const rsi = { id: 'r', par: 'EUR/USD', tipo: 'rsi', lado: 'abajo', nivel: 30, activa: true, app: 'swing' }
+  const precio = { id: 'p', par: 'EUR/USD', tipo: 'precio', lado: 'sube', nivel: 1, activa: true, app: 'swing' }
+  const r = prepararEnvios([rsi, precio], datos, { ahora: AHORA })
+  comprobar('el de RSI dispara sin puente', r.envios.length === 1 && r.envios[0].aviso.id === 'r')
+  comprobar('y el de precio NO dispara (no hay precio que mirar)', !r.envios.some((e) => e.aviso.id === 'p'))
 }
 
 console.log('')

@@ -14336,3 +14336,198 @@ Es lo único que hace creíble todo lo demás.
 avisos ya suenan. **Falta la pieza 3** — el programa que lee el precio cada 15
 minutos y manda la notificación. Hoy la pantalla PROGRAMA avisos y no suena
 ninguno. Decir lo contrario sería justo lo que este texto presume de no hacer.
+
+---
+
+# La pieza 3: los avisos del usuario YA SUENAN (2026-10-31)
+
+Cierra la herramienta que Néstor pidió el 2026-10-30. Las dos primeras piezas
+ya estaban —`alertas.js` decide si un aviso suena y `MisAvisos.jsx` deja
+programarlo—, así que hasta hoy **la pantalla programaba avisos y no sonaba
+ninguno**: no había nadie leyendo el precio y mandando la notificación.
+
+```
+app/scripts/lib/avisos-usuario.mjs     el motor: datos, agrupar, marcar, el bucle
+app/scripts/mandar-avisos.mjs          la plomería: baja, abre Firestore, manda
+app/scripts/prueba-avisos-usuario.mjs  ~70 comprobaciones, sin internet
+.github/workflows/avisos.yml           cada 15 min, permiso de LECTURA
+app/scripts/lib/firestore-rest.mjs     + listas, objetos y nulos        GEMELO
+app/src/lib/useAvisos.js               + `app: APP` al crear            GEMELO
+reloj-externo/worker.js                + `minutoPulso` como LISTA
+```
+
+⚠️ **NO CAMBIA NI UNA SEÑAL.** Swing sigue en −0,040 por unidad de riesgo e
+Intradía en −0,13. Esto manda lo que cada persona se puso a sí misma.
+
+## ⚠️⚠️ EL AGUJERO QUE LO HABRÍA DEJADO EN SILENCIO SIN DAR UN ERROR
+
+`planchar` no conocía `arrayValue`, y los avisos viven en `users/{uid}.avisos`,
+que es una **lista de objetos**. El campo no venía vacío: **desaparecía**. El
+programa habría leído cero avisos para todo el mundo y habría terminado **en
+verde** diciendo «nada que mandar» — indistinguible de que todo va bien.
+
+Es la familia que este archivo colecciona, y de la peor clase: **el silencio
+que se lee como éxito**. Quitarle las listas a `planchar` tumba 9
+comprobaciones. `etiquetar` también las escribe ahora, y el ORDEN de sus ramas
+importa: `Date` y `Array` son objetos, así que con la rama genérica delante una
+fecha se guardaría como un mapa vacío y una lista como un objeto con claves
+«0», «1», «2»… sin dar ningún error.
+
+## ⚠️⚠️ SE MARCA ANTES DE MANDAR, y es la decisión más delicada
+
+Al revés —mandar y luego marcar— un fallo al escribir dejaría el aviso sin
+marca, y volvería a sonar en la vuelta siguiente, y en la siguiente: **sin
+límite**, porque el contador `veces` tampoco subiría.
+
+| equivocarse hacia… | cuesta |
+|---|---|
+| marcar y que el envío falle | **un** aviso perdido, y «volver a armar» lo arregla |
+| mandar y que la marca falle | un celular sonando cada 15 minutos **para siempre** |
+
+Acotado contra ilimitado, así que la condición no puede ser simétrica. **Y si
+la marca falla, no se manda.**
+
+## ⚠️ UN AVISO DE INDICADOR SIN `app` NO SUENA
+
+«RSI 30» es el RSI de velas **diarias** en Swing y el de velas de **una hora**
+en Intradía. Sin saber de dónde viene habría que adivinar qué pidió la persona,
+y adivinar hacia el lado que SUENA es el aviso falso que
+`EDAD_MAXIMA_PRECIO_MIN` existe para impedir, colado por otra puerta.
+
+Los de **precio sí suenan**: el bid y el ask salen del puente de MT5, que es
+uno para las dos apps. Y no hay ningún caso especial escrito: a ese montón se
+le pasan datos sin campos técnicos y `estadoDe` ya devuelve `sinDato`. **La
+asimetría sale del motor que ya existe en vez de de una condición nueva.**
+
+Desde hoy se guarda `app` al crear. Los de antes se arreglan **borrándolos y
+volviéndolos a poner**, y el registro dice cuántos se saltaron.
+
+## Lo demás que no hay que ablandar
+
+⚠️ **NO HEREDA `AVISOS_PAUSADOS`.** Esa pausa existe porque las señales de la
+app no están validadas; aquí el nivel lo puso la persona y no hay nada nuestro
+que validar. Dejarlo en pausa sería no mandar nunca lo que alguien pidió
+expresamente, por un motivo que no le aplica. Hay comprobación de que ni el
+guion ni el motor importan ese archivo.
+
+⚠️ **NO FILTRA LOS APARATOS POR APP.** `push-envio.mjs` sí lo hace y hace bien
+—una señal de Swing no es de Intradía— pero **un aviso es de la PERSONA**: va a
+todos sus aparatos, se lo puso donde se lo puso.
+
+⚠️ **Solo a quien tiene la puerta abierta** (`estado === 'aprobado'`).
+Mandarle avisos a alguien retirado sería darle el producto por una puerta de
+atrás, y encima avisos que no puede entrar a ver.
+
+⚠️ **SIN APARATO NO SE MARCA NADA.** Marcar un aviso como «ya sonó» cuando no
+había a quién mandárselo lo escondería para siempre detrás de un «ya sonó» de
+algo que nunca llegó.
+
+⚠️ **CADA APP CON SU FRESCURA DE BARRIDO** (26 h en Swing, 2 h en Intradía),
+porque Swing publica dos veces al día y la hermana una vez por hora. Copiar el
+número habría sido la lección de `barridoSwap`. Los dos salen del `HORAS_VIEJO`
+de cada `useMarketData.js` —el mismo con el que la PANTALLA pinta el aviso de
+«foto vieja»— y **el de Swing se comprueba leyendo su archivo como texto**. El
+de Intradía va a mano y no hay forma de evitarlo: vive en el otro repositorio y
+la prueba corre sin red. Misma situación que los 4 pares de `prueba-mt5.mjs`.
+
+⚠️ **VIVE SOLO EN SWING**, como el robot de vencimientos: las dos apps
+comparten la colección `users` del mismo proyecto de Firebase, y dos programas
+mandando lo mismo lo harían sonar dos veces. Lee los barridos de las dos (son
+públicos) para juzgar cada aviso con su temporalidad.
+
+⚠️ **SOLO SE PARA SI NO LLEGÓ NINGUNA DE LAS TRES FUENTES**, y sale en VERDE.
+La primera versión se paraba en cuanto faltaba el puente, y era demasiado: un
+aviso de RSI **no necesita el puente**, sale del barrido. Y el verde es a
+propósito — el computador de Néstor apagado de noche es lo NORMAL, y un rojo
+cada noche enseña a ignorar el workflow, que es lo escrito del rojo permanente
+de la puntualidad.
+
+## El bucle vive en el lib, no en el guion
+
+Dentro del guion **no se podía probar**: ese archivo necesita credenciales y
+red en cuanto se importa. Y de ese bucle salen las cuatro decisiones que pueden
+hacer sonar un celular de más o de menos. Es la lección de `medir()` del
+2026-09-02, y pagó sola: la prueba lo corre con Firestore y el push de mentira
+—dos aparatos, estados no aprobados, sin aparatos, la marca fallando, una
+suscripción muerta, el presupuesto agotado y la corrida en seco— en vez de leer
+el texto del archivo y suponer.
+
+## El reloj: el primer programa que se mira CUATRO VECES por hora
+
+`minutoPulso` acepta ahora una **lista**, y los avisos van a los minutos
+**9, 24, 39 y 54** — la cadencia del puente de MT5, que es la misma que separa
+los recordatorios. La alternativa (cuatro entradas iguales en la lista cambiando
+el minuto) habría roto «ningún programa repetido» y habría dejado el mismo
+workflow descrito cuatro veces.
+
+Los cuatro crones de GitHub son el **suelo**: está medido que una entrada
+horaria solo dispara el 21 % de las veces. No gasta un crédito de Twelve Data,
+así que su `.yml` **no lleva `TWELVEDATA_KEY`** y no entra en el reparto de
+minutos que evita el 429.
+
+⚠️⚠️ **EL WORKER VIVE PEGADO EN CLOUDFLARE: esto NO llega allí solo.** Mientras
+Néstor no lo vuelva a pegar, los avisos solo los dispara el cron de GitHub —o
+sea el 21 % de las veces, y con horas de retraso.
+
+## 📌 DOS CLONES DEL MISMO REPOSITORIO, Y UNA FALSA ALARMA DE SEIS ARCHIVOS
+
+`prueba-gemelos` dio **6 archivos divergentes**, incluidos cuatro que esta
+tarea no tocó (`firestore.rules`, `BottomNav.jsx`, `prueba-idiomas.mjs`,
+`CotizacionesVivo.jsx`). No era una divergencia: en el contenedor había **dos
+clones de Intradía** —`Nestor-forex-intradia` (el de trabajo, al día) y
+`nestor-forex-intradia` (viejo, en el PR #99)— y la prueba busca **el de
+minúsculas**, que era el viejo.
+
+Es la lección del 2026-10-21 otra vez: **antes de creer que algo se rompió,
+comprobar que la herramienta con la que miras está diciendo la verdad.** Se
+apartó el duplicado y el clon de trabajo se movió a la ruta que las pruebas
+buscan. Con eso, los **78 gemelos** idénticos.
+
+📌 Y de paso: **`prueba-reloj-externo.mjs` es SOLO de Swing** —el reloj y los
+dos repositorios viven aquí—, así que copiarlo a Intradía crea un archivo que
+no puede importar nada. Se vio porque `git status` lo marcó como `??`.
+
+## Cómo se verificó, y lo único que solo confirma producción
+
+Lint contado contra `main` (7 y 8, los mismos), build, **todas** las pruebas sin
+internet en los dos repos y los 78 gemelos. Solo falla `prueba-aviso-real`, que
+pide el secreto VAPID y manda un aviso de verdad.
+
+**Comprobado que las pruebas MUERDEN**, con el daño verificado en el archivo
+antes de darlo por bueno: quitarle las listas a `planchar` tumba 9 · el objeto
+genérico antes que `Array`/`Date` tumba 1 · la misma frescura en las dos apps
+tumba 3 · `appDe` por descarte tumba 1 · marcar después de mandar tumba 1 ·
+quitar el guardia de «aprobado» tumba 3 · marcar sin aparatos tumba 1 · pararse
+solo por falta del puente tumba 1.
+
+Y el ensayo **en seco contra producción** (el botón sin marcar la casilla), que
+salió en verde y leyó las tres fuentes:
+
+```
+precio del puente: 2026-10-31T05:45:45Z · 18 pares
+barrido Swing:     2026-10-30T22:59:29Z
+barrido Intradía:  2026-10-31T02:23:43Z
+fichas: 4
+nada que mandar en esta vuelta.
+```
+
+⚠️⚠️ **`conAvisos` no salió, o sea CERO: nadie tiene todavía ningún aviso
+guardado.** Así que el arreglo de `planchar` está comprobado por la vuelta
+completa en la prueba **y no contra producción** — no había nada que leer. La
+forma de cerrarlo es que Néstor cree un aviso y se vuelva a pulsar el botón en
+seco: tiene que decir `conAvisos: 1`. **La escritura** (el `PATCH` de una lista
+de objetos) la estrena el primer aviso que suene de verdad.
+
+📌 Y el precio del puente era de **hace 15 horas**: su computador estaba
+apagado. Con `EDAD_MAXIMA_PRECIO_MIN = 45` nada habría sonado, que es el
+guardián haciendo su trabajo — **un aviso de PRECIO necesita el puente
+encendido**; uno de RSI o %B no.
+
+## Lo que falta
+
+1. **Néstor vuelve a pegar el Worker en Cloudflare**, con `reloj-externo/README.md`
+   delante. Sin eso los avisos llegan tarde y salteados.
+2. **Crear un aviso y volver a pulsar el botón en seco** para cerrar lo de
+   `conAvisos`.
+3. Y sigue en pie que la landing **no puede decir todavía** nada sobre avisos
+   hasta que haya sonado uno de verdad.
