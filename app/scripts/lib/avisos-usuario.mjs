@@ -34,11 +34,16 @@
 //
 // No gasta un crédito de Twelve Data: lee tres archivos ya publicados.
 
-import { mensajeDe, queMandar } from '../../src/lib/alertas.js'
-import { posicionDe } from '../../src/lib/bollinger.js'
+import { APPS, appDe, mensajeDe, queMandar } from '../../src/lib/alertas.js'
 
-// Las dos apps que pueden haber creado un aviso.
-export const APPS = Object.freeze(['swing', 'intradia'])
+// ⚠️ `APPS` y `appDe` se REEXPORTAN desde `src/lib/alertas.js`, que es GEMELO.
+// Antes vivían aquí, y la pantalla no las podía importar —el navegador no tiene
+// `scripts/`—, así que marcar un aviso mudo en pantalla habría pedido una
+// SEGUNDA copia de la condición. Dos copias de lo que decide si un aviso suena
+// es el fallo del umbral de fuerza en nueve guiones. Se reexportan para no
+// romper a quien ya las importaba de aquí.
+export { APPS, appDe }
+import { posicionDe } from '../../src/lib/bollinger.js'
 
 // ⚠️⚠️ CUÁNTO PUEDE TENER EL BARRIDO PARA QUE UN AVISO DE INDICADOR SUENE.
 //
@@ -75,9 +80,9 @@ export const EDAD_BARRIDO_MIN = Object.freeze({ swing: 26 * 60, intradia: 2 * 60
  * Esto solo afecta a los avisos creados ANTES del 2026-10-31, que es cuando se
  * empezó a guardar el campo. Volver a crearlos lo arregla.
  */
-export function appDe(aviso) {
-  return APPS.includes(aviso?.app) ? aviso.app : null
-}
+// (`appDe` vive ahora en `src/lib/alertas.js` y se reexporta arriba. El
+// comentario de encima explica por qué un aviso sin app no puede disparar por
+// indicador, y sigue siendo la razón.)
 
 /**
  * Agrupa los avisos de una persona por la app que los creó.
