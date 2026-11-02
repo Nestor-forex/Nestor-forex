@@ -1,11 +1,26 @@
 name: Medir si el COT sirve como filtro
 
-# Mide si las posiciones institucionales (COT) habrían servido para descartar
-# las señales malas de la app. Ver la cabecera de `app/scripts/medir-cot.mjs`.
+# Mide si las posiciones del COT habrían servido para descartar las señales
+# malas de la app. Ver la cabecera de `app/scripts/medir-cot.mjs`.
+#
+# DOS FAMILIAS Y DOS LISTONES, desde el 2026-11-02:
+#
+#   · **los fondos** (`lev_money`, hedge funds) — listón del 2026-09-14 en
+#     `app/scripts/lib/preregistro-cot.mjs`. Ya se midió y SUSPENDIÓ;
+#   · **los pequeños** (`nonrept`, los que no declaran) — listón del 2026-11-02
+#     en `app/scripts/lib/preregistro-cot-pequenos.mjs`. Es la pregunta de
+#     «los pequeños pierden, hagamos lo contrario», que nunca se había medido.
+#
+# ⚠️⚠️ `nonrept` NO ES EL SENTIMIENTO MINORISTA DE UN BRÓKER DE FOREX: un solo
+# contrato de euro del CME son 125.000 €. Es un parecido con cinco años de
+# historia, y su aprobado no diría nada sobre el dato de verdad.
 #
 # ⚠️ ES UNA MEDICIÓN, NO UN CAMBIO. No toca ni una línea de `app/src/` y no
-# enciende nada. El listón está escrito ANTES, en
-# `app/scripts/lib/preregistro-cot.mjs`.
+# enciende nada.
+#
+# 📌 Antes de gastar los créditos, la plomería se prueba sin red ni llave:
+# `node scripts/humo-cot-pequenos.mjs` corre ESTE guion con dobles de las dos
+# puertas que salen a internet.
 #
 # ⚠️⚠️ SÍ GASTA CRÉDITOS DE TWELVE DATA: 14, por las velas. Por eso lleva el
 # secreto y por eso NO está programado — se lanza a mano cuando hace falta.

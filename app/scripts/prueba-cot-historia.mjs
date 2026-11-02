@@ -13,10 +13,12 @@ import {
   DIAS_HASTA_PUBLICAR,
   cotConocidoEl,
   diasEntre,
+  familiasQueFaltan,
   indexarHistoria,
   sesgoDePar,
 } from './lib/cot-historia.mjs'
-import { CONTRATOS } from '../src/lib/cot.js'
+import { COLUMNAS, CONTRATOS, FAMILIAS, columnasDeFamilia } from '../src/lib/cot.js'
+import { juzgarPequenos } from './lib/preregistro-cot-pequenos.mjs'
 
 let hechas = 0
 let fallos = 0
@@ -159,6 +161,153 @@ console.log('5. El sesgo usa lo de ESE día, no lo último del historial')
     enAgosto.sesgo !== enSeptiembre.sesgo,
     'el sesgo CAMBIA con la fecha: si fuera igual, estaría usando el futuro',
   )
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+
+console.log('6. ⚠️ LAS DOS FAMILIAS — que medir «los pequeños» no devuelva «los fondos»')
+{
+  // Una fila con las DOS familias dentro, y a propósito con números que no se
+  // parecen: si `indexarHistoria` ignorara la familia, los dos índices darían
+  // lo mismo y eso es justo lo que hay que poder distinguir.
+  const dos = (divisa, fecha, oi, fl, fc, pl, pc) => ({
+    market_and_exchange_names: CONTRATOS[divisa],
+    report_date_as_yyyy_mm_dd: `${fecha}T00:00:00.000`,
+    open_interest_all: String(oi),
+    lev_money_positions_long: String(fl),
+    lev_money_positions_short: String(fc),
+    nonrept_positions_long_all: String(pl),
+    nonrept_positions_short_all: String(pc),
+  })
+  //                               oi    fondos      pequeños
+  const H = [dos('EUR', MARTES[0], 1000, 300, 0, /**/ 0, 200)]
+
+  const f = indexarHistoria(H, { familia: 'fondos' })
+  const p = indexarHistoria(H, { familia: 'pequenos' })
+  ok(Math.abs(f.EUR[0].pct - 30) < 0.001, `los fondos salen +30 %, y salió ${f.EUR[0].pct}`)
+  ok(Math.abs(p.EUR[0].pct - -20) < 0.001, `los pequeños salen −20 %, y salió ${p.EUR[0].pct}`)
+  ok(f.EUR[0].pct !== p.EUR[0].pct, 'las dos familias dan números DISTINTOS sobre la misma fila')
+
+  // ⚠️ ADITIVO: sin el parámetro tiene que dar EXACTAMENTE lo de antes del
+  // 2026-11-02. Si esto cambiara, todos los números medidos hasta hoy dejarían
+  // de ser comparables con los de mañana.
+  const porDefecto = indexarHistoria(HISTORIA)
+  const explicito = indexarHistoria(HISTORIA, { familia: 'fondos' })
+  ok(
+    JSON.stringify(porDefecto) === JSON.stringify(explicito),
+    'sin familia da lo mismo que pidiendo `fondos`: el cambio es aditivo',
+  )
+
+  // ⚠️ Una familia desconocida REVIENTA. Es la decisión CONTRARIA a la
+  // asimetría habitual del proyecto, y a propósito: caer en silencio a los
+  // fondos daría la tabla de otro grupo con el rótulo equivocado.
+  let revento = false
+  try {
+    indexarHistoria(H, { familia: 'minoristas-de-verdad' })
+  } catch {
+    revento = true
+  }
+  ok(revento, 'una familia que no existe LANZA en vez de caer a los fondos')
+}
+
+console.log('7. Los nombres de columna de cada familia')
+{
+  // ⚠️ LA INCONSISTENCIA DE LA CFTC, FIJADA AQUÍ. `lev_money_positions_long`
+  // va SIN sufijo y `nonrept_positions_long_all` CON él. Comprobado en la
+  // sonda del 2026-09-14, y desde donde se programa el host está bloqueado:
+  // nadie puede verificarlo sobre la marcha, así que la defensa es esta
+  // prueba. Un nombre «corregido» de memoria daría un 400 de Socrata que
+  // aborta la medición entera.
+  ok(
+    columnasDeFamilia('fondos').every((c) => !c.endsWith('_all')),
+    'las de los fondos NO llevan `_all`',
+  )
+  ok(
+    columnasDeFamilia('pequenos').every((c) => c.endsWith('_all')),
+    'las de los pequeños SÍ llevan `_all`',
+  )
+  ok(
+    columnasDeFamilia('pequenos').join(',') ===
+      'nonrept_positions_long_all,nonrept_positions_short_all',
+    'los nombres exactos de los pequeños son los de la sonda',
+  )
+
+  // ⚠️ Y que NO estén en `COLUMNAS`: eso es lo que pide el publicador, y lo
+  // que el publicador pide acaba en el archivo que baja cada miembro. Mientras
+  // los pequeños sean solo una medición, no viajan al teléfono de nadie.
+  ok(
+    columnasDeFamilia('pequenos').every((c) => !COLUMNAS.includes(c)),
+    'los pequeños NO están en COLUMNAS: no se publican todavía',
+  )
+  ok(
+    columnasDeFamilia('fondos').every((c) => COLUMNAS.includes(c)),
+    'los fondos SÍ están en COLUMNAS: la pantalla los enseña',
+  )
+
+  // El aviso que convierte un 400 ciego en un mensaje útil.
+  const hay = ['market_and_exchange_names', ...columnasDeFamilia('fondos'), 'nonrept_positions_long']
+  const faltan = familiasQueFaltan(hay, ['fondos', 'pequenos'])
+  ok(faltan.length === 2, `con las de los pequeños ausentes avisa de las 2, y avisó de ${faltan.length}`)
+  ok(
+    faltan.every((f) => f.familia === 'pequenos'),
+    'y dice de QUÉ familia son las que faltan',
+  )
+  ok(
+    faltan.some((f) => f.parecidas.includes('nonrept_positions_long')),
+    'y enseña el nombre PARECIDO que sí existe, que es lo que hace útil el mensaje',
+  )
+  ok(familiasQueFaltan(['market_and_exchange_names'], []).length === 0, 'sin familias que mirar no inventa faltas')
+  ok(familiasQueFaltan(null, ['fondos']).length === 2, 'sin lista de columnas las da todas por ausentes')
+
+  // Las etiquetas: una familia sin rótulo saldría en la tabla como `undefined`.
+  for (const k of Object.keys(FAMILIAS)) {
+    ok(typeof FAMILIAS[k].etiqueta === 'string' && FAMILIAS[k].etiqueta.length > 2, `«${k}» tiene etiqueta`)
+  }
+}
+
+console.log('8. ⚠️ EL LISTÓN DE LOS PEQUEÑOS muerde — siete resultados que fallan uno cada uno')
+{
+  // Un resultado que pasa los siete. Los demás se construyen cambiando UNA
+  // cosa, para que cada comprobación señale a su criterio y no a otro.
+  const bueno = {
+    basePorR: -0.05,
+    baseMitad1: -0.06,
+    baseMitad2: -0.04,
+    mejorPorR: 0.02,
+    mejorMitad1: 0.01,
+    mejorMitad2: 0.03,
+    mejorSenalesMes: 20,
+    vecinosMejoran: true,
+    direccionMitad1: 'contra',
+    direccionMitad2: 'contra',
+    baseSinCostes: -0.02,
+    mejorSinCostes: 0.04,
+    mayorAporteDeUnPar: 0.25,
+  }
+  ok(juzgarPequenos(bueno).aprobado, 'el resultado bueno pasa los siete')
+
+  const falla = (cambios, criterio) => {
+    const v = juzgarPequenos({ ...bueno, ...cambios })
+    ok(!v.aprobado && v.criterios[criterio] === false, `falla «${criterio}» y no aprueba`)
+  }
+  falla({ mejorPorR: -0.06 }, 'mejora')
+  falla({ mejorMitad2: -0.05 }, 'mitades')
+  falla({ mejorSenalesMes: 9.9 }, 'habla')
+  falla({ vecinosMejoran: false }, 'vecinos')
+  falla({ direccionMitad2: 'seguir' }, 'direccion')
+  falla({ mejorSinCostes: -0.03 }, 'sinCostes')
+  falla({ mayorAporteDeUnPar: 0.41 }, 'reparto')
+
+  // Los bordes exactos, que es donde un `>` y un `>=` se confunden.
+  ok(juzgarPequenos({ ...bueno, mejorSenalesMes: 10 }).criterios.habla, '10 señales/mes justas PASAN')
+  ok(juzgarPequenos({ ...bueno, mayorAporteDeUnPar: 0.4 }).criterios.reparto, 'un 40 % justo PASA')
+  ok(!juzgarPequenos({ ...bueno, mejorPorR: -0.05 }).criterios.mejora, 'empatar con la base NO es mejorar')
+
+  // ⚠️ Y `null` no es un aprobado. «No se pudo medir» y «salió bien» se leen
+  // igual en una tabla, así que aquí tienen que separarse.
+  ok(!juzgarPequenos({ ...bueno, mejorSinCostes: null }).criterios.sinCostes, 'sin el dato de costes NO aprueba')
+  ok(!juzgarPequenos({ ...bueno, mayorAporteDeUnPar: null }).criterios.reparto, 'sin el reparto medido NO aprueba')
+  ok(!juzgarPequenos({ ...bueno, direccionMitad1: null }).criterios.direccion, 'sin dirección medida NO aprueba')
 }
 
 console.log('')

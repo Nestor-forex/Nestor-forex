@@ -143,6 +143,67 @@ export const COLUMNAS = [
   'change_in_lev_money_short',
 ]
 
+// ─────────────────────────────────────────────────────────────────────────
+// LAS FAMILIAS DE OPERADOR, para las MEDICIONES (no para la pantalla)
+// ─────────────────────────────────────────────────────────────────────────
+//
+// El informe reparte a todo el mundo en cinco grupos. La pantalla enseña dos
+// (`lev_money` y `asset_mgr`) y eso no cambia aquí. Esto existe para que
+// `scripts/lib/cot-historia.mjs` pueda medir una familia distinta sin que
+// nadie copie los nombres de columna a mano en un guion.
+//
+// ⚠️⚠️ ADVERTENCIA 6, Y VA ESCRITA ANTES DE MEDIR NADA CON ESTO:
+// **`nonrept` NO SON LOS MINORISTAS DE FOREX.** Son los operadores que no
+// llegan al tamaño mínimo para tener que declarar a la CFTC, o sea pequeños
+// **comparados con un banco**. Un solo contrato de euro del CME son 125.000 €,
+// más de cien veces lo que mueve alguien que opera 0,01 lotes en un bróker al
+// por menor. Llamar a esto «el sentimiento minorista» sería exactamente la
+// etiqueta equivocada que este proyecto considera un error de medición.
+//
+// Es un PARECIDO con cinco años de historia, que es su único mérito frente a
+// un dato de verdad minorista que habría que empezar a acumular desde cero.
+//
+// ⚠️ Y los nombres llevan `_all` donde los de `lev_money` NO lo llevan. Es una
+// inconsistencia de la CFTC, no un descuido: `lev_money_positions_long` contra
+// `nonrept_positions_long_all`. Comprobado en la sonda del 2026-09-14 y
+// anotado en `app/CLAUDE.md`. Pedir el nombre sin `_all` daría un 400 de
+// Socrata, que al menos es ruidoso — pero hay una prueba que los fija para que
+// nadie los «corrija» de memoria.
+export const FAMILIAS = {
+  fondos: {
+    etiqueta: 'los fondos',
+    descripcion: 'hedge funds (`lev_money`): el dinero especulativo que todo el mundo mira',
+    largos: 'lev_money_positions_long',
+    cortos: 'lev_money_positions_short',
+  },
+  pequenos: {
+    etiqueta: 'los pequeños',
+    descripcion:
+      'los que no declaran (`nonrept`): demasiado chicos para el umbral de la CFTC, ' +
+      'que NO es lo mismo que minoristas de Forex — ver la advertencia 6',
+    largos: 'nonrept_positions_long_all',
+    cortos: 'nonrept_positions_short_all',
+  },
+}
+
+// Las columnas que hace falta pedir para una familia, además de las comunes.
+//
+// ⚠️ Se deja FUERA de `COLUMNAS` a propósito: `COLUMNAS` es lo que pide el
+// publicador, y lo que el publicador pide acaba en el archivo que baja cada
+// miembro. Mientras los pequeños sean solo una medición, no tienen por qué
+// viajar al teléfono de nadie. Si algún día pasan el listón, entonces se
+// decide publicarlos — y será una decisión, no un arrastre.
+export function columnasDeFamilia(familia) {
+  const f = FAMILIAS[familia]
+  // ⚠️ REVIENTA en vez de caer a los fondos. Es la decisión CONTRARIA a la
+  // asimetría habitual de este proyecto («ante la duda, el lado barato»), y a
+  // propósito: aquí el lado barato no existe. Medir los pequeños y obtener en
+  // silencio los números de los fondos es el fallo de `TFF_All` otra vez —
+  // un dato correcto de una cosa distinta de la que uno cree estar midiendo.
+  if (!f) throw new Error(`familia de COT desconocida: ${familia}`)
+  return [f.largos, f.cortos]
+}
+
 const PARA_DIVISA = Object.fromEntries(Object.entries(CONTRATOS).map(([d, c]) => [c, d]))
 
 // ─────────────────────────────────────────────────────────────────────────
