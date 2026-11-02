@@ -14862,3 +14862,217 @@ dos métodos dan 0,50 y 0,67.
 
 Es la sexta vez en el proyecto que casi se construye algo que ya existía, y la
 primera en que **la regla funcionó**: se buscó antes de escribir.
+
+---
+
+# La segunda vuelta del COT, y los avisos mudos en pantalla (2026-11-02, tarde)
+
+Néstor pidió tres cosas: lanzar la segunda medición del COT, arreglar los
+avisos y marcar los incompletos en pantalla.
+
+⚠️ **NINGUNA CAMBIA UNA SEÑAL.** Swing sigue en −0,036/−0,040 por unidad de
+riesgo con la vara neutra e Intradía en −0,13.
+
+## 1. El candidato que el listón de la mañana no llegó a juzgar
+
+```
+scripts/lib/preregistro-cot-pequenos-2.mjs   los DESCARTES, no un listón de aprobar
+scripts/lib/solape.mjs                        |A ∩ B| / |A|, con sus dos conteos
+scripts/prueba-solape.mjs                     68 comprobaciones, sin internet
+scripts/lib/aporte-por-par.mjs                + mayorAportePorGrupo + grupoDolar
+```
+
+El listón de la mañana dio NO PASA, y lo suspendió un defecto **de cómo estaba
+escrito**: `juzgarPequenos` recibe «el mejor», y yo definí «el mejor» como el
+de mayor `porRiesgo`. Ése era `≥ 15`, con **55 operaciones y 0,9 señales al
+mes** — la fila más sobreajustada de la rejilla. La de **1.011 operaciones**
+no se juzgó.
+
+📌 Es el error clásico de las rejillas: **«quédate con el máximo» premia la
+muestra más pequeña**, porque es donde el ruido es mayor.
+
+### ⚠️⚠️ ESTO NO ES UN LISTÓN DE APROBAR, Y NO PUEDE SERLO
+
+El candidato se **fija por nombre** y se eligió **DESPUÉS de ver la tabla**.
+Por honesto que sea el motivo, eso es troceo a posteriori. Así que:
+
+- los seis criterios son **DESCARTES**: solo pueden TUMBARLO;
+- `FUENTE_DEL_VEREDICTO_PEQUENOS_2 = 'registro hacia adelante'`, igual que el
+  LSS el 2026-09-20;
+- el veredicto devuelve **`sobrevive`, NO `aprobado`**, y hay una comprobación
+  de que ese campo no existe. «No se ha encontrado la razón por la que no
+  vale» y «vale» se leen igual en una tabla si no se separan.
+
+⚠️ **Y el listón de la mañana NO se tocó.** Su veredicto sigue siendo NO PASA.
+La diferencia con los dos criterios que SÍ se corrigieron en este proyecto —el
+70 % del listón de cruces y el desplazamiento de Intradía— es que aquéllos se
+cambiaron **antes** de tener un solo resultado real, por ser imposibles por
+construcción. Éste tiene el número delante.
+
+### El resultado: SOBREVIVE a los seis
+
+Run `41406542761`, 14 créditos. Día: **112 de 800**.
+
+```
+ir EN CONTRA de los pequeños, |sesgo| ≥ 0
+  ops 1011 · 17,5 señales/mes
+  por 1R     +0,052  contra −0,036 sin filtro
+  SIN costes +0,070  contra −0,018        ← la brecha NO es el peaje
+  vecinos (≥2) +0,040 · el par que más aporta 23 %
+  solape con el MISMO filtro sobre los FONDOS: 580 de 1022 = 57 %
+  el lado del dólar que más aporta: 44 %   (46 % / 52 % / 50 %)
+```
+
+### ⚠️ EL SOLAPE PASA RASPANDO, Y EL HECHO QUE DESCRIBE ES INCÓMODO
+
+57 % contra un umbral de 60 %. El criterio dice «pasa»; el número dice que
+**más de la mitad** de las señales que deja este filtro las deja también el
+filtro que suspendió **dos veces**.
+
+📌 **Y lo que NO se midió:** si los dos comparten 580 señales y dan +0,052 y
+−0,033, la diferencia la hacen las ~442 exclusivas de este filtro, **y su
+resultado por separado no está medido**. Es la pregunta natural que queda
+abierta, y hay que hacerla antes de apoyarse en este número.
+
+### ✅ Lo que SÍ queda contestado: no es «vender dólar» disfrazado
+
+El filtro deja pasar ~la mitad de cada grupo del dólar (46 / 52 / 50 %). Cierra
+la hipótesis que estaba abierta desde el carry del 2026-10-13 **para este
+caso**.
+
+### Qué autoriza sobrevivir, que no es encender nada
+
+Lo dice el propio listón: **proponerle a Néstor que el vigía ANOTE el sesgo del
+COT en cada señal**, como ya anota el RSI y `huboSweep`. No enciende nada, no
+cuesta un crédito, y en unos meses deja la pregunta re-respondible con datos
+que nadie ha mirado. Es lo más barato que se puede hacer con una idea que el
+histórico no puede juzgar limpiamente. **No se hace sin que él lo pida.**
+
+### Las decisiones de las piezas
+
+⚠️ **`solape.mjs` usa `|A ∩ B| / |A|` y NO Jaccard**, a propósito: es la misma
+definición con la que ya se publicaron dos números aquí (18 % de «comprar la
+caída», 76 % de Bollinger). Cambiarla dejaría tres cifras con el mismo nombre
+que no se pueden comparar. No es simétrica, y devuelve **los dos conteos**:
+con la referencia vacía la fracción también sale 0, y «no solapan» y «no se
+pudo mirar» se leen igual si solo se da la fracción.
+
+⚠️ **`mayorAportePorGrupo` exige grupos DISJUNTOS.** La descomposición de una
+diferencia de medias solo es exacta si cada señal cae en UN grupo; si cayera en
+dos —agrupando por «divisa que compra» y «divisa que vende» a la vez— la suma
+valdría el doble y cada fracción saldría inflada **sin dar ningún error**. Por
+eso `grupoDolar` devuelve una clave y nunca una lista, y hay prueba de que los
+tres aportes suman la mejora entera.
+
+### 📌 El humo NO puede cubrir el solape, y conviene saber por qué
+
+El doble de la CFTC genera a los pequeños con el signo **exactamente opuesto**
+a los fondos, así que allí los dos filtros son disjuntos por construcción y el
+solape sale **0 % siempre**. Comprobado en el doble antes de dar ese 0 por
+bueno. De ahí `prueba-solape.mjs` con casos a mano.
+
+Lo que el humo SÍ comprueba es lo que distingue **«no solapan» de «no se pudo
+mirar»**: que el informe diga cuántas señales deja pasar el filtro de
+REFERENCIA y que sean más de cero. Si el mapa de claves estuviera roto, el
+solape saldría 0 % igual.
+
+⚠️ **Y una comprobación mía del humo no mordía:** contaba las marcas ✅/❌ en
+TODO el informe y salían 18 —los 5 criterios de los fondos, los 7 de los
+pequeños y los 6 nuevos—, así que `>= 6` se cumplía por construcción. Acotada a
+la sección. Es «contar apariciones no es leer», otra vez.
+
+## 2. Los avisos que no pueden sonar, marcados en pantalla
+
+Cambio **EMPAREJADO**: PR #150 aquí y #109 en Intradía, misma rama.
+
+Néstor tenía un aviso que **no iba a sonar nunca** y la app no se lo decía: lo
+decía el registro de un workflow que él no lee. Pasa con los de indicador
+creados antes del **2026-10-31 a las 16:02 UTC**, que es cuando se empezó a
+guardar de qué app salían (comprobado con `git log -S`, no supuesto).
+
+### ⚠️⚠️ LA CONDICIÓN SE MOVIÓ A `src/lib/alertas.js`, QUE ES GEMELO
+
+No es organización. El **programa** decide con ella si un aviso puede sonar y
+la **pantalla** decide con ella si lo marca. Vivía en
+`scripts/lib/avisos-usuario.mjs`, y el navegador no puede importar de
+`scripts/`, así que marcarlo habría pedido una **segunda copia** — y dos copias
+de lo que decide si un aviso suena dejarían avisos marcados que sí suenan y
+avisos que no suenan sin marcar, **sin que nada fallara**. Es el fallo del
+umbral de fuerza copiado en nueve guiones. `APPS` y `appDe` se reexportan desde
+el guion para no romper a quien las importaba.
+
+### Las decisiones que no hay que ablandar
+
+⚠️ **`TIPOS_SIN_APP` enumera LA EXCEPCIÓN, no la regla.** El precio es la
+excepción porque el bid y el ask salen del puente de MT5, que es uno para las
+dos apps. Así un tipo de aviso que se añada mañana **necesita la app** hasta
+que alguien venga a escribir que no. Callado se arregla volviéndolo a crear;
+sonando con el dato de la app equivocada le dice a su dueño que pasó algo que
+no pasó.
+
+⚠️ **Un aviso mudo DEJA de decir «Esperando».** No es añadir una línea: lo que
+había era **falso** para este caso — afirmaba que va a sonar.
+
+⚠️ **A PROPÓSITO NO HAY BOTÓN QUE LO ARREGLE SOLO.** Rellenar la app con la de
+la pantalla que lo enseña sería adivinar, y pudo crearse en la hermana. Hay una
+comprobación que falla si aparece una función `arregla*`/`repara*`, para que
+tenga que venir a borrarla a mano.
+
+### 📌 Lo que solo salió mirando la captura
+
+**«No va a sonar» salía en el mismo gris que «Esperando»** — cuatro renglones
+iguales donde la única diferencia era leer la frase entera. El estado mudo pasa
+a **ÁMBAR**, que aquí no afirma nada del mercado: dice «esto necesita que hagas
+algo», que es lo que el ámbar significa en el resto de la app. Ni el build, ni
+el lint, ni las 55 pruebas lo veían.
+
+### ⚠️ Y UNA COMPROBACIÓN MÍA NO MORDÍA, POR UNA RAZÓN NUEVA
+
+El bucle recorría `TIPOS`, o sea **los tres tipos que ya existen**, y con una
+lista positiva equivalente los tres dan exactamente lo mismo. La propiedad que
+quería fijar es sobre **un tipo que todavía no existe**, así que no se puede
+ver llamando a la función: con el daño puesto, `necesitaApp({tipo:'loQueVenga'})`
+pasaba a decir «no necesita app» y las comprobaciones seguían **todas en
+verde**.
+
+📌 Es hermano de la comprobación de la hora que no podía morder corriendo en
+UTC (2026-10-24): **el entorno de la prueba no podía distinguir los dos
+casos**. Reescrita leyendo el código, como los otros guardianes del repo, y
+ahora tumba 3.
+
+(Y otra pasaba por una **doble negación accidental**, `=== false === false`.
+Funcionaba, pero por casualidad. Corregida a `=== true`.)
+
+Más el guardián de cableado: que la pantalla **importe y llame** a `avisoMudo`
+y que las dos claves existan en `es.js`. `avisoMudo` podría estar escrita,
+probada y sin llamar por nadie — que es exactamente lo que pasó con
+`soloSeguidos` el 2026-10-31, y lo encontró Néstor.
+
+### Cómo se verificó
+
+Lint contado contra `main` (7 y 8, los mismos), build, **53 de 55** pruebas en
+Swing y **38 de 39** en Intradía (el rojo es `prueba-aviso-real`, que pide el
+secreto VAPID), y los **78 gemelos idénticos** comparando rama contra rama en
+los dos sentidos.
+
+Chromium a **390 px**, banco aislado con un doble del hook, español y árabe:
+2 marcas ámbar exactas, el de **precio sin app NO marcado**, 2 estados siguen
+diciendo «esperando», 22 hojas de datos y **0 en `rtl`**, la marca heredando
+`rtl` (es texto traducido, no un dato), cero desplazamiento lateral y cero
+errores de consola.
+
+📌 **Mi doble del hook se inventó las claves** en la primera pasada —`pares`,
+`cargando`, `crear`— y le faltaban `seguimiento`, `puedoEscribir`, `anadir` y
+`seguir`: la pantalla reventó con «Cannot read properties of undefined (reading
+'includes')» y las trece comprobaciones fallaron **como si la app estuviera
+rota**. Se arregló leyendo la firma real de `useAvisos.js`. **Van doce veces.**
+
+## 📌 Dos cosas del entorno que costaron un intento cada una
+
+- **El worker se reinició a media tarea.** Todo sobrevivió, pero la lección del
+  2026-10-23 sigue en pie: **commitear en cuanto una pieza está coherente**, no
+  al final.
+- ⚠️ **`--force-with-lease` falla con `stale info` en Intradía**, porque allí el
+  fetch solo trae `main` y no hay ref de seguimiento de la rama. La salida es
+  `--force-with-lease=<rama>:<sha>` con el sha comprobado antes — que además es
+  **más estricto** que el lease normal, no menos.
