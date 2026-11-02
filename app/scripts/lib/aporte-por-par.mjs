@@ -38,6 +38,21 @@
 // «no se pudo medir» y «salió bien» se leen igual en una tabla si no se
 // separan a mano.
 export function mayorAportePorPar(mide, senales, filtro) {
+  return mayorAportePorGrupo(mide, senales, filtro, (s) => s?.par)
+}
+
+// La misma descomposición, agrupando por lo que diga `claveDe(senal)`.
+//
+// ⚠️⚠️ LOS GRUPOS TIENEN QUE SER DISJUNTOS, y no es un detalle de estilo: la
+// descomposición de arriba solo es exacta si cada señal cae en UN grupo. Si una
+// señal contara en dos (por ejemplo agrupando por «divisa que compra» y
+// «divisa que vende» a la vez), la suma de los aportes valdría el doble de la
+// mejora y cada fracción saldría inflada **sin dar ningún error** — un número
+// plausible describiendo otra cosa.
+//
+// Por eso `claveDe` devuelve UNA clave por señal, nunca una lista. Una señal
+// cuya clave sea `null` o `undefined` se salta: no se le inventa un grupo.
+export function mayorAportePorGrupo(mide, senales, filtro, claveDe) {
   const base = mide(() => true)
   const filtrado = mide(filtro)
   const mejora = (filtrado.porRiesgo ?? NaN) - (base.porRiesgo ?? NaN)
@@ -48,15 +63,16 @@ export function mayorAportePorPar(mide, senales, filtro) {
   if (!Number.isFinite(mejora) || mejora <= 1e-9) return null
   if (!base.total || !filtrado.total) return null
 
-  const pares = [...new Set((Array.isArray(senales) ? senales : []).map((s) => s?.par).filter(Boolean))]
-  if (!pares.length) return null
+  const lista = Array.isArray(senales) ? senales : []
+  const grupos = [...new Set(lista.map((s) => claveDe(s)).filter((k) => k != null))]
+  if (!grupos.length) return null
 
   let mayor = -Infinity
-  for (const par of pares) {
-    const a = mide((s) => s.par === par)
-    const b = mide((s) => s.par === par && filtro(s))
-    // Un par que no aparece en ninguno de los dos no aporta nada; uno que solo
-    // aparece en la base aporta NEGATIVO (se lo llevó el filtro), y eso es
+  for (const g of grupos) {
+    const a = mide((s) => claveDe(s) === g)
+    const b = mide((s) => claveDe(s) === g && filtro(s))
+    // Un grupo que no aparece en ninguno de los dos no aporta nada; uno que
+    // solo aparece en la base aporta NEGATIVO (se lo llevó el filtro), y eso es
     // información legítima: no se salta.
     const sumaBase = (a.porRiesgo ?? 0) * a.total
     const sumaFil = (b.porRiesgo ?? 0) * b.total
@@ -64,4 +80,23 @@ export function mayorAportePorPar(mide, senales, filtro) {
     if (aporte > mayor) mayor = aporte
   }
   return Number.isFinite(mayor) ? mayor / mejora : null
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// ¿QUÉ HACE UNA SEÑAL CON EL DÓLAR?
+// ─────────────────────────────────────────────────────────────────────────
+//
+// Partición DISJUNTA de tres grupos, que es lo que la hace válida para la
+// descomposición de arriba. Contesta una pregunta concreta: si un filtro
+// «funciona» en 2021-2026 —el ciclo de subidas de la Fed— puede que no esté
+// midiendo una regla sino **una apuesta direccional al dólar de ese tramo**.
+//
+// `EUR/USD COMPRA` compra EUR y vende USD. `USD/JPY COMPRA` compra USD.
+// Un cruce sin dólar dentro no dice nada del dólar.
+export function grupoDolar(s) {
+  if (!s || typeof s.lado !== 'string') return null
+  const compraBase = s.lado === 'COMPRA'
+  if (s.base === 'USD') return compraBase ? 'compraUSD' : 'vendeUSD'
+  if (s.cotizada === 'USD') return compraBase ? 'vendeUSD' : 'compraUSD'
+  return 'sinUSD'
 }
