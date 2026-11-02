@@ -14651,3 +14651,214 @@ siempre.
 `.yml` del repositorio, así que se aplica solo al fusionar. El Worker que Néstor
 pegó hoy está bien — y se comprobó que funciona con su propio pulso:
 `workflow_dispatch` a las 17:24:40, minuto :24 de los cuatro que le tocan.
+
+---
+
+# «Los pequeños pierden, hagamos lo contrario»: NO PASA, y el listón falló por MI culpa (2026-11-02)
+
+Néstor preguntó si esa frase estaba medida aquí. **No lo estaba** —lo del
+2026-09-14 fueron los GRANDES— y al mirarlo apareció que se podía medir **sin
+ningún dato nuevo**: el mismo archivo de la CFTC que la app ya baja trae la
+familia `nonrept`, «los que no declaran». Cinco años, cero créditos de datos
+nuevos, sin permiso de nadie.
+
+⚠️ **Cero archivos de `src/` tocados y nada encendido.** Swing sigue en −0,036
+por unidad de riesgo con la vara neutra.
+
+## El resultado, 2.060 señales, vara neutra 1:1, con costes
+
+Mitades partidas en 2024-06-03. Retraso del dato usado: mediana 8 días, máx 11.
+
+| filtro | ops | señ/mes | acierto | por 1R | 1ª mit | 2ª mit |
+|---|---:|---:|---:|---:|---:|---:|
+| **SIN FILTRO (la app tal cual)** | 2.060 | 35,6 | 49 % | **−0,036** | −0,038 | −0,034 |
+| seguir a los pequeños, ≥ 0 | 1.049 | 18,1 | 45 % | −0,121 | −0,128 | −0,114 |
+| seguir, ≥ 2 | 775 | 13,4 | 45 % | −0,111 | −0,123 | −0,098 |
+| seguir, ≥ 5 | 499 | 8,6 | 45 % | −0,120 | −0,107 | −0,138 |
+| seguir, ≥ 10 | 141 | 2,4 | 43 % | −0,172 | −0,102 | −0,344 |
+| seguir, ≥ 15 | 56 | 1,0 | 46 % | −0,097 | +0,027 | −0,407 |
+| **ir EN CONTRA, ≥ 0** | **1.011** | **17,5** | **54 %** | **+0,052** | **+0,055** | **+0,049** |
+| ir EN CONTRA, ≥ 2 | 786 | 13,6 | 53 % | +0,040 | +0,073 | +0,002 |
+| ir EN CONTRA, ≥ 5 | 409 | 7,1 | 54 % | +0,061 | +0,145 | −0,074 |
+| ir EN CONTRA, ≥ 10 | 143 | 2,5 | 52 % | +0,008 | +0,071 | −0,172 |
+| ir EN CONTRA, ≥ 15 | 55 | 0,9 | 58 % | +0,141 | +0,155 | −0,040 |
+
+**Las CINCO de «seguir» pierden y las CINCO de «ir en contra» ganan.** No es una
+casilla: es un gradiente de diez filas con el signo partido limpio por la
+dirección. Y el acierto va **45 % contra 54 %** — nueve puntos sobre ~1.000
+operaciones por montón, con ±3 de margen cada uno: **los márgenes no se
+solapan.**
+
+Con la geometría real de la app sale igual y más fuerte, además **creciente con
+el umbral**: 62 % · 63 % · 65 % · 66 % de acierto, y +0,051 · +0,064 · +0,089 ·
++0,115 por 1R.
+
+## ⚠️⚠️ EL VEREDICTO ES «NO PASA», Y LO SUSPENDIÓ UN DEFECTO DE MI LISTÓN
+
+```
+El mejor filtro de los diez: ir EN CONTRA de los pequeños, |sesgo| ≥ 15
+  por 1R: 0.141 · mitades: 0.155 y −0.040 · señales al mes: 0.9
+  ❌ mitades   ❌ al menos 10 señales/mes   ❌ ningún par >40 %
+  → NO PASA el listón.
+```
+
+**`juzgarPequenos` recibe «el mejor», y yo definí «el mejor» como el de mayor
+`porRiesgo`.** El de mayor `porRiesgo` es `≥ 15`, con **55 operaciones y 0,9
+señales al mes** — o sea justo la fila más sobreajustada de la rejilla. Y la
+fila con 1.011 operaciones, que pasa mejora, mitades, señales/mes y dirección,
+**no se juzgó.**
+
+📌 Es el error clásico de las rejillas: *«quédate con el máximo»* premia la
+muestra más pequeña, porque es donde el ruido es mayor. Lo escribí yo y no lo vi
+al escribirlo.
+
+⚠️⚠️ **Y AUN ASÍ EL LISTÓN NO SE TOCA, Y ESO ES LO IMPORTANTE DE ESTE DÍA.**
+El resultado ya está visto. Cambiar ahora cómo se elige «el mejor» para que
+`≥ 0` entre es exactamente lo que el propio listón prohíbe con esas palabras
+(«si algún criterio queda a un pelo, la respuesta no es aflojarlo»).
+
+📌 La diferencia con los dos criterios que SÍ se corrigieron en este proyecto
+—el 70 % de señales del listón de cruces y el desplazamiento de Intradía— es
+nítida y hay que conservarla: **aquéllos se cambiaron ANTES de tener un solo
+resultado real**, porque eran imposibles de cumplir por construcción. Éste tiene
+el número delante. No es lo mismo y no se puede tratar igual.
+
+**Veredicto oficial: NO PASA. Nada se enciende.**
+
+## Lo que queda por medir, y es poco
+
+De `ir EN CONTRA ≥ 0` solo se sabe la mitad: pasa **mejora · mitades ·
+señales/mes · dirección**, y **no se midieron** sus vecinos, su columna sin
+costes ni su reparto por par (los tres se calcularon solo para la fila
+ganadora). Más dos comprobaciones que esta medición no hizo y que pueden
+tumbarlo entero:
+
+1. ⚠️ **El SOLAPE con el COT de los grandes.** Si las señales que deja «en
+   contra de los pequeños» son casi las mismas que deja alguna fila de los
+   fondos, lo medido es el COT de siempre con otro rótulo — y ése suspendió. El
+   dato que hay a favor de que NO son lo mismo: «en contra de los fondos ≥ 0»
+   da **−0,033** y «en contra de los pequeños ≥ 0» da **+0,052**, o sea signos
+   opuestos sobre el mismo periodo. Si fueran el mismo conjunto darían el mismo
+   número. **Pero no está medido.**
+2. ⚠️ **El reparto por DIVISA.** 2021-2026 es el ciclo de subidas de la Fed, y
+   «ir en contra de los pequeños» podría ser «vender dólar» disfrazado — la
+   misma hipótesis que quedó abierta con el carry el 2026-10-13 y que sigue sin
+   medirse.
+
+**Lo que haría falta es una medición nueva con un listón nuevo escrito antes**,
+donde «el mejor» se defina por algo que no premie las muestras chicas (por
+ejemplo: el umbral más bajo que mejore, fijado de antemano) y con esas dos
+comprobaciones dentro. 14 créditos.
+
+⚠️ **Y lo que NO autoriza este resultado:** encender nada, ni citar el +0,052
+como una ventaja de la app. Es una fila de una rejilla que su propio listón
+suspendió.
+
+## 📌 De paso: los números de los FONDOS, actualizados
+
+Los del 2026-09-14 eran anteriores a la rejilla limpia (2026-10-06) y al swap
+por noches de calendario, y seguían citándose.
+
+| | 2026-09-14 | **ahora** |
+|---|---:|---:|
+| señales con COT publicado | 2.228 | **2.060** |
+| la app sin filtro | −0,044 | **−0,036** |
+| el mejor de los diez | −0,032 (seguir ≥ 0) | **−0,033** (en contra ≥ 0) |
+
+**Sigue suspendiendo**, y ahora falla TRES criterios en vez de dos: mitades,
+vecinos y dirección. La dirección ganadora sigue cambiando de mitad a mitad
+(seguir en la primera, contra en la segunda), que es la firma de la moneda al
+aire. **El COT de los grandes queda cerrado por segunda vez.**
+
+## ⚠️ Lo que esto NO dice sobre el sentimiento minorista de un bróker
+
+Va escrito en el listón **con fecha anterior a la corrida**, a propósito, porque
+con un número positivo delante la frase «entonces el sentimiento funciona» se
+dice sola:
+
+| | los pequeños del COT | el sentimiento de un bróker |
+|---|---|---|
+| quiénes | cuenta de futuros en el CME | cuenta en un bróker de Forex |
+| tamaño | un contrato de euro = **125.000 €** | 0,01 lotes = 1.000 unidades |
+| qué cuenta | contratos (dinero) | % de **cuentas** (una cuenta, un voto) |
+| cada cuánto | semanal, 8 días de retraso | cada 15 minutos |
+
+Son dos poblaciones distintas. Como mucho, esto es **un motivo** para ir a
+buscar el dato de verdad; nunca su sustituto. Y sobre Myfxbook sigue en pie el
+obstáculo que no es técnico: su página de la API pide que **el software que la
+use sea gratuito**, y las apps son de suscripción — eso lo tienen que contestar
+ellos por escrito.
+
+## Las piezas, y dos decisiones que no hay que ablandar
+
+```
+src/lib/cot.js                          FAMILIAS + columnasDeFamilia
+scripts/lib/cot-historia.mjs            familia parametrizada + descubrirColumnas
+scripts/lib/preregistro-cot-pequenos.mjs  el listón, 7 criterios
+scripts/lib/aporte-por-par.mjs          la descomposición de una diferencia de MEDIAS
+scripts/lib/dobles/                     los dobles de red para el humo
+scripts/humo-cot-pequenos.mjs           corre EL GUION con dobles, sin créditos
+scripts/prueba-aporte-por-par.mjs       14 comprobaciones
+scripts/prueba-cot-historia.mjs         69 (eran 38)
+```
+
+⚠️ **UNA FAMILIA DESCONOCIDA REVIENTA**, no cae a los fondos. Es la decisión
+CONTRARIA a la asimetría habitual del proyecto («ante la duda, el lado
+barato»), y a propósito: aquí el lado barato no existe. Medir los pequeños y
+obtener en silencio los números de los fondos es el fallo de `TFF_All` otra vez
+— un dato correcto de una cosa distinta de la que uno cree estar midiendo.
+
+⚠️ **LOS PEQUEÑOS QUEDAN FUERA DE `COLUMNAS`.** Eso es lo que pide el
+publicador, y lo que el publicador pide acaba en el archivo que baja cada
+miembro al abrir la app. Mientras sean solo una medición no viajan al teléfono
+de nadie; si algún día pasan un listón, publicarlos será una decisión y no un
+arrastre. Hay comprobación.
+
+⚠️ **Los nombres de columna llevan `_all` donde los de `lev_money` NO lo
+llevan** (`nonrept_positions_long_all` contra `lev_money_positions_long`). Es
+una inconsistencia de la CFTC, está fijada en una prueba, y desde donde se
+programa el host está **bloqueado** —`publicreporting.cftc.gov` da 000— así que
+nadie puede comprobarlo sobre la marcha. De ahí `descubrirColumnas`: un
+`$select` con una columna inexistente da 400 y aborta la medición entera, y eso
+convierte el 400 ciego en un mensaje que dice **qué nombres sí hay**.
+
+## 📌 Y el humo corre EL GUION, no las piezas
+
+`humo-cot-pequenos.mjs` registra dos hooks de módulo y sustituye solo las dos
+puertas que salen a la red (el lector de velas y las dos funciones de la CFTC).
+Todo lo demás —indexar, la disciplina de fechas, el sesgo del par, las señales,
+el resolver, `medir`, el reparto y los dos veredictos— es producción.
+
+Un humo que encadenara las funciones a mano probaría que encajan y dejaría sin
+cubrir lo que más falla: un error **en** el guion. Está medido — el del
+breakeven cazó un `data.pares?.[s.par]` que leía un array como objeto indexado
+por nombre y habría devuelto la tabla vacía **después** de gastar los créditos.
+
+⚠️ **Los dobles se anuncian al cargarse** (`globalThis.__DOBLES_DE_HUMO`) y el
+humo falla si no se cargaron los dos. La primera versión exportaba un contador
+desde el archivo de hooks y **era inútil**: `register()` corre los hooks en otro
+hilo, así que el hilo principal no puede leer nada de ahí y la comprobación
+habría pasado en verde sin comprobar nada.
+
+📌 Y el doble de la CFTC **reexporta el original** en vez de reimplementarlo, lo
+que provocó un ciclo de módulos («Detected cycle while resolving name») hasta
+que el hook aprendió a no redirigir cuando quien importa es un doble. Eso es lo
+que lo hace honesto: lo único que finge es la respuesta de la red.
+
+**Comprobado que las pruebas MUERDEN**, con el daño verificado en el archivo
+antes de darlo por bueno: ignorar la familia tumba 4 · una familia desconocida
+cayendo a los fondos tumba 2 · meter los pequeños en `COLUMNAS` tumba 2 ·
+restar sumas en vez de descomponer medias tumba 3.
+
+## 📌 Un lib que casi dupliqué, y lo salvó buscar primero
+
+`concentracionDeLaMejora` ya existía en `breakeven.mjs` y hace lo mismo **de
+nombre**. No se puede reusar, y la diferencia es de aritmética: allí las dos
+columnas tienen el MISMO conjunto de operaciones (breakeven no quita ninguna),
+así que la mejora es una resta de SUMAS; aquí el filtro QUITA señales, los dos N
+son distintos y la mejora es una diferencia de MEDIAS. Restar sumas habría dado
+un número plausible y equivocado — hay una prueba con el caso exacto donde los
+dos métodos dan 0,50 y 0,67.
+
+Es la sexta vez en el proyecto que casi se construye algo que ya existía, y la
+primera en que **la regla funcionó**: se buscó antes de escribir.
