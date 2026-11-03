@@ -1,19 +1,16 @@
 {
-  "actualizadoEl": "2026-11-02T15:20:57.474Z",
-  "cierre": "2026-11-02",
+  "actualizadoEl": "2026-11-03T15:20:54.233Z",
+  "cierre": "2026-11-03",
   "senales": [
     "GBP/JPY|COMPRA|tendencia",
     "GBP/USD|COMPRA|tendencia",
-    "NZD/CHF|VENTA|tendencia",
     "NZD/CAD|VENTA|tendencia",
-    "USD/CHF|VENTA|tendencia",
-    "NZD/CHF|COMPRA|reversion",
+    "NZD/CHF|VENTA|tendencia",
+    "EUR/CAD|VENTA|tendencia",
     "NZD/CAD|COMPRA|reversion",
-    "USD/CAD|COMPRA|reversion",
-    "NZD/CHF|COMPRA|caida",
-    "NZD/CHF|COMPRA|bollinger",
-    "NZD/CAD|COMPRA|bollinger",
-    "GBP/JPY|COMPRA|lss",
-    "NZD/CHF|VENTA|lss"
+    "NZD/CHF|COMPRA|reversion",
+    "GBP/JPY|VENTA|reversion",
+    "GBP/JPY|VENTA|caida",
+    "GBP/JPY|VENTA|bollinger"
   ]
 }
