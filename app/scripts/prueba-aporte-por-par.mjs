@@ -15,7 +15,7 @@
 // MEDIAS y hay que descomponerla sobre los dos N distintos. Restar sumas daría
 // un número plausible y equivocado.
 
-import { mayorAportePorPar } from './lib/aporte-por-par.mjs'
+import { grupoDolar, mayorAportePorGrupo, mayorAportePorPar } from './lib/aporte-por-par.mjs'
 
 let hechas = 0
 let fallos = 0
@@ -151,6 +151,82 @@ console.log('4. ⚠️ Cuándo devuelve `null`, que NO es un aprobado')
     'señales sin `par` dan null en vez de un montón «undefined»',
   )
   ok(mayorAportePorPar(mide, null, (s) => s.pasa) === null, 'sin lista de señales es null')
+}
+
+console.log('5. `grupoDolar`: qué hace cada señal con el dólar')
+{
+  // La mecánica del nombre del par, que es lo único que decide esto.
+  ok(grupoDolar({ base: 'EUR', cotizada: 'USD', lado: 'COMPRA' }) === 'vendeUSD', 'EUR/USD COMPRA vende dólar')
+  ok(grupoDolar({ base: 'EUR', cotizada: 'USD', lado: 'VENTA' }) === 'compraUSD', 'EUR/USD VENTA compra dólar')
+  ok(grupoDolar({ base: 'USD', cotizada: 'JPY', lado: 'COMPRA' }) === 'compraUSD', 'USD/JPY COMPRA compra dólar')
+  ok(grupoDolar({ base: 'USD', cotizada: 'JPY', lado: 'VENTA' }) === 'vendeUSD', 'USD/JPY VENTA vende dólar')
+  ok(grupoDolar({ base: 'EUR', cotizada: 'NZD', lado: 'COMPRA' }) === 'sinUSD', 'un cruce no toca el dólar')
+  // ⚠️ Sin lado no se adivina: devolver un grupo convertiría un hueco de datos
+  // en una afirmación sobre el mercado.
+  ok(grupoDolar({ base: 'EUR', cotizada: 'USD' }) === null, 'sin lado devuelve null, no un grupo')
+  ok(grupoDolar(null) === null, 'sin señal devuelve null')
+
+  // ⚠️⚠️ Y LA PROPIEDAD QUE LA HACE USABLE: es una PARTICIÓN. Cada señal cae en
+  // uno y solo uno de los tres. Si cayera en dos, la descomposición de la
+  // mejora valdría el doble y cada fracción saldría inflada sin dar error.
+  const todas = [
+    { base: 'EUR', cotizada: 'USD', lado: 'COMPRA' },
+    { base: 'USD', cotizada: 'CAD', lado: 'VENTA' },
+    { base: 'GBP', cotizada: 'JPY', lado: 'COMPRA' },
+    { base: 'USD', cotizada: 'CHF', lado: 'COMPRA' },
+  ]
+  const grupos = todas.map(grupoDolar)
+  ok(
+    grupos.every((g) => ['compraUSD', 'vendeUSD', 'sinUSD'].includes(g)),
+    'los tres grupos cubren todos los casos',
+  )
+  ok(new Set(grupos).size <= 3, 'y no hay un cuarto grupo escondido')
+}
+
+console.log('6. `mayorAportePorGrupo`: la descomposición también es exacta por grupo')
+{
+  // Mismo caso que el bloque 1 pero agrupando por lo que hace con el dólar.
+  const senales = [
+    { par: 'EUR/USD', base: 'EUR', cotizada: 'USD', lado: 'COMPRA', r: +1, pasa: true }, // vendeUSD
+    { par: 'EUR/USD', base: 'EUR', cotizada: 'USD', lado: 'VENTA', r: -1, pasa: false }, // compraUSD
+    { par: 'USD/JPY', base: 'USD', cotizada: 'JPY', lado: 'COMPRA', r: -1, pasa: false }, // compraUSD
+    { par: 'GBP/JPY', base: 'GBP', cotizada: 'JPY', lado: 'COMPRA', r: +0.5, pasa: true }, // sinUSD
+    { par: 'EUR/NZD', base: 'EUR', cotizada: 'NZD', lado: 'VENTA', r: -1, pasa: false }, // sinUSD
+  ]
+  const mide = medidor(senales)
+  const filtro = (s) => s.pasa
+
+  const base = mide(() => true)
+  const filtrado = mide(filtro)
+  const mejora = filtrado.porRiesgo - base.porRiesgo
+  ok(mejora > 0, `el filtro mejora (de ${base.porRiesgo.toFixed(3)} a ${filtrado.porRiesgo.toFixed(3)})`)
+
+  let suma = 0
+  for (const g of ['compraUSD', 'vendeUSD', 'sinUSD']) {
+    const a = mide((s) => grupoDolar(s) === g)
+    const b = mide((s) => grupoDolar(s) === g && filtro(s))
+    suma += ((b.porRiesgo ?? 0) * b.total) / filtrado.total - ((a.porRiesgo ?? 0) * a.total) / base.total
+  }
+  casi(suma, mejora, 'los aportes de los TRES grupos suman la mejora entera')
+
+  const frac = mayorAportePorGrupo(mide, senales, filtro, grupoDolar)
+  ok(frac != null && frac > 0 && frac <= 1, `la fracción del mayor está entre 0 y 1: ${frac?.toFixed(3)}`)
+
+  // Y la garantía aditiva: `mayorAportePorPar` tiene que seguir dando lo mismo
+  // que antes, o sea agrupar por par.
+  casi(
+    mayorAportePorGrupo(mide, senales, filtro, (s) => s.par),
+    mayorAportePorPar(mide, senales, filtro),
+    'agrupar por `par` a mano da lo mismo que `mayorAportePorPar`',
+  )
+
+  // ⚠️ Una clave que devuelve `null` para algunas señales las SALTA en vez de
+  // inventarles un grupo: un montón «undefined» con el 100 % es el fallo que ya
+  // mordió con `name` en Bollinger.
+  ok(
+    mayorAportePorGrupo(mide, senales, filtro, () => null) === null,
+    'si ninguna señal tiene grupo, devuelve null',
+  )
 }
 
 console.log('')

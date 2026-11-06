@@ -72,7 +72,8 @@ import { generarSenales, medir } from './lib/backtest-nucleo.mjs'
 import { simetrica, actual } from './lib/geometrias.mjs'
 import { resolver } from './lib/resolver.mjs'
 import { FAMILIAS } from '../src/lib/cot.js'
-import { mayorAportePorPar } from './lib/aporte-por-par.mjs'
+import { grupoDolar, mayorAportePorGrupo, mayorAportePorPar } from './lib/aporte-por-par.mjs'
+import { claveDeSenal, repartoPorGrupo, solapeDeFiltros } from './lib/solape.mjs'
 import {
   bajarHistoria,
   descubrirColumnas,
@@ -88,6 +89,14 @@ import {
   QUE_SIGNIFICA_APROBAR_PEQUENOS,
   juzgarPequenos,
 } from './lib/preregistro-cot-pequenos.mjs'
+import {
+  CANDIDATO_PEQUENOS,
+  DESCARTES_PEQUENOS,
+  FECHA_DESCARTES_PEQUENOS,
+  FUENTE_DEL_VEREDICTO_PEQUENOS_2,
+  QUE_SIGNIFICA_SOBREVIVIR_PEQUENOS,
+  juzgarDescartesPequenos,
+} from './lib/preregistro-cot-pequenos-2.mjs'
 
 const CALENTAMIENTO = 80
 // ⚠️ NO se escribe el número: lo importa. Tres copias a mano del umbral que
@@ -442,6 +451,112 @@ for (const familia of ['fondos', 'pequenos']) {
 
 veredictoDe(neutras.fondos, PREREGISTRO_COT, juzgarCot, QUE_SIGNIFICA_APROBAR_COT)
 veredictoDe(neutras.pequenos, PREREGISTRO_PEQUENOS, juzgarPequenos, QUE_SIGNIFICA_APROBAR_PEQUENOS, true)
+
+// ─────────────────────────────────────────────────────────────────────────
+// LOS DESCARTES DEL CANDIDATO FIJADO (segunda vuelta, 2026-11-02 por la tarde)
+// ─────────────────────────────────────────────────────────────────────────
+//
+// El listón de la mañana juzgó «el mejor», y «el mejor» estaba definido como el
+// de mayor `porRiesgo` — o sea la muestra más pequeña de la rejilla. Esta
+// sección juzga la fila que ese defecto dejó sin mirar, con el candidato FIJADO
+// en el listón y no buscado.
+//
+// ⚠️ Y lo que sale de aquí NO es un aprobado, por mucho que sobreviva: el
+// candidato se eligió con la tabla delante. Ver
+// `QUE_SIGNIFICA_SOBREVIVIR_PEQUENOS`.
+function descartesDelCandidato(neutra) {
+  const { dir, umbral } = CANDIDATO_PEQUENOS
+  const filtro = (s) => DIRECCIONES[dir](s, umbral)
+
+  const base = neutra.base
+  const cand = neutra.mide(filtro)
+
+  // Los vecinos, que es lo que no se midió en la corrida de la mañana para
+  // esta fila. Vecinos = los umbrales de al lado en la MISMA dirección.
+  const mismos = neutra.resultados.filter((r) => r.dir === dir).sort((a, b) => a.u - b.u)
+  const i = mismos.findIndex((r) => r.u === umbral)
+  const vecinos = [mismos[i - 1], mismos[i + 1]].filter(Boolean)
+  const vecinosMejoran = vecinos.length > 0 && vecinos.every((v) => v.m.porRiesgo > base.porRiesgo)
+
+  // ⚠️ EL MISMO FILTRO, PERO CON EL SESGO DE LOS FONDOS. Es la comparación que
+  // contesta «¿es el filtro suspendido con otro rótulo?»: misma dirección,
+  // mismo umbral, mismas señales, y lo único que cambia es qué familia del
+  // informe se mira.
+  //
+  // El sesgo de los fondos se guarda en un mapa por clave en vez de pegarse a
+  // las señales: `neutra.mide` filtra sobre SUS objetos, así que copiarlos
+  // dejaría el filtro mirando unos y la medición otros.
+  const sesgoFondosDe = new Map()
+  for (const s of neutra.senales) {
+    const r = sesgoDePar(indices.fondos, s.base, s.cotizada, s.vistoEl)
+    const k = claveDeSenal(s)
+    if (r && k != null) sesgoFondosDe.set(k, r.sesgo)
+  }
+  const filtroFondos = (s) => {
+    const g = sesgoFondosDe.get(claveDeSenal(s))
+    if (g == null) return false
+    return DIRECCIONES[dir]({ lado: s.lado, sesgo: g }, umbral)
+  }
+  const sol = solapeDeFiltros(neutra.senales, filtro, filtroFondos)
+
+  const datos = {
+    candidatoSenalesMes: cand.total / MESES,
+    vecinosMejoran,
+    baseSinCostes: neutra.mideSin(() => true).porRiesgo,
+    candidatoSinCostes: neutra.mideSin(filtro).porRiesgo,
+    mayorAporteDeUnPar: mayorAportePorPar(neutra.mide, neutra.senales, filtro),
+    solapeConFondos: sol.fraccion,
+    mayorAporteDeUnLadoDelDolar: mayorAportePorGrupo(neutra.mide, neutra.senales, filtro, grupoDolar),
+  }
+
+  const veredicto = juzgarDescartesPequenos(datos)
+  const n = (x) => (x == null ? '—' : `${x >= 0 ? '+' : ''}${x.toFixed(3)}`)
+  const pct = (x) => (x == null ? '—' : `${(x * 100).toFixed(0)} %`)
+
+  console.log('')
+  console.log('#'.repeat(96))
+  console.log(`#  SEGUNDA VUELTA — LOS DESCARTES DEL CANDIDATO (listón del ${FECHA_DESCARTES_PEQUENOS})`)
+  console.log('#'.repeat(96))
+  console.log('')
+  console.log(`Candidato FIJADO en el listón: ${dir === 'seguir' ? 'SEGUIR a' : 'ir EN CONTRA de'} ${neutra.quienes}, |sesgo| ≥ ${umbral}`)
+  console.log(`  (es la fila que el defecto del listón de la mañana dejó sin juzgar)`)
+  console.log('')
+  console.log(`  ops: ${cand.total}   señales al mes: ${datos.candidatoSenalesMes.toFixed(1)}`)
+  console.log(`  por 1R: ${n(cand.porRiesgo)}   contra ${n(base.porRiesgo)} sin filtro`)
+  console.log(`  SIN costes: ${n(datos.candidatoSinCostes)}   contra ${n(datos.baseSinCostes)} sin filtro`)
+  console.log(`  vecinos (|sesgo| ≥ ${vecinos.map((v) => v.u).join(' y ≥ ')}): ${vecinos.map((v) => n(v.m.porRiesgo)).join(' y ')}`)
+  console.log(`  el par que más aporta a la mejora: ${pct(datos.mayorAporteDeUnPar)}`)
+  console.log('')
+  console.log(`  solape con el MISMO filtro sobre los fondos:`)
+  console.log(`     ${sol.comunes} de ${sol.candidato} señales del candidato son también de los fondos (${pct(sol.fraccion)})`)
+  console.log(`     (los fondos dejan pasar ${sol.referencia} con este mismo filtro)`)
+  console.log('')
+  console.log(`  el lado del dólar que más aporta a la mejora: ${pct(datos.mayorAporteDeUnLadoDelDolar)}`)
+  const rep = repartoPorGrupo(neutra.senales, filtro, grupoDolar)
+  const todas = repartoPorGrupo(neutra.senales, () => true, grupoDolar)
+  for (const g of ['compraUSD', 'vendeUSD', 'sinUSD']) {
+    const a = rep.get(g) ?? 0
+    const t = todas.get(g) ?? 0
+    console.log(`     ${g.padEnd(10)} ${String(a).padStart(5)} de ${String(t).padStart(5)} señales   (${t ? ((a / t) * 100).toFixed(0) : '—'} % de las que había)`)
+  }
+  console.log('')
+  for (const c of DESCARTES_PEQUENOS) {
+    console.log(`  ${veredicto.criterios[c.id] ? '✅' : '❌'}  ${c.que}`)
+  }
+  console.log('')
+  console.log(
+    veredicto.sobrevive
+      ? `  → SOBREVIVE a los ${DESCARTES_PEQUENOS.length} descartes. Y sobrevivir NO es aprobar — leer lo de abajo.`
+      : '  → TUMBADO por al menos un descarte. La pregunta queda cerrada para estos cinco años.',
+  )
+  console.log('')
+  console.log(`El veredicto limpio saldría de: ${FUENTE_DEL_VEREDICTO_PEQUENOS_2}.`)
+  console.log('')
+  console.log(QUE_SIGNIFICA_SOBREVIVIR_PEQUENOS)
+  return veredicto
+}
+
+descartesDelCandidato(neutras.pequenos)
 
 console.log('')
 console.log('⚠️ Y recordar la limitación de arriba: aquí el filtro solo QUITA señales.')

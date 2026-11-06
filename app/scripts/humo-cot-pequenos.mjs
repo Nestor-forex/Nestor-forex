@@ -124,6 +124,72 @@ bien(
   'el informe avisa de que esto no es el sentimiento minorista',
 )
 
+// ── La segunda vuelta: los descartes del candidato ────────────────────────
+//
+// 📌 Aquí solo se comprueba QUE SALE y que los números se pudieron calcular.
+// El contenido lo vigila `prueba-solape.mjs` con casos a mano, y hay un motivo
+// concreto: el doble de la CFTC genera a los pequeños con el signo EXACTAMENTE
+// opuesto a los fondos, así que los dos filtros son disjuntos por construcción
+// y el solape sale 0 % siempre. Una comprobación que solo puede ver un valor no
+// comprueba nada.
+bien(texto.includes('SEGUNDA VUELTA'), 'el informe trae la sección de los descartes')
+bien(
+  texto.includes('Candidato FIJADO en el listón: ir EN CONTRA de los pequeños, |sesgo| ≥ 0'),
+  'y dice qué candidato juzga, con la dirección y el umbral del listón',
+)
+bien(
+  texto.includes('es la fila que el defecto del listón de la mañana dejó sin juzgar'),
+  'y por qué es ése y no el máximo de la rejilla',
+)
+
+// Los seis descartes salen todos, cada uno con su ✅ o su ❌. Si el bucle se
+// rompiera, la sección saldría sin criterios y el veredicto se leería igual.
+//
+// 📌 Y se cuentan DENTRO de la sección, no en el informe entero. La primera
+// versión buscaba las marcas en todo el texto y salían 18 —los 5 criterios del
+// listón de los fondos, los 7 del de los pequeños y los 6 de aquí— así que
+// `>= 6` se cumplía por construcción y habría pasado en verde aunque esta
+// sección no imprimiera ni un criterio. Es «contar apariciones no es leer»,
+// otra vez.
+const desdeSegunda = texto.slice(texto.indexOf('SEGUNDA VUELTA'))
+const marcasDescarte = (desdeSegunda.match(/\n {2}[✅❌] {2}/g) || []).length
+bien(marcasDescarte === 6, `los seis descartes se juzgan uno por uno, y salieron ${marcasDescarte} marcas`)
+
+// ⚠️ LA COMPROBACIÓN QUE DISTINGUE «NO SOLAPAN» DE «NO SE PUDO MIRAR».
+//
+// Si el mapa de claves del sesgo de los fondos estuviera roto, el filtro de
+// referencia no dejaría pasar NADA y el solape saldría 0 % — exactamente igual
+// que si los dos filtros fueran de verdad independientes. El conteo de la
+// referencia es lo único que separa los dos casos, y por eso el informe lo
+// imprime y aquí se exige que sea mayor que cero.
+const ref = texto.match(/los fondos dejan pasar (\d+) con este mismo filtro/)
+bien(ref != null, 'el informe dice cuántas señales deja pasar el filtro de referencia')
+bien(ref != null && Number(ref[1]) > 0, `y son más de cero (${ref?.[1]}): el solape se pudo CALCULAR`)
+
+// El reparto por el lado del dólar, con sus tres grupos. Si `grupoDolar`
+// devolviera `null` para todo, no saldría ninguna línea y el criterio se
+// leería como «no hay concentración».
+for (const g of ['compraUSD', 'vendeUSD', 'sinUSD']) {
+  bien(texto.includes(g), `el reparto por el dólar enseña el grupo «${g}»`)
+}
+
+// Y las dos frases que impiden que esto se lea como un aprobado. Si alguien las
+// borra del listón, el informe deja de decirlo y la sección pasa a parecer un
+// veredicto normal.
+bien(texto.includes('registro hacia adelante'), 'el informe dice de dónde saldría el veredicto limpio')
+bien(
+  texto.includes('SOBREVIVIR A LOS SEIS DESCARTES NO ES UN APROBADO'),
+  'y que sobrevivir a los descartes no es aprobar',
+)
+// ⚠️ La palabra que NO puede aparecer en esta sección: el veredicto se llama
+// «sobrevive» o «tumbado», nunca «aprobado».
+const seccion = texto.slice(texto.indexOf('SEGUNDA VUELTA'))
+bien(
+  /→ (SOBREVIVE|TUMBADO)/.test(seccion),
+  'el veredicto de la sección dice SOBREVIVE o TUMBADO',
+)
+bien(!/→ APROBADO/.test(seccion), 'y nunca dice APROBADO')
+
 original('')
 if (fallos) {
   original(`✗ ${fallos} comprobaciones del humo fallaron.`)
