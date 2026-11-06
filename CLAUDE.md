@@ -15076,3 +15076,179 @@ rota**. Se arregló leyendo la firma real de `useAvisos.js`. **Van doce veces.**
   fetch solo trae `main` y no hay ref de seguimiento de la rama. La salida es
   `--force-with-lease=<rama>:<sha>` con el sha comprobado antes — que además es
   **más estricto** que el lease normal, no menos.
+
+---
+
+# El resultado por separado, y el vigía anota el sesgo del COT (2026-11-06)
+
+Néstor pidió tres cosas: **«fusiona lo que haya que fusionar. haz el resultado
+por separado y haz que el vigía anote el sesgo del COT»**.
+
+⚠️ **NO CAMBIA NI UNA SEÑAL.** Swing sigue en −0,036/−0,040 por unidad de
+riesgo con la vara neutra. El COT como FILTRO se midió **dos veces** y
+suspendió las dos.
+
+Fusionados primero los dos PR que quedaban del día anterior, seguidos como
+manda la convención de los cambios emparejados: **#150 en Swing** (`7145af0`)
+y **#109 en Intradía** (`5fbf791`), los dos con `gemelos` en verde.
+
+## 1. «El resultado por separado»: las cuatro celdas del cruce
+
+```
+scripts/lib/solape.mjs       + CUADRANTES · cuadranteDe · filtrosPorCuadrante
+scripts/prueba-solape.mjs    bloque 12 (87 comprobaciones, eran 68)
+scripts/medir-cot.mjs        la tabla, dentro de la sección de los descartes
+scripts/humo-cot-pequenos.mjs  2 comprobaciones nuevas
+```
+
+Es la pregunta que el solape del **57 %** dejaba abierta y que quedó escrita
+como pendiente: el candidato mide **+0,052** y la referencia **−0,033** sobre
+conjuntos que comparten **más de la mitad** de las señales, así que la
+diferencia la tiene que hacer alguna de las partes y no se sabía cuál.
+
+El cruce parte las señales en **cuatro celdas disjuntas y exhaustivas**
+—ambos · solo el candidato · solo la referencia · ninguno— y cada una se mide
+con su acierto, su margen y su por 1R.
+
+⚠️ **ES UN DIAGNÓSTICO, NO UN CRITERIO.** Las celdas se miran DESPUÉS de ver el
+solape, o sea troceo a posteriori, y además son más chicas que el conjunto
+entero, o sea con el margen más ancho. **Ningún descarte las usa**, y si algún
+día se quiere perseguir una, va con su propio listón escrito antes.
+
+### ⚠️⚠️ LA VERDAD POR TRUTHINESS, Y NO ES ESTILO
+
+Quien mide es `senales.filter(f)`, o sea `Array.prototype.filter`, que decide
+por **truthiness**. Con un `=== true`, un filtro que devolviera un número o una
+cadena llevaría la señal a una celda **distinta de la que `medir` le asigna**, y
+las celdas dejarían de sumar lo que el informe cuenta **sin dar ningún error**:
+cuatro filas con números perfectamente plausibles.
+
+Por eso el informe **comprueba él que suman** —las cuatro contra el total sin
+filtro, y las dos del candidato contra el candidato— y lo imprime. Una tabla que
+no cuadre se lee exactamente igual que una buena si nadie hace la suma.
+
+📌 **Comprobado que muerde**, con el daño verificado en el archivo antes de
+darlo por bueno: exigir `=== true` tumba 1 **y nombra el número** · cambiar el
+orden de las celdas tumba 6.
+
+⚠️ **Y el humo NO puede cubrir el contenido de esa tabla**, por el motivo ya
+escrito: el doble de la CFTC genera a los pequeños con el signo **exactamente
+opuesto** a los fondos, así que allí los dos filtros son disjuntos por
+construcción y dos de las cuatro celdas salen vacías. Lo que el humo comprueba
+es que la tabla EXISTA y que la línea de «las celdas suman» salga en ✓.
+
+## 2. El vigía anota el sesgo del COT
+
+```
+src/lib/cot.js               + sesgoDeNetos · sesgoDeParPublicado
+                             + anotacionCot · DIAS_COT_RARO
+scripts/lib/cot-historia.mjs   `sesgoDePar` IMPORTA el convenio, ya no lo copia
+scripts/lib/vigia-nucleo.mjs   + leerCotPublicado                        PRIMO
+scripts/vigia.mjs              lo lee y lo anota
+scripts/prueba-vigia.mjs       bloque 15
+```
+
+Cada línea nueva de `senales.jsonl` lleva ahora **`cotSesgo` y `cotFecha`**.
+
+⚠️⚠️ **ES LO ÚNICO QUE EL LISTÓN DE LA SEGUNDA VUELTA AUTORIZABA**, y conviene
+tenerlo escrito con estas palabras: **no apaga ni una señal, no las reordena, no
+las puntúa y no cambia a quién le suena el celular.** Hay comprobación de que el
+sesgo no aparece en ningún `filter` ni `sort` del vigía — añadir un filtro
+obliga a venir a borrarla a mano.
+
+Lo que compra es que **dentro de unos meses la pregunta se pueda contestar con
+días que nadie ha mirado**, en vez de con los mismos cinco años que ya se usaron
+para encontrar el candidato. Es lo más barato que se puede hacer con una idea
+que el histórico no puede juzgar limpiamente: **no cuesta ni una petición ni un
+crédito** — lee el `cot.json` que `publicar-cot.mjs` ya publica a diario.
+
+### ⚠️⚠️ EL CONVENIO VIVE EN UN SOLO SITIO, Y ERA EL RIESGO DE FONDO
+
+Cómo se combinan las dos divisas es la decisión que más fácil se hace mal —el
+signo, y si el índice del dólar entra o no— y la misma cuenta la necesitan **el
+banco de pruebas** (sobre el histórico de la CFTC) y **el vigía** (sobre el
+archivo publicado).
+
+Dos copias se separarían el día que alguien la tocara, y entonces **lo que el
+vigía ANOTA y lo que el banco MIDE dirían cosas distintas sin que nada fallara**,
+con el listón juzgando a otra regla. Es el fallo del umbral de fuerza copiado en
+nueve guiones y el de `ATR_REVERSION` en dos.
+
+`sesgoDeNetos(pctBase, pctCotizada)` es ahora el único sitio donde está la
+resta, y `cot-historia.mjs` la importa. Lo que SÍ es propio del histórico es la
+**disciplina de fecha** (mirar hacia atrás y descartar los informes que ese día
+no se habían publicado todavía); en el vigía esa disciplina **no existe y no
+hace falta**, porque el archivo del día solo puede contener lo que la CFTC ya
+hizo público. El futuro no existe ahí.
+
+Hay comprobación de que las dos vías dan el MISMO número sobre los mismos netos.
+
+### Las decisiones que no hay que ablandar
+
+⚠️ **LOS DOS CAMPOS VIAJAN JUNTOS O NO VIAJA NINGUNO.** Un sesgo sin su fecha se
+lee como de hoy, y el informe del COT llega con **3 a 10 días** de retraso; con
+el publicador roto podría llevar meses parado. Un `cotSesgo` suelto sería un
+número bien calculado describiendo otra cosa de la que dice describir. Hay cinco
+comprobaciones dedicadas, una por par.
+
+⚠️ **NUNCA SE ESCRIBE `null`.** Igual que `huboSweep` y `vara`: el campo solo
+aparece cuando hay dato, así que las líneas ya escritas se siguen leyendo igual
+y **la ausencia significa «aquí no se pudo» en vez de «el sesgo es 0»**.
+
+⚠️ **UN COT VIEJO SE ANOTA IGUAL, con su fecha dentro, y el log lo grita** por
+encima de 21 días. La asimetría va al revés de lo habitual y por una razón
+concreta: **no anotarlo lo perdería para siempre**, mientras que anotarlo con su
+fecha deja que quien lo mida después descarte la línea. De los dos errores, el
+caro es el primero.
+
+⚠️ **UN FALLO LEYENDO EL ARCHIVO NO PUEDE TUMBAR EL VIGÍA.** Sin anotación se
+pierde un dato de un experimento sin validar; si el vigía muere, el historial de
+la app —**lo único irrecuperable del proyecto**— pierde el día entero. Misma
+razón por la que `setupsLSS` va dentro de un `try`. Y se avisa en el log: si eso
+saliera todos los días durante meses, el registro se quedaría vacío sin que
+nadie lo notara.
+
+⚠️ **VA PARA TODAS LAS SEÑALES, no solo para una regla.** A diferencia de
+`huboSweep`, que es un dato de la ruptura, **el sesgo es una propiedad del PAR**:
+ese día vale lo mismo para la app que para las cuatro reglas de la sombra. Y por
+eso el mismo par sale con el MISMO sesgo en COMPRA y en VENTA — el lado se
+combina con el sesgo al medir (`DIRECCIONES`), no al anotar.
+
+### Cómo se verificó
+
+Lint **contado contra `main`** (7 avisos, los mismos), build, **54 de 55**
+pruebas en Swing y **38 de 39** en Intradía —el único rojo es
+`prueba-aviso-real`, que pide el secreto VAPID y manda un aviso de verdad— y los
+**78 gemelos idénticos**, con el clon hermano comprobado en `origin/main`.
+
+**Comprobado que las pruebas MUERDEN**, con el daño verificado en el archivo
+antes de darlo por bueno: desenchufar la anotación tumba 1 · quitarle la fecha
+al sesgo tumba 5 · devolver la resta propia al histórico tumba 1 · dar la vuelta
+al signo tumba 3 aquí **y 4 en `prueba-cot-historia`**.
+
+Y **de punta a punta con el `cot.json` REAL de producción** (informe del
+2026-10-27) y el doble de velas, sin gastar un crédito ni usar llave:
+
+| caso | resultado |
+|---|---|
+| normal | las 6 señales con su sesgo y su fecha |
+| los números a mano | EUR/CHF +4,67 (−8,2 − −12,9) · EUR/CAD +18,56 · NZD/CHF −4,56 ✓ |
+| los dos campos | **0 líneas con uno sin el otro** |
+| sin `cot.json` | avisa y **no anota nada** (0 de 6) |
+| con uno de 90 días | **se anota igual**, avisando, con `cotFecha: 2026-08-08` |
+
+📌 **Y el doble de velas necesitó reexportar `PARES`**, que un módulo arrastrado
+por el vigía (`lss-banco.mjs`) importa. Se **reexporta del original**, no se
+copia: una lista copiada se separaría el día que la app añadiera un par, y el
+humo mediría sobre un universo distinto del de producción sin que nada fallara.
+
+## Lo que sigue pendiente de esta pregunta
+
+⚠️ **El registro hacia adelante acaba de empezar.** Hasta que acumule
+operaciones no hay nada que medir, y sigue en pie lo del listón: **sobrevivir a
+los descartes NO es un aprobado** — el candidato se eligió después de ver la
+tabla, así que su único veredicto limpio es el de los días que nadie ha mirado.
+
+📌 Y lo que la tabla de celdas deja claro de entrada: si la mejora resultara
+venir de las señales que el candidato COMPARTE con los fondos, lo medido sería
+el filtro que ya suspendió dos veces con otro rótulo.
