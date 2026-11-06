@@ -166,6 +166,27 @@ const ref = texto.match(/los fondos dejan pasar (\d+) con este mismo filtro/)
 bien(ref != null, 'el informe dice cuántas señales deja pasar el filtro de referencia')
 bien(ref != null && Number(ref[1]) > 0, `y son más de cero (${ref?.[1]}): el solape se pudo CALCULAR`)
 
+// ── El resultado de cada celda, por separado ──────────────────────────────
+//
+// 📌 En el mercado inventado DOS de las cuatro celdas salen vacías, y no es un
+// fallo: el doble de la CFTC genera a los pequeños con el signo opuesto a los
+// fondos, así que los dos filtros son disjuntos por construcción. Por eso aquí
+// no se exige que las cuatro tengan operaciones — lo que se exige es que la
+// tabla EXISTA y que las celdas CUADREN.
+bien(texto.includes('EL RESULTADO DE CADA CELDA, POR SEPARADO'), 'el informe trae la tabla por celdas')
+for (const r of ['candidato Y fondos', 'SOLO el candidato', 'SOLO los fondos', 'ninguno de los dos']) {
+  bien(texto.includes(r), `la tabla por celdas enseña «${r}»`)
+}
+
+// ⚠️ LA COMPROBACIÓN QUE DE VERDAD IMPORTA DE ESTA SECCIÓN. Si las celdas no
+// sumaran el total, la tabla se leería exactamente igual que una buena: cuatro
+// filas con números plausibles. El guion lo comprueba él y lo imprime; aquí se
+// exige que esa comprobación salga bien Y que exista — un informe que dejara de
+// imprimir la línea pasaría este humo si solo se mirara que no diga «MAL».
+const sumanCeldas = texto.match(/(✓|✗ MAL) {2}las celdas suman (\d+) \(sin filtro: (\d+)\)/)
+bien(sumanCeldas != null, 'el informe dice si las celdas suman el total')
+bien(sumanCeldas?.[1] === '✓', `y cuadran (${sumanCeldas?.[2]} contra ${sumanCeldas?.[3]})`)
+
 // El reparto por el lado del dólar, con sus tres grupos. Si `grupoDolar`
 // devolviera `null` para todo, no saldría ninguna línea y el criterio se
 // leería como «no hay concentración».

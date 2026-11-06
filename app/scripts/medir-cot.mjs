@@ -73,7 +73,8 @@ import { simetrica, actual } from './lib/geometrias.mjs'
 import { resolver } from './lib/resolver.mjs'
 import { FAMILIAS } from '../src/lib/cot.js'
 import { grupoDolar, mayorAportePorGrupo, mayorAportePorPar } from './lib/aporte-por-par.mjs'
-import { claveDeSenal, repartoPorGrupo, solapeDeFiltros } from './lib/solape.mjs'
+import { CUADRANTES, claveDeSenal, filtrosPorCuadrante, repartoPorGrupo, solapeDeFiltros } from './lib/solape.mjs'
+import { margen } from '../src/lib/diagnostico.js'
 import {
   bajarHistoria,
   descubrirColumnas,
@@ -530,6 +531,56 @@ function descartesDelCandidato(neutra) {
   console.log(`  solape con el MISMO filtro sobre los fondos:`)
   console.log(`     ${sol.comunes} de ${sol.candidato} señales del candidato son también de los fondos (${pct(sol.fraccion)})`)
   console.log(`     (los fondos dejan pasar ${sol.referencia} con este mismo filtro)`)
+  // ── El resultado de cada celda, por separado ───────────────────────────
+  //
+  // 📌 Lo pidió Néstor el 2026-11-02 («has el resultado por separado») y es la
+  // pregunta que el solape deja abierta: con el 57 % compartido, ¿la mejora la
+  // traen las señales que los dos filtros comparten o las que el candidato
+  // tiene de más?
+  //
+  // ⚠️ DIAGNÓSTICO, NO CRITERIO. Las celdas se miran después de ver el solape
+  // y son más chicas que el conjunto entero. Ningún descarte las usa, y si
+  // algún día se quiere perseguir una, va con su propio listón escrito antes.
+  const cuad = filtrosPorCuadrante(filtro, filtroFondos)
+  const medidoCuad = {}
+  for (const c of CUADRANTES) medidoCuad[c] = neutra.mide(cuad[c])
+
+  const ROTULOS = {
+    ambos: 'las dos: candidato Y fondos',
+    soloCandidato: 'SOLO el candidato (los pequeños)',
+    soloReferencia: 'SOLO los fondos',
+    ninguno: 'ninguno de los dos',
+  }
+
+  console.log('')
+  console.log('  EL RESULTADO DE CADA CELDA, POR SEPARADO:')
+  console.log('')
+  console.log('     celda                              ops   acierto   margen    por 1R')
+  console.log('     ' + '─'.repeat(68))
+  for (const c of CUADRANTES) {
+    const m = medidoCuad[c]
+    const ac = m.acierto == null ? '    — ' : `${m.acierto.toFixed(0)} %`.padStart(6)
+    const mg = m.total ? `±${margen(m.total)}`.padStart(6) : '     —'
+    console.log(`     ${ROTULOS[c].padEnd(33)} ${String(m.total).padStart(4)}    ${ac}   ${mg}    ${n(m.porRiesgo)}`)
+  }
+  console.log('     ' + '─'.repeat(68))
+
+  // ⚠️ LA COMPROBACIÓN QUE HACE QUE ESA TABLA SIGNIFIQUE ALGO. Las cuatro
+  // celdas son disjuntas y exhaustivas, así que tienen que sumar el total
+  // medido sin filtro, y las dos primeras tienen que sumar el candidato. Si no
+  // suman, alguna señal se está contando dos veces o en ninguna parte — y una
+  // tabla así se lee exactamente igual que una buena.
+  const sumaCeldas = CUADRANTES.reduce((a, c) => a + medidoCuad[c].total, 0)
+  const sumaCandidato = medidoCuad.ambos.total + medidoCuad.soloCandidato.total
+  const cuadran = sumaCeldas === base.total && sumaCandidato === cand.total
+  console.log(
+    `     ${cuadran ? '✓' : '✗ MAL'}  las celdas suman ${sumaCeldas} (sin filtro: ${base.total}) ` +
+      `y las dos del candidato ${sumaCandidato} (candidato: ${cand.total})`,
+  )
+  if (!cuadran) {
+    console.log('     ⚠️ NO CUADRAN: la tabla de arriba NO se puede leer. Mirar `cuadranteDe`.')
+  }
+
   console.log('')
   console.log(`  el lado del dólar que más aporta a la mejora: ${pct(datos.mayorAporteDeUnLadoDelDolar)}`)
   const rep = repartoPorGrupo(neutra.senales, filtro, grupoDolar)

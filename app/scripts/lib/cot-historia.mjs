@@ -43,6 +43,7 @@ import {
   neto,
   num,
   pctDelInteres,
+  sesgoDeNetos,
 } from '../../src/lib/cot.js'
 import { APP } from '../../src/lib/identidad.js'
 
@@ -131,22 +132,20 @@ export function cotConocidoEl(indice, divisa, fecha) {
 // El sesgo del PAR
 // ─────────────────────────────────────────────────────────────────────────
 //
-// ⚠️ CÓMO SE COMBINAN LAS DOS DIVISAS, QUE ES LA DECISIÓN QUE MÁS FÁCIL SE
-// HACE MAL. Cada futuro del CME es esa divisa CONTRA EL DÓLAR:
+// ⚠️⚠️ EL CONVENIO NO VIVE AQUÍ: VIVE EN `sesgoDeNetos`, de `src/lib/cot.js`.
 //
-//   · `neto%(EUR)` ya significa «cuán comprados están de euro contra dólar»;
-//   · así que para EUR/USD el sesgo es, simplemente, `neto%(EUR)`;
-//   · y para un cruce como EUR/JPY —que es comprar euro y vender yen— el
-//     sesgo es `neto%(EUR) − neto%(JPY)`.
+// Cómo se combinan las dos divisas es la decisión que más fácil se hace mal
+// (el signo, y si el índice del dólar entra o no), y la misma cuenta la
+// necesitan ESTE guion —sobre el histórico de la CFTC— y el VIGÍA, sobre el
+// `cot.json` ya publicado. Dos copias se separarían el día que alguien la
+// tocara, y entonces lo que el vigía ANOTA y lo que el banco MIDE dirían cosas
+// distintas sin que nada fallara. El porqué completo está en la cabecera de
+// `sesgoDeNetos`.
 //
-// De ahí sale la regla única: **sesgo = neto%(base) − neto%(cotizada), con el
-// dólar valiendo 0.** El dólar vale 0 porque su lado ya está dentro del
-// número de la otra divisa; sumarle además el índice del dólar sería contarlo
-// dos veces.
-//
-// 📌 Por eso el índice del dólar NO se usa aquí aunque sí se enseñe en
-// pantalla: en pantalla es información sobre el dólar, y aquí sería un
-// doble conteo.
+// Lo que SÍ es propio de aquí es la **disciplina de fecha**: mirar hacia atrás
+// y quedarse solo con el informe que ese día ya estaba publicado. Sin eso el
+// backtest miraría tres días de futuro todas las semanas durante cinco años,
+// y no fallaría: devolvería un resultado creíble y demasiado bueno.
 export function sesgoDePar(indice, base, cotizada, fecha) {
   const lado = (d) => {
     if (d === 'USD') return { pct: 0, f: null }
@@ -156,8 +155,11 @@ export function sesgoDePar(indice, base, cotizada, fecha) {
   const b = lado(cotizada)
   if (!a || !b) return null
 
+  const sesgo = sesgoDeNetos(a.pct, b.pct)
+  if (sesgo == null) return null
+
   return {
-    sesgo: a.pct - b.pct,
+    sesgo,
     // La fecha del informe MÁS VIEJO de los dos, para poder contar cuántos
     // días de retraso llevaba la decisión.
     fechaDato: [a.f, b.f].filter(Boolean).sort()[0] ?? null,
