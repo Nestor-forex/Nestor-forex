@@ -63,6 +63,53 @@ export function solapeDeFiltros(senales, filtroCandidato, filtroReferencia) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// EL CRUCE DE DOS FILTROS, CELDA POR CELDA
+// ─────────────────────────────────────────────────────────────────────────
+// El solape dice CUÁNTO se parecen dos filtros. No dice lo que de verdad
+// hace falta saber cuando se parecen a medias: **si lo que mejora son las
+// señales que comparten o las que el candidato tiene de más.**
+//
+// 📌 Néstor lo pidió el 2026-11-02 así: «has el resultado por separado». Y es
+// la pregunta correcta — con un solape del 57 %, el candidato y la referencia
+// miden +0,052 y −0,033 sobre conjuntos que comparten más de la mitad, así
+// que la diferencia la tiene que hacer alguna de las partes y hasta hoy no se
+// sabía cuál.
+//
+// Las cuatro celdas son DISJUNTAS y EXHAUSTIVAS: cada señal cae en una y solo
+// una, así que suman el total y no hay nada escondido.
+export const CUADRANTES = Object.freeze(['ambos', 'soloCandidato', 'soloReferencia', 'ninguno'])
+
+// ⚠️ LA VERDAD POR TRUTHINESS, NO POR `=== true`, y no es un detalle de
+// estilo. Quien mide es `senales.filter(f)`, o sea `Array.prototype.filter`,
+// que decide por truthiness. Si aquí se exigiera un booleano exacto, un filtro
+// que devolviera un número o una cadena llevaría la señal a una celda distinta
+// de la que `medir` le asigna — y las celdas dejarían de sumar el total **sin
+// dar ningún error**. Hay comprobación de que suman.
+export function cuadranteDe(s, filtroCandidato, filtroReferencia) {
+  const a = Boolean(filtroCandidato(s))
+  const b = Boolean(filtroReferencia(s))
+  if (a && b) return 'ambos'
+  if (a) return 'soloCandidato'
+  if (b) return 'soloReferencia'
+  return 'ninguno'
+}
+
+// Devuelve un filtro por celda, listo para pasárselo a `mide`.
+//
+// ⚠️ ES UN DIAGNÓSTICO, NUNCA UN CRITERIO. Las celdas se miran DESPUÉS de ver
+// el solape, así que cualquier número que salga aquí es troceo a posteriori; y
+// además son más chicas que el conjunto entero, o sea con el margen más ancho.
+// Sirve para entender de dónde viene la diferencia, no para decidir nada: un
+// listón que use una celda tiene que escribirse antes y medirse aparte.
+export function filtrosPorCuadrante(filtroCandidato, filtroReferencia) {
+  const out = {}
+  for (const c of CUADRANTES) {
+    out[c] = (s) => cuadranteDe(s, filtroCandidato, filtroReferencia) === c
+  }
+  return out
+}
+
 // Reparto crudo de las señales que pasan un filtro, por el grupo que diga
 // `claveDe`. Es información, no un criterio: el criterio es el aporte a la
 // mejora, que es otra cosa y puede decir lo contrario que el recuento.

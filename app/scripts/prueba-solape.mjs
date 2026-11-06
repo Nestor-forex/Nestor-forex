@@ -22,7 +22,14 @@ import {
   QUE_SIGNIFICA_SOBREVIVIR_PEQUENOS,
   juzgarDescartesPequenos,
 } from './lib/preregistro-cot-pequenos-2.mjs'
-import { claveDeSenal, repartoPorGrupo, solapeDeFiltros } from './lib/solape.mjs'
+import {
+  CUADRANTES,
+  claveDeSenal,
+  cuadranteDe,
+  filtrosPorCuadrante,
+  repartoPorGrupo,
+  solapeDeFiltros,
+} from './lib/solape.mjs'
 
 let hechas = 0
 let fallos = 0
@@ -245,6 +252,81 @@ console.log('11. El listón dice en voz alta de dónde saldría el veredicto lim
   ok(/DESPUÉS de ver la tabla/.test(QUE_SIGNIFICA_SOBREVIVIR_PEQUENOS), 'dice que el candidato se eligió a posteriori')
   ok(/FILTRO/.test(QUE_SIGNIFICA_SOBREVIVIR_PEQUENOS), 'recuerda que esto es un filtro')
   ok(/SENTIMIENTO MINORISTA/.test(QUE_SIGNIFICA_SOBREVIVIR_PEQUENOS), 'y que no dice nada de Myfxbook')
+}
+
+console.log('12. El cruce de dos filtros: cuatro celdas disjuntas y exhaustivas')
+{
+  // Un conjunto con las cuatro combinaciones representadas.
+  const lista = [
+    s('a', 'd1', { en: ['cand', 'ref'] }),
+    s('b', 'd1', { en: ['cand', 'ref'] }),
+    s('c', 'd1', { en: ['cand'] }),
+    s('d', 'd1', { en: ['cand'] }),
+    s('e', 'd1', { en: ['cand'] }),
+    s('f', 'd1', { en: ['ref'] }),
+    s('g', 'd1', { en: [] }),
+  ]
+  const cand = (x) => x.en.includes('cand')
+  const ref = (x) => x.en.includes('ref')
+
+  for (const [id, esperado] of [
+    ['a', 'ambos'],
+    ['c', 'soloCandidato'],
+    ['f', 'soloReferencia'],
+    ['g', 'ninguno'],
+  ]) {
+    const sx = lista.find((x) => x.id === id)
+    ok(cuadranteDe(sx, cand, ref) === esperado, `«${id}» cae en «${esperado}»`)
+  }
+
+  const fs = filtrosPorCuadrante(cand, ref)
+  ok(CUADRANTES.length === 4, 'hay cuatro celdas')
+  const cuenta = {}
+  for (const c of CUADRANTES) cuenta[c] = lista.filter(fs[c]).length
+  casi(cuenta.ambos, 2, 'la celda «ambos» tiene 2')
+  casi(cuenta.soloCandidato, 3, 'la de «solo el candidato» tiene 3')
+  casi(cuenta.soloReferencia, 1, 'la de «solo la referencia» tiene 1')
+  casi(cuenta.ninguno, 1, 'la de «ninguno» tiene 1')
+
+  // ⚠️⚠️ LA PROPIEDAD QUE HACE QUE LA TABLA SIGNIFIQUE ALGO. Si las celdas no
+  // suman el total, alguna señal se está contando dos veces o en ninguna
+  // parte — y el informe se lee exactamente igual que si estuviera bien.
+  const suma = CUADRANTES.reduce((a, c) => a + cuenta[c], 0)
+  casi(suma, lista.length, 'las cuatro celdas suman TODAS las señales')
+  casi(cuenta.ambos + cuenta.soloCandidato, lista.filter(cand).length, 'y las dos del candidato suman el candidato')
+  casi(cuenta.ambos + cuenta.soloReferencia, lista.filter(ref).length, 'y las dos de la referencia, la referencia')
+
+  // Y que de verdad son disjuntas: ninguna señal en dos celdas a la vez.
+  const dobles = lista.filter((x) => CUADRANTES.filter((c) => fs[c](x)).length !== 1)
+  ok(dobles.length === 0, `ninguna señal cae en dos celdas (${dobles.length} lo hacen)`)
+
+  // ⚠️ LA TRUTHINESS, QUE NO ES ESTILO. Quien mide es `Array.filter`, que
+  // decide por truthiness. Un filtro que devuelva un número o una cadena tiene
+  // que caer en la MISMA celda que `filter` le daría; si no, las celdas dejan
+  // de sumar lo que `medir` cuenta, en silencio.
+  const raro = (x) => (x.en.includes('cand') ? 1 : 0)
+  const refRara = (x) => (x.en.includes('ref') ? 'sí' : '')
+  const fsRaros = filtrosPorCuadrante(raro, refRara)
+  const sumaRara = CUADRANTES.reduce((a, c) => a + lista.filter(fsRaros[c]).length, 0)
+  casi(sumaRara, lista.length, 'con filtros que devuelven valores truthy las celdas siguen sumando')
+  casi(
+    lista.filter(fsRaros.ambos).length + lista.filter(fsRaros.soloCandidato).length,
+    lista.filter(raro).length,
+    'y el candidato truthy cuadra con lo que `filter` le daría',
+  )
+
+  // Caso degenerado: dos filtros idénticos dejan «solo uno» vacíos.
+  const fsIg = filtrosPorCuadrante(cand, cand)
+  ok(lista.filter(fsIg.soloCandidato).length === 0, 'con filtros idénticos no hay «solo el candidato»')
+  ok(lista.filter(fsIg.soloReferencia).length === 0, 'ni «solo la referencia»')
+  casi(lista.filter(fsIg.ambos).length, lista.filter(cand).length, 'y «ambos» es el filtro entero')
+
+  // Y la lista vacía: cuatro celdas vacías, no un reventón.
+  const vacio = CUADRANTES.map((c) => [].filter(fs[c]).length)
+  ok(
+    vacio.every((x) => x === 0),
+    'con la lista vacía las cuatro celdas salen vacías',
+  )
 }
 
 console.log('')
