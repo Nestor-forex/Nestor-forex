@@ -28,11 +28,15 @@ import {
   compararConAnterior,
   escribir,
   esSombra,
+  leerCotPublicado,
   leerEstado,
   leerJsonl,
   separarSombra,
   yaCorrioHoy,
 } from './lib/vigia-nucleo.mjs'
+// El sesgo del COT, anotado en cada señal desde el 2026-11-06. NO enciende
+// nada: ver la cabecera de `anotacionCot`.
+import { DIAS_COT_RARO, anotacionCot, diasDelDato } from '../src/lib/cot.js'
 import { resolver, resumir } from './lib/resolver.mjs'
 // La CUARTA regla en la sombra, desde el 2026-09-20. Viene del indicador que
 // Néstor escribió para el concurso de TradingView, pero con sus tres señas de
@@ -50,6 +54,10 @@ const LOG_CORRIDAS = `${DATOS}/historial/corridas.jsonl`
 // abajo sobre por qué la app no pide los precios ella misma.
 const BARRIDO = `${DATOS}/estado/barrido.json`
 const LOG_RESULTADOS = `${DATOS}/historial/resultados.jsonl`
+// El COT ya publicado, que es el mismo archivo que lee la app. No se vuelve a
+// bajar de la CFTC: lo publica `publicar-cot.mjs` todos los días y aquí solo se
+// lee, así que esto no cuesta ni una petición ni un crédito.
+const COT = `${DATOS}/estado/cot.json`
 
 const ahora = new Date()
 
@@ -183,6 +191,32 @@ const { actuales, nuevas } = compararConAnterior(todosLosSetups, estadoPrevio)
 // escrito hoy.
 const { visibles: nuevasVisibles, sombra: nuevasSombra } = separarSombra(nuevas)
 
+// ⚠️⚠️ EL SESGO DEL COT, ANOTADO Y NADA MÁS (2026-11-06).
+//
+// Néstor lo pidió así: «Has que el vigía anote el sesgo del COT». Es lo único
+// que el listón de la segunda vuelta autorizaba, y conviene tenerlo escrito
+// con estas palabras: **no apaga ni una señal, no las reordena, no las puntúa
+// y no cambia a quién le suena el celular.** El COT como FILTRO se midió dos
+// veces y suspendió las dos.
+//
+// Lo que compra es que dentro de unos meses la pregunta se pueda contestar con
+// días que nadie ha mirado, en vez de con los mismos cinco años que ya se
+// usaron para encontrar el candidato. No cuesta un crédito ni una pantalla.
+const cot = leerCotPublicado(COT)
+const diasCot = cot ? diasDelDato(cot.fecha, ahora) : null
+if (!cot) {
+  // No se para: una anotación de un experimento sin validar no vale un día de
+  // historial. Pero se dice, porque si esto saliera todos los días durante
+  // meses el registro se quedaría vacío sin que nadie lo notara.
+  console.log(`⚠️ Sin COT publicado en ${COT}: las señales de hoy se anotan sin sesgo.`)
+} else if (diasCot != null && diasCot > DIAS_COT_RARO) {
+  // ⚠️ SE ANOTA IGUAL, Y CON SU FECHA DENTRO. Lo normal son 3-10 días; esto no
+  // es normal, pero el campo `cotFecha` viaja con el sesgo, así que quien lo
+  // mida después puede descartar estas líneas. No anotarlas las perdería para
+  // siempre, y ése es el error más caro de los dos.
+  console.log(`⚠️ El COT publicado tiene ${diasCot} días (lo normal son 3-10). Se anota igual, con su fecha.`)
+}
+
 // Una línea por señal nueva, con los niveles tal como se los daríamos a
 // Néstor. Es lo que después se compara contra lo que hizo el precio.
 for (const { id, s } of nuevas) {
@@ -259,6 +293,13 @@ for (const { id, s } of nuevas) {
       // comprobación de `prueba-vigia.mjs` que exige que `huboSweep` viaje.
       ...(c.huboSweep !== undefined ? { huboSweep: c.huboSweep } : {}),
       ...(c.evento !== undefined ? { evento: c.evento } : {}),
+      // ⚠️ El sesgo del COT va con su fecha o no va. Ver `anotacionCot`.
+      //
+      // Y va para TODAS las señales, no solo para las de una regla: a
+      // diferencia de `huboSweep`, que es un dato de la ruptura, esto es una
+      // propiedad del PAR y ese día lo mismo vale para la app que para las
+      // cuatro reglas de la sombra.
+      ...(anotacionCot(cot, s.name) ?? {}),
     }) + '\n',
     true
   )

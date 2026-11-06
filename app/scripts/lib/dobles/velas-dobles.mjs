@@ -22,6 +22,13 @@ export function leerLlave() {
   return 'llave-de-mentira'
 }
 
+// ⚠️ SE REEXPORTA DEL ORIGINAL, no se copia. `PARES` es la lista de los 14
+// pares que la app pide directos, y la necesitan módulos que el humo arrastra
+// sin querer (`lss-banco.mjs`). Copiarla aquí dejaría dos listas que se
+// separarían el día que la app añadiera un par, y el humo mediría sobre un
+// universo distinto del de producción sin que nada fallara.
+export { PARES } from '../velas.mjs'
+
 // Azar DETERMINISTA: con `Math.random` una prueba que falla no se puede
 // repetir, y entonces no es una prueba.
 function azarador(semilla = 7) {

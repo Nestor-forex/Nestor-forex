@@ -188,3 +188,42 @@ export function escribir(ruta, texto, anexar = false) {
   if (anexar) appendFileSync(ruta, texto)
   else writeFileSync(ruta, texto)
 }
+
+// ────────────────────────────────────────────────────────────────────────
+// EL SESGO DEL COT, ANOTADO EN CADA SEÑAL (desde el 2026-11-06)
+//
+// Néstor lo pidió con estas palabras: «Has que el vigía anote el sesgo del
+// COT». Sale de lo que el listón de la segunda vuelta autorizaba y nada más:
+// anotar el dato para que la pregunta sea re-respondible con días que nadie
+// ha mirado.
+//
+// ⚠️⚠️ ESTO NO ENCIENDE NADA, Y NO PUEDE. No apaga ni una señal, no las
+// reordena, no las puntúa y no cambia a quién le suena el celular. El COT
+// como FILTRO se midió DOS veces y suspendió las dos; la segunda vuelta dejó
+// un candidato que SOBREVIVE a sus descartes, y sobrevivir no es aprobar —
+// su veredicto limpio saldría del registro hacia adelante, que es
+// exactamente lo que esto empieza a escribir.
+//
+// ⚠️ POR QUÉ AQUÍ NO HAY DISCIPLINA DE FECHA. En el banco de pruebas hay que
+// mirar hacia atrás y descartar los informes que ese día no se habían
+// publicado todavía; aquí se lee el `cot.json` del día, que solo puede
+// contener lo que la CFTC ya hizo público. El futuro no existe.
+// ────────────────────────────────────────────────────────────────────────
+
+// Lee el `cot.json` publicado. Devuelve `null` ante cualquier problema.
+//
+// ⚠️ UN FALLO AQUÍ NO PUEDE TUMBAR EL VIGÍA, y los dos errores no valen lo
+// mismo: sin anotación se pierde un dato de un experimento sin validar; si el
+// vigía muere, el historial de la app —lo único irrecuperable del proyecto—
+// pierde el día entero. Misma razón por la que `setupsLSS` va dentro de un
+// `try`.
+export function leerCotPublicado(ruta) {
+  try {
+    const c = JSON.parse(readFileSync(ruta, 'utf8'))
+    if (!c || typeof c !== 'object') return null
+    if (!c.divisas || typeof c.divisas !== 'object') return null
+    return c
+  } catch {
+    return null
+  }
+}

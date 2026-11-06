@@ -17,11 +17,13 @@ import {
   escribir,
   esSombra,
   idDe,
+  leerCotPublicado,
   leerEstado,
   separarSombra,
   yaCorrioEstaHora,
   yaCorrioHoy,
 } from './lib/vigia-nucleo.mjs'
+import { anotacionCot, sesgoDeNetos, sesgoDeParPublicado } from '../src/lib/cot.js'
 
 const dir = mkdtempSync(join(tmpdir(), 'vigia-'))
 const ESTADO = join(dir, 'estado/vigia.json')
@@ -439,6 +441,121 @@ console.log('\n14b. ⚠️ El publicador mira el guardián ANTES de pedir precio
   // ⚠️ Y que comparta `concurrency` con el vigía: los dos escriben el MISMO
   // archivo en la misma rama.
   comprobar('comparte el grupo de concurrencia `vigia`', /group:\s*vigia\b/.test(wf))
+}
+
+console.log('\n15. ⚠️ El sesgo del COT se ANOTA, con su fecha, y no enciende nada')
+{
+  const vigia = readFileSync(new URL('./vigia.mjs', import.meta.url), 'utf8')
+
+  // ── La función pura ────────────────────────────────────────────────────
+  const cot = {
+    fecha: '2026-11-03',
+    divisas: {
+      EUR: { fondosPct: 12.345, f: '2026-11-03' },
+      JPY: { fondosPct: -8.2, f: '2026-10-27' },
+      CHF: { fondosPct: 4, f: '2026-11-03' },
+    },
+  }
+
+  // EUR/USD: el dólar vale 0, así que el sesgo ES el neto del euro.
+  const eurusd = anotacionCot(cot, 'EUR/USD')
+  comprobar('EUR/USD: el sesgo es el neto del euro (el dólar vale 0)', eurusd?.cotSesgo === 12.35)
+  comprobar('y lleva la fecha de su informe', eurusd?.cotFecha === '2026-11-03')
+
+  // Un cruce resta los dos netos.
+  const eurjpy = anotacionCot(cot, 'EUR/JPY')
+  comprobar('EUR/JPY: resta los dos netos', Math.abs(eurjpy.cotSesgo - 20.55) < 1e-9)
+  // ⚠️ Y la fecha es la del informe MÁS VIEJO de los dos, no la más nueva: es
+  // la que dice de cuándo es de verdad la decisión.
+  comprobar('y la fecha es la del informe MÁS VIEJO de los dos', eurjpy.cotFecha === '2026-10-27')
+
+  // USD/JPY: el dólar delante, así que el sesgo cambia de signo respecto a
+  // JPY/USD. Si esto saliera al revés, el registro mediría lo contrario de lo
+  // que el banco de pruebas mide, y nada fallaría.
+  comprobar('USD/JPY: el signo sale del orden del par', anotacionCot(cot, 'USD/JPY').cotSesgo === 8.2)
+
+  // ⚠️ `null`, nunca 0, cuando falta una divisa. Un 0 diría «los dos lados
+  // están igual de posicionados», que es una afirmación.
+  comprobar('si falta una divisa no se anota nada (NO cero)', anotacionCot(cot, 'GBP/USD') === null)
+  comprobar('con un par que no es un par, nada', anotacionCot(cot, 'EURUSD') === null)
+  comprobar('sin COT, nada', anotacionCot(null, 'EUR/USD') === null)
+  comprobar('con un COT sin `divisas`, nada', anotacionCot({ fecha: '2026-11-03' }, 'EUR/USD') === null)
+
+  // ⚠️⚠️ LOS DOS CAMPOS VIAJAN JUNTOS O NINGUNO. Un sesgo sin fecha se lee
+  // como de hoy, y el informe llega con días de retraso.
+  const sinFecha = anotacionCot({ divisas: { EUR: { fondosPct: 5 } } }, 'EUR/USD')
+  comprobar('un neto sin fecha de informe NO se anota', sinFecha === null)
+  const sinPct = anotacionCot({ divisas: { EUR: { f: '2026-11-03' } } }, 'EUR/USD')
+  comprobar('y una fecha sin neto tampoco', sinPct === null)
+  for (const par of ['EUR/USD', 'EUR/JPY', 'USD/CHF', 'GBP/USD', 'EURUSD']) {
+    const a = anotacionCot(cot, par)
+    comprobar(
+      `${par}: o están los dos campos o no está ninguno`,
+      a === null || (Number.isFinite(a.cotSesgo) && typeof a.cotFecha === 'string')
+    )
+  }
+
+  // ── El convenio vive en UN sitio ───────────────────────────────────────
+  //
+  // ⚠️ Si el histórico y el vigía tuvieran cada uno su copia de la resta, el
+  // día que alguien cambiara el signo o metiera el índice del dólar, lo que el
+  // vigía ANOTA y lo que el banco MIDE dirían cosas distintas sin que nada
+  // fallara — con el listón juzgando a otra regla. Es el fallo del umbral de
+  // fuerza copiado en nueve guiones.
+  const historia = readFileSync(new URL('./lib/cot-historia.mjs', import.meta.url), 'utf8')
+  comprobar('el histórico IMPORTA el convenio de `cot.js`', /sesgoDeNetos/.test(historia))
+  comprobar(
+    'y ya NO tiene su propia resta escrita',
+    !/sesgo:\s*a\.pct\s*-\s*b\.pct/.test(historia)
+  )
+  // Y que las dos vías den el MISMO número sobre los mismos netos, que es la
+  // propiedad que de verdad importa.
+  comprobar(
+    'las dos vías dan el mismo sesgo sobre los mismos netos',
+    sesgoDeNetos(12.345, -8.2) === sesgoDeParPublicado(cot, 'EUR', 'JPY').sesgo
+  )
+
+  // ── Enchufado al vigía ─────────────────────────────────────────────────
+  //
+  // ⚠️ `anotacionCot` podría estar escrita, probada y sin que la llame nadie:
+  // es exactamente lo que pasó con `soloSeguidos` el 2026-10-31, y lo encontró
+  // Néstor eligiendo tres pares y viendo los catorce.
+  comprobar('el vigía lee el COT publicado', /leerCotPublicado\(COT\)/.test(vigia))
+  comprobar('y lo pone en la línea del historial', /\.\.\.\(anotacionCot\(cot, s\.name\) \?\? \{\}\)/.test(vigia))
+
+  // ⚠️⚠️ Y QUE NO DECIDA NADA. El COT como filtro se midió DOS veces y
+  // suspendió las dos; la segunda vuelta dejó un candidato que SOBREVIVE a sus
+  // descartes, y sobrevivir no es aprobar. Si algún día alguien quiere
+  // filtrar con esto, tiene que venir a borrar esta comprobación a mano.
+  const trasAnotacion = vigia.slice(vigia.indexOf('leerCotPublicado(COT)'))
+  comprobar(
+    'el sesgo NO se usa para descartar ni ordenar señales',
+    !/(cotSesgo|anotacionCot)[^\n]*\b(filter|sort|slice)\b/.test(trasAnotacion) &&
+      !/\b(filter|sort)\([^)]*cotSesgo/.test(vigia)
+  )
+  comprobar(
+    'y no toca a quién le suena el celular',
+    !/(nuevasVisibles|avisos)[^\n]*cot(Sesgo|\b)/i.test(vigia)
+  )
+
+  // Que el aviso de «sin COT» exista: si esto saliera todos los días durante
+  // meses, el registro se quedaría vacío sin que nadie lo notara.
+  comprobar('avisa en el log si no hay COT publicado', /Sin COT publicado/.test(vigia))
+  // ⚠️ Y que un COT viejo SE ANOTE IGUAL, con su fecha dentro. No anotarlo lo
+  // perdería para siempre; anotarlo con su fecha deja que quien lo mida
+  // después descarte la línea. De los dos errores, el caro es el primero.
+  comprobar('un COT viejo se anota igual, avisando', /Se anota igual, con su fecha/.test(vigia))
+
+  // ── El lector del archivo ──────────────────────────────────────────────
+  const dir = mkdtempSync(join(tmpdir(), 'cot-'))
+  const ruta = join(dir, 'cot.json')
+  comprobar('sin archivo, el lector devuelve null', leerCotPublicado(ruta) === null)
+  escribir(ruta, '{ roto')
+  comprobar('con el archivo roto, null', leerCotPublicado(ruta) === null)
+  escribir(ruta, JSON.stringify({ fecha: '2026-11-03' }))
+  comprobar('sin `divisas`, null', leerCotPublicado(ruta) === null)
+  escribir(ruta, JSON.stringify(cot))
+  comprobar('y con un COT bueno lo devuelve', leerCotPublicado(ruta)?.divisas?.EUR?.fondosPct === 12.345)
 }
 
 console.log(fallos === 0 ? '\nTodas las comprobaciones pasaron.\n' : `\n${fallos} comprobación(es) fallaron.\n`)

@@ -544,3 +544,107 @@ export function diasDelDato(fecha, ahora = new Date()) {
 export function esIndice(divisa) {
   return divisa === 'USD'
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// EL SESGO DE UN PAR, Y POR QUÉ LA REGLA VIVE EN UN SOLO SITIO
+// ─────────────────────────────────────────────────────────────────────────
+//
+// Cada futuro del CME es esa divisa CONTRA EL DÓLAR, así que:
+//
+//   · `neto%(EUR)` ya significa «cuán comprados están de euro contra dólar»;
+//   · para EUR/USD el sesgo es, simplemente, `neto%(EUR)`;
+//   · para un cruce como EUR/JPY —comprar euro y vender yen— es
+//     `neto%(EUR) − neto%(JPY)`.
+//
+// De ahí la regla única: **sesgo = neto%(base) − neto%(cotizada), con el dólar
+// valiendo 0.** El dólar vale 0 porque su lado ya está dentro del número de la
+// otra divisa; sumarle además el índice del dólar sería contarlo dos veces —
+// y por eso el índice se enseña en pantalla pero NO entra aquí.
+//
+// ⚠️⚠️ ESTA FUNCIÓN EXISTE PARA QUE LA REGLA NO ESTÉ EN DOS SITIOS. La misma
+// cuenta la necesitan el banco de pruebas (sobre el histórico de la CFTC, en
+// `scripts/lib/cot-historia.mjs`) y el vigía (sobre el `cot.json` ya
+// publicado). Dos copias se separarían el día que alguien cambiara el convenio
+// —el signo, o meter el índice del dólar— y entonces **lo que el vigía ANOTA y
+// lo que el banco MIDE dirían cosas distintas sin que nada fallara**, con el
+// listón juzgando a otra regla. Es el fallo del umbral de fuerza copiado en
+// nueve guiones, y el de `ATR_REVERSION` en dos.
+//
+// Devuelve `null` —nunca 0— cuando falta uno de los dos. Un 0 diría «los dos
+// lados están igual de posicionados», que es una afirmación; «no lo sé» y «no
+// hay sesgo» no son lo mismo. Misma asimetría que `pearson` y `percentil`.
+export function sesgoDeNetos(pctBase, pctCotizada) {
+  if (!Number.isFinite(pctBase) || !Number.isFinite(pctCotizada)) return null
+  return pctBase - pctCotizada
+}
+
+// El sesgo de un par leído del `cot.json` YA PUBLICADO, que es lo que ve la app
+// y lo que puede leer el vigía.
+//
+// ⚠️ No hay disciplina de fecha que aplicar aquí, y esa es la diferencia con
+// `sesgoDePar` del histórico. Allí hay que mirar hacia atrás y descartar los
+// informes que ese día todavía no se habían publicado —si no, el backtest
+// miraría días de futuro todas las semanas—. Aquí el archivo solo puede
+// contener lo que la CFTC ya hizo público, así que el futuro no existe.
+//
+// Devuelve `{ sesgo, fecha }` o `null`. `fecha` es la del informe MÁS VIEJO de
+// las dos divisas, igual que en el histórico: es la que dice de cuándo es de
+// verdad la decisión.
+//
+// ⚠️ LOS DOS CAMPOS VIAJAN JUNTOS O NO VIAJA NINGUNO. Un sesgo sin su fecha se
+// lee como de hoy, y el informe del COT llega con entre 3 y 10 días de
+// retraso; con el publicador roto podría llevar meses parado. Hay comprobación
+// de que nunca sale uno sin el otro.
+export function sesgoDeParPublicado(cot, base, cotizada) {
+  const divisas = cot?.divisas
+  if (!divisas || typeof divisas !== 'object') return null
+
+  // El dólar vale 0 y no tiene fecha propia: su lado ya está dentro del número
+  // de la otra divisa. Ver la cabecera de `sesgoDeNetos`.
+  const lado = (d) => {
+    if (d === 'USD') return { pct: 0, f: null }
+    const x = divisas[d]
+    if (!x || !Number.isFinite(x.fondosPct)) return null
+    return { pct: x.fondosPct, f: typeof x.f === 'string' ? x.f : null }
+  }
+
+  const a = lado(base)
+  const b = lado(cotizada)
+  if (!a || !b) return null
+
+  const sesgo = sesgoDeNetos(a.pct, b.pct)
+  if (sesgo == null) return null
+
+  const fecha = [a.f, b.f].filter(Boolean).sort()[0] ?? null
+  if (fecha == null) return null
+
+  return { sesgo, fecha }
+}
+
+// A partir de cuántos días del informe conviene gritar en el log del vigía. El
+// COT se publica los viernes con datos del martes, así que **lo normal es
+// entre 3 y 10 días** y un número alto NO es un fallo por sí solo; por encima
+// de tres semanas lo más probable es que el publicador se haya roto y nadie se
+// haya enterado.
+export const DIAS_COT_RARO = 21
+
+// Los campos que el vigía añade a la línea del historial, o `null` si no se
+// puede calcular el sesgo de ese par.
+//
+// ⚠️⚠️ LOS DOS CAMPOS VIAJAN JUNTOS O NO VIAJA NINGUNO. Un sesgo sin su fecha
+// se lee como de hoy, y el informe llega con días de retraso: quien mida el
+// registro hacia adelante tiene que poder descartar las líneas viejas. Un
+// `cotSesgo` suelto sería un número bien calculado describiendo otra cosa de
+// la que dice describir, que es la familia de fallo que este repositorio lleva
+// meses quitando. Hay comprobación dedicada.
+//
+// ⚠️ Y NUNCA SE ESCRIBE `null`. Igual que `huboSweep` y `vara`: el campo solo
+// aparece cuando hay dato, así que las líneas ya escritas se siguen leyendo
+// igual y la ausencia significa «aquí no se pudo» en vez de «el sesgo es 0».
+export function anotacionCot(cot, par) {
+  const partes = String(par ?? '').split('/')
+  if (partes.length !== 2) return null
+  const r = sesgoDeParPublicado(cot, partes[0], partes[1])
+  if (!r || !Number.isFinite(r.sesgo) || typeof r.fecha !== 'string') return null
+  return { cotSesgo: Number(r.sesgo.toFixed(2)), cotFecha: r.fecha }
+}
