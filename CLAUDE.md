@@ -15252,3 +15252,72 @@ tabla, así que su único veredicto limpio es el de los días que nadie ha mirad
 📌 Y lo que la tabla de celdas deja claro de entrada: si la mejora resultara
 venir de las señales que el candidato COMPARTE con los fondos, lo medido sería
 el filtro que ya suspendió dos veces con otro rótulo.
+
+---
+
+# Las cuatro celdas, medidas (2026-11-09). La información está en los PEQUEÑOS
+
+Néstor: **«fusiona y lanza la medición»**. Fusionado el PR #151 (`7da7632`, con
+`deploy`, `build` y `gemelos` en verde) y lanzada `medir-cot.yml` sobre `main`
+(run `42716587566`, 14 créditos, 1 min 40 s).
+
+⚠️ **NADA SE ENCENDIÓ.** Swing sigue en −0,033/−0,040 por unidad de riesgo con
+la vara neutra. Los dos veredictos NO cambian: el listón oficial de los
+pequeños **NO PASA** y el candidato **SOBREVIVE** a los seis descartes — que no
+es aprobar.
+
+## La tabla que faltaba
+
+Candidato: ir EN CONTRA de los pequeños, |sesgo| ≥ 0 — 1.014 ops, **+0,059**
+contra −0,033 sin filtro (el 2026-11-02 eran +0,052 y −0,036: los días
+avanzaron, la conclusión no).
+
+| celda | ops | acierto | por 1R |
+|---|---:|---:|---:|
+| las dos: candidato Y fondos | 573 | 55 % ±4 | **+0,073** |
+| SOLO el candidato (los pequeños) | 441 | 53 % ±5 | **+0,041** |
+| SOLO los fondos | 412 | 42 % ±5 | **−0,181** |
+| ninguno de los dos | 637 | 47 % ±4 | **−0,082** |
+
+✓ Las celdas suman 2.063 (sin filtro: 2.063) y las dos del candidato 1.014.
+
+## Lo que contesta
+
+La duda escrita el 2026-11-06 era: si la mejora viniera de las señales que el
+candidato COMPARTE con los fondos, sería el filtro que ya suspendió dos veces
+con otro rótulo. **No es eso.** Leída por filas:
+
+- donde los pequeños dicen SÍ, las dos celdas son positivas (+0,073 y +0,041),
+  **diga lo que diga el filtro de los fondos**;
+- donde los pequeños dicen NO, las dos son negativas (−0,181 y −0,082),
+  **diga lo que diga el filtro de los fondos**.
+
+O sea que el eje que separa lo bueno de lo malo es el de los pequeños. Y de
+paso se ve por qué el filtro de los fondos suspende: sus 573 compartidas ganan
+y sus 412 exclusivas pierden fuerte — (573 × 0,073 + 412 × −0,181) / 985 =
+**−0,033**, que es justo el número con el que suspendió.
+
+## ⚠️ Lo que NO autoriza, y los márgenes que hay que mirar
+
+- **Es un DIAGNÓSTICO a posteriori.** Las celdas se miraron después de ver el
+  solape y ningún descarte las usa.
+- **«SOLO el candidato» da 53 % ±5: el margen incluye el 50 %.** Esa celda sola
+  no se distingue de una moneda. Lo que sí se separa sin solaparse es 55 % ±4
+  contra 42 % ±5.
+- El solape del informe cuenta SEÑALES (580 de 1.024) y la tabla cuenta
+  operaciones RESUELTAS (573 de 1.014). No es una contradicción: son las ~10
+  que siguen abiertas.
+- Sigue en pie todo lo del listón: es un FILTRO (van diez familias medidas y
+  diez que no aportan nada), el candidato se eligió después de ver la tabla, y
+  no dice nada del sentimiento minorista de un bróker.
+
+## Lo que queda corriendo solo
+
+El vigía anota `cotSesgo` y `cotFecha` en cada señal **desde su próxima
+corrida** (la del 2026-11-09 fue antes de fusionar, así que las primeras líneas
+anotadas son del 2026-11-10). Es lo único que puede dar un veredicto limpio, y
+son meses.
+
+📌 **Para comprobarlo:** la última línea de `historial/senales.jsonl` de la
+rama `datos` tiene que traer los dos campos. Si trae uno sin el otro, o
+ninguno habiendo `estado/cot.json` publicado, algo falla.
