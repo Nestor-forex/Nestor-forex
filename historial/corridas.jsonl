@@ -66,3 +66,4 @@
 {"en":"2026-11-05T15:21:05.651Z","cierre":"2026-11-05","total":10,"nuevas":5,"disparo":"workflow_dispatch"}
 {"en":"2026-11-06T15:20:58.392Z","cierre":"2026-11-06","total":15,"nuevas":12,"disparo":"workflow_dispatch"}
 {"en":"2026-11-09T15:20:53.361Z","cierre":"2026-11-09","total":10,"nuevas":8,"disparo":"workflow_dispatch"}
+{"en":"2026-11-10T00:18:25.818Z","cierre":"2026-11-10","total":8,"nuevas":2,"disparo":"schedule"}
