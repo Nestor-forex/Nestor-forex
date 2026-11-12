@@ -15369,3 +15369,54 @@ silencio — el arreglo convertido en el fallo.
 📌 Para probar a mano a otra hora sin red ni llave: un `--import` que sustituya
 `Date` por una clase con la hora fija, más `scripts/lib/dobles/hooks.mjs` para
 las velas. Así se comprobó: a las 00:18 y a las 20:50 → 0 archivos escritos.
+
+---
+
+# Fase 1 del Analizador: «Mi perfil de riesgo» (2026-11-12). En las dos apps
+
+Néstor aprobó un plan de seis fases (perfil → guardián de riesgo → Analizador
+con botones → prueba de Qwen → Qwen interpreta el calendario → Asistente Qwen
+a pedido → medir a Qwen). Esto es la primera, y va primero porque las demás la
+leen: el Analizador calcula el lote con este perfil y el guardián del Diario
+lee sus dos frenos.
+
+```
+src/lib/perfilRiesgo.js          las cuentas, SIN Firebase          GEMELO
+src/lib/usePerfilRiesgo.js       guardarlo en users/{uid}           GEMELO
+src/components/MiPerfil.jsx      la tarjeta, encima de la calculadora  GEMELO
+scripts/prueba-perfil.mjs        ~80 comprobaciones, sin internet   GEMELO
+firestore.rules                  + `perfilRiesgo` en la lista blanca GEMELO
+```
+
+Cuatro campos: capital, riesgo por operación (1/2/3 % con un toque, los que dio
+Néstor, o el suyo), pérdida máxima del día y pérdidas seguidas. La calculadora
+se rellena sola con el perfil; cambiar un número allí NO toca el perfil.
+
+## Las decisiones que no hay que ablandar
+
+⚠️ **UNA CASILLA VACÍA ES `null`, NUNCA 0.** `Number('')` vale 0, y un capital
+de 0 daría un lote de 0. Misma familia que `new Date(null) === 1970`.
+
+⚠️ **UN VALOR GUARDADO RARO NO SE RECORTA: SE QUEDA VACÍO.** Un riesgo del 50 %
+no se convierte en 10 (sería decidir por la persona) ni se usa (sería calcular
+un lote absurdo).
+
+⚠️ **EL CAPITAL NO SE PROPONE NUNCA.** Solo los dos frenos (3 % y 3).
+
+⚠️ **LOS LÍMITES ESTÁN EN DOS SITIOS** —`LIMITES` y `perfilRiesgoValido` en las
+reglas— y la prueba falla si se separan. Las reglas exigen los cuatro campos,
+ni uno más ni uno menos, porque la app corre en el teléfono y se puede saltar.
+
+⚠️ **EL RESUMEN VA COMO «RÓTULO: NÚMERO».** «Paras tras 1 pérdidas» es el fallo
+de concordancia que ya salió dos veces aquí.
+
+⚠️ **LA APP NO BLOQUEA NADA.** No está conectada al bróker; los frenos solo
+avisarán (fase 2).
+
+📌 **Mientras las reglas nuevas no estén publicadas, guardar dice «falta
+activar el permiso»** — código propio (`sinPermiso`), no «no se pudo guardar».
+
+📌 **Lo que solo salió mirando la captura:** el resumen entero en letra `mono`
+estiraba las palabras árabes letra por letra y partía un rótulo español en dos.
+La letra de máquina va solo en los números. (La calculadora de debajo tiene el
+mismo defecto en árabe desde antes, y no se tocó.)

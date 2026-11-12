@@ -318,7 +318,7 @@ export default function App() {
               )}
               {tab === 'historial' && <HistorialTab />}
               {tab === 'avisos' && <MisAvisos uid={authUser.uid} perfil={perfil} />}
-              {tab === 'calc' && <CalculadoraTab ratesUSD={mercado.ratesUSD} loadingTasas={mercado.loading} errorTasas={mercado.error} />}
+              {tab === 'calc' && <CalculadoraTab ratesUSD={mercado.ratesUSD} loadingTasas={mercado.loading} errorTasas={mercado.error} uid={authUser.uid} ficha={perfil} />}
               {tab === 'admin' && esAdmin && (
                 <MiembrosTab usuarios={miembros.usuarios} cargando={miembros.cargando} onAprobar={miembros.aprobar} onRetirar={miembros.retirar} onFijarVence={miembros.fijarVence} />
               )}
