@@ -117,6 +117,66 @@ export function yaCorrioHoy(estado, ahora) {
 }
 
 // ────────────────────────────────────────────────────────────────────────
+// LA VENTANA DEL DÍA (desde el 2026-11-12)
+//
+// `yaCorrioHoy` decide si un intento SOBRA. No decidía si llega a su HORA, y
+// eso rompió un día de historial sin dar un solo error:
+//
+//   · El 2026-11-09 un cron de GitHub de las 15:50 UTC llegó con ocho horas
+//     de retraso, a las 00:18 UTC del día 10. Para el reloj mundial ya era
+//     día 10, así que no había corrido «hoy» y trabajó — sobre una vela del
+//     día 10 recién empezada. Y lo apuntó como la corrida del día.
+//   · El pulso bueno del día 10, a las 15:20 UTC, vio esa marca y se saltó.
+//     El historial de ese día salió de una vela con dos horas de vida.
+//
+// Y había un segundo caso que nadie había mirado: LA VELA DIARIA NO CAMBIA
+// DE FECHA A MEDIANOCHE. Medido sobre lo publicado, aunque se pide con
+// `timezone=UTC`: a las 19:30 UTC la última vela todavía es la del día, y a
+// las 20:48 UTC ya es la del día SIGUIENTE (2026-11-02 y 2026-11-09). El
+// 2026-10-08 el vigía corrió a las 20:50 UTC y anotó la vela del día 9. O sea
+// que un intento atrasado que llegue por la noche anota la vela de MAÑANA con
+// minutos de vida, y el día de hoy no se anota nunca.
+//
+// Arreglo: los intentos automáticos solo trabajan entre las 15:00 y las 19:00
+// UTC. Ahí caen el pulso del reloj de fuera (15:20), los tres crones de
+// GitHub (15:50, 16:20, 16:50) y la revisión diaria que lo lanza si no corrió
+// (17:40). Fuera de la ventana el intento se sale sin pedir precios.
+//
+// ⚠️ LA ASIMETRÍA DE SIEMPRE, PERO AQUÍ VA AL REVÉS, Y POR UNA RAZÓN MEDIDA.
+// `yaCorrioHoy` resuelve la duda CORRIENDO porque saltarse cuesta un día. Aquí
+// correr fuera de hora cuesta MÁS que saltarse: no solo anota una lectura
+// mala, sino que la apunta como la del día y bloquea la buena. Y saltarse
+// casi nunca cuesta el día, porque dentro de la ventana hay cinco intentos
+// independientes. Lanzarlo a mano con la casilla `forzar` se salta la ventana
+// entera, que es el camino previsto para recuperar un día.
+//
+// ⚠️ `hasta` NO PUEDE PASAR DE LAS 19:00. El cambio de vela se ha visto desde
+// las 19:30 en adelante; la media hora de margen es a propósito. Hay una
+// comprobación que falla si alguien lo estira.
+export const VENTANA_VIGIA_UTC = Object.freeze({ desde: 15, hasta: 19 })
+
+export function dentroDeVentana(ahora, ventana = VENTANA_VIGIA_UTC) {
+  const h = ahora.getUTCHours()
+  return h >= ventana.desde && h < ventana.hasta
+}
+
+// Y LA SEGUNDA DEFENSA, DESPUÉS de pedir los precios: ¿la última vela es la
+// de HOY? Si no, el intento no anota nada.
+//
+// La ventana debería bastar. Esto existe por si el proveedor adelanta un día
+// el cambio de vela y deja de pasar a las 19:30: entonces la ventana dejaría
+// pasar una vela de mañana, y esto la para. Y por el caso contrario —una
+// vela de AYER a mitad de la tarde—, que significaría volver a anotar una
+// fecha que ya tiene su lectura.
+//
+// ⚠️ Una fecha que no se entiende devuelve `false` (sí trabaja): aquí no se
+// sabe nada, y saltarse por no saber sería el error caro de `yaCorrioHoy`.
+export function velaDeOtroDia(ultima, ahora) {
+  if (typeof ultima !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(ultima)) return false
+  return ultima !== ahora.toISOString().slice(0, 10)
+}
+
+// ────────────────────────────────────────────────────────────────────────
 // Y EL MISMO GUARDIÁN, PERO POR HORA (desde el 2026-10-07)
 //
 // Lo usa `publicar-barrido.mjs`, que corre DOS VECES AL DÍA y no una. Hacen

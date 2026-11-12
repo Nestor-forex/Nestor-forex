@@ -33,6 +33,9 @@ import {
   leerJsonl,
   separarSombra,
   yaCorrioHoy,
+  dentroDeVentana,
+  velaDeOtroDia,
+  VENTANA_VIGIA_UTC,
 } from './lib/vigia-nucleo.mjs'
 // El sesgo del COT, anotado en cada señal desde el 2026-11-06. NO enciende
 // nada: ver la cabecera de `anotacionCot`.
@@ -73,19 +76,54 @@ const ahora = new Date()
 // `obtenerVelas`, así que en un día normal los dos sobrantes no gastan ni un
 // crédito de Twelve Data ni tardan más de un segundo.
 //
-// Solo se aplica a los intentos automáticos: el workflow pone esta variable
-// únicamente cuando el disparo es `schedule`. Lanzarlo a mano SIEMPRE corre,
-// que es lo que uno quiere cuando le da al botón.
+// Solo se aplica a los intentos automáticos. Desde el 2026-11-01 eso incluye
+// el pulso del reloj de fuera, que llega por `workflow_dispatch` igual que el
+// botón: la variable va puesta por defecto y solo la quita la casilla
+// «forzar», que es el camino para recuperar un día saltado.
+const automatico = process.env.VIGIA_SOLO_SI_FALTA === '1'
 const estadoPrevio = leerEstado(ESTADO)
-if (process.env.VIGIA_SOLO_SI_FALTA === '1' && yaCorrioHoy(estadoPrevio, ahora)) {
+if (automatico && yaCorrioHoy(estadoPrevio, ahora)) {
   console.log('---VIGIA-INICIO---')
   console.log(`Hoy ya corrió (${estadoPrevio.actualizadoEl}). Este intento no hace nada.`)
   console.log('---VIGIA-FIN---')
   process.exit(0)
 }
 
+// ⚠️ Y la ventana, también ANTES de pedir precios: un intento fuera de hora no
+// gasta créditos, no escribe nada y, sobre todo, NO deja la marca de «hoy ya
+// corrió» que bloquearía al intento bueno. Ver `dentroDeVentana`.
+if (automatico && !dentroDeVentana(ahora)) {
+  const { desde, hasta } = VENTANA_VIGIA_UTC
+  console.log('---VIGIA-INICIO---')
+  console.log(
+    `Este intento llegó a las ${ahora.toISOString().slice(11, 16)} UTC, fuera de su ventana ` +
+      `(${desde}:00–${hasta}:00 UTC). No hace nada: la vela del día estaría recién empezada ` +
+      `o sería ya la de mañana. Para correr igual, lanzarlo a mano con la casilla «forzar».`
+  )
+  console.log('---VIGIA-FIN---')
+  process.exit(0)
+}
+
 const { fechas, rates, rangosPar } = await obtenerVelas(leerLlave())
 const data = computarBarrido(fechas, rates, rangosPar)
+
+// ⚠️ La segunda defensa, ANTES DE ESCRIBIR NADA: la última vela tiene que ser
+// la de hoy. Ver `velaDeOtroDia` para por qué hace falta aunque haya ventana.
+// Aquí ya se gastaron los créditos; lo que se protege es el historial.
+if (velaDeOtroDia(data.ultima, ahora)) {
+  const aviso =
+    `La última vela es del ${data.ultima} y hoy es ${ahora.toISOString().slice(0, 10)} ` +
+    `(${ahora.toISOString().slice(11, 16)} UTC).`
+  if (automatico) {
+    console.log('---VIGIA-INICIO---')
+    console.log(`⚠️ ${aviso} Este intento no anota nada para no apuntar la vela de otro día como la de hoy.`)
+    console.log('---VIGIA-FIN---')
+    process.exit(0)
+  }
+  // Lanzado a mano con «forzar»: corre, que es para lo que existe la casilla,
+  // pero lo dice bien alto en el log.
+  console.log(`⚠️ ${aviso} Se sigue porque se forzó a mano.`)
+}
 // ⚠️ `incluirVentas` va encendido AQUÍ y solo aquí.
 //
 // Las ventas están pausadas: la app no las propone y nadie recibe aviso de
