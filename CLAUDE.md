@@ -15321,3 +15321,51 @@ son meses.
 📌 **Para comprobarlo:** la última línea de `historial/senales.jsonl` de la
 rama `datos` tiene que traer los dos campos. Si trae uno sin el otro, o
 ninguno habiendo `estado/cot.json` publicado, algo falla.
+
+---
+
+# El vigía de Swing ya no trabaja fuera de hora (2026-11-12)
+
+Néstor lo aprobó con un «dale». PR #153, solo Swing. **No cambia ninguna señal.**
+
+## El fallo, y el dato que lo explica
+
+`yaCorrioHoy` decidía si un intento **sobraba**, no si llegaba **a su hora**.
+El 2026-11-09 un cron de las 15:50 UTC llegó a las **00:18 UTC del día 10**:
+para el reloj mundial ya era día 10, así que trabajó sobre una vela recién
+empezada, la apuntó como «la corrida de hoy» y el pulso bueno de las 15:20
+se saltó. El historial de ese día salió de una vela con dos horas de vida.
+
+⚠️⚠️ **LA VELA DIARIA DE TWELVE DATA NO CAMBIA DE FECHA A MEDIANOCHE**, aunque
+`velas.mjs` la pida con `timezone=UTC`. Medido sobre los `barrido.json`
+publicados: a las 19:30 UTC la última vela todavía es la del día, y a las
+20:48 UTC ya es la del día SIGUIENTE (2026-11-02 y 2026-11-09). El 2026-10-08
+el vigía corrió a las 20:50 y anotó la vela del día 9.
+
+📌 **Esta memoria decía en varios sitios que «las velas de Twelve Data cierran
+a las 22:00 UTC». Es falso**, y no se había medido nunca. Lo que sí está medido
+es la ventana 19:30-20:48; la hora exacta dentro de ella no.
+
+## El arreglo
+
+- **La ventana, antes de pedir precios:** un intento automático solo trabaja
+  entre las **15:00 y las 19:00 UTC** (`VENTANA_VIGIA_UTC`). Fuera, se sale sin
+  gastar créditos, sin escribir y **sin dejar la marca de «hoy ya corrió»**.
+- **La fecha de la vela, antes del primer `escribir(`:** si la última vela no
+  es la de hoy, un automático no anota nada (`velaDeOtroDia`).
+- **«forzar» se salta las dos**: es el camino para recuperar un día a mano.
+
+⚠️ **La asimetría va al revés que en `yaCorrioHoy`, y a propósito.** Allí
+saltarse cuesta un día; aquí correr fuera de hora cuesta más —anota mal **y**
+bloquea al bueno— y saltarse casi nunca pierde el día, porque dentro de la
+ventana hay cinco intentos (reloj 15:20, crones 15:50/16:20/16:50, revisión
+diaria 17:40).
+
+⚠️ **`hasta` no puede pasar de las 19:00**, y la prueba exige además que los
+tres crones de `vigia.yml` y el pulso de `worker.js` caigan dentro: si alguien
+mueve un horario fuera de la ventana, ese intento dejaría de trabajar en
+silencio — el arreglo convertido en el fallo.
+
+📌 Para probar a mano a otra hora sin red ni llave: un `--import` que sustituya
+`Date` por una clase con la hora fija, más `scripts/lib/dobles/hooks.mjs` para
+las velas. Así se comprobó: a las 00:18 y a las 20:50 → 0 archivos escritos.
