@@ -314,6 +314,8 @@ export default function App() {
                   prellenar={prellenarDiario}
                   onPrellenado={() => setPrellenarDiario(null)}
                   onVerSenales={() => setTab('barrido')}
+                  perfilRiesgo={perfil?.perfilRiesgo}
+                  onIrAlPerfil={() => setTab('calc')}
                 />
               )}
               {tab === 'historial' && <HistorialTab />}

@@ -15420,3 +15420,44 @@ activar el permiso»** — código propio (`sinPermiso`), no «no se pudo guarda
 estiraba las palabras árabes letra por letra y partía un rótulo español en dos.
 La letra de máquina va solo en los números. (La calculadora de debajo tiene el
 mismo defecto en árabe desde antes, y no se tocó.)
+
+---
+
+# Fase 2 del Analizador: el guardián de riesgo del Diario (2026-11-12). En las dos apps
+
+```
+src/lib/guardianRiesgo.js          la cuenta, sin Firebase ni React   GEMELO
+src/components/GuardianRiesgo.jsx  «Tu freno de hoy», arriba del Diario GEMELO
+scripts/prueba-guardian.mjs        ~45 comprobaciones, sin internet    GEMELO
+src/lib/useTrades.js               `cerrar` guarda cerradaEl y cerradaEnMs  PRIMO
+```
+
+Lee los dos frenos de «Mi perfil de riesgo» y enseña cuánto lleva perdido hoy
+la persona («$105.00 / $150.00») y cuántas pérdidas seguidas («2 / 3»). Ámbar a
+2/3 del freno o a una pérdida del límite; rojo al tocarlo, con la frase «tu
+propia regla dice que no abras más operaciones hasta mañana».
+
+## Las decisiones que no hay que ablandar
+
+⚠️ **SOLO AVISA, NUNCA BLOQUEA.** La app no está conectada al bróker; fingir
+que protege sería peor que no tener guardián. El pie lo dice, y hay
+comprobación de que la tarjeta no desactiva nada.
+
+⚠️ **EL DÍA ES EL DEL TELÉFONO, NO `toISOString()`.** El Diario guardaba
+`fecha` en UTC, así que en Colombia desde las 7 de la tarde ya era «mañana» y
+una pérdida de las 8 de la noche no contaba hoy. Ahora `diaLocal()`. La prueba
+lo repite en un proceso con `TZ=America/Bogota`, porque en una máquina en UTC
+no podría morder (el agujero de la prueba de la hora del 2026-10-24).
+
+⚠️ **CUENTA EL NETO DEL DÍA** (−100 y +60 son 40 perdidos), **LA RACHA ES SOLO
+DE HOY** (si no, quien paró ayer tendría el aviso encendido para siempre) y **UN
+EMPATE NI SUMA NI CORTA** la racha.
+
+⚠️ **LO VIEJO ES APROXIMADO.** `cerradaEl`/`cerradaEnMs` se guardan desde hoy.
+Una operación anterior abierta un día y cerrada otro cuenta en el día de
+apertura, y las importadas del mismo día no tienen orden fiable para la racha.
+
+⚠️ **CUENTA SOLO ESTE DIARIO.** Swing e Intradía guardan en colecciones
+distintas; quien opere las dos con la misma cuenta tiene el freno partido en
+dos. Leer las dos colecciones es posible (las reglas lo dejan) y quedó sin
+hacer a propósito: no se pidió.
