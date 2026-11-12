@@ -22,7 +22,11 @@ import {
   separarSombra,
   yaCorrioEstaHora,
   yaCorrioHoy,
+  dentroDeVentana,
+  velaDeOtroDia,
+  VENTANA_VIGIA_UTC,
 } from './lib/vigia-nucleo.mjs'
+import { PROGRAMAS, minutosDe } from '../../reloj-externo/worker.js'
 import { anotacionCot, sesgoDeNetos, sesgoDeParPublicado } from '../src/lib/cot.js'
 
 const dir = mkdtempSync(join(tmpdir(), 'vigia-'))
@@ -556,6 +560,79 @@ console.log('\n15. ⚠️ El sesgo del COT se ANOTA, con su fecha, y no enciende
   comprobar('sin `divisas`, null', leerCotPublicado(ruta) === null)
   escribir(ruta, JSON.stringify(cot))
   comprobar('y con un COT bueno lo devuelve', leerCotPublicado(ruta)?.divisas?.EUR?.fondosPct === 12.345)
+}
+
+console.log('\n16. ⚠️ Un intento que llega FUERA DE HORA no trabaja ni bloquea al bueno')
+{
+  // Los dos casos reales, con su hora exacta. Si alguno vuelve a trabajar, el
+  // historial vuelve a anotar una vela que no es la del día.
+  comprobar(
+    'el cron de las 15:50 que llegó a las 00:18 UTC del día siguiente → NO trabaja (2026-11-10)',
+    dentroDeVentana(new Date('2026-11-10T00:18:01Z')) === false
+  )
+  comprobar(
+    'el que llegó a las 20:50 UTC, con la vela de mañana ya abierta → NO trabaja (2026-10-08)',
+    dentroDeVentana(new Date('2026-10-08T20:50:00Z')) === false
+  )
+  comprobar('el pulso del reloj de las 15:20 UTC → trabaja', dentroDeVentana(new Date('2026-11-12T15:20:21Z')) === true)
+  comprobar('el último cron, 16:50 UTC → trabaja', dentroDeVentana(new Date('2026-11-12T16:50:00Z')) === true)
+  comprobar('la revisión diaria de las 17:40 UTC → trabaja', dentroDeVentana(new Date('2026-11-12T17:40:00Z')) === true)
+  comprobar('los bordes: 18:59 dentro', dentroDeVentana(new Date('2026-11-12T18:59:59Z')) === true)
+  comprobar('los bordes: 19:00 fuera', dentroDeVentana(new Date('2026-11-12T19:00:00Z')) === false)
+  comprobar('los bordes: 14:59 fuera', dentroDeVentana(new Date('2026-11-12T14:59:59Z')) === false)
+
+  // ⚠️ El límite de arriba no se puede estirar: la vela del día siguiente se
+  // ha visto aparecer desde las 19:30 UTC.
+  comprobar('la ventana cierra a las 19:00 UTC o antes', VENTANA_VIGIA_UTC.hasta <= 19)
+
+  // ⚠️ Y que la ventana y los horarios no se separen. Si alguien mueve un cron
+  // o el pulso del reloj fuera de la ventana, ese intento dejaría de trabajar
+  // en silencio — el arreglo convertido en el fallo.
+  const wf = readFileSync(new URL('../../.github/workflows/vigia.yml', import.meta.url), 'utf8')
+  const horasCron = [...wf.matchAll(/- cron:\s*'(\d+)\s+(\d+)\s/g)].map((m) => Number(m[2]))
+  comprobar('se leyeron los tres crones del workflow', horasCron.length === 3)
+  comprobar(
+    `los tres crones (${horasCron.join(', ')} UTC) caen dentro de la ventana`,
+    horasCron.length > 0 && horasCron.every((h) => h >= VENTANA_VIGIA_UTC.desde && h < VENTANA_VIGIA_UTC.hasta)
+  )
+  const prog = PROGRAMAS.find((p) => p.repo === 'Nestor-forex' && p.wf === 'vigia.yml')
+  comprobar('el reloj de fuera tiene su entrada para el vigía de Swing', Boolean(prog && Array.isArray(prog.pulsar)))
+  const horasPulso = (prog?.pulsar || []).map((hhmm) => Number(hhmm.slice(0, 2)))
+  comprobar(
+    `y sus pulsos (${(prog?.pulsar || []).join(', ')} → minuto ${minutosDe(prog).join(', ')}) caen dentro de la ventana`,
+    horasPulso.length > 0 && horasPulso.every((h) => h >= VENTANA_VIGIA_UTC.desde && h < VENTANA_VIGIA_UTC.hasta)
+  )
+
+  // ── La segunda defensa: la fecha de la vela ────────────────────────────
+  comprobar('la vela de hoy → sí anota', velaDeOtroDia('2026-11-12', new Date('2026-11-12T15:20:00Z')) === false)
+  comprobar(
+    'la vela de MAÑANA (el caso del 2026-10-08) → no anota',
+    velaDeOtroDia('2026-10-09', new Date('2026-10-08T20:50:00Z')) === true
+  )
+  comprobar('una vela de AYER → no anota', velaDeOtroDia('2026-11-11', new Date('2026-11-12T15:20:00Z')) === true)
+  // Ante la duda, trabaja: saltarse por no saber es el error caro.
+  comprobar('sin fecha → trabaja', velaDeOtroDia(undefined, new Date('2026-11-12T15:20:00Z')) === false)
+  comprobar('fecha ilegible → trabaja', velaDeOtroDia('el martes', new Date('2026-11-12T15:20:00Z')) === false)
+
+  // ── El ORDEN en el guion, leído como texto ─────────────────────────────
+  // La ventana tiene que mirarse ANTES de pedir precios (si no, el ahorro y la
+  // protección de la marca de «hoy» se pierden) y la fecha de la vela ANTES
+  // del primer `escribir(` (si no, el historial ya estaría tocado).
+  const vigia = readFileSync(new URL('./vigia.mjs', import.meta.url), 'utf8')
+  const iVentana = vigia.indexOf('!dentroDeVentana(ahora)')
+  const iVelas = vigia.indexOf('await obtenerVelas(')
+  const iVela = vigia.indexOf('velaDeOtroDia(data.ultima, ahora)')
+  const iEscribir = vigia.indexOf('escribir(')
+  comprobar('el guion mira la ventana', iVentana > 0)
+  comprobar('…ANTES de pedir precios', iVentana > 0 && iVelas > 0 && iVentana < iVelas)
+  comprobar('el guion mira la fecha de la vela', iVela > 0)
+  comprobar('…ANTES de escribir nada', iVela > 0 && iEscribir > 0 && iVela < iEscribir)
+  // Y que solo se aplique a los intentos automáticos: «forzar» tiene que
+  // poder recuperar un día a cualquier hora.
+  comprobar(
+    'la ventana solo se aplica a los intentos automáticos',
+    /if \(automatico && !dentroDeVentana\(ahora\)\)/.test(vigia)
+  )
 }
 
 console.log(fallos === 0 ? '\nTodas las comprobaciones pasaron.\n' : `\n${fallos} comprobación(es) fallaron.\n`)
