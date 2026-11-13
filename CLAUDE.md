@@ -15852,3 +15852,41 @@ condiciones **todavía no se han leído** una por una.
 ⚠️ **Que el canal RSS esté abierto no autoriza nada.** Investing.com respondió
 200 a la sonda y sus condiciones prohíben justo eso. Es lo escrito en
 `robots.mjs`: robots.txt y un 200 solo DESCARTAN, no aprueban.
+
+## Las condiciones de los bancos centrales, y las noticias YA en las dos apps (2026-11-13)
+
+Néstor: «dale con el 1 luego 2 y 3». Leídas las condiciones de los seis bancos
+centrales que pasaron la sonda (texto de cada página legal, no de memoria):
+
+| banco | ¿en una app de pago? | lo que dice |
+|---|---|---|
+| **Reserva Federal** | ✅ | dominio público; «citar a la Junta como fuente». Sin sellos ni logos |
+| **BCE** | ✅ | uso libre citando al BCE y sin alterarlo; los documentos firmados (working papers) no se reproducen enteros — un titular con enlace no es reproducirlos |
+| **Banco de la Reserva de Nueva Zelanda** | ✅ | reproducir citándolo como fuente y dueño. **Acceso automático: máx. 120 peticiones/hora y User-Agent `RBNZ-Automated-Agent/<org>/<propósito>`** — el publicador lo usa |
+| Banco de Inglaterra | ❌ sin permiso | solo uso personal o interno no comercial; formulario de permiso |
+| Banco de Japón | ❌ sin permiso | la copia comercial exige permiso previo (`post.prd8@boj.or.jp`) |
+| Banco Nacional Suizo | ❌ | solo fines no comerciales |
+
+```
+app/scripts/lib/noticias.mjs      + FUENTES_PUBLICABLES, entradaPublicable, prepararNoticias
+app/scripts/publicar-noticias.mjs escribe estado/noticias.json (rama datos de Swing)
+.github/workflows/noticias.yml    cada 4 h, todos los días; el reloj de fuera NO lo pulsa
+app/src/lib/useNoticias.js        GEMELO — las DOS apps leen el archivo de Swing
+app/src/components/Noticias.jsx   GEMELO — debajo del calendario, plegada
+```
+
+⚠️ **Solo Fed, BCE, Nueva Zelanda e ING.** Hay una comprobación que falla si
+aparece Investing, investingLive, BoE, BoJ, SNB o FXStreet en la lista.
+
+⚠️ **Titular, fecha, enlace y fuente, TAL CUAL**, en su idioma original (el BCE
+y Nueva Zelanda piden no alterar). Nunca el texto de la noticia. El enlace
+tiene que ir al mismo sitio que el canal. Lo que ING marque «THINK Outside»
+queda fuera — su licencia solo cubre lo de ING Bank N.V. ⚠️ **No se ha visto
+todavía cómo marca ING lo de terceros en su canal**: el publicador imprime las
+categorías en el log para revisarlo en la primera corrida.
+
+⚠️ **El aviso de que una noticia no es una señal va ANTES de los titulares**, y
+la atribución que pide cada fuente va al pie, sin logos.
+
+📌 **Las dos apps leen el archivo de Swing** (como el puente de MT5): dos
+publicadores serían el doble de peticiones a sitios que piden moderación.

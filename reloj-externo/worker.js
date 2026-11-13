@@ -441,6 +441,20 @@ export const PROGRAMAS = [
   },
   {
     repo: 'Nestor-forex',
+    wf: 'noticias.yml',
+    nombre: 'Swing · noticias',
+    programado: ['00:40', '04:40', '08:40', '12:40', '16:40', '20:40'],
+    dias: TODOS,
+    mide: 'cobertura',
+    cadaHoras: 4,
+    pulsar: null,
+    noPulsaPorque:
+      'Titulares de contexto con su propia fecha dentro: un retraso de horas no ' +
+      'cambia ninguna decisión, y no gasta créditos. Añadirlo al reloj obligaría ' +
+      'a volver a pegar el Worker en Cloudflare por algo que no lo necesita.',
+  },
+  {
+    repo: 'Nestor-forex',
     wf: 'puntualidad.yml',
     nombre: 'Swing · puntualidad',
     programado: ['04:35'],

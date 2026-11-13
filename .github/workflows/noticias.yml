@@ -1,0 +1,68 @@
+name: Noticias
+
+# Publica `estado/noticias.json` en la rama `datos`: titulares, fecha, enlace y
+# fuente de los canales cuyas condiciones de uso lo permiten (Fed, BCE, Banco de
+# la Reserva de Nueva Zelanda e ING THINK). Ver la cabecera de
+# app/scripts/publicar-noticias.mjs y la lista `FUENTES_PUBLICABLES` en
+# app/scripts/lib/noticias.mjs, con el motivo de cada fuente que NO está.
+#
+# No gasta créditos de Twelve Data ni usa ninguna llave.
+#
+# Cada 4 horas, todos los días (los bancos centrales también publican en fin de
+# semana a veces, y ING casi todos los días). El reloj de fuera NO lo pulsa: el
+# archivo lleva su propia hora y un retraso de horas en un titular de contexto
+# no cambia ninguna decisión (está en reloj-externo/worker.js con el motivo).
+
+on:
+  schedule:
+    - cron: '40 */4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: noticias
+  cancel-in-progress: false
+
+jobs:
+  noticias:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - name: Traer los datos
+        uses: actions/checkout@v4
+        with:
+          ref: datos
+          path: datos
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Bajar y preparar
+        working-directory: app
+        env:
+          VIGIA_DATOS: ${{ github.workspace }}/datos
+        run: node scripts/publicar-noticias.mjs
+
+      - name: Guardar
+        working-directory: datos
+        run: |
+          git config user.name 'Noticias Nestor Forex Swing'
+          git config user.email 'noreply@anthropic.com'
+          git add estado/noticias.json
+          if git diff --cached --quiet; then
+            echo 'Las noticias no cambiaron desde la última vez.'
+            exit 0
+          fi
+          git commit -m "Noticias $(date -u +'%Y-%m-%d %H:%M UTC')"
+          for i in 1 2 3; do
+            git pull --rebase origin datos && git push origin HEAD:datos && exit 0
+            sleep $((i * 5))
+          done
+          echo 'No se pudo guardar tras 3 intentos.'
+          exit 1
