@@ -15830,3 +15830,25 @@ pero **las ventas siguen en negativo y la dirección cambia de una mitad a otra*
 — la firma de la moneda al aire. La regla de `reglas.js` (reactivar solo si el
 banco da positivo en las ventas) **no se cumple: siguen en pausa**, y ahora se
 ven en pantalla.
+
+## Las condiciones de uso de los tres medios, leídas (2026-11-13)
+
+Néstor: «lee sus condiciones para que los usemos en las apps». Leídas enteras
+(Investing.com desde su copia en `cdn.investing.com/about-us/terms_and_conditions.html`,
+versión de agosto de 2026; las otras dos desde sus páginas). **No es consejo
+legal**, pero lo que dicen no deja dudas:
+
+| medio | ¿se puede usar en una app de pago? | lo que dicen |
+|---|---|---|
+| **Investing.com** | ❌ **NO** | §10: uso **solo personal**, prohibido «cualquier propósito comercial»; prohibido «cualquier sistema automático para extraer datos o contenido… para cualquier propósito» (nombra robots y programas); prohibido redistribuir o mostrar. §14: la información es «solo para tu uso interno». Permiso por escrito: `tools@investing.com` |
+| **investingLive (ForexLive)** | ❌ **NO sin permiso escrito** | el contenido «no debe copiarse, transmitirse ni publicarse en ninguna forma» ni usarse de forma comercial o no personal sin consentimiento previo por escrito. Contacto: `communications@investinglive.com` |
+| **ING THINK** | ✅ **SÍ, con condiciones** | en el contenido donde **ING Bank N.V. figura como dueño**, ING da licencia para usarlo, distribuirlo, reproducirlo, modificarlo y mostrarlo **citando a ING Bank N.V. como dueño del copyright**. El de otros autores («THINK Outside») queda fuera |
+
+⚠️ **Consecuencia:** de los tres, solo ING se puede usar, y es el que menos
+habla de nuestras divisas (1 de 10 titulares en la sonda). Las fuentes más
+seguras siguen siendo las notas de prensa de los **bancos centrales**, cuyas
+condiciones **todavía no se han leído** una por una.
+
+⚠️ **Que el canal RSS esté abierto no autoriza nada.** Investing.com respondió
+200 a la sonda y sus condiciones prohíben justo eso. Es lo escrito en
+`robots.mjs`: robots.txt y un 200 solo DESCARTAN, no aprueban.
