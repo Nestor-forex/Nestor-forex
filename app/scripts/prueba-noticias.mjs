@@ -17,6 +17,11 @@ import {
   veredictoGeneral,
   HORAS_FRESCA,
   MIN_ENTRADAS,
+  FUENTES_PUBLICABLES,
+  entradaPublicable,
+  prepararNoticias,
+  DIAS_NOTICIA,
+  MAX_POR_FUENTE,
 } from './lib/noticias.mjs'
 
 let fallos = 0
@@ -125,6 +130,56 @@ console.log('\n7 · Cableado de la sonda')
   ok(/veredictoGeneral\(/.test(s) && /veredictoFuente\(/.test(s), 'el veredicto lo calcula la librería, no el guion')
   ok(!/TWELVEDATA_KEY|leerLlave/.test(s), 'no usa ninguna llave')
   ok(/NestorForexSwing\/1\.0/.test(s), 'se presenta con un User-Agent honesto')
+}
+
+
+console.log('\n8 · ⚠️ Solo se publican las fuentes cuyas condiciones lo permiten')
+{
+  const ids = FUENTES_PUBLICABLES.map((f) => f.id)
+  ok(JSON.stringify(ids) === JSON.stringify(['fed', 'bce', 'rbnz', 'ing']), `las cuatro leídas y permitidas (${ids})`)
+  const hosts = FUENTES_PUBLICABLES.map((f) => new URL(f.url).hostname).join(' ')
+  ok(!/investing\.com|investinglive|forexlive|bankofengland|boj\.or\.jp|snb\.ch|fxstreet/.test(hosts), '⚠️ ninguna de las que piden permiso (Investing, investingLive, BoE, BoJ, SNB, FXStreet)')
+  ok(FUENTES_PUBLICABLES.every((f) => f.derechos && /^https:\/\//.test(f.condiciones)), 'cada una lleva su atribución y el enlace a sus condiciones')
+  const rbnz = FUENTES_PUBLICABLES.find((f) => f.id === 'rbnz')
+  ok(/^RBNZ-Automated-Agent\/[^/]+\/[^/]+$/.test(rbnz?.agente ?? ''), 'el Banco de Nueva Zelanda con el User-Agent que exige su política')
+  ok(FUENTES_PUBLICABLES.find((f) => f.id === 'ing')?.derechos === '© ING Bank N.V.', 'ING citado como dueño, como pide su licencia')
+  const pub = readFileSync(new URL('./publicar-noticias.mjs', import.meta.url), 'utf8')
+  ok(/fuente\.agente \?\? UA/.test(pub), 'el publicador usa el User-Agent propio de cada fuente')
+  ok(/process\.exit\(1\)/.test(pub) && /!archivo\.noticias\.length/.test(pub), 'sin ninguna noticia no escribe nada')
+}
+
+console.log('\n9 · Qué entradas se publican')
+{
+  const fed = FUENTES_PUBLICABLES.find((f) => f.id === 'fed')
+  const ing = FUENTES_PUBLICABLES.find((f) => f.id === 'ing')
+  const e = (o) => ({ titulo: 'T', enlace: 'https://www.federalreserve.gov/x.htm', fecha: AHORA - 3_600_000, categorias: [], autor: '', ...o })
+  ok(entradaPublicable(fed, e({}), AHORA), 'una de la Fed, de ayer, en su propio sitio')
+  ok(!entradaPublicable(fed, e({ fecha: null }), AHORA), 'sin fecha no')
+  ok(!entradaPublicable(fed, e({ enlace: 'https://otro.com/x' }), AHORA), '⚠️ con el enlace a otro sitio no (contenido de un tercero con la atribución de otro)')
+  ok(!entradaPublicable(fed, e({ fecha: AHORA - (DIAS_NOTICIA + 1) * 86_400_000 }), AHORA), `más vieja de ${DIAS_NOTICIA} días no`)
+  ok(!entradaPublicable(fed, e({ titulo: '' }), AHORA), 'sin titular no')
+  const ei = (o) => e({ enlace: 'https://think.ing.com/articles/x/', ...o })
+  ok(entradaPublicable(ing, ei({}), AHORA), 'un artículo de ING sí')
+  ok(!entradaPublicable(ing, ei({ categorias: ['THINK Outside'] }), AHORA), '⚠️ lo marcado «THINK Outside» no: su licencia no lo cubre')
+  ok(!entradaPublicable(ing, ei({ enlace: 'https://think.ing.com/think-outside/x/' }), AHORA), 'ni lo que lo lleva en la dirección')
+
+  const muchas = Array.from({ length: 10 }, (_, i) => e({ titulo: `F${i}`, enlace: `https://www.federalreserve.gov/${i}.htm`, fecha: AHORA - (i + 1) * 3_600_000 }))
+  const archivo = prepararNoticias([{ fuente: fed, entradas: [...muchas, muchas[0]] }, { fuente: ing, entradas: [] }], new Date(AHORA))
+  ok(archivo.noticias.length === MAX_POR_FUENTE, `como mucho ${MAX_POR_FUENTE} por fuente, y sin repetidas (${archivo.noticias.length})`)
+  ok(archivo.noticias[0].t === 'F0' && archivo.noticias.every((n, i, a) => i === 0 || a[i - 1].d >= n.d), 'de la más reciente a la más vieja')
+  ok(archivo.noticias.every((n) => n.div.join() === 'USD'), 'la de un banco central lleva su divisa')
+  ok(archivo.fuentes.find((f) => f.id === 'ing')?.n === 0, 'una fuente que falló sale con 0, no desaparece')
+  ok(Object.keys(archivo.noticias[0]).sort().join() === 'd,div,f,t,u', 'solo titular, fecha, enlace, fuente y divisa: nunca el texto de la noticia')
+}
+
+console.log('\n10 · La tarjeta')
+{
+  const c = readFileSync(new URL('../src/components/Noticias.jsx', import.meta.url), 'utf8')
+  ok(c.indexOf("t('noticias.aviso')") > -1 && c.indexOf("t('noticias.aviso')") < c.indexOf('datos.noticias.map'), '⚠️ el aviso de que no es una señal va ANTES de los titulares')
+  ok(/<bdi>\{n\.t\}<\/bdi>/.test(c), 'el titular tal cual, aislado para el árabe')
+  ok(/rel="noopener noreferrer"/.test(c), 'los enlaces abren aparte sin dar acceso a la app')
+  ok(/f\.derechos/.test(c), 'y pinta la atribución de cada fuente')
+  ok(!/var\(--green\)|var\(--red\)/.test(c), 'sin verde ni rojo: un titular no es bueno ni malo')
 }
 
 console.log(fallos ? `\n✗ ${fallos} comprobación(es) fallaron` : '\n✓ todo bien')

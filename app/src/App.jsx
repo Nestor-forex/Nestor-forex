@@ -15,6 +15,7 @@ import Cot from './components/Cot'
 import Oro from './components/Oro'
 import Estacionalidad from './components/Estacionalidad'
 import Calendario from './components/Calendario'
+import Noticias from './components/Noticias'
 import HistorialTab from './components/HistorialTab'
 import TableroCompleto from './components/TableroCompleto'
 import SetupDetalle from './components/SetupDetalle'
@@ -260,6 +261,10 @@ export default function App() {
                       que cuesta la operación —no cambian de aquí a mañana— y
                       ésta dice a qué hora conviene no estar dentro. */}
                   <Calendario cal={calendario} />
+                  {/* Justo debajo del calendario: aquél dice qué se va a
+                      publicar; éste, qué publicaron ya los bancos centrales.
+                      Titulares tal cual, con su fuente, y nunca una dirección. */}
+                  <Noticias />
                   {/* Debajo de los avisos y no arriba del barrido: el barrido
                       es lo que se viene a mirar, y esto es una herramienta de
                       apoyo para el momento de entrar. */}

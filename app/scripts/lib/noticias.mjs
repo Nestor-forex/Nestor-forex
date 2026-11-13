@@ -101,7 +101,11 @@ export function leerCanal(xml) {
     const titulo = etiqueta(b, ['title'])
     const enlace = enlaceDe(b)
     const textoFecha = etiqueta(b, ['pubDate', 'published', 'updated', 'dc:date'])
-    return { titulo, enlace, fecha: leerFecha(textoFecha), textoFecha }
+    // Categorías y autor: solo los lee el publicador, para dejar fuera lo que
+    // una fuente dice que NO es suyo (ver `entradaPublicable`).
+    const categorias = [...b.matchAll(/<category\b[^>]*>([\s\S]*?)<\/category>/gi)].map((m) => limpiarTexto(m[1])).filter(Boolean)
+    const autor = etiqueta(b, ['dc:creator', 'author'])
+    return { titulo, enlace, fecha: leerFecha(textoFecha), textoFecha, categorias, autor }
   })
   return { formato, entradas }
 }
@@ -177,4 +181,127 @@ export function veredictoGeneral(resultados = []) {
   if (!leidas.length) return { estado: 'no-se-pudo', sirven: [] }
   if (!sirven.length) return { estado: 'ninguna-sirve', sirven: [] }
   return { estado: 'hay-fuentes', sirven: sirven.map((r) => r.id) }
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// LO QUE SE PUBLICA EN LA APP (2026-11-13)
+// ═════════════════════════════════════════════════════════════════════════
+// Néstor pidió usar las fuentes cuyas condiciones lo permiten. Leídas el
+// 2026-11-13 (el detalle, en CLAUDE.md):
+//
+//   · Reserva Federal — dominio público; pide citar a la Junta como fuente.
+//   · Banco Central Europeo — uso libre citando al BCE y sin alterarlo.
+//   · Banco de la Reserva de Nueva Zelanda — se puede reproducir citándolo como
+//     fuente y dueño; acceso automático permitido con su User-Agent y un máximo
+//     de 120 peticiones por hora.
+//   · ING THINK — licencia para lo que es de ING Bank N.V., citándolo como dueño.
+//     Lo de otros autores («THINK Outside») NO.
+//
+// ⚠️⚠️ LO QUE NO ESTÁ AQUÍ, A PROPÓSITO, Y NO SE AÑADE SIN PERMISO ESCRITO:
+// Investing.com (solo uso personal, prohíbe programas automáticos),
+// investingLive (pide permiso escrito), Banco de Inglaterra (uso comercial con
+// permiso), Banco de Japón (copia comercial con permiso) y Banco Nacional Suizo
+// (solo uso no comercial). Que su canal responda no autoriza nada. Hay una
+// comprobación que falla si alguno aparece en esta lista.
+//
+// ⚠️ SE PUBLICA SOLO TITULAR, FECHA, ENLACE Y FUENTE, tal cual: nunca el texto
+// de la noticia, y nunca un titular reescrito. Ninguna noticia dice hacia dónde
+// va el precio, y la app no se lo añade.
+export const FUENTES_PUBLICABLES = Object.freeze([
+  {
+    id: 'fed',
+    nombre: 'Federal Reserve',
+    divisa: 'USD',
+    url: 'https://www.federalreserve.gov/feeds/press_all.xml',
+    derechos: 'Source: Federal Reserve Board (public domain)',
+    condiciones: 'https://www.federalreserve.gov/disclaimer.htm',
+  },
+  {
+    id: 'bce',
+    nombre: 'European Central Bank',
+    divisa: 'EUR',
+    url: 'https://www.ecb.europa.eu/rss/press.html',
+    derechos: 'Source: © European Central Bank',
+    condiciones: 'https://www.ecb.europa.eu/home/disclaimer/html/index.en.html',
+  },
+  {
+    id: 'rbnz',
+    nombre: 'Reserve Bank of New Zealand',
+    divisa: 'NZD',
+    url: 'https://www.rbnz.govt.nz/feeds/news',
+    derechos: 'Source: © Reserve Bank of New Zealand',
+    condiciones: 'https://www.rbnz.govt.nz/copyright',
+    // Su política lo exige con este formato exacto: «RBNZ-Automated-Agent/
+    // <organización>/<propósito>».
+    agente: 'RBNZ-Automated-Agent/NestorForex/Noticias',
+  },
+  {
+    id: 'ing',
+    nombre: 'ING THINK',
+    divisa: null,
+    url: 'https://think.ing.com/rss/',
+    derechos: '© ING Bank N.V.',
+    condiciones: 'https://think.ing.com/about/terms-of-use/',
+  },
+])
+
+export const DIAS_NOTICIA = 7
+export const MAX_POR_FUENTE = 6
+
+// ¿Se puede publicar esta entrada de esta fuente?
+//
+// ⚠️ El enlace tiene que ir al MISMO sitio que el canal. Un canal que enlaza a
+// otra web estaría enseñando contenido de un tercero con la atribución de otro.
+// ⚠️ ING: lo que su canal marca como de otros autores («THINK Outside») queda
+// fuera: su licencia solo cubre lo que es de ING Bank N.V.
+export function entradaPublicable(fuente, e, ahora = Date.now()) {
+  if (!fuente || !e || !e.titulo || e.fecha === null || !Number.isFinite(e.fecha)) return false
+  let host
+  try {
+    host = new URL(e.enlace).hostname.replace(/^www\./, '')
+  } catch {
+    return false
+  }
+  if (host !== new URL(fuente.url).hostname.replace(/^www\./, '')) return false
+  if (ahora - e.fecha > DIAS_NOTICIA * 86_400_000) return false
+  if (e.fecha - ahora > 3_600_000) return false
+  if (fuente.id === 'ing') {
+    const marcas = [...(e.categorias ?? []), e.autor ?? '', e.enlace].join(' ')
+    if (/think[\s-]*outside/i.test(marcas)) return false
+  }
+  return true
+}
+
+// De lo que devolvió cada fuente, el archivo que lee la app.
+// `porFuente`: [{ fuente, entradas }] — `entradas` vacío si la fuente falló.
+export function prepararNoticias(porFuente = [], ahora = new Date()) {
+  const ms = ahora.getTime()
+  const fuentes = []
+  const noticias = []
+  for (const { fuente, entradas = [] } of porFuente) {
+    const vistas = new Set()
+    const buenas = entradas
+      .filter((e) => entradaPublicable(fuente, e, ms))
+      .filter((e) => (vistas.has(e.enlace) ? false : vistas.add(e.enlace)))
+      .sort((a, b) => b.fecha - a.fecha)
+      .slice(0, MAX_POR_FUENTE)
+    fuentes.push({
+      id: fuente.id,
+      nombre: fuente.nombre,
+      derechos: fuente.derechos,
+      condiciones: fuente.condiciones,
+      n: buenas.length,
+    })
+    for (const e of buenas) {
+      noticias.push({
+        f: fuente.id,
+        t: e.titulo,
+        u: e.enlace,
+        d: new Date(e.fecha).toISOString(),
+        div: fuente.divisa ? [fuente.divisa] : divisasDe(e.titulo),
+      })
+    }
+  }
+  noticias.sort((a, b) => (a.d < b.d ? 1 : a.d > b.d ? -1 : 0))
+  return { generadoEl: ahora.toISOString(), fuentes, noticias }
 }
