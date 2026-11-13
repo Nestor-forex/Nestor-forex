@@ -1,0 +1,40 @@
+name: Sonda de fuentes de noticias
+
+# ¿Qué fuentes de noticias y opiniones se pueden leer gratis, sin llave, con
+# fecha y enlace? Bancos centrales (las ocho divisas) y medios de Forex.
+#
+# Ver la cabecera de app/scripts/sonda-noticias.mjs: lo que queda escrito ANTES
+# de ver ningún titular es que una noticia no es una señal, que solo se
+# guardaría titular, fecha y enlace, y que robots.txt solo descarta — las
+# condiciones de uso de las fuentes comerciales las lee una persona.
+#
+# ⚠️⚠️ NO CAMBIA NADA, y no es una promesa: es el permiso.
+# `permissions: contents: read` — no puede escribir en ninguna rama.
+#
+# ⚠️ NO NECESITA el secreto de Twelve Data ni ninguna otra llave: comprobar
+# que se puede sin llave es justo lo que viene a hacer.
+#
+# ⚠️ SOLO A MANO. Contesta una pregunta de una vez; no vigila nada.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    # Quince fuentes con tope de 20 segundos cada una: lo normal es un minuto.
+    timeout-minutes: 10
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Sondear
+        working-directory: app
+        run: node scripts/sonda-noticias.mjs
