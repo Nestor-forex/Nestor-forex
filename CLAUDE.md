@@ -15502,6 +15502,25 @@ despacio, entero, y aplicarlas dentro de los objetivos de siempre: no
 afirmar más de lo que se puede demostrar, ningún número de acierto sin
 medir, la llave nunca en el repositorio ni en el chat.
 
+## ⚠️⚠️ Y LO QUE QWEN TIENE QUE TRAER SÍ O SÍ (Néstor, repetido el 2026-11-13)
+
+> recuerda que cuando tengamos Qwen debe haber también el botón o algo que si
+> el suscriptor no entiende las noticias Qwen se la pueda explicar en términos
+> sencillos… no quiero que lo olvides para cuando te lo pregunte o tengamos que
+> hacerlo
+
+**Un botón «Explícamelo con Qwen» en CADA noticia de la tarjeta «Noticias de
+los bancos centrales»** (los titulares de la Fed, el BCE, Nueva Zelanda e ING
+van en inglés y tal cual, así que un principiante no los entiende), **además**
+del que ya estaba planeado en el calendario, las tasas y el COT junto a
+«¿Qué significa?». Qwen explica en palabras sencillas qué dice la noticia.
+
+Las reglas de esa explicación son las mismas de «¿Qué significa?»: **nunca
+«compra» ni «vende»**, nunca hacia dónde irá el precio, y al final el aviso de
+que no es una señal y la decisión es del suscriptor. El titular original se
+sigue enseñando tal cual (el BCE y Nueva Zelanda piden no alterarlo); lo de
+Qwen va aparte y rotulado como explicación de la IA.
+
 ## Por qué estas tres fases, explicado para suscriptores (la DECIMOCUARTA)
 
 Néstor la pidió guardada «como las demás», para la página de venta. Va con
@@ -15971,3 +15990,20 @@ mirarlos. Y el Analizador ya no lee un `{ fallo }` como «cero eventos».
 contenido): `prueba-idiomas.mjs` exige un solo `paraQue` por archivo, y la
 primera versión con dos tarjetas lo hizo saltar. Sigue arriba de las noticias
 de los bancos, como estaba. Bloque 13 de `prueba-calendario.mjs`.
+
+# La guía de las herramientas nuevas para suscriptores (2026-11-13)
+
+Néstor pidió guardar «todos los pasos o explicaciones de cada una de las cosas
+o herramientas que hemos hecho nuevas», para los suscriptores. Está en
+**`notas/guia-herramientas-suscriptores.md`**: Mi perfil de riesgo, Tu freno de
+hoy, el Analizador, Mis pares, Mis avisos, el Calendario económico, las
+Noticias de los bancos centrales, «¿Qué significa?», lo que señalaron las
+reglas en pruebas, lo que mide positivo y las ventas en pausa. Cada una con
+dónde está, para qué sirve, paso a paso, un ejemplo y lo que NO hace, más una
+tabla de en cuál de las dos apps está cada una.
+
+⚠️ **Es la base del tutorial con imágenes que falta para la landing.** Antes de
+publicarla, comprobar que cada pantalla sigue como la describe: una guía que no
+se toca envejece en silencio cuando cambia la app. Y sigue en pie lo de siempre
+para la landing: ningún número de acierto verificado, ninguna promesa de
+señales.
