@@ -15939,3 +15939,35 @@ lo correcto, y en `ltr` para que no se dé la vuelta.
 «dollar» se contaba como dólar estadounidense. Con la divisa delante eso le
 diría a un principiante algo falso. Ahora «dollar» precedido de Canadian,
 Australian o New Zealand no cuenta como USD (5 comprobaciones nuevas).
+
+## El calendario ya no desaparece cuando no hay nada (2026-11-13). En las dos apps
+
+Néstor abrió las dos apps un viernes por la noche, no vio el calendario y
+preguntó si se había quitado. No: sin eventos en las próximas 48 horas la
+tarjeta se escondía entera, y desaparecer sin decir por qué se lee como «lo
+quitaron». Ahora `estadoTarjeta` (en `calendario.js`, GEMELO) da tres casos:
+
+- `'con'` → la tarjeta de siempre;
+- `'vacia'` → el archivo llegó y no hay nada en 48 h: la tarjeta SE QUEDA y
+  dice, visible sin abrir, «Sin datos importantes en las próximas 48 horas».
+  Dentro explica que la app no está rota y, si el archivo ya trae algo más
+  allá de las 48 h, cuándo es el siguiente (`siguienteFuera`);
+- `'cargando'` → todavía no llegó nada: dice «Cargando el calendario…»;
+- `'fallo'` → no se pudo bajar y no hay copia: dice QUÉ falló (en ámbar).
+
+⚠️⚠️ **LA TARJETA NO DESAPARECE NUNCA.** Lo pidió Néstor el mismo día: «la
+tarjeta no debe desaparecer nunca y si es porque no hay internet solamente debe
+notificar ese fallo o el fallo que sea». `useCalendario` (PRIMO) ya no se calla
+los fallos: sin copia devuelve `{ fallo }`; con copia guardada devuelve la copia
+con `fallo` pegado, y la tarjeta la enseña avisando de que no se pudo
+actualizar. `clasificarFallo` da `sinRed` (solo si el teléfono dice que no hay
+red), `conexion`, `tiempo`, `http` (con su código), `formato` o `desconocido`.
+
+⚠️ **Sin archivo NO se dice «no hay datos»**: sería afirmar algo del mercado
+sin haberlo mirado. El texto del fallo dice justo eso: que la app no pudo
+mirarlos. Y el Analizador ya no lee un `{ fallo }` como «cero eventos».
+
+📌 Es UNA sola `TarjetaPlegable` para los dos casos (cambian título, avance y
+contenido): `prueba-idiomas.mjs` exige un solo `paraQue` por archivo, y la
+primera versión con dos tarjetas lo hizo saltar. Sigue arriba de las noticias
+de los bancos, como estaba. Bloque 13 de `prueba-calendario.mjs`.
