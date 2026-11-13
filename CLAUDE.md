@@ -15794,3 +15794,39 @@ lee una persona; usarlas para decidir sería un FILTRO y va al banco antes.
 
 📌 **Un workflow nuevo no se puede lanzar desde una rama** (404): hay que
 fusionarlo antes de pulsarlo.
+
+## ✅ La sonda corrió (2026-11-13, run 43495754804). SIRVEN 9 de 15
+
+| fuente | veredicto | nota |
+|---|---|---|
+| Fed, BCE, BoE, BoJ, SNB, RBNZ | ✅ sirve | notas de prensa con fecha y enlace |
+| Banco de Canadá | ❌ «parado» (último hace 8 días) | ⚠️ ver abajo: el criterio está mal calibrado para bancos centrales |
+| RBA | ❌ 1 titular | ese canal es solo de comunicados; puede haber otro |
+| ForexLive | ✅ sirve | ⚠️ **ahora redirige a `investinglive.com`**: cambió de nombre |
+| Investing.com — Forex | ✅ sirve | 8 de 10 titulares nombran una de nuestras divisas |
+| ING Think | ✅ sirve | casi nada de nuestras divisas (1 de 10) |
+| FXStreet (×2) | 403 | a un User-Agent honesto. Se respeta |
+| DailyForex · BabyPips | 404 · 400 | conjeturas de dirección que no eran |
+
+⚠️⚠️ **EL CRITERIO DE FRESCURA (72 h) SIRVE PARA MEDIOS Y NO PARA BANCOS
+CENTRALES.** Un banco central publica cuando decide algo; ocho días sin nota de
+prensa es lo normal y no un canal muerto. Tumbar al Banco de Canadá por eso es
+una etiqueta equivocada. **NO se cambió el criterio después de ver el
+resultado**: queda anotado para el lector, que tendrá que juzgar un canal de
+banco central por si responde y trae fechas, no por lo reciente.
+
+⚠️ **Las tres comerciales pasan solo los criterios técnicos.** Antes de
+construir un lector con ellas, Néstor (o quien él diga) lee sus condiciones de
+uso. Investing.com y ForexLive/investingLive son empresas, no organismos.
+
+## El banco de las ventas, con los datos de hoy (2026-11-13)
+
+1.334 días, rejilla limpia, costes. **Con la geometría de la app:** compras
+1.071 · 58 % · **−0,00**; ventas 996 · 55 % · **−0,05**. **Con la vara neutra
+por mitades:** compras +0,02 → −0,03; ventas −0,07 → +0,02.
+
+La diferencia se encogió muchísimo desde agosto (entonces −0,00 contra −0,30),
+pero **las ventas siguen en negativo y la dirección cambia de una mitad a otra**
+— la firma de la moneda al aire. La regla de `reglas.js` (reactivar solo si el
+banco da positivo en las ventas) **no se cumple: siguen en pausa**, y ahora se
+ven en pantalla.
