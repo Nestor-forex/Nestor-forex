@@ -1,6 +1,7 @@
 import { PARAMS_SOMBRA, posicionDe, reglaBollinger } from './bollinger.js'
 import { compresionDe, fibonacci, nivelDe, posicionEnRango, velasEstrechas } from './compresion.js'
 import { matrizCorrelacion, paresQueVanJuntos, riesgoEntreSenales } from './correlacion.js'
+import { pivoteClasico } from './analizador.js'
 import { crearT } from './i18n/crearT.js'
 import { IDIOMA_BASE } from './i18n/idiomas.js'
 import { VENTAS_PAUSADAS } from './reglas.js'
@@ -717,16 +718,69 @@ const nivelesSimetricos = (p, compra) => ({
 export const usaVaraSimetrica = (tipo) =>
   tipo === 'reversion' || tipo === 'caida' || tipo === 'bollinger'
 
+// La geometría de las señales de la app: stop medio ATR por fuera del extremo
+// de 10 días, objetivo en el máximo de 20 días o a 2 ATR, el más lejano.
+//
+// ⚠️ Se exporta para que el ANALIZADOR use exactamente esta misma cuenta (el
+// método «la de la app»). Una copia allí se separaría el día que alguien
+// tocara una de las dos, y el Analizador diría «la geometría de la app» de
+// algo que ya no lo es — sin que nada fallara.
+export const nivelesApp = (p, compra) => ({
+  sl: compra ? p.lo10 - 0.5 * p.atrAbs : p.hi10 + 0.5 * p.atrAbs,
+  tp: compra ? Math.max(p.hi20, p.c + 2 * p.atrAbs) : Math.min(p.lo20, p.c - 2 * p.atrAbs),
+})
+
+/**
+ * Lo que el ANALIZADOR necesita saber de un par, en la forma que entiende
+ * `analizador.js` (que es GEMELO: la misma en las dos apps). Aquí se resuelve
+ * lo que es propio de ESTA app: sus medias (EMA20/EMA50), su geometría y de
+ * dónde sale su pivote.
+ *
+ * ⚠️ EL PIVOTE es el clásico de la PENÚLTIMA vela publicada, no de la última:
+ * la última va a medias (se publica a las 11:20 y a las 19:20 UTC, con el día
+ * sin cerrar), y un pivote calculado sobre un día a medias se movería cada vez
+ * que se publica. Ver «la vela diaria de Twelve Data no cambia de fecha a
+ * medianoche» en CLAUDE.md: a partir de ~20:48 UTC la última vela ya es la
+ * del día siguiente, y entonces la penúltima es el día que acaba de cerrar,
+ * que es justo lo que un pivote diario quiere.
+ *
+ * ⚠️ Sin extremos publicados (un barrido viejo) el pivote sale `null`, nunca
+ * calculado sobre cierres: sería un nivel con aspecto de real.
+ */
+export function fichaAnalisis(p, esc = {}) {
+  const n = p.serie20?.length ?? 0
+  const pen = n >= 2 && p.altos20?.length === n && p.bajos20?.length === n ? n - 2 : -1
+  return {
+    name: p.name,
+    b: p.b,
+    q: p.q,
+    dec: p.dec,
+    precio: p.c,
+    atr: p.atrAbs,
+    atrPct: p.atrPct,
+    rsi: Number.isFinite(p.rsiV) ? Math.round(p.rsiV) : null,
+    tend: p.tend,
+    emas: { corta: p.e20, larga: p.e50, nombres: ['EMA20', 'EMA50'] },
+    sop: p.lo20,
+    res: p.hi20,
+    pivote: pen >= 0 ? pivoteClasico(p.altos20[pen], p.bajos20[pen], p.serie20[pen]) : null,
+    compresion: p.compresion,
+    nivelCompresion: nivelDe(p.compresion, UMBRALES_COMPRESION),
+    fuerzaB: esc[p.b],
+    fuerzaQ: esc[p.q],
+    bollinger: posicionDe(p),
+    niveles: {
+      app: { COMPRA: nivelesApp(p, true), VENTA: nivelesApp(p, false) },
+      simetrica: { COMPRA: nivelesSimetricos(p, true), VENTA: nivelesSimetricos(p, false) },
+    },
+  }
+}
+
 const mkSetup = (p, lado, esc = {}, t, tipo = 'tendencia') => {
   const d = p.dec
   const compra = lado === 'COMPRA'
   const simetrica = usaVaraSimetrica(tipo)
-  const { sl, tp } = simetrica
-    ? nivelesSimetricos(p, compra)
-    : {
-        sl: compra ? p.lo10 - 0.5 * p.atrAbs : p.hi10 + 0.5 * p.atrAbs,
-        tp: compra ? Math.max(p.hi20, p.c + 2 * p.atrAbs) : Math.min(p.lo20, p.c - 2 * p.atrAbs),
-      }
+  const { sl, tp } = simetrica ? nivelesSimetricos(p, compra) : nivelesApp(p, compra)
   const rr = Math.abs(tp - p.c) / Math.abs(p.c - sl)
   return {
     name: p.name,
@@ -1175,9 +1229,14 @@ export function derivarVista(
     ? { n: bloqueadosRaw.length, lado: 'VENTA', pares: bloqueadosRaw.map((p) => p.name) }
     : null
 
+  // Lo que necesita el Analizador, un par por ficha. Va SIN filtrar por «Mis
+  // pares» (ver `prueba-cableado.mjs`): ahí la persona elige el par a mano.
+  const fichas = paresRaw.map((p) => fichaAnalisis(p, esc))
+
   return {
     monedas,
     pares,
+    fichas,
     compras,
     ventas,
     vigilancia,

@@ -18,6 +18,7 @@ import Calendario from './components/Calendario'
 import HistorialTab from './components/HistorialTab'
 import TableroCompleto from './components/TableroCompleto'
 import SetupDetalle from './components/SetupDetalle'
+import AnalizadorTab from './components/AnalizadorTab'
 import { useT } from './lib/i18n'
 import DiarioTab from './components/DiarioTab'
 import CalculadoraTab from './components/CalculadoraTab'
@@ -315,6 +316,21 @@ export default function App() {
                   onPrellenado={() => setPrellenarDiario(null)}
                   onVerSenales={() => setTab('barrido')}
                   perfilRiesgo={perfil?.perfilRiesgo}
+                  onIrAlPerfil={() => setTab('calc')}
+                />
+              )}
+              {tab === 'analizar' && (
+                <AnalizadorTab
+                  fichas={mercado.fichas}
+                  ratesUSD={mercado.ratesUSD}
+                  uid={authUser.uid}
+                  ficha={perfil}
+                  trades={diario.trades}
+                  cal={calendario}
+                  onAnotar={(pre) => {
+                    setPrellenarDiario(pre)
+                    setTab('diario')
+                  }}
                   onIrAlPerfil={() => setTab('calc')}
                 />
               )}

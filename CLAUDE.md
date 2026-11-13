@@ -15461,3 +15461,167 @@ apertura, y las importadas del mismo día no tienen orden fiable para la racha.
 distintas; quien opere las dos con la misma cuenta tiene el freno partido en
 dos. Leer las dos colecciones es posible (las reglas lo dejan) y quedó sin
 hacer a propósito: no se pidió.
+
+---
+
+# El Analizador tendrá DOS modos, y el recordatorio antes de Qwen (2026-11-13)
+
+Néstor dio el «dale» a la fase 3 con dos condiciones que mandan sobre el
+diseño de aquí en adelante:
+
+> quiero que las apps tengan de manera manual la elección del suscriptor de
+> cómo quiere analizar con las herramientas propias de las app pero también
+> tendrá la opción de hacer sus análisis con Qwen para que esa IA también la
+> pueda hacer los análisis con las herramientas de las apps y en internet
+
+O sea que el Analizador tiene **dos modos**, y el segundo llega en la fase 5:
+
+| modo | quién analiza | con qué |
+|---|---|---|
+| **manual** (fase 3) | el suscriptor | elige par, dirección y herramientas de la app |
+| **con Qwen** (fase 5) | la IA | las mismas herramientas de la app **más internet** |
+
+⚠️ **Consecuencia de diseño desde la fase 3:** la tarjeta se arma con una
+función pura que devuelve un objeto de datos (`armarAnalisis` en
+`src/lib/analizador.js`), no con texto pegado dentro del componente. Ese
+objeto es exactamente lo que la fase 5 le pasará a Qwen como «las
+herramientas de la app»: los números los sigue calculando la app y Qwen los
+interpreta y los cruza con lo que lea fuera. Si los números salieran de Qwen
+serían inventados.
+
+## ⚠️⚠️ RECORDATORIO OBLIGATORIO ANTES DE INSTALAR QWEN
+
+> antes de pasar a la instalación de Qwen me recuerdas para darte unas
+> indicaciones precisas que quiero que leas con mucho cuidado y detenimiento
+> para que dentro de nuestros objetivos contexto puedas aplicar todo lo que
+> allí te comento con una conversación con Qwen
+
+**Antes de empezar la fase 5 (y antes de pedirle que cree la cuenta de
+Qwen), hay que recordárselo a Néstor y esperar sus indicaciones.** Leerlas
+despacio, entero, y aplicarlas dentro de los objetivos de siempre: no
+afirmar más de lo que se puede demostrar, ningún número de acierto sin
+medir, la llave nunca en el repositorio ni en el chat.
+
+## Por qué estas tres fases, explicado para suscriptores (la DECIMOCUARTA)
+
+Néstor la pidió guardada «como las demás», para la página de venta. Va con
+las trece de la serie —el volumen, TradingView, la correlación, el swap, la
+actividad, el margen de error, Historial contra Diario, las apps contra el
+mercado, el oro, la rejilla, la estacionalidad, qué es esta app y las dos
+herramientas— y es la primera que no explica un dato sino **qué tres piezas
+le dan valor al producto**:
+
+> **¿Me gustan las ideas? Sí, y estas tres en particular:**
+>
+> **El guardián de riesgo.** Es la mejor de todas: protege al suscriptor de
+> sí mismo, que es donde más dinero se pierde, y no depende de acertar el
+> mercado.
+>
+> **El Analizador.** Convierte quince herramientas sueltas en una respuesta.
+> Es exactamente el ahorro de tiempo que vendes.
+>
+> **Qwen.** Le da una cara que el suscriptor ve y entiende de inmediato.
+
+📌 **Por qué vende:** las tres se sostienen sin prometer aciertos. El
+guardián vale aunque el mercado no se adivine nunca; el Analizador vende
+tiempo, no resultados; y Qwen es la forma en que un principiante entiende lo
+que la app ya calcula.
+
+⚠️ **Lo que NO se puede hacer con este texto:** publicarlo diciendo que Qwen
+ya está en la app. Hoy está construido el guardián (fase 2, publicado el
+2026-11-13) y el Analizador manual está en obra (fase 3). Qwen llega en la
+fase 5, y antes de instalarla hay que pedirle a Néstor sus indicaciones.
+
+---
+
+# Fase 3: el Analizador, modo manual (2026-11-13). En las dos apps
+
+```
+src/lib/analizador.js          las cuentas y las plantillas, sin React   GEMELO
+src/lib/usePlantillas.js       guardarlas en users/{uid}.plantillas      GEMELO
+src/components/AnalizadorTab.jsx  la pestaña «Analizar»                  GEMELO
+scripts/prueba-analizador.mjs  ~70 comprobaciones, sin internet          GEMELO
+src/lib/marketCalc.js          + nivelesApp, fichaAnalisis, `fichas`     PRIMO
+firestore.rules                + `plantillas` (lista de 10)              GEMELO
+```
+
+Pestaña nueva, la segunda de la barra. La persona elige **par → dirección →
+cómo poner el Stop-loss → qué herramientas ver**, y la app arma una tarjeta:
+entrada, Stop-loss y Take-profit con sus pips, R/B, lote y riesgo en dólares
+con su perfil, más las herramientas encendidas (soporte y resistencia,
+pivote, tendencia con sus EMA, RSI, ATR, fuerza de las dos divisas,
+compresión, Bollinger %B solo en Swing, calendario de las dos divisas y lado
+del swap). «Anotar en el Diario» lleva par, dirección, lote y una nota con
+los niveles. Las plantillas guardan herramientas + método con un nombre.
+
+## Las decisiones que no hay que ablandar
+
+⚠️ **NO ELIGE LA DIRECCIÓN.** Arranca sin lado, y sin lado no hay niveles ni
+lote. El aviso lo dice ANTES de cualquier control. Si la app eligiera la
+dirección sería otra señal sin validar.
+
+⚠️ **NINGÚN NÚMERO NUEVO.** Los tres métodos son cuentas que ya existían:
+`app` = `nivelesApp` de cada `marketCalc.js` (exportada y **usada por
+`mkSetup`**, así que las señales y el Analizador no pueden separarse — hay
+comprobación), `simetrica` = 1,5 ATR (la vara neutra) y `estructura` =
+medio ATR por fuera del extremo de 20 velas. El lote es `calcularLote`, el
+de la calculadora. El pivote es `pivoteClasico`, que se movió de
+`marketCalc.js` de Intradía a `analizador.js` para que las dos apps usen la
+misma fórmula.
+
+⚠️ **EL PIVOTE DE SWING ES DE LA PENÚLTIMA VELA**, no de la última: la
+última va a medias cuando se publica (11:20 y 19:20 UTC), y un pivote sobre
+un día a medias se movería en cada publicación. Sin extremos publicados sale
+`null`, nunca calculado sobre cierres.
+
+⚠️ **`armarAnalisis` DEVUELVE DATOS, NO TEXTO**, y pasa por JSON (hay
+comprobación). Es lo que la fase 5 le pasará a Qwen como «las herramientas
+de la app». Los números los sigue poniendo la app.
+
+⚠️ **UN MÉTODO QUE NO SALE SE DICE.** Con el precio en el extremo de 20
+velas, «soporte y resistencia» daría un Take-profit a cero pips y un lote
+infinito; `nivelesDe` devuelve `null` y la tarjeta explica que con ese
+método no sale.
+
+⚠️ **SOLO SE OFRECEN LAS HERRAMIENTAS QUE LA APP CALCULA.** Intradía no
+tiene Bollinger y el botón no aparece allí (comprobado en el navegador).
+
+⚠️ **LAS FICHAS NO SE FILTRAN POR «MIS PARES»** (está en `NO_SE_FILTRAN`):
+en el Analizador el par se elige a mano.
+
+⚠️ **El freno del guardián sale en la tarjeta** (rojo si se tocó, ámbar si
+queda poco), leyendo `estadoDelDia` — no una cuenta nueva.
+
+⚠️ **LAS REGLAS DE FIRESTORE HAY QUE PUBLICARLAS** para que guardar
+plantillas funcione (Actions → «Publicar las reglas de Firestore», casilla
+«aplicar»). Mientras no, guardar dice «falta activar el permiso» y todo lo
+demás funciona.
+
+## Lo que solo se vio en el navegador
+
+📌 **En árabe el precio y los pips del Stop-loss salían al revés** —«(42
+pips) 1.1012»—: dos números sueltos dentro de una fila `rtl`. Ahora van en
+UN bloque `ltr`. Ni el build ni las 70 comprobaciones lo veían.
+
+📌 **Intradía ofrecía el botón de Bollinger**, que ahí diría siempre «Sin
+dato». Se ofrecen solo las herramientas con dato en algún par.
+
+📌 Y mi banco marcó como «dato de color» el icono verde de la pestaña
+activa (◎). Era el banco, no la app: se acotó a fuera de la barra.
+
+Verificado a 390 px con el `barrido.json`, `calendario.json` y `tasas.json`
+REALES de producción, pasando por `useMarketData` y `useCalendario`, en
+español y árabe, sin perfil, con el freno tocado, y las 7 pestañas cabiendo
+en los 13 idiomas. Cero errores de consola y cero desplazamiento lateral.
+
+## Comprobado que las pruebas muerden
+
+elegir COMPRA por defecto tumba 4 · 12 plantillas en la app y 10 en la
+regla tumba 2 · calendario sin filtrar por divisa tumba 1 · la geometría
+copiada en `mkSetup` en vez de `nivelesApp` tumba 1.
+
+## Lo que viene
+
+El **modo con Qwen** (fase 5) va encima de esta misma pantalla. ⚠️ Antes de
+la fase 5 hay que **recordarle a Néstor que quiere dar indicaciones** sobre
+la conversación con Qwen, y esperarlas.
