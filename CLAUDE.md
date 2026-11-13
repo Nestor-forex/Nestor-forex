@@ -15531,3 +15531,97 @@ que la app ya calcula.
 ya está en la app. Hoy está construido el guardián (fase 2, publicado el
 2026-11-13) y el Analizador manual está en obra (fase 3). Qwen llega en la
 fase 5, y antes de instalarla hay que pedirle a Néstor sus indicaciones.
+
+---
+
+# Fase 3: el Analizador, modo manual (2026-11-13). En las dos apps
+
+```
+src/lib/analizador.js          las cuentas y las plantillas, sin React   GEMELO
+src/lib/usePlantillas.js       guardarlas en users/{uid}.plantillas      GEMELO
+src/components/AnalizadorTab.jsx  la pestaña «Analizar»                  GEMELO
+scripts/prueba-analizador.mjs  ~70 comprobaciones, sin internet          GEMELO
+src/lib/marketCalc.js          + nivelesApp, fichaAnalisis, `fichas`     PRIMO
+firestore.rules                + `plantillas` (lista de 10)              GEMELO
+```
+
+Pestaña nueva, la segunda de la barra. La persona elige **par → dirección →
+cómo poner el Stop-loss → qué herramientas ver**, y la app arma una tarjeta:
+entrada, Stop-loss y Take-profit con sus pips, R/B, lote y riesgo en dólares
+con su perfil, más las herramientas encendidas (soporte y resistencia,
+pivote, tendencia con sus EMA, RSI, ATR, fuerza de las dos divisas,
+compresión, Bollinger %B solo en Swing, calendario de las dos divisas y lado
+del swap). «Anotar en el Diario» lleva par, dirección, lote y una nota con
+los niveles. Las plantillas guardan herramientas + método con un nombre.
+
+## Las decisiones que no hay que ablandar
+
+⚠️ **NO ELIGE LA DIRECCIÓN.** Arranca sin lado, y sin lado no hay niveles ni
+lote. El aviso lo dice ANTES de cualquier control. Si la app eligiera la
+dirección sería otra señal sin validar.
+
+⚠️ **NINGÚN NÚMERO NUEVO.** Los tres métodos son cuentas que ya existían:
+`app` = `nivelesApp` de cada `marketCalc.js` (exportada y **usada por
+`mkSetup`**, así que las señales y el Analizador no pueden separarse — hay
+comprobación), `simetrica` = 1,5 ATR (la vara neutra) y `estructura` =
+medio ATR por fuera del extremo de 20 velas. El lote es `calcularLote`, el
+de la calculadora. El pivote es `pivoteClasico`, que se movió de
+`marketCalc.js` de Intradía a `analizador.js` para que las dos apps usen la
+misma fórmula.
+
+⚠️ **EL PIVOTE DE SWING ES DE LA PENÚLTIMA VELA**, no de la última: la
+última va a medias cuando se publica (11:20 y 19:20 UTC), y un pivote sobre
+un día a medias se movería en cada publicación. Sin extremos publicados sale
+`null`, nunca calculado sobre cierres.
+
+⚠️ **`armarAnalisis` DEVUELVE DATOS, NO TEXTO**, y pasa por JSON (hay
+comprobación). Es lo que la fase 5 le pasará a Qwen como «las herramientas
+de la app». Los números los sigue poniendo la app.
+
+⚠️ **UN MÉTODO QUE NO SALE SE DICE.** Con el precio en el extremo de 20
+velas, «soporte y resistencia» daría un Take-profit a cero pips y un lote
+infinito; `nivelesDe` devuelve `null` y la tarjeta explica que con ese
+método no sale.
+
+⚠️ **SOLO SE OFRECEN LAS HERRAMIENTAS QUE LA APP CALCULA.** Intradía no
+tiene Bollinger y el botón no aparece allí (comprobado en el navegador).
+
+⚠️ **LAS FICHAS NO SE FILTRAN POR «MIS PARES»** (está en `NO_SE_FILTRAN`):
+en el Analizador el par se elige a mano.
+
+⚠️ **El freno del guardián sale en la tarjeta** (rojo si se tocó, ámbar si
+queda poco), leyendo `estadoDelDia` — no una cuenta nueva.
+
+⚠️ **LAS REGLAS DE FIRESTORE HAY QUE PUBLICARLAS** para que guardar
+plantillas funcione (Actions → «Publicar las reglas de Firestore», casilla
+«aplicar»). Mientras no, guardar dice «falta activar el permiso» y todo lo
+demás funciona.
+
+## Lo que solo se vio en el navegador
+
+📌 **En árabe el precio y los pips del Stop-loss salían al revés** —«(42
+pips) 1.1012»—: dos números sueltos dentro de una fila `rtl`. Ahora van en
+UN bloque `ltr`. Ni el build ni las 70 comprobaciones lo veían.
+
+📌 **Intradía ofrecía el botón de Bollinger**, que ahí diría siempre «Sin
+dato». Se ofrecen solo las herramientas con dato en algún par.
+
+📌 Y mi banco marcó como «dato de color» el icono verde de la pestaña
+activa (◎). Era el banco, no la app: se acotó a fuera de la barra.
+
+Verificado a 390 px con el `barrido.json`, `calendario.json` y `tasas.json`
+REALES de producción, pasando por `useMarketData` y `useCalendario`, en
+español y árabe, sin perfil, con el freno tocado, y las 7 pestañas cabiendo
+en los 13 idiomas. Cero errores de consola y cero desplazamiento lateral.
+
+## Comprobado que las pruebas muerden
+
+elegir COMPRA por defecto tumba 4 · 12 plantillas en la app y 10 en la
+regla tumba 2 · calendario sin filtrar por divisa tumba 1 · la geometría
+copiada en `mkSetup` en vez de `nivelesApp` tumba 1.
+
+## Lo que viene
+
+El **modo con Qwen** (fase 5) va encima de esta misma pantalla. ⚠️ Antes de
+la fase 5 hay que **recordarle a Néstor que quiere dar indicaciones** sobre
+la conversación con Qwen, y esperarlas.
