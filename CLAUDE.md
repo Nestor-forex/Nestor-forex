@@ -15502,6 +15502,25 @@ despacio, entero, y aplicarlas dentro de los objetivos de siempre: no
 afirmar más de lo que se puede demostrar, ningún número de acierto sin
 medir, la llave nunca en el repositorio ni en el chat.
 
+## ⚠️⚠️ Y LO QUE QWEN TIENE QUE TRAER SÍ O SÍ (Néstor, repetido el 2026-11-13)
+
+> recuerda que cuando tengamos Qwen debe haber también el botón o algo que si
+> el suscriptor no entiende las noticias Qwen se la pueda explicar en términos
+> sencillos… no quiero que lo olvides para cuando te lo pregunte o tengamos que
+> hacerlo
+
+**Un botón «Explícamelo con Qwen» en CADA noticia de la tarjeta «Noticias de
+los bancos centrales»** (los titulares de la Fed, el BCE, Nueva Zelanda e ING
+van en inglés y tal cual, así que un principiante no los entiende), **además**
+del que ya estaba planeado en el calendario, las tasas y el COT junto a
+«¿Qué significa?». Qwen explica en palabras sencillas qué dice la noticia.
+
+Las reglas de esa explicación son las mismas de «¿Qué significa?»: **nunca
+«compra» ni «vende»**, nunca hacia dónde irá el precio, y al final el aviso de
+que no es una señal y la decisión es del suscriptor. El titular original se
+sigue enseñando tal cual (el BCE y Nueva Zelanda piden no alterarlo); lo de
+Qwen va aparte y rotulado como explicación de la IA.
+
 ## Por qué estas tres fases, explicado para suscriptores (la DECIMOCUARTA)
 
 Néstor la pidió guardada «como las demás», para la página de venta. Va con
