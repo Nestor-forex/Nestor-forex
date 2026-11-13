@@ -15952,10 +15952,20 @@ quitaron». Ahora `estadoTarjeta` (en `calendario.js`, GEMELO) da tres casos:
   dice, visible sin abrir, «Sin datos importantes en las próximas 48 horas».
   Dentro explica que la app no está rota y, si el archivo ya trae algo más
   allá de las 48 h, cuándo es el siguiente (`siguienteFuera`);
-- `'nada'` → no hay archivo (cargando, 404, sin red): no se pinta nada.
+- `'cargando'` → todavía no llegó nada: dice «Cargando el calendario…»;
+- `'fallo'` → no se pudo bajar y no hay copia: dice QUÉ falló (en ámbar).
+
+⚠️⚠️ **LA TARJETA NO DESAPARECE NUNCA.** Lo pidió Néstor el mismo día: «la
+tarjeta no debe desaparecer nunca y si es porque no hay internet solamente debe
+notificar ese fallo o el fallo que sea». `useCalendario` (PRIMO) ya no se calla
+los fallos: sin copia devuelve `{ fallo }`; con copia guardada devuelve la copia
+con `fallo` pegado, y la tarjeta la enseña avisando de que no se pudo
+actualizar. `clasificarFallo` da `sinRed` (solo si el teléfono dice que no hay
+red), `conexion`, `tiempo`, `http` (con su código), `formato` o `desconocido`.
 
 ⚠️ **Sin archivo NO se dice «no hay datos»**: sería afirmar algo del mercado
-sin haberlo mirado. Misma asimetría que `veredictoBusqueda`.
+sin haberlo mirado. El texto del fallo dice justo eso: que la app no pudo
+mirarlos. Y el Analizador ya no lee un `{ fallo }` como «cero eventos».
 
 📌 Es UNA sola `TarjetaPlegable` para los dos casos (cambian título, avance y
 contenido): `prueba-idiomas.mjs` exige un solo `paraQue` por archivo, y la
