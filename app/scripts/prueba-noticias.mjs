@@ -83,6 +83,11 @@ ok(divisasDe('EUR/USD slides as ECB holds').join() === 'USD,EUR', 'EUR/USD y BCE
 ok(divisasDe('Bank of Japan keeps rates').join() === 'JPY', 'Banco de Japón')
 ok(divisasDe('Oil prices rise').length === 0, 'el petróleo no es una divisa nuestra')
 ok(divisasDe('Kiwi rallies').join() === 'NZD', '«kiwi» es el NZD')
+ok(divisasDe('Australian dollar slips').join() === 'AUD', '⚠️ «Australian dollar» es solo AUD, no también USD')
+ok(divisasDe('Canadian dollar firms').join() === 'CAD', '«Canadian dollar» es solo CAD')
+ok(divisasDe('New Zealand dollar gains').join() === 'NZD', '«New Zealand dollar» es solo NZD')
+ok(divisasDe('The dollar rallies').join() === 'USD', '«dollar» a secas sigue siendo USD')
+ok(divisasDe('US dollar and Australian dollar').join() === 'USD,AUD', 'y si nombra los dos, salen los dos')
 
 console.log('\n5 · El veredicto de una fuente')
 {
@@ -185,6 +190,12 @@ console.log('\n10 · La tarjeta')
   ok(/<bdi>\{n\.t\}<\/bdi>/.test(c), 'el titular tal cual, aislado para el árabe')
   ok(/rel="noopener noreferrer"/.test(c), 'los enlaces abren aparte sin dar acceso a la app')
   ok(/f\.derechos/.test(c), 'y pinta la atribución de cada fuente')
+  {
+    const li = c.slice(c.indexOf('datos.noticias.map'))
+    const iDiv = li.indexOf('n.div')
+    ok(iDiv > -1 && iDiv < li.indexOf('cuando(n.d)') && iDiv < li.indexOf('<bdi>{n.t}</bdi>'), 'la divisa va DELANTE de la fecha y del titular (pedido por Néstor)')
+    ok(/className="mono"\s+dir="ltr"/.test(li.slice(0, iDiv)), 'el código de divisa va en `ltr`, para que en árabe no se dé la vuelta')
+  }
   ok(!/var\(--green\)|var\(--red\)/.test(c), 'sin verde ni rojo: un titular no es bueno ni malo')
 }
 
