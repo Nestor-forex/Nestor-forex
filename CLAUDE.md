@@ -15625,3 +15625,101 @@ copiada en `mkSetup` en vez de `nivelesApp` tumba 1.
 El **modo con Qwen** (fase 5) va encima de esta misma pantalla. ⚠️ Antes de
 la fase 5 hay que **recordarle a Néstor que quiere dar indicaciones** sobre
 la conversación con Qwen, y esperarlas.
+
+---
+
+# «¿Qué significa?» bajo cada noticia, tasa y fila del COT (2026-11-13). En las dos apps
+
+Néstor: un principiante ve «USD Core PPI m/m (Inflación) · Mueve mucho ·
+previsto 0.3 % · anterior 0.7 %» y no entiende nada. Pidió un botón que
+amplíe la información en palabras sencillas, en el calendario, las tasas, el
+COT y todo lo que sea noticia. Es la parte 1 de tres; la 2 es la sonda de
+noticias (fase 4) y la 3 el botón «Explícamelo con Qwen» (fase 5), que **no
+se toca hasta que Néstor mande sus indicaciones sobre Qwen**.
+
+```
+src/lib/explicacion.js          qué se explica, como DATOS          GEMELO
+src/components/Explica.jsx      el botón y la caja                  GEMELO
+scripts/prueba-explicacion.mjs  ~45 comprobaciones                  GEMELO
+src/components/Calendario.jsx   botón en cada noticia               GEMELO
+src/components/Tasas.jsx        botón en cada par y en cada tasa    GEMELO
+src/components/Cot.jsx          botón en cada fila (solo Swing)     PRIMO
+```
+
+Son **95 gemelos** (eran 92).
+
+## Las dos reglas que puso Néstor, y que no hay que ablandar
+
+⚠️⚠️ **SOLO DICE SI UN DATO SALE ALTO O BAJO, NUNCA COMPRA O VENTA.** Sus
+palabras: «si sale alto solo debe indicar que está alto o bajo, no debe decir
+compra o venta, de esa manera no estamos dando una señal». La frase que se lee
+en todas partes —«un dato de inflación alto suele fortalecer la divisa»— es
+exactamente una señal sin medir, y no está. La prueba falla si el texto de una
+noticia (en español o inglés) dice compr-/vend-/fortalec-/debilit-, o si
+`explicacion.js` nombra un lado o exporta algo que suene a señal.
+
+⚠️⚠️ **CADA EXPLICACIÓN TERMINA CON EL AVISO de que no es una señal y la
+decisión es del suscriptor** (`explica.noEsSenal`). Va dentro de `Explica.jsx`,
+así que ninguna explicación puede salir sin él. Al final y no al principio: aquí
+no previene de leer mal un número, cierra lo explicado, que es cuando aparece
+la pregunta «¿y entonces qué hago?».
+
+## Lo que dice cada explicación
+
+- **Noticia:** de qué familia es (inflación, empleo, tasas…) y por qué la mira
+  un banco central; qué significa cada trozo de jerga del nombre (Core, CPI,
+  PPI, PMI, GDP, Flash, m/m, q/q, y/y); qué quiere decir «Mueve mucho»; si lo
+  previsto sale **más alto, más bajo o igual** que lo anterior, con los dos
+  números; y que lo que mueve el precio es la **sorpresa** contra lo previsto.
+- **Tasa de un par:** cuánto paga cada divisa, la diferencia, de qué lado juega
+  el swap si la dejas abierta de noche — dicho como **coste**, «no una razón
+  para abrirla» — y que no es la cifra del bróker.
+- **Tasa suelta:** qué banco central la fija (por su nombre), qué significa que
+  suba o baje, cómo cambió la última vez, y por qué la fecha no es de hoy.
+- **Fila del COT:** cómo están apostando los fondos especulativos, que eso no
+  dice qué va a pasar, qué movieron esta semana, qué significa la frase del
+  percentil y el retraso del dato.
+
+## Decisiones que no hay que deshacer
+
+⚠️ **`explicacion.js` DEVUELVE DATOS, NO TEXTO.** La frase la arma la pantalla
+en el idioma de quien mira, y ese mismo objeto es lo que el botón de Qwen (fase
+5) le pasará como contexto. Hay comprobación de que pasa por JSON intacto.
+
+⚠️ **LA COMPARACIÓN NO SE INVENTA NADA.** «<0.1%» es una cota y no se compara;
+dos unidades distintas («0.3%» contra «24K») tampoco; lo vacío es `null`, nunca
+0. Si no se puede comparar, se enseñan los dos números sin decir alto ni bajo.
+
+⚠️ **LO QUE NO RECONOCE VA A «general»**, que dice que la app no sabe de qué
+familia es. Nunca una familia inventada — misma regla que `categoriaDe`.
+
+⚠️ **SOLO EL BOTÓN VA SANGRADO; LA EXPLICACIÓN USA EL ANCHO ENTERO**
+(`sangria`). Con la sangría de la fila salía en una columna de tres palabras
+por renglón. **Lo vio la captura, no las pruebas.**
+
+## 📌 Dos fallos que cazó la prueba al estrenarse
+
+1. **`[+-−]` en la expresión que lee los números era un RANGO** del `+` al `−`
+   (U+2212), que incluye el `<` y todos los dígitos. «<0.1%» se leía como
+   número y «53.1» perdía su primer dígito. Ahora `[+\-−]`.
+2. **La frase del comercio decía «lo que el país vende y compra»** y la del CPI
+   «lo que las personas compran»: no son señales, pero la regla de arriba tiene
+   que poder ser estricta, así que se reescribieron («exporta e importa», «en el
+   día a día»). La única excepción escrita es «gerentes de compras», que es el
+   nombre del cargo que contesta el PMI.
+
+## Cómo se verificó
+
+Lint contado contra `main` (7 y 8, los mismos), build, **todas** las pruebas
+sin internet en los dos repos, `prueba-idiomas` en los 13 y los 95 gemelos.
+**Comprobado que la prueba nueva muerde**, con el daño verificado en el archivo:
+quitar el aviso de `Explica.jsx` tumba 1 · meter «suele fortalecer la divisa» en
+la inflación tumba 1 · desenchufar el botón del calendario tumba 1.
+
+Y en **Chromium a 390 px** con `tasas.json` y `cot.json` reales de producción y
+un calendario de siete noticias de familias distintas, en español y árabe: 37
+botones, las siete explicaciones con su aviso, MÁS BAJO / MÁS ALTO / IGUAL con
+sus números, la cota sin comparar, la familia desconocida en «general», ninguna
+explicación de noticia con compra o venta, la caja heredando `rtl` en árabe,
+los códigos de divisa en `ltr`, cero errores de consola y cero desplazamiento
+lateral. Y sin `cot.json` (como en Intradía) no revienta nada.

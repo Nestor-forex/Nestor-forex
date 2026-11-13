@@ -1,5 +1,6 @@
 import { useIdioma } from '../lib/i18n'
 import TarjetaPlegable from './TarjetaPlegable'
+import Explica from './Explica'
 import { diasDelDato, divisasOrdenadas, esIndice } from '../lib/cot'
 import { useCot } from '../lib/useCot'
 
@@ -147,7 +148,7 @@ export default function Cot() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {filas.map((d) => (
-              <Fila key={d.divisa} d={d} t={t} p={datos.percentiles?.[d.divisa]} />
+              <Fila key={d.divisa} d={d} t={t} p={datos.percentiles?.[d.divisa]} fecha={fecha} />
             ))}
           </div>
 
@@ -168,7 +169,7 @@ export default function Cot() {
   )
 }
 
-function Fila({ d, t, p }) {
+function Fila({ d, t, p, fecha }) {
   const pct = d.fondosPct
   const etiqueta = pct > 0 ? t('cot.comprados') : pct < 0 ? t('cot.vendidos') : t('cot.igualados')
 
@@ -259,6 +260,29 @@ function Fila({ d, t, p }) {
               : t('cot.cambio', { n: enteroConSigno(d.cambioNeto) })}
         </span>
       </div>
+
+      {/* «¿Qué significa?». Mismo criterio que el resto de la tarjeta: dice
+          cómo están posicionados los grandes y qué NO quiere decir eso, nunca
+          qué hacer. */}
+      <Explica>
+        <p style={{ margin: 0 }}>
+          {pct === 0
+            ? t('explica.cot.igualados', { divisa: d.divisa })
+            : t(pct > 0 ? 'explica.cot.comprados' : 'explica.cot.vendidos', {
+                divisa: d.divisa,
+                pct: Math.abs(pct).toFixed(1),
+                contra: esIndice(d.divisa) ? t('explica.cot.contraCesta') : t('explica.cot.contraDolar'),
+              })}
+        </p>
+        <p style={{ margin: 0 }}>{t('explica.cot.noDice')}</p>
+        {d.cambioNeto != null && d.cambioNeto !== 0 && (
+          <p style={{ margin: 0 }}>
+            {t(d.cambioNeto > 0 ? 'explica.cot.semanaMas' : 'explica.cot.semanaMenos', { n: Math.abs(d.cambioNeto) })}
+          </p>
+        )}
+        {p && <p style={{ margin: 0 }}>{t('explica.cot.historia')}</p>}
+        <p style={{ margin: 0 }}>{t('explica.cot.retraso', { fecha })}</p>
+      </Explica>
     </div>
   )
 }
