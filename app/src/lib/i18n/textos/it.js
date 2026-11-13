@@ -198,6 +198,7 @@ export default {
   tablero: {
     ventasPausadas:
       'Per ora l’app non suggerisce vendite. Abbiamo misurato le regole sugli ultimi 10 mesi di mercato: le operazioni di vendita perdevano denaro in modo costante, quelle di acquisto no. Preferiamo non suggerirti nulla piuttosto che suggerirti qualcosa che sappiamo perdente. La panoramica continua a mostrare sopra quali valute sono deboli, e quella sì è buona informazione.',
+    ventasPausadasHoy: "Queste oggi hanno superato la soglia di forza dal lato della vendita. Te le mostriamo perché tu le veda, ma restano in pausa: l'app non le propone e non fanno suonare il telefono. La decisione di operare è tua.",
     volver: '← Indietro',
     sesionActiva: 'Sessione attiva:',
     fuerzaRelativa: 'Forza relativa per valuta',
@@ -254,6 +255,7 @@ export default {
   },
 
   setup: {
+    pausada: 'VENDITA IN PAUSA',
     soporte: 'Supporto',
     resistencia: 'Resistenza',
     entrada: 'Ingresso',

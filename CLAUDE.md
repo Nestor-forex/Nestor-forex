@@ -15723,3 +15723,74 @@ sus números, la cota sin comparar, la familia desconocida en «general», ningu
 explicación de noticia con compra o venta, la caja heredando `rtl` en árabe,
 los códigos de divisa en `ltr`, cero errores de consola y cero desplazamiento
 lateral. Y sin `cot.json` (como en Intradía) no revienta nada.
+
+---
+
+# Las ventas en pausa se ENSEÑAN con sus niveles (2026-11-13). Solo Swing
+
+Néstor, leyendo el reporte: **«si pasan los umbrales quiero que se vean»**.
+Eligió «Enseñarlas y medir» por `AskUserQuestion`. Hasta hoy el reporte solo
+decía cuántas eran y la app ni eso.
+
+⚠️ **NO SE REACTIVAN.** `VENTAS_PAUSADAS` sigue en `true`: la app no las
+propone y el celular no suena por ellas (los avisos los manda el vigía, que las
+sigue marcando con `esSombra`).
+
+- `derivarVista` devuelve **`setupsPausados`**: las 3 primeras ventas que pasan
+  el umbral, con `pausada: true`. **Son exactamente las que anota el vigía**
+  (mismo `cls`, mismo orden, mismo `topN`, misma geometría), y
+  `prueba-umbral.mjs` lo comprueba nivel por nivel. Nunca entran en `setups`.
+- En la app van dentro de «Mejores para vender», con su aviso ANTES de las
+  tarjetas y la etiqueta «VENTA EN PAUSA» en cada una (y en el detalle).
+- En el reporte, bloque propio «Ventas en pausa — pasaron el umbral», después de
+  la línea de los bloqueados y antes de la reversión.
+
+## Lo que se vio al mirar el registro real
+
+| (registro hacia adelante, hasta el 2026-11-13) | ops | acierto | pips |
+|---|---:|---:|---:|
+| compras que la app propone | 42 | 45 % | −1.490 |
+| ventas en pausa (sombra) | 32 | 56 % | −458 |
+
+La pausa se decidió el 2026-08-12 con el banco de entonces (219 días, ventas
+40 % y −0,30). **En la realidad las ventas van MEJOR que las compras, y las dos
+pierden** (la geometría de la app pide ~60 % para empatar). Con 32 operaciones
+el margen es ±17: no distingue nada todavía. La regla de `reglas.js` sigue en
+pie: se reactivan solo si el banco de pruebas da positivo en el lado de las
+ventas.
+
+---
+
+# Fase 4: la sonda de fuentes de noticias (2026-11-13). Solo Swing
+
+```
+app/scripts/lib/noticias.mjs        leer RSS/Atom y el veredicto (puro)
+app/scripts/sonda-noticias.mjs      15 candidatas: 8 bancos centrales + 7 medios
+app/scripts/prueba-noticias.mjs     ~40 comprobaciones, sin internet
+.github/workflows/sonda-noticias.yml  solo a mano, permiso de LECTURA, sin llaves
+```
+
+Sonda primero, lector después, como el calendario, las tasas y el COT.
+
+## Los cinco criterios, escritos antes de ver un titular
+
+200 sin credencial · robots.txt no lo prohíbe (solo DESCARTA, no autoriza) ·
+al menos 3 titulares · el 80 % con FECHA y ENLACE · el último de menos de 72 h
+(un canal parado sigue respondiendo 200). Que hable de Forex **no** se exige:
+la nota de prensa de un banco central es la noticia de su divisa. Se cuenta
+cuántos titulares nombran una de nuestras divisas, como información.
+
+⚠️ **Tres estados, y el del medio es el que importa:** `sirve` · `no-se-pudo`
+(no se pudo LEER: no dice nada de la fuente) · `no-sirve` (se leyó y falla un
+criterio). Sin fuentes leídas el veredicto general es «no se pudo mirar», nunca
+«no hay fuentes» — la asimetría de `veredictoBusqueda`.
+
+⚠️ **Una fecha que no se entiende es `null`**, nunca «ahora» ni 1970.
+
+⚠️ **Escrito antes:** una noticia NO es una señal (dirá qué pasó y cuándo,
+nunca hacia dónde); se guardaría solo titular, fecha, enlace y fuente; las
+fuentes COMERCIALES pasan solo criterios técnicos y sus condiciones de uso las
+lee una persona; usarlas para decidir sería un FILTRO y va al banco antes.
+
+📌 **Un workflow nuevo no se puede lanzar desde una rama** (404): hay que
+fusionarlo antes de pulsarlo.

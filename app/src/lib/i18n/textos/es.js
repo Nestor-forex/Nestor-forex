@@ -282,6 +282,7 @@ export default {
     // midió, no funcionaban, se quitaron.
     ventasPausadas:
       'De momento la app no sugiere ventas. Medimos las reglas sobre los últimos 10 meses de mercado y las operaciones de venta perdían dinero de forma constante, mientras que las de compra no. Preferimos no sugerirte nada antes que sugerirte algo que sabemos que pierde. El barrido sigue mostrando arriba qué divisas están débiles, que eso sí es información buena.',
+    ventasPausadasHoy: 'Estas pasaron hoy el umbral de fuerza del lado de la venta. Te las enseñamos para que las veas, pero siguen en pausa: la app no las propone y no hacen sonar el celular. La decisión de operar es tuya.',
     atrPorHora: ({ v }) => `ATR ${v}%`,
     riesgoTitulo: 'Riesgo:',
     riesgoTexto:
@@ -328,6 +329,7 @@ export default {
   },
 
   setup: {
+    pausada: 'VENTA EN PAUSA',
     soporte: 'Soporte',
     resistencia: 'Resistencia',
     entrada: 'Entrada',

@@ -159,7 +159,7 @@ export default function App() {
   // niveles distintos: el fallo de siempre. Con el `tipo` dentro no hay dos
   // claves iguales.
   const detalle = detalleId
-    ? [...mercado.setups, ...mercado.setupsReversion, ...mercado.setupsBollinger].find(
+    ? [...mercado.setups, ...mercado.setupsReversion, ...mercado.setupsBollinger, ...(mercado.setupsPausados ?? [])].find(
         (s) => claveSetup(s) === detalleId,
       )
     : null
@@ -368,6 +368,7 @@ export default function App() {
             vigilancia={vista.vigilancia}
             setups={vista.setups}
             setupsReversion={vista.setupsReversion}
+            setupsPausados={vista.setupsPausados}
             setupsBollinger={vista.setupsBollinger}
             correlaciones={vista.correlaciones}
             compresionPares={vista.compresionPares}

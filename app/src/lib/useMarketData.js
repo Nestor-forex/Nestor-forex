@@ -164,6 +164,9 @@ export function useMarketData({ thr = 0.5, topN = 3 } = {}) {
     vigilancia: vista?.vigilancia ?? [],
     setups: vista?.setups ?? [],
     setupsReversion: vista?.setupsReversion ?? [],
+    // Las ventas en pausa con sus niveles (2026-11-13), en su propia lista y
+    // marcadas `pausada`: se enseñan, no se proponen ni hacen sonar el celular.
+    setupsPausados: vista?.setupsPausados ?? [],
     // El toque de banda de Bollinger, la quinta regla en pruebas (2026-10-13).
     // Lo pidió Néstor el 2026-10-20: «TOCA LO DE BOLLINGER».
     //

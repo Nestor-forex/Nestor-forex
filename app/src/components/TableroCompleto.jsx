@@ -51,7 +51,15 @@ function SetupCard({ s, t, onVerSetup }) {
   // De la app es lo que ES de la app; todo lo demás es una regla en pruebas y
   // lleva su etiqueta sí o sí.
   const esDeLaApp = !s.tipo || s.tipo === 'tendencia'
-  const etiquetaRegla = esDeLaApp ? null : ETIQUETA_REGLA[s.tipo] ? t(ETIQUETA_REGLA[s.tipo]) : s.tipo.toUpperCase()
+  // Una venta en pausa ES de la app (misma regla, misma geometría) pero la app
+  // no la propone: lleva su propia etiqueta, o se leería como una señal normal.
+  const etiquetaRegla = s.pausada
+    ? t('setup.pausada')
+    : esDeLaApp
+      ? null
+      : ETIQUETA_REGLA[s.tipo]
+        ? t(ETIQUETA_REGLA[s.tipo])
+        : s.tipo.toUpperCase()
   return (
     <div className="card">
       {/* ⚠️ LA TARJETA SE IDENTIFICA SOLA, y no basta con el título de la
@@ -150,7 +158,7 @@ function RazonList({ items, emptyText }) {
   )
 }
 
-export default function TableroCompleto({ onVolver, onVerSetup, filtro = null, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], setupsBollinger = [], correlaciones = [], riesgoSenales = [], compresionPares = [], corte, generadoEl, horasViejo, costePorAntiguedad }) {
+export default function TableroCompleto({ onVolver, onVerSetup, filtro = null, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], setupsPausados = [], setupsBollinger = [], correlaciones = [], riesgoSenales = [], compresionPares = [], corte, generadoEl, horasViejo, costePorAntiguedad }) {
   const { t, locale } = useIdioma()
   // Cómo le va de verdad a la regla de reversión, contado en vivo. Ver el
   // porqué en `useResumenReal`: este número estuvo escrito a mano y se quedó
@@ -312,9 +320,28 @@ export default function TableroCompleto({ onVolver, onVerSetup, filtro = null, l
               rota", y además el usuario tiene derecho a saber que dejamos de
               sugerir ventas porque medimos que perdían. */}
           {VENTAS_PAUSADAS ? (
-            <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-              {t('tablero.ventasPausadas')}
-            </p>
+            <>
+              <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+                {t('tablero.ventasPausadas')}
+              </p>
+              {/* ⚠️ LAS QUE PASARON EL UMBRAL HOY, CON SUS NIVELES (2026-11-13).
+                  Néstor: «si pasan los umbrales quiero que se vean». Van aquí
+                  y no en «Setups del top», que es lo que la app PROPONE: cada
+                  tarjeta lleva la etiqueta de pausa y el aviso va ANTES de
+                  ellas, que es cuando sirve. Son las mismas que anota el vigía. */}
+              {setupsPausados.length > 0 && (
+                <>
+                  <p style={{ margin: '10px 0 12px', fontSize: 12.5, color: 'var(--amber)', lineHeight: 1.55 }}>
+                    {t('tablero.ventasPausadasHoy')}
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    {setupsPausados.map((s) => (
+                      <SetupCard key={s.name + s.lado} s={s} t={t} onVerSetup={onVerSetup} />
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
           ) : (
             <RazonList items={ventas} emptyText={t('tablero.sinVentas')} />
           )}

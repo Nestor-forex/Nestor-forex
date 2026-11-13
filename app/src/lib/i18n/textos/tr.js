@@ -198,6 +198,7 @@ export default {
   tablero: {
     ventasPausadas:
       'Şimdilik uygulama satış önermiyor. Kuralları piyasanın son 10 ayı üzerinde ölçtük: satış işlemleri sürekli para kaybederken alışlar kaybetmiyordu. Kaybettiğini bildiğimiz bir şeyi önermektense hiçbir şey önermemeyi tercih ederiz. Tarama yukarıda hangi para birimlerinin zayıf olduğunu göstermeye devam ediyor, o bilgi sağlam.',
+    ventasPausadasHoy: 'Bunlar bugün satış tarafında güç eşiğini geçti. Görebilmen için gösteriyoruz, ama hâlâ duraklatılmış durumdalar: uygulama bunları önermiyor ve telefonun çalmıyor. İşlem yapma kararı senin.',
     volver: '← Geri',
     sesionActiva: 'Aktif seans:',
     fuerzaRelativa: 'Para birimine göre göreli güç',
@@ -254,6 +255,7 @@ export default {
   },
 
   setup: {
+    pausada: 'SATIŞ DURAKLATILDI',
     soporte: 'Destek',
     resistencia: 'Direnç',
     entrada: 'Giriş',

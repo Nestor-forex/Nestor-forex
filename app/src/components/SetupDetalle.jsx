@@ -230,6 +230,14 @@ export default function SetupDetalle({ setup, corte, onVolver, onAnotar }) {
           </span>
         </div>
 
+        {/* Una venta en pausa abierta en detalle: sin esto la pantalla es
+            idéntica a la de una señal que la app propone. */}
+        {setup.pausada && (
+          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--amber)', lineHeight: 1.55 }}>
+            {t('tablero.ventasPausadasHoy')}
+          </p>
+        )}
+
         {/* --- gráfico --- */}
         <div className="card" style={{ padding: '10px 6px 6px' }}>
           <svg

@@ -202,6 +202,7 @@ export default {
   tablero: {
     ventasPausadas:
       'Vorerst schlägt die App keine Verkäufe vor. Wir haben die Regeln über die letzten 10 Monate Marktdaten gemessen: die Verkaufsgeschäfte verloren durchgehend Geld, die Käufe nicht. Uns ist lieber, gar nichts vorzuschlagen, als etwas, von dem wir wissen, dass es verliert. Der Überblick zeigt oben weiterhin, welche Währungen schwach sind — das ist gute Information.',
+    ventasPausadasHoy: 'Diese haben heute die Stärkeschwelle auf der Verkaufsseite überschritten. Wir zeigen sie dir, damit du sie siehst, aber sie bleiben pausiert: Die App schlägt sie nicht vor und sie lösen keine Benachrichtigung aus. Die Entscheidung zu handeln liegt bei dir.',
     volver: '← Zurück',
     sesionActiva: 'Aktive Session:',
     fuerzaRelativa: 'Relative Stärke je Währung',
@@ -258,6 +259,7 @@ export default {
   },
 
   setup: {
+    pausada: 'VERKAUF PAUSIERT',
     soporte: 'Unterstützung',
     resistencia: 'Widerstand',
     entrada: 'Einstieg',
