@@ -15921,3 +15921,21 @@ Los correos de permiso pasan de 2 a 5 (se suman Banco de Inglaterra, de Japón y
 Suizo) con una tabla de a dónde mandar cada uno, comprobada en sus páginas
 legales: `notas/correos-permiso-noticias.md`. El de Inglaterra va por
 formulario (enlace en bankofengland.co.uk/legal); los demás por correo.
+
+## La divisa delante de cada noticia (2026-11-13). En las dos apps
+
+Pedido por Néstor, pensando en los principiantes: cada titular lleva a la
+izquierda el código de su divisa, igual que el calendario (Fed → USD, BCE →
+EUR, Nueva Zelanda → NZD; en ING, las que nombra el titular, una debajo de
+otra). `Noticias.jsx` es GEMELO, así que el cambio va en las dos apps con la
+misma rama. El dato ya venía en `noticias.json` (`div`); antes salía al final
+de la línea gris de la fecha y casi no se veía.
+
+⚠️ Color neutro: decir de qué divisa habla una noticia no dice si le va bien
+o mal. En árabe el código va al principio de la línea (a la derecha), que es
+lo correcto, y en `ltr` para que no se dé la vuelta.
+
+⚠️ De paso: `divisasDe` marcaba «Australian dollar» como USD **y** AUD, porque
+«dollar» se contaba como dólar estadounidense. Con la divisa delante eso le
+diría a un principiante algo falso. Ahora «dollar» precedido de Canadian,
+Australian o New Zealand no cuenta como USD (5 comprobaciones nuevas).

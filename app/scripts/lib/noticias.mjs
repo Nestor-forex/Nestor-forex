@@ -117,7 +117,11 @@ export function leerCanal(xml) {
 // trae sobre todo Polonia, Turquía y Europa del Este. Nunca dice hacia dónde
 // va el precio.
 const DIVISAS = {
-  USD: /\bUSD\b|\bdollar\b|\bfed\b|federal reserve|\bfomc\b/i,
+  // ⚠️ «dollar» a secas es el de EE. UU., pero NO cuando lleva delante
+  // «Canadian», «Australian» o «New Zealand»: si no, «Australian dollar» se
+  // marcaría USD y AUD, y la tarjeta le diría a un principiante que la noticia
+  // también habla del dólar estadounidense.
+  USD: /\bUSD\b|(?<!canadian |australian |zealand )\bdollar\b|\bfed\b|federal reserve|\bfomc\b/i,
   EUR: /\bEUR\b|\beuro\b|\becb\b|eurozone|euro area/i,
   GBP: /\bGBP\b|\bpound\b|sterling|bank of england|\bboe\b/i,
   JPY: /\bJPY\b|\byen\b|bank of japan|\bboj\b/i,
