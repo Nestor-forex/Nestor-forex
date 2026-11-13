@@ -111,8 +111,11 @@ export function leerCanal(xml) {
 }
 
 // ─── ¿nombra una de nuestras divisas? ────────────────────────────────────
-// Solo para CONTAR. Códigos (USD) y pares (EUR/USD) en mayúsculas, y los
-// nombres en inglés que usan los titulares. Nunca decide nada.
+// Códigos (USD) y pares (EUR/USD) en mayúsculas, y los nombres en inglés que
+// usan los titulares. En la sonda solo CUENTA. En el publicador decide UNA
+// cosa: qué titulares de ING entran (`soloSiNombraDivisa`), porque su canal
+// trae sobre todo Polonia, Turquía y Europa del Este. Nunca dice hacia dónde
+// va el precio.
 const DIVISAS = {
   USD: /\bUSD\b|\bdollar\b|\bfed\b|federal reserve|\bfomc\b/i,
   EUR: /\bEUR\b|\beuro\b|\becb\b|eurozone|euro area/i,
@@ -242,6 +245,10 @@ export const FUENTES_PUBLICABLES = Object.freeze([
     url: 'https://think.ing.com/rss/',
     derechos: '© ING Bank N.V.',
     condiciones: 'https://think.ing.com/about/terms-of-use/',
+    // Pedido por Néstor el 2026-11-13: de ING solo lo que nombra una de las 8
+    // divisas de la app. Un banco central no lo necesita: su nota de prensa
+    // ES la noticia de su divisa, aunque el titular no la nombre.
+    soloSiNombraDivisa: true,
   },
 ])
 
@@ -269,6 +276,7 @@ export function entradaPublicable(fuente, e, ahora = Date.now()) {
     const marcas = [...(e.categorias ?? []), e.autor ?? '', e.enlace].join(' ')
     if (/think[\s-]*outside/i.test(marcas)) return false
   }
+  if (fuente.soloSiNombraDivisa && divisasDe(e.titulo).length === 0) return false
   return true
 }
 

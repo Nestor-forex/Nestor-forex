@@ -15890,3 +15890,34 @@ la atribución que pide cada fuente va al pie, sin logos.
 
 📌 **Las dos apps leen el archivo de Swing** (como el puente de MT5): dos
 publicadores serían el doble de peticiones a sitios que piden moderación.
+
+📌 **Primera corrida del publicador (2026-11-13, run 43499923690):** 15 noticias
+de 4 fuentes (Fed 4 · BCE 4 · RBNZ 1 · ING 6), 4,1 KB. **El canal de ING no trae
+categorías** («(ninguna)» en el log), así que lo de «THINK Outside» solo se puede
+filtrar por la dirección. Y ese día ING ocupaba los primeros puestos con
+noticias de Polonia, Turquía y Europa del Este: propuesto a Néstor dejar de ING
+solo lo que nombre una de las 8 divisas, sin decidir.
+
+Los correos para pedir permiso a Investing.com e investingLive están en
+`notas/correos-permiso-noticias.md`. Los manda Néstor; sin su respuesta escrita
+no se añade ninguna de las dos fuentes.
+
+## De ING solo lo que nombra una de las 8 divisas (2026-11-13)
+
+Pedido por Néstor. `soloSiNombraDivisa: true` en la entrada de ING de
+`FUENTES_PUBLICABLES`; `entradaPublicable` lo aplica con `divisasDe` ANTES de
+quedarse con las 6 más recientes, así que entran las 6 últimas que sí nombran
+una divisa. Los bancos centrales no lo llevan: su nota de prensa es la noticia
+de su divisa aunque el titular no la nombre (hay comprobación).
+
+⚠️ **Con el archivo publicado ese día, las 6 de ING habrían quedado FUERA**
+(Polonia, Turquía, República Checa, IA…). Hay días en que ING no saldrá en la
+tarjeta, y eso es el filtro funcionando, no un fallo: la fuente sale con `n: 0`.
+
+📌 `divisasDe` cuenta «dollar» como USD, así que «Australian dollar» marca USD y
+AUD. Para decidir si entra da igual (nombra una divisa nuestra igualmente).
+
+Los correos de permiso pasan de 2 a 5 (se suman Banco de Inglaterra, de Japón y
+Suizo) con una tabla de a dónde mandar cada uno, comprobada en sus páginas
+legales: `notas/correos-permiso-noticias.md`. El de Inglaterra va por
+formulario (enlace en bankofengland.co.uk/legal); los demás por correo.
