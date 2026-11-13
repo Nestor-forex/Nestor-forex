@@ -202,6 +202,7 @@ export default {
   tablero: {
     ventasPausadas:
       'Pour l’instant l’application ne propose pas de ventes. Nous avons mesuré les règles sur les 10 derniers mois de marché : les ventes perdaient de l’argent de façon constante, les achats non. Nous préférons ne rien proposer plutôt que de proposer ce que nous savons perdant. Le balayage continue de montrer plus haut quelles devises sont faibles, et cela reste une bonne information.',
+    ventasPausadasHoy: "Celles-ci ont franchi aujourd'hui le seuil de force du côté vente. Nous te les montrons pour que tu les voies, mais elles restent en pause : l'app ne les propose pas et elles ne font pas sonner ton téléphone. La décision de trader t'appartient.",
     volver: '← Retour',
     sesionActiva: 'Session active :',
     fuerzaRelativa: 'Force relative par devise',
@@ -258,6 +259,7 @@ export default {
   },
 
   setup: {
+    pausada: 'VENTE EN PAUSE',
     soporte: 'Support',
     resistencia: 'Résistance',
     entrada: 'Entrée',

@@ -190,7 +190,7 @@ const NO_SE_PASAN = {
     'solo para el REPORTE diario (2026-10-12): dice con qué umbral de fuerza se clasificó. Llevarlo a la pantalla serían 13 idiomas y no lo ha pedido nadie.',
   difMax: 'ídem — hasta dónde llegó la divergencia de hoy. Va junto a `umbral` en el reporte, no en la app.',
   bloqueados:
-    'solo para el REPORTE diario (2026-10-19): cuántos pares pasaron el umbral y se cayeron por tener su lado pausado. En la APP no hace falta — ahí el hueco no existe, porque la pantalla enseña las reversiones y Néstor ve esos mismos pares con su lado. El hueco era del reporte, que no las enseñaba.',
+    'solo para el REPORTE diario (2026-10-19): CUÁNTOS pares pasaron el umbral y se cayeron por tener su lado pausado. La app enseña esas mismas ventas con sus niveles en `setupsPausados` (2026-11-13), que sí llega a la pantalla.',
 }
 
 const calculados = clavesDelReturn(leer('../src/lib/marketCalc.js'))

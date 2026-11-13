@@ -1229,6 +1229,23 @@ export function derivarVista(
     ? { n: bloqueadosRaw.length, lado: 'VENTA', pares: bloqueadosRaw.map((p) => p.name) }
     : null
 
+  // ⚠️ LAS VENTAS EN PAUSA, CON SUS NIVELES (2026-11-13). Lo pidió Néstor: «si
+  // pasan los umbrales quiero que se vean». Hasta hoy el reporte solo decía
+  // cuántas eran y la app ni eso.
+  //
+  // ⚠️ NO VUELVEN A SER PROPUESTAS. Van en su PROPIA lista, nunca dentro de
+  // `setups`, y cada una lleva `pausada: true` para que la tarjeta lo diga
+  // sola. El celular no suena por ellas: los avisos los manda el vigía, que
+  // sigue marcándolas como sombra (`esSombra`).
+  //
+  // ⚠️ SON EXACTAMENTE LAS QUE EL VIGÍA ANOTA. El vigía llama con
+  // `incluirVentas: true` y `topN: 3`, así que anota las 3 primeras de
+  // `cands` que `cls` da por VENTA; aquí se cogen las mismas, con el mismo
+  // `cls`, el mismo orden y la misma geometría (`mkSetup` con tipo de la app).
+  // Lo que se ve y lo que se anota no pueden separarse.
+  const ventasPausadasRaw = incluirVentas ? [] : cands.filter((p) => cls(p) === 'VENTA').slice(0, topN)
+  const setupsPausados = ventasPausadasRaw.map((p) => ({ ...mkSetup(p, 'VENTA', esc, t), pausada: true }))
+
   // Lo que necesita el Analizador, un par por ficha. Va SIN filtrar por «Mis
   // pares» (ver `prueba-cableado.mjs`): ahí la persona elige el par a mano.
   const fichas = paresRaw.map((p) => fichaAnalisis(p, esc))
@@ -1243,6 +1260,7 @@ export function derivarVista(
     reversiones,
     setups,
     setupsReversion,
+    setupsPausados,
     setupsCaida,
     setupsBollinger,
     correlaciones,

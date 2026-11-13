@@ -81,6 +81,28 @@ _⚠️ La reversión es un EXPERIMENTO y hace lo contrario que la app: compra l
 `
 }
 
+// ⚠️ LAS VENTAS EN PAUSA, CON SUS NIVELES (2026-11-13). Néstor: «si pasan
+// los umbrales quiero que se vean». Hasta hoy la línea de arriba solo decía
+// cuántas eran.
+//
+// Van en su PROPIO bloque, nunca dentro de «Setups del top», que es lo que la
+// app PROPONE. Son las mismas que la app enseña y las mismas que anota el vigía
+// (`derivarVista` las saca con el mismo `cls` y el mismo orden).
+const bloquePausadas = (setupsPausados) => {
+  if (!Array.isArray(setupsPausados) || !setupsPausados.length) return ''
+  const filas = setupsPausados
+    .map(
+      (s) =>
+        `• *${s.name} ${s.lado}* — entrada ${s.entrada.split(' · ')[0]}, SL ${s.sl.split(' (')[0]}, TP ${s.tp} (R/B ${s.rr})`,
+    )
+    .join('\n')
+  return `\n*Ventas en pausa — pasaron el umbral (esto es lo que ves en la app):*
+${filas}
+
+_⚠️ Las ventas siguen en pausa: la app no las propone y no hacen sonar el celular. Se enseñan para que veas qué pasó el umbral; su registro real se sigue midiendo. La decisión de operar es tuya._
+`
+}
+
 function formatoChat({
   fecha,
   monedas,
@@ -90,6 +112,7 @@ function formatoChat({
   vigilancia,
   setups,
   setupsReversion,
+  setupsPausados,
   corte,
   difMax,
   umbral,
@@ -124,7 +147,7 @@ ${li(vigilancia)}
 
 *Setups del top:*
 ${setups.length ? setups.map(niveles).join('\n') : '_Sin setups limpios hoy._'}${lineaUmbral({ difMax, umbral, haySenales })}${lineaBloqueados({ bloqueados, haySenales })}
-${bloqueReversion(setupsReversion)}
+${bloquePausadas(setupsPausados)}${bloqueReversion(setupsReversion)}
 _Riesgo: 1-2% del capital por operación. ${limitaciones}_`
 }
 

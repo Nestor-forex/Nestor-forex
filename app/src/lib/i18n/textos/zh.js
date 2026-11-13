@@ -197,6 +197,7 @@ export default {
   tablero: {
     ventasPausadas:
       '目前应用不再给出卖出建议。我们用最近 10 个月的行情复核了规则：卖出交易持续亏钱，买入则没有。与其建议一个我们已知会亏的方向，不如什么都不建议。上方的扫描仍会显示哪些货币偏弱，那部分信息是可靠的。',
+    ventasPausadasHoy: '这些今天在卖出一侧超过了强度门槛。我们展示出来让你看到，但它们仍处于暂停状态：应用不会推荐它们，也不会让你的手机响起提醒。是否交易由你决定。',
     volver: '← 返回',
     sesionActiva: '当前时段：',
     fuerzaRelativa: '各货币相对强度',
@@ -251,6 +252,7 @@ export default {
   },
 
   setup: {
+    pausada: '卖出暂停',
     soporte: '支撑',
     resistencia: '阻力',
     entrada: '入场',

@@ -15723,3 +15723,38 @@ sus números, la cota sin comparar, la familia desconocida en «general», ningu
 explicación de noticia con compra o venta, la caja heredando `rtl` en árabe,
 los códigos de divisa en `ltr`, cero errores de consola y cero desplazamiento
 lateral. Y sin `cot.json` (como en Intradía) no revienta nada.
+
+---
+
+# Las ventas en pausa se ENSEÑAN con sus niveles (2026-11-13). Solo Swing
+
+Néstor, leyendo el reporte: **«si pasan los umbrales quiero que se vean»**.
+Eligió «Enseñarlas y medir» por `AskUserQuestion`. Hasta hoy el reporte solo
+decía cuántas eran y la app ni eso.
+
+⚠️ **NO SE REACTIVAN.** `VENTAS_PAUSADAS` sigue en `true`: la app no las
+propone y el celular no suena por ellas (los avisos los manda el vigía, que las
+sigue marcando con `esSombra`).
+
+- `derivarVista` devuelve **`setupsPausados`**: las 3 primeras ventas que pasan
+  el umbral, con `pausada: true`. **Son exactamente las que anota el vigía**
+  (mismo `cls`, mismo orden, mismo `topN`, misma geometría), y
+  `prueba-umbral.mjs` lo comprueba nivel por nivel. Nunca entran en `setups`.
+- En la app van dentro de «Mejores para vender», con su aviso ANTES de las
+  tarjetas y la etiqueta «VENTA EN PAUSA» en cada una (y en el detalle).
+- En el reporte, bloque propio «Ventas en pausa — pasaron el umbral», después de
+  la línea de los bloqueados y antes de la reversión.
+
+## Lo que se vio al mirar el registro real
+
+| (registro hacia adelante, hasta el 2026-11-13) | ops | acierto | pips |
+|---|---:|---:|---:|
+| compras que la app propone | 42 | 45 % | −1.490 |
+| ventas en pausa (sombra) | 32 | 56 % | −458 |
+
+La pausa se decidió el 2026-08-12 con el banco de entonces (219 días, ventas
+40 % y −0,30). **En la realidad las ventas van MEJOR que las compras, y las dos
+pierden** (la geometría de la app pide ~60 % para empatar). Con 32 operaciones
+el margen es ±17: no distingue nada todavía. La regla de `reglas.js` sigue en
+pie: se reactivan solo si el banco de pruebas da positivo en el lado de las
+ventas.

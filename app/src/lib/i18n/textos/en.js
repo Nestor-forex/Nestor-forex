@@ -202,6 +202,7 @@ export default {
   tablero: {
     ventasPausadas:
       'For now the app does not suggest sells. We measured the rules over the last 10 months of market data and the sell trades lost money consistently, while the buys did not. We would rather suggest nothing than suggest something we know loses. The scan still shows which currencies are weak up above — that part is good information.',
+    ventasPausadasHoy: 'These passed the strength threshold on the sell side today. We show them so you can see them, but they are still paused: the app does not propose them and they do not ring your phone. The decision to trade is yours.',
     volver: '← Back',
     sesionActiva: 'Active session:',
     fuerzaRelativa: 'Relative strength by currency',
@@ -258,6 +259,7 @@ export default {
   },
 
   setup: {
+    pausada: 'PAUSED SELL',
     soporte: 'Support',
     resistencia: 'Resistance',
     entrada: 'Entry',
