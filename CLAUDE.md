@@ -15890,3 +15890,14 @@ la atribución que pide cada fuente va al pie, sin logos.
 
 📌 **Las dos apps leen el archivo de Swing** (como el puente de MT5): dos
 publicadores serían el doble de peticiones a sitios que piden moderación.
+
+📌 **Primera corrida del publicador (2026-11-13, run 43499923690):** 15 noticias
+de 4 fuentes (Fed 4 · BCE 4 · RBNZ 1 · ING 6), 4,1 KB. **El canal de ING no trae
+categorías** («(ninguna)» en el log), así que lo de «THINK Outside» solo se puede
+filtrar por la dirección. Y ese día ING ocupaba los primeros puestos con
+noticias de Polonia, Turquía y Europa del Este: propuesto a Néstor dejar de ING
+solo lo que nombre una de las 8 divisas, sin decidir.
+
+Los correos para pedir permiso a Investing.com e investingLive están en
+`notas/correos-permiso-noticias.md`. Los manda Néstor; sin su respuesta escrita
+no se añade ninguna de las dos fuentes.
