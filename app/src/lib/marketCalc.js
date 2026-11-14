@@ -787,6 +787,14 @@ export function fichaAnalisis(p, esc = {}) {
     // enseñe y no solo dónde está el precio entre ellas. 20 velas diarias.
     bandas: bandas(p.serie20),
     medias: p.medias ?? null,
+    // Fibonacci del último movimiento de las 20 velas publicadas (2026-11-15),
+    // con la MISMA función y el mismo mínimo que la tarjeta de Compresión, para
+    // que las dos pantallas no digan niveles distintos del mismo par.
+    // `null` = sin extremos («no lo sé»); `{ sinMovimiento }` = miré y el
+    // movimiento es demasiado pequeño para que los niveles signifiquen algo.
+    fib: Array.isArray(p.altos20) && Array.isArray(p.bajos20)
+      ? (fibonacci({ altos: p.altos20, bajos: p.bajos20, atrAbs: p.atrAbs, minATR: MIN_ATR_FIBONACCI }) ?? { sinMovimiento: true })
+      : null,
     // Los huecos (FVG) vivos en las 20 velas publicadas. La última va a medias
     // (se publica con el día sin cerrar), así que no puede confirmar un hueco
     // pero sí cuenta para decir si uno ya se tocó. `null` sin extremos.
