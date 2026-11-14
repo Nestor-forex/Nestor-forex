@@ -1,6 +1,7 @@
 import { PARAMS_SOMBRA, posicionDe, reglaBollinger } from './bollinger.js'
 import { compresionDe, fibonacci, nivelDe, posicionEnRango, velasEstrechas } from './compresion.js'
 import { matrizCorrelacion, paresQueVanJuntos, riesgoEntreSenales } from './correlacion.js'
+import { huecosVivos } from './fvg.js'
 import { pivoteClasico } from './analizador.js'
 import { crearT } from './i18n/crearT.js'
 import { IDIOMA_BASE } from './i18n/idiomas.js'
@@ -769,6 +770,10 @@ export function fichaAnalisis(p, esc = {}) {
     fuerzaB: esc[p.b],
     fuerzaQ: esc[p.q],
     bollinger: posicionDe(p),
+    // Los huecos (FVG) vivos en las 20 velas publicadas. La última va a medias
+    // (se publica con el día sin cerrar), así que no puede confirmar un hueco
+    // pero sí cuenta para decir si uno ya se tocó. `null` sin extremos.
+    fvg: huecosVivos(p.altos20, p.bajos20, { velaEnCurso: true }),
     niveles: {
       app: { COMPRA: nivelesApp(p, true), VENTA: nivelesApp(p, false) },
       simetrica: { COMPRA: nivelesSimetricos(p, true), VENTA: nivelesSimetricos(p, false) },

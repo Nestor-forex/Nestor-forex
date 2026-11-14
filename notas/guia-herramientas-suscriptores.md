@@ -244,6 +244,34 @@ no es adorno, es lo que impide leer el número al revés.
 tiene esos datos, y la tarjeta no ofrece un botón para que diga siempre «sin
 dato».
 
+**FVG — brecha de valor justo** · *las dos apps* (se sumó el 2026-11-15)
+
+- **Qué te dice:** los «huecos» que dejó el precio en las últimas 20 velas:
+  tramos por los que pasó tan rápido que nadie negoció. De cada uno: si es
+  alcista o bajista, entre qué dos precios está, a cuántos pips queda del precio
+  de ahora (por encima, por debajo o «el precio está dentro ahora»), si ya se
+  tocó y hace cuántas velas se formó.
+- **De dónde viene:** de ICT (Inner Circle Trader). Muchos traders esperan que
+  el precio vuelva a rellenar esos huecos y que, al volver, siga en la dirección
+  del salto.
+- **Lo que medimos, y te lo decimos:** en la app de swing probamos esa entrada
+  —comprar o vender el primer regreso al hueco— sobre unos 5 años de mercado
+  real, con un listón escrito **antes** de medir. **No ganó**: 2.007 operaciones,
+  acertó el 48 % y perdió unos 5 centavos y medio por cada dólar arriesgado.
+  Perdía incluso **antes** de pagar los costes, y en las dos mitades del
+  periodo. En la app de intradía todavía no está medido, y la tarjeta lo dice.
+- **Para qué te sirve entonces:** para saber **dónde** hay zonas que mucha gente
+  mira. Si tu Stop-loss o tu Take-profit cae justo dentro de un hueco, es bueno
+  saberlo antes de abrir.
+- **Lo que NO es:** no te dice hacia dónde irá el precio, y «alcista» o
+  «bajista» es el nombre del hueco, no una recomendación. En los cruces de
+  Intradía los máximos y mínimos son aproximados, y la tarjeta lo avisa.
+
+> **Por qué te contamos que no ganó:** casi todos los que enseñan el FVG te
+> dicen cómo dibujarlo y ninguno te dice cuánto ganó. Nosotros lo medimos, salió
+> mal, y aun así te dejamos la herramienta, porque saber dónde están los huecos
+> es información útil aunque operarlos a ciegas no lo sea.
+
 > **La frase para el suscriptor:** el Analizador **no piensa por ti**. Junta en
 > una sola tarjeta lo que antes tenías que ir a buscar a diez pantallas, y te
 > pone al lado de cada número lo que ese número **no** dice.
