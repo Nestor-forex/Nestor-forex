@@ -275,3 +275,25 @@ las demás.
 ⚠️ **Cuando los suscriptores dependan de Qwen, el tope de la cuenta tiene que
 subir con ellos.** Un tope que corta en día 20 los deja sin Qwen el resto del
 mes; el aviso al 80 % es lo que da tiempo de subirlo.
+
+### El precio de internet (leído el 2026-11-13, igual en Plus y en Max)
+
+| herramienta integrada | qué hace | precio |
+|---|---|---:|
+| **Búsqueda web** | busca en internet | **$10 cada 1.000 llamadas** (1 centavo cada una) |
+| `web_fetch` / `web_extractor` | abre y lee una página concreta | gratis |
+| intérprete de código | cálculos | gratis |
+| `pdf_parsing` | leer un PDF (solo en Max) | $0,0033 por página |
+| `t2i_search` / `i2i_search` | búsqueda de imágenes (no se usa) | $8 cada 1.000 |
+
+⚠️ **«Gratis» es la herramienta, no el texto que trae:** lo que Qwen lee de una
+página entra en la consulta y se cobra al precio normal del modelo.
+
+⚠️ **Una búsqueda cuesta casi 3 veces más que una consulta entera al Plus.**
+Con 50 suscriptores buscando en las 5 consultas diarias, solo las búsquedas
+serían ~$75 al mes. Encaja con lo que decidió Néstor (internet solo a
+petición o con autorización del usuario). Dos propuestas que **no están
+decididas**: contar las consultas con internet aparte dentro de las 5, y
+hacer la **medición diaria SIN internet** — no solo por el coste: si Qwen
+leyera páginas distintas cada día, sus resultados dependerían de lo que
+encontró ese día y no se podrían comparar entre días.
