@@ -347,6 +347,9 @@ const LIMPIA = [
   // existiría: un hueco entre un viernes y un sábado sin mercado sería un
   // hueco inventado por la rejilla, no por el precio.
   'scripts/medir-fvg.mjs',
+  // El Ichimoku (2026-11-15): limpia por lo mismo que el FVG — su nube sale de
+  // máximos y mínimos, y un sábado sin mercado los falsearía.
+  'scripts/medir-ichimoku.mjs',
 ]
 
 const llaman = readdirSync(new URL('./', import.meta.url))
