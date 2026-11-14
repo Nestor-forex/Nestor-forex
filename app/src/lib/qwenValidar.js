@@ -147,7 +147,11 @@ export function analisisParaQwen(a) {
   if (h.atr) hh.atr = { abs: r(h.atr.abs, d + 1), pct: r(h.atr.pct, 2), pips: r(h.atr.pips, 0) }
   if (h.fuerza) hh.fuerza = { ...h.fuerza, vb: r(h.fuerza.vb, 1), vq: r(h.fuerza.vq, 1) }
   if (h.compresion) hh.compresion = { ...h.compresion, v: r(h.compresion.v, 2) }
-  if (h.bollinger) hh.bollinger = { pctB: r(h.bollinger.pctB, 2) }
+  if (h.bollinger) hh.bollinger = { pctB: r(h.bollinger.pctB, 2), arriba: r(h.bollinger.arriba, d), media: r(h.bollinger.media, d), abajo: r(h.bollinger.abajo, d), anchoPips: r(h.bollinger.anchoPips, 0) }
+  if (h.medias) {
+    const m = (x) => ({ ...x, v: r(x.v, d), pips: r(x.pips, 0) })
+    hh.medias = { sma: h.medias.sma.map(m), ema: h.medias.ema.map(m) }
+  }
   // Las seis del 2026-11-15, también como se ven en pantalla.
   if (h.spread) hh.spread = { ...h.spread, spread: r(h.spread.spread, 1), pctStop: r(h.spread.pctStop, 1), actividad: r(h.spread.actividad, 2) }
   if (h.cot) hh.cot = { ...h.cot, pctB: r(h.cot.pctB, 1), pctQ: r(h.cot.pctQ, 1) }

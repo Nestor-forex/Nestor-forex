@@ -272,6 +272,34 @@ dato».
 > mal, y aun así te dejamos la herramienta, porque saber dónde están los huecos
 > es información útil aunque operarlos a ciegas no lo sea.
 
+**Bandas de Bollinger** · *las dos apps* (en Intradía desde el 2026-11-15)
+
+- **Qué te dice:** tres líneas alrededor del precio, calculadas con las últimas
+  20 velas de la app (días en Swing, horas en Intradía): la **media** (SMA 20) y
+  dos **bandas** a dos desviaciones por encima y por debajo. Te da los tres
+  precios, el **ancho** en pips y el **%B**: 0 es la banda de abajo, 1 la de
+  arriba, 0,5 la media; más de 1 o menos de 0 es que el precio se salió.
+- **Para qué te sirve:** ver de un vistazo si el precio está estirado respecto
+  de lo normal en las últimas 20 velas, y si las bandas están estrechas (poco
+  movimiento) o anchas.
+- **Lo que NO es:** no dice hacia dónde irá. En Swing medimos la regla de
+  «tocar la banda de abajo y comprar»: dio un poco a favor contando solo el
+  spread y en contra contando el swap. Por eso corre en pruebas y no se propone.
+
+**Medias móviles (SMA y EMA)** · *las dos apps* (2026-11-15)
+
+- **Qué te dice:** el valor de cada media y a cuántos pips está el precio, por
+  encima o por debajo. La **SMA** es la media simple de las últimas velas; la
+  **EMA** da más peso a las más recientes.
+- **Los periodos de cada app:** en **Swing** cada vela es un día — SMA y EMA de
+  20 (un mes de mercado), 50 (un trimestre) y 200 (casi un año). En
+  **Intradía** cada vela es una hora — SMA 20, 50 y 200, y EMA 9, 21, 50 y 200.
+- **«faltan velas»:** la EMA de 200 necesita unas 600 velas para salir bien y
+  las apps bajan unas 300. En vez de enseñarte un número distinto del de
+  cualquier gráfico, la tarjeta te dice que falta.
+- **Lo que NO es:** que el precio esté encima de una media no quiere decir que
+  vaya a seguir subiendo. Ningún número va de verde o de rojo por eso.
+
 > **La frase para el suscriptor:** el Analizador **no piensa por ti**. Junta en
 > una sola tarjeta lo que antes tenías que ir a buscar a diez pantallas, y te
 > pone al lado de cada número lo que ese número **no** dice.
