@@ -343,6 +343,10 @@ const LIMPIA = [
   // fin de semana —el 27 % del recorrido normal— hundirían el ATR y moverían
   // justo el número que este guion parte en montones.
   'scripts/medir-compresion.mjs',
+  // El FVG (2026-11-15). Limpia, como todo lo que mide una regla tal como
+  // existiría: un hueco entre un viernes y un sábado sin mercado sería un
+  // hueco inventado por la rejilla, no por el precio.
+  'scripts/medir-fvg.mjs',
 ]
 
 const llaman = readdirSync(new URL('./', import.meta.url))

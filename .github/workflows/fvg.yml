@@ -1,0 +1,58 @@
+name: ¿Sirve el FVG (brecha de valor justo)?
+
+# ¿Mide algo la única pieza de ICT que se puede calcular con máximo y mínimo y
+# que aquí nunca se había medido? La otra pieza calculable —el barrido de
+# liquidez— se midió el 2026-09-04 y perdió en las dos apps.
+#
+# ⚠️⚠️ NO CAMBIA NADA, y no es una promesa: es el permiso.
+#
+# `permissions: contents: read` — no puede escribir en ninguna rama aunque
+# quisiera. No toca un archivo de `src/`, ni una señal, ni el barrido
+# publicado, ni el historial, ni las reglas de la sombra. Y pasar el listón
+# TAMPOCO enciende nada: la decisión es de Néstor.
+#
+# ⚠️ EL LISTÓN ESTÁ ESCRITO ANTES, en `app/scripts/lib/preregistro-fvg.mjs`
+# con fecha 2026-11-15 dentro — incluido cuál lectura es la candidata, cuál el
+# control y cuál variante se juzga.
+#
+# ⚠️ SOLO A MANO. Contesta una pregunta de una vez; no vigila nada, y por eso
+# el reloj de fuera no lo pulsa (no tiene `schedule`).
+#
+# ⚠️⚠️ NECESITA EL SECRETO. Son 14 créditos de Twelve Data (los 14 pares en dos
+# tandas), así que sin el `env` de abajo `leerLlave` no encuentra la llave.
+
+on:
+  workflow_dispatch:
+    inputs:
+      velas:
+        description: 'Cuántas velas diarias pedir (1500 ≈ 5 años de mercado)'
+        required: false
+        default: '1500'
+
+permissions:
+  contents: read
+
+jobs:
+  medir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Primero lo que va sin internet, y lo que importa es que el listón
+      # MUERDA: un veredicto que calcula una función solo vale si esa función
+      # dice que no cuando toca.
+      - name: Comprobar que el FVG y su listón muerden (sin internet)
+        working-directory: app
+        run: node scripts/prueba-fvg.mjs
+
+      - name: Medir
+        working-directory: app
+        env:
+          VELAS: ${{ inputs.velas }}
+          # ⚠️ SIN ESTO EL GUION FALLA. Ver la cabecera.
+          TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
+        run: node scripts/medir-fvg.mjs
