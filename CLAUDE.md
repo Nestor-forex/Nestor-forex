@@ -16240,3 +16240,50 @@ no sale; Bollinger sí, porque sale de `serie20`, que ya viaja.
 renglón se pintaba vacía (una raya sobre un hueco) cuando ninguna de ellas
 estaba encendida — un defecto anterior que Bollinger destapó al salir de esa
 lista. Y en árabe «%B» dentro de la frase salía «B%»: se aisló con LRI/PDI.
+
+---
+
+# Ichimoku: medido, NO pasa. Fibonacci al Analizador (2026-11-15)
+
+## Ichimoku (run 43653535419, solo Swing, 14 créditos)
+
+`src/lib/ichimoku.js` (9/26/52, la nube de hoy calculada hace 26 velas, con
+comprobación) · `preregistro-ichimoku.mjs` · `medir-ichimoku.mjs` · `ichimoku.yml`.
+
+| | ops | señ/mes | acierto | por 1R | 1ª mit | 2ª mit | +swap |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **cruce fuerte (fuera de la nube) ← juzgada** | 340 | 6,0 | 49 % | **−0,044** | +0,086 | −0,152 | −0,090 |
+| cruce Tenkan/Kijun solo (info) | 828 | 14,6 | 51 % | −0,008 | +0,085 | −0,091 | −0,054 |
+| ruptura de la nube (info) | 1.022 | 18,0 | 50 % | −0,024 | −0,003 | −0,044 | −0,069 |
+| CONTROL (al revés) | 340 | 6,0 | 51 % | −0,003 | −0,121 | +0,095 | −0,049 |
+| la app | 2.431 | 42,8 | 49 % | −0,032 | | | −0,076 |
+
+**❌ NO PASA (1 de 6).** Las tres lecturas pierden y la dirección cambia de una
+mitad a otra (la firma de la moneda al aire). **No entra en el Analizador**: Néstor
+lo pidió solo «si sale bien». Duodécima familia que se mide y no sirve.
+
+📌 La pregunta de Néstor era «de varios indicadores de tendencia alguno debería
+medir mejor». La respuesta medida: en Swing **ninguno de tendencia gana** —
+EMA20/50 de la app (−0,03), FVG (−0,055), Ichimoku (−0,044)—. No hay uno mejor
+que elegir; todos pierden por poco y lo único positivo compra debilidad.
+
+## Fibonacci en el Analizador (las dos apps)
+
+Herramienta `fibonacci`: los niveles 23,6 · 38,2 · 50 · 61,8 · 78,6 % del último
+movimiento de las 20 velas publicadas, con precio, distancia y el más cercano.
+Usa la MISMA `fibonacci()` de `compresion.js` (GEMELO) que la tarjeta de
+Compresión de Swing, y el mismo mínimo de 2 ATR (`MIN_ATR_FIBONACCI`, PRIMO: en
+Intradía es ATR de una hora). `null` = sin datos; `{ sinMovimiento }` = la tarjeta
+dice que el movimiento es demasiado chico.
+
+## Dos preguntas contestadas (sin construir nada)
+
+- **¿Bollinger normal y %B son cosas distintas?** No: el %B es una forma de leer
+  las MISMAS bandas — dónde está el precio entre ellas (0 abajo, 1 arriba). Lo
+  inventó el propio John Bollinger. Lo que estaba mal era la etiqueta de la
+  tarjeta (ya arreglada en el PR #174).
+- **¿Se arregla lo de las 600 velas de la EMA 200?** Sí, pero no gratis en
+  trabajo: subir las velas del vigía cambiaría el ATR de Swing (Wilder recorre la
+  serie entera) y con él las señales. La forma limpia es un programa aparte que
+  baje ~800 velas solo para las medias (Swing 14 créditos/día; Intradía 7 por
+  corrida) y las publique. **Pendiente de que Néstor decida.**

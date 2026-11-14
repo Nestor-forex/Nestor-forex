@@ -300,6 +300,21 @@ dato».
 - **Lo que NO es:** que el precio esté encima de una media no quiere decir que
   vaya a seguir subiendo. Ningún número va de verde o de rojo por eso.
 
+**Fibonacci** · *las dos apps* (2026-11-15)
+
+- **Qué te dice:** toma el último movimiento de las últimas 20 velas (días en
+  Swing, horas en Intradía), desde su punto más bajo hasta el más alto o al
+  revés, y marca los niveles al 23,6, 38,2, 50, 61,8 y 78,6 % del recorrido.
+  De cada nivel te da el precio y a cuántos pips queda, y marca el más cercano.
+- **Para qué se usa:** cuando el precio sube mucho y luego retrocede, muchos
+  traders miran el 38,2, el 50 y el 61,8 % para ver hasta dónde podría volver
+  antes de seguir, y ponen ahí entradas, Stop-loss o Take-profit.
+- **Si el movimiento es muy pequeño** (menos de 2 ATR), la tarjeta no dibuja
+  niveles y te lo dice: serían cinco números pegados que no significan nada.
+- **Lo que NO es:** no hay prueba de que el precio respete esos niveles por sí
+  solo. A veces los respeta porque mucha gente pone órdenes ahí. No dice hacia
+  dónde irá el precio.
+
 > **La frase para el suscriptor:** el Analizador **no piensa por ti**. Junta en
 > una sola tarjeta lo que antes tenías que ir a buscar a diez pantallas, y te
 > pone al lado de cada número lo que ese número **no** dice.
