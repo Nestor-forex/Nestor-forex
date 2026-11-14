@@ -16135,3 +16135,68 @@ los 13 diccionarios. Vale también para la landing, los tutoriales y el curso.
 
 📌 Las explicaciones de las seis herramientas para suscriptores están en
 `notas/guia-herramientas-suscriptores.md`, sección del Analizador.
+
+---
+
+# El FVG (brecha de valor justo): medido, NO pasa, y aun así va al Analizador (2026-11-15)
+
+Néstor preguntó por **IPDA y FVG** (ICT). IPDA («el algoritmo de los bancos que
+entrega el precio») no se puede medir: no es un dato, es una creencia, y choca
+con que el Forex no tiene un sitio central. El FVG sí: solo pide máximo y
+mínimo. Pidió **medirlo y añadirlo al Analizador** como las seis anteriores.
+
+```
+src/lib/fvg.js                      la matemática                    GEMELO (95)
+scripts/lib/preregistro-fvg.mjs     el listón, fecha 2026-11-15 dentro   solo Swing
+scripts/medir-fvg.mjs + fvg.yml     solo a mano, lectura, 14 créditos   solo Swing
+scripts/prueba-fvg.mjs              comprobaciones sin internet        solo Swing
+```
+
+**Definición:** hueco alcista si el mínimo de la vela 3 > máximo de la vela 1;
+bajista al revés. **Regla medida:** el PRIMER regreso a un hueco de las últimas
+20 velas, sin tocar desde que se formó, y sin cerrar atravesándolo → entrar a
+favor del salto (lectura de ICT). **Control:** el mismo disparo al revés.
+
+## El resultado (run 43649733650, 1.332 días, vara neutra 1:1, con costes)
+
+| | ops | acierto | por 1R | sin costes | 1ª mit | 2ª mit | +swap |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **FVG pura ← la juzgada** | 2.007 | 48 % | **−0,055** | −0,037 | −0,037 | −0,074 | −0,098 |
+| hueco ≥ 0,25 ATR (info) | 1.258 | 49 % | −0,043 | −0,025 | −0,044 | −0,042 | −0,084 |
+| ventana 10 (info) | 1.859 | 48 % | −0,052 | −0,035 | −0,028 | −0,077 | −0,095 |
+| CONTROL (al revés) | 2.007 | 52 % | +0,017 | +0,034 | +0,004 | +0,031 | −0,026 |
+| reversión M2 | 1.566 | 51 % | +0,007 | | −0,042 | +0,056 | |
+| la app | 2.474 | 49 % | −0,040 | | | | |
+
+**❌ NO PASA (2 de 6).** Pierde antes de costes y en las dos mitades; gana en 5
+de 14 pares. Solape con M2: 1 %.
+
+⚠️ **El control sale positivo y NO se asciende**: se diseñó como control, +0,017
+es casi cero, y pagando swap pierde (−0,026). Es la misma familia que el control
+de la confluencia y el de «comprar la caída»: **en Swing, ir a favor del
+movimiento pierde y ir en contra mide un pelo mejor.** Undécima confirmación.
+
+⚠️ **Y no se vuelve a medir sobre este periodo** (barrer ventanas o tamaños
+devuelve el mismo número por construcción). **En Intradía no está medido.**
+
+## En el Analizador, como INFORMACIÓN
+
+Bloque «FVG (brecha de valor justo)»: hasta 4 huecos vivos más cercanos al
+precio, con bordes, distancia en pips (por encima / por debajo / dentro), si ya
+se tocaron y cuántas velas atrás. **Ni el tipo ni la distancia van de color.**
+La nota dice el resultado medido (en Intradía: «en la app de swing no ganó; con
+velas de una hora todavía no se ha medido»).
+
+⚠️ **La vela en curso NO confirma un hueco** (`velaEnCurso: true` en las dos
+apps): su mínimo todavía puede bajar. Sí cuenta para decir si uno ya se tocó.
+
+⚠️ **Intradía publica ahora `altos20`/`bajos20`** (~4 KB más). Hasta que el
+publicador corra con el código nuevo, su barrido no los trae y el botón **no
+sale** — comprobado en navegador, no revienta. En los cruces son aproximados.
+
+📌 **El humo con el mercado inventado dio CERO señales** en la primera pasada: el
+doble de velas tiene rangos de ±0,4-0,8 % alrededor del cierre y nunca deja un
+hueco. No era un fallo del código. Se probó con una copia del doble de rangos
+estrechos (en el scratchpad, no en el repo), y la plomería salió simétrica
+(81 % / 19 %). **Un mercado inventado sirve para la plomería, nunca para
+conclusiones** — esa vez «ganaba» porque es una tendencia en forma de ola.
