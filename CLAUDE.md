@@ -16200,3 +16200,43 @@ hueco. No era un fallo del código. Se probó con una copia del doble de rangos
 estrechos (en el scratchpad, no en el repo), y la plomería salió simétrica
 (81 % / 19 %). **Un mercado inventado sirve para la plomería, nunca para
 conclusiones** — esa vez «ganaba» porque es una tendencia en forma de ola.
+
+---
+
+# Bollinger en las dos apps y medias móviles en el Analizador (2026-11-15)
+
+Néstor: «agrega bandas de Bollinger que sí midan según la temporalidad de cada
+app, y medias móviles simples y exponenciales en los periodos de cada app».
+
+```
+src/lib/medias.js     smaUltima · emaUltima · mediasDe        GEMELO (nuevo)
+src/lib/bollinger.js  pasa a GEMELO: Intradía no lo tenía      GEMELO (97 en total)
+marketCalc.js         PERIODOS_MEDIAS + `medias` por par + `bandas` en la ficha   PRIMO
+```
+
+| | Swing (velas diarias) | Intradía (velas de una hora) |
+|---|---|---|
+| Bollinger | 20 velas, 2 desviaciones | 20 velas, 2 desviaciones (**nuevo**) |
+| SMA | 20 · 50 · 200 | 20 · 50 · 200 |
+| EMA | 20 · 50 · 200 | 9 · 21 · 50 · 200 |
+
+⚠️⚠️ **LA TARJETA DECÍA «%B» Y ENSEÑABA OTRA COSA.** Enseñaba `posicionDe`
+(−1 a +1); el %B de Bollinger va de 0 a 1. Un precio en la media salía «0.00»
+cuando su %B es 0,50. Arreglado en `bollingerDe` (%B = (precio − abajo) /
+(arriba − abajo)) y con comprobación de que cuadra con la posición.
+
+⚠️ **LA EMA NECESITA 3× SU PERIODO** (`VECES_EMA`) o sale `null` con «faltan
+velas». Con menos, lo que queda del arranque pesa más del 2 % y el número no es
+el de un gráfico con historia. **Por eso la EMA 200 sale vacía en las dos apps**
+(bajan ~300 velas; Swing ~215 tras quitar fines de semana). La SMA 200 sí sale.
+Subir a 600 velas no cuesta créditos pero cambiaría el ATR de Swing (Wilder
+recorre la serie entera) y con él las señales: no se hizo.
+
+⚠️ Las medias se calculan EN EL VIGÍA y viajan en `barrido.json` (necesitan la
+serie entera). Hasta que corra con el código nuevo, el botón «Medias móviles»
+no sale; Bollinger sí, porque sale de `serie20`, que ya viaja.
+
+📌 **Lo que solo se vio mirando la captura:** la lista de herramientas de un
+renglón se pintaba vacía (una raya sobre un hueco) cuando ninguna de ellas
+estaba encendida — un defecto anterior que Bollinger destapó al salir de esa
+lista. Y en árabe «%B» dentro de la frase salía «B%»: se aisló con LRI/PDI.

@@ -1,7 +1,8 @@
-import { PARAMS_SOMBRA, posicionDe, reglaBollinger } from './bollinger.js'
+import { PARAMS_SOMBRA, bandas, posicionDe, reglaBollinger } from './bollinger.js'
 import { compresionDe, fibonacci, nivelDe, posicionEnRango, velasEstrechas } from './compresion.js'
 import { matrizCorrelacion, paresQueVanJuntos, riesgoEntreSenales } from './correlacion.js'
 import { huecosVivos } from './fvg.js'
+import { mediasDe } from './medias.js'
 import { pivoteClasico } from './analizador.js'
 import { crearT } from './i18n/crearT.js'
 import { IDIOMA_BASE } from './i18n/idiomas.js'
@@ -37,6 +38,15 @@ export const PAIRS = [
 // nada comprobaba que el RSI siguiera siendo el RSI. Estaban bien, pero por
 // buen trabajo, no por protección — cualquiera podía romperlos sin que nada
 // avisara. Son la base de la que salen el stop, el objetivo y las señales.
+// Las medias que enseña el Analizador (2026-11-15). En esta app cada vela es un
+// DÍA, así que son las clásicas del gráfico diario: 20 (un mes de mercado), 50
+// (un trimestre) y 200 (casi un año). ⚠️ La EMA de 200 sale vacía: haría falta
+// el triple de velas de las que se bajan (ver `VECES_EMA` en `medias.js`).
+//
+// ⚠️ PRIMO: en Intradía las velas son HORAS y los periodos son otros. Copiar
+// estos allí sería traerse días donde hay horas.
+export const PERIODOS_MEDIAS = Object.freeze({ sma: [20, 50, 200], ema: [20, 50, 200] })
+
 export const emaLast = (c, p) => {
   const k = 2 / (p + 1)
   let e = c.slice(0, p).reduce((a, b) => a + b) / p
@@ -366,6 +376,9 @@ export function computarBarrido(fechas, rates, rangosPar = null) {
       // aquí arriba para el soporte y la resistencia.
       altos20: last20,
       bajos20,
+      // Las medias del Analizador, ya calculadas: necesitan la serie entera de
+      // cierres y el barrido publicado solo lleva los últimos 20. Son 6 números.
+      medias: mediasDe(closes, PERIODOS_MEDIAS),
       // Series completas, alineadas con `fechas`. Las usa scripts/lib/
       // resolver.mjs para saber si una señal llegó a su objetivo o a su stop:
       // hace falta el recorrido entero, no solo el último valor. Se exponen
@@ -770,6 +783,10 @@ export function fichaAnalisis(p, esc = {}) {
     fuerzaB: esc[p.b],
     fuerzaQ: esc[p.q],
     bollinger: posicionDe(p),
+    // Las tres bandas en PRECIO (arriba, media, abajo), para que la tarjeta las
+    // enseñe y no solo dónde está el precio entre ellas. 20 velas diarias.
+    bandas: bandas(p.serie20),
+    medias: p.medias ?? null,
     // Los huecos (FVG) vivos en las 20 velas publicadas. La última va a medias
     // (se publica con el día sin cerrar), así que no puede confirmar un hueco
     // pero sí cuenta para decir si uno ya se tocó. `null` sin extremos.
