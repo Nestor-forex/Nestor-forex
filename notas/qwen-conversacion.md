@@ -297,3 +297,39 @@ decididas**: contar las consultas con internet aparte dentro de las 5, y
 hacer la **medición diaria SIN internet** — no solo por el coste: si Qwen
 leyera páginas distintas cada día, sus resultados dependerían de lo que
 encontró ese día y no se podrían comparar entre días.
+
+## 4. La primera sonda NO llegó a preguntar: la cuenta está frenada (2026-11-14)
+
+Néstor creó la llave `sonda-github` y la guardó como secreto `QWEN_KEY`. La
+sonda (run 43561961994) falló en el primer paso, sin gastar nada:
+
+```
+403 AccessDenied.Unpurchased — "Access to model denied. Please make sure you
+are eligible for using the model."
+```
+
+en las DOS direcciones (`maas.qwencloudapi.com` y `dashscope-intl`).
+
+**Lo que se descartó, en orden, con fotos de su consola:**
+
+| sospecha | por qué no era |
+|---|---|
+| la llave mal copiada | eso da **401**, no 403 |
+| el interruptor «Stop-on-Exhaust» | ese corte da **`AllocationQuota.FreeTierOnly`**, y estaban todos apagados |
+| el nombre del modelo | «Límites del modelo» le asigna TPM a `qwen3.8-flash` y `qwen3.8-max`, y los tres modelos salen en el catálogo |
+| algo de la llave o del código | **el Playground de la consola, sin llave, da el mismo 403** al escribir «hola» |
+
+**La causa, leída en el aviso amarillo «Algunas funciones restringidas»** de
+la consola: **`RISK.RISK_CONTROL_REJECTION`** — el control de riesgo de
+Alibaba tiene la cuenta frenada. No hay interruptor: lo levanta su soporte.
+
+📌 Mi primera sospecha (Stop-on-Exhaust) era falsa y la tumbó el propio texto
+de la página, que nombraba el código de error que da ese corte. Y la prueba
+que lo decidió fue la más barata: **el Playground**, porque quita de en medio
+la llave y el código de una vez.
+
+**Pendiente de Néstor:** ticket al soporte desde ese mismo aviso, con el
+código y un `request_id` (00041628-9541-9439-9560-babcec411ada). Si piden la
+información fiscal, es la del RUT con la dirección vieja, pendiente de
+actualizar en la DIAN. **Cuando la levanten, se relanza la sonda tal cual:**
+la llave de GitHub está bien y no hay que tocar nada del código.
