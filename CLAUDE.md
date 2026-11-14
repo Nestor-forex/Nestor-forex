@@ -16114,7 +16114,7 @@ existen); el spread y la estacionalidad los baja la propia pantalla con hooks
 que existen en las dos.
 
 ⚠️ **Ninguna de las seis elige la dirección ni da un veredicto.** Cada bloque
-lleva su nota: el spread es de la cuenta del desarrollador en AvaTrade, no del
+lleva su nota: el spread es de una cuenta real del desarrollador, no del
 suscriptor; el COT no dice hacia dónde; la estacionalidad mide cuánto, no hacia
 dónde, y la dirección por mes va con un ± de ~23 puntos.
 
@@ -16124,3 +16124,14 @@ hubo mercado). La edad de la foto del bróker sale en min o en h.
 Comprobado en Chromium a 390 px con los datos reales de producción, en español
 y árabe: cero errores de consola, cero desplazamiento lateral, cero datos en
 `rtl`; y sin COT/oro/correlación (modo Intradía) esos botones no salen.
+
+⚠️⚠️ **NUNCA NOMBRAR AL BRÓKER EN NADA QUE VEA EL SUSCRIPTOR** (Néstor,
+2026-11-15: «jamás debe decir cuál es el nombre de mi bróker, no le voy a hacer
+publicidad»). La primera versión de la nota del spread lo nombraba en los 13
+idiomas y se corrigió antes de fusionar. Se dice «una cuenta real del
+desarrollador de la app», igual que `vivo.cuentaGenerica` desde el 2026-10-30.
+`prueba-analizador.mjs` (GEMELO) falla si el nombre aparece en cualquiera de
+los 13 diccionarios. Vale también para la landing, los tutoriales y el curso.
+
+📌 Las explicaciones de las seis herramientas para suscriptores están en
+`notas/guia-herramientas-suscriptores.md`, sección del Analizador.
