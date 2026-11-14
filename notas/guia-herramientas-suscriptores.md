@@ -137,8 +137,10 @@ herramientas.
      resistencia) y Take-profit en el otro extremo de las últimas 20 velas.
 4. **Qué herramientas ver:** enciende o apaga las que te interesen: soporte y
    resistencia, pivote, tendencia (EMA), RSI, ATR, fuerza de las divisas,
-   compresión, Bollinger (%B, solo en Swing), calendario de las dos divisas y
-   swap.
+   compresión, Bollinger (%B, solo en Swing), calendario de las dos divisas,
+   swap, **spread y actividad, COT, oro, correlación, estacionalidad y tu
+   diario** (ver abajo qué dice cada una). Puedes encender solo dos o tres, o
+   todas: la tarjeta junta las que elijas.
 5. Lee la tarjeta: **Entrada, Stop-loss y Take-profit** con sus pips, la
    relación riesgo/beneficio, y **el lote y el riesgo en dólares** calculados
    con tu perfil.
@@ -166,6 +168,85 @@ y el lote para que, si toca el Stop-loss, pierdas 20 USD.
 **Lo que NO hace:** **no elige la dirección** y no es una señal. Todos los
 números salen de cuentas que la app ya usa; no hay ninguna fórmula nueva
 escondida.
+
+### Las seis herramientas que se sumaron al Analizador (2026-11-15)
+
+Con estas seis, la tarjeta junta **todas** las herramientas de información de
+la app. Cada una sale en su propio bloque, con una nota corta debajo: la nota
+no es adorno, es lo que impide leer el número al revés.
+
+**Spread y actividad** · *las dos apps*
+- **Qué te dice:** cuánto cuesta abrir ese par (el spread, en pips) y, sobre
+  todo, **qué parte de tu Stop-loss se come ese coste**. 1,4 pips sobre un
+  Stop-loss de 38 son el 3,7 % de lo que arriesgas; sobre uno de 15 serían casi
+  el 10 %.
+- **Actividad:** qué tan movido está ese par hoy comparado con el más movido
+  del momento (100 % = el más activo).
+- **Para qué te sirve:** saber si el coste de entrar pesa mucho en esa
+  operación, y si hay gente negociando el par o está dormido.
+- **Lo que NO es:** no es el spread de tu bróker, sino el de una cuenta real
+  del desarrollador de la app (el tuyo puede ser distinto). La actividad cuenta
+  cuántas veces cambió el precio: **no es volumen y no dice hacia dónde**. Si
+  el dato del bróker es viejo, la tarjeta te dice de hace cuánto es.
+
+**COT (fondos)** · *solo Swing*
+- **Qué te dice:** si los grandes fondos especulativos están **comprados (+)**
+  o **vendidos (−)** en cada una de las dos monedas del par, en % de todos los
+  contratos abiertos, con la fecha del informe.
+- **Para qué te sirve:** saber si una apuesta ya está muy llena: cuando casi
+  todos están del mismo lado, queda poca gente por entrar.
+- **Lo que NO es:** no dice hacia dónde irá el precio, y el informe llega con
+  varios días de retraso. Lo medimos como filtro de señales dos veces y **no
+  sirvió**: aquí es solo información.
+
+**Oro** · *solo Swing*
+- **Qué te dice:** cuánto se mueve el oro junto con ese par (de −1 a +1) y
+  cuánto se movió el oro en las últimas 20 sesiones.
+- **Para qué te sirve:** muchas veces el oro sube cuando el dólar baja. Si el
+  par que miras va muy pegado al oro, lo que haga el oro te da una pista de
+  contexto.
+- **Lo que NO es:** moverse juntos no quiere decir que uno mueva al otro, y no
+  dice el futuro: mide los últimos tres meses.
+
+**Correlación** · *solo Swing*
+- **Qué te dice:** qué otros pares se mueven **casi igual** que éste (o casi
+  exactamente al revés).
+- **Para qué te sirve:** evitar abrir sin querer dos veces la misma apuesta. Si
+  EUR/USD y GBP/USD van a +0,90, comprar los dos es como comprar uno el doble
+  de grande. Si van al revés, se anulan y pagas dos veces el coste para nada.
+- **Si sale «ningún par»:** ese par va bastante por su cuenta, que también es
+  un dato.
+
+**Estacionalidad** · *las dos apps*
+- **Qué te dice:** cuánto suele moverse ese par **este día de la semana**,
+  **este mes** (y, en Intradía, **a esta hora**) comparado con lo normal.
+  «×1.09» quiere decir que se mueve un 9 % más que la media. También dice
+  cuántas veces un mes como éste terminó en verde, con su ±.
+- **Para qué te sirve:** elegir el **momento**: un día o una hora en que el par
+  suele moverse poco puede no alcanzar tu Take-profit.
+- **Lo que NO es:** mide **cuánto** se mueve, nunca **hacia dónde**. Y la parte
+  de «meses en verde» se apoya en muy pocos años, así que su ± ronda los 23
+  puntos: casi no dice nada, y la tarjeta te lo advierte. En fin de semana la
+  fila del día no sale, porque no hay mercado.
+
+**Mi diario** · *las dos apps*
+- **Qué te dice:** cómo te ha ido **a ti** con ese par (operaciones cerradas,
+  % de acierto con su ± y resultado en dólares) y cuántas operaciones tienes
+  abiertas que comparten alguna moneda con él.
+- **Para qué te sirve:** recordarte tu propia experiencia con el par antes de
+  repetir, y avisarte si vas a sumar una apuesta más grande sin darte cuenta
+  (por ejemplo, ya tienes USD/JPY abierto y ahora miras EUR/USD: los dos llevan
+  dólar).
+- **Lo que NO es:** con pocas operaciones el ± es enorme. Un 50 % sobre 2
+  operaciones no te dice nada todavía.
+
+**Por qué en Intradía no salen el COT, el oro ni la correlación:** esa app no
+tiene esos datos, y la tarjeta no ofrece un botón para que diga siempre «sin
+dato».
+
+> **La frase para el suscriptor:** el Analizador **no piensa por ti**. Junta en
+> una sola tarjeta lo que antes tenías que ir a buscar a diez pantallas, y te
+> pone al lado de cada número lo que ese número **no** dice.
 
 ---
 

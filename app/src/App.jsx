@@ -30,6 +30,8 @@ import { useMembers } from './lib/useMembers'
 import { useTrades } from './lib/useTrades'
 import { useMarketData } from './lib/useMarketData'
 import { useCalendario } from './lib/useCalendario'
+import { useCot } from './lib/useCot'
+import { useOro } from './lib/useOro'
 import { decidirModo, filtrarMercado, guardarModo, leerModo, resumenVista } from './lib/vistaPares'
 
 // La clave con la que se recuerda qué setup está abierto en la pantalla de
@@ -67,6 +69,11 @@ export default function App() {
   // cada cuatro horas TODOS los días, porque el feed cubre la semana en curso
   // y cambia de semana el domingo.
   const calendario = useCalendario()
+  // Para el Analizador (2026-11-15). Solo esta app publica COT y oro, así que
+  // se bajan aquí y se le pasan: `AnalizadorTab` es GEMELO y no puede importar
+  // un hook que la app de intradía no tiene. Son archivos pequeños y con caché.
+  const cotAnalizador = useCot()
+  const oroAnalizador = useOro()
   const miembros = useMembers(esAdmin)
   const diario = useTrades(authUser?.uid)
 
@@ -332,6 +339,9 @@ export default function App() {
                   ficha={perfil}
                   trades={diario.trades}
                   cal={calendario}
+                  cot={cotAnalizador}
+                  oro={oroAnalizador}
+                  correlaciones={mercado.correlaciones}
                   onAnotar={(pre) => {
                     setPrellenarDiario(pre)
                     setTab('diario')

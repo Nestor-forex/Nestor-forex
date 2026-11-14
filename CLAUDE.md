@@ -16087,3 +16087,51 @@ letra para `\b`, así que `subir[áa]\b` no cazaba nada. Lo cazó la prueba.
 secreto `QWEN_KEY` (README §A), lanzar la sonda, y con sus números elegir el
 modelo. El puente en Cloudflare (README §B) se monta cuando la app tenga el
 botón.
+
+---
+
+# El Analizador junta TODAS las herramientas (2026-11-15). En las dos apps
+
+Néstor trajo otra conversación que describía «un motor de síntesis
+multi-factorial» y preguntó si era lo que se estaba montando. **Sí: es el
+Analizador** (pestaña «Analizar»). Lo que faltaba era que usara las 15
+herramientas y no 9. Se añadieron las seis que faltaban:
+
+| herramienta | qué enseña | app |
+|---|---|---|
+| `spread` | spread en pips, **spread / Stop-loss** de esa tarjeta, actividad frente al par más activo | las dos |
+| `cot` | fondos comprados/vendidos en las dos divisas, con la fecha del informe | solo Swing |
+| `oro` | correlación del oro con el par y su cambio en 20 sesiones | solo Swing |
+| `correlacion` | pares con \|r\| ≥ 0,7 respecto a éste | solo Swing |
+| `estacionalidad` | recorrido típico de hoy, este mes (y esta hora en Intradía) ×media, y meses en verde con su ± | las dos |
+| `diario` | tus operaciones cerradas en el par (con ±) y abiertas que comparten divisa | las dos |
+
+⚠️ **Lo que se ofrece se decide por el DATO** (`herramientasDisponibles`), no
+por el nombre de la app: así `analizador.js` y `AnalizadorTab.jsx` siguen
+GEMELOS. El COT, el oro y la correlación llegan por **props** desde el `App.jsx`
+de Swing (un gemelo no puede importar `useCot`/`useOro`, que en Intradía no
+existen); el spread y la estacionalidad los baja la propia pantalla con hooks
+que existen en las dos.
+
+⚠️ **Ninguna de las seis elige la dirección ni da un veredicto.** Cada bloque
+lleva su nota: el spread es de una cuenta real del desarrollador, no del
+suscriptor; el COT no dice hacia dónde; la estacionalidad mide cuánto, no hacia
+dónde, y la dirección por mes va con un ± de ~23 puntos.
+
+⚠️ `null` es «no lo sé» y nunca 0. En fin de semana la fila del día no sale (no
+hubo mercado). La edad de la foto del bróker sale en min o en h.
+
+Comprobado en Chromium a 390 px con los datos reales de producción, en español
+y árabe: cero errores de consola, cero desplazamiento lateral, cero datos en
+`rtl`; y sin COT/oro/correlación (modo Intradía) esos botones no salen.
+
+⚠️⚠️ **NUNCA NOMBRAR AL BRÓKER EN NADA QUE VEA EL SUSCRIPTOR** (Néstor,
+2026-11-15: «jamás debe decir cuál es el nombre de mi bróker, no le voy a hacer
+publicidad»). La primera versión de la nota del spread lo nombraba en los 13
+idiomas y se corrigió antes de fusionar. Se dice «una cuenta real del
+desarrollador de la app», igual que `vivo.cuentaGenerica` desde el 2026-10-30.
+`prueba-analizador.mjs` (GEMELO) falla si el nombre aparece en cualquiera de
+los 13 diccionarios. Vale también para la landing, los tutoriales y el curso.
+
+📌 Las explicaciones de las seis herramientas para suscriptores están en
+`notas/guia-herramientas-suscriptores.md`, sección del Analizador.
