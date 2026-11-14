@@ -166,7 +166,10 @@ let pierde = 0
 for (const par of PAIR_NAMES) {
   const a = delPar(gJ, par)
   const b = delPar(gControl, par)
-  if (a.por1R !== null) a.por1R > 0 ? gana++ : pierde++
+  if (a.por1R !== null) {
+    if (a.por1R > 0) gana++
+    else pierde++
+  }
   const m = a.ops > 0 ? '±' + Math.round(98 / Math.sqrt(a.ops)) : '—'
   console.log(`${par.padEnd(10)} ${String(a.ops).padStart(5)} ${m.padStart(7)}  ${num(a.por1R).padStart(8)} ${num(b.por1R).padStart(8)}`)
 }
