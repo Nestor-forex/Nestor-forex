@@ -15521,6 +15521,33 @@ que no es una señal y la decisión es del suscriptor. El titular original se
 sigue enseñando tal cual (el BCE y Nueva Zelanda piden no alterarlo); lo de
 Qwen va aparte y rotulado como explicación de la IA.
 
+## ✅ Las indicaciones de Néstor sobre Qwen LLEGARON (2026-11-14)
+
+El recordatorio de arriba ya se cumplió: Néstor pegó su conversación con Qwen
+(los 4 prompts fijos, la configuración y cómo integrarse) y decidió punto por
+punto. **Todo está en `notas/qwen-conversacion.md`, y esa nota manda sobre
+cualquier plan anterior de esta memoria.** Lo esencial:
+
+- **Las instrucciones de Qwen SÍ se pueden cambiar** cuando no den resultados.
+  Cada versión lleva número y fecha, y sus resultados se cuentan por separado.
+- **Los prompts 3 y 4 van TAL CUAL**, con la puntuación del 1 al 10 y el
+  «APROBADO/RECHAZADO», **para medirlos**. Las apps no son públicas todavía. El
+  Prompt 4 dice además si el plan cumple las reglas del perfil del suscriptor.
+- **Las fases del mercado y «qué divisas se benefician» se MIDEN.**
+- **Los números los pone la app; Qwen no cambia ningún dato de las apps.**
+- **Qwen puede usar internet** a petición del usuario, combinándolo con los
+  datos de la app y citando de dónde sale.
+- **5 consultas al día por suscripción.** Las que pasen de ahí se piden al
+  desarrollador y se pagan por adelantado.
+- ⚠️ **La medición de Qwen va A LA VISTA, no en la sombra:** resultados diarios
+  con todos los pares de cada app (14 y 18). Es lo CONTRARIO de las otras
+  reglas, y es decisión suya.
+
+📌 **Al hacer la crítica cometí un error de lectura:** comparé el análisis de
+EUR/USD de Qwen con los precios del 2026-11-13, y Qwen lo hizo días antes y con
+datos que él mismo llamó simulados. Esos precios no podían cuadrar, y así se
+le pidió.
+
 ## Por qué estas tres fases, explicado para suscriptores (la DECIMOCUARTA)
 
 Néstor la pidió guardada «como las demás», para la página de venta. Va con
