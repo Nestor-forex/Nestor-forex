@@ -252,3 +252,26 @@ modo de pensar se enciende con `enable_thinking`.
 
 📌 **Para la medición diaria:** la de Max y Plus por **lotes** cuesta la mitad
 y no tiene prisa. Flash no admite lotes.
+
+### El tope de gasto: Budgets SÍ corta (visto el 2026-11-13)
+
+La pantalla «Budget Management» de Model Studio dice que permite poner un
+**tope mensual y avisos**, y que **restringe automáticamente las llamadas de
+pago por uso cuando el presupuesto se agota**. O sea que no solo avisa: corta.
+Tiene tres niveles:
+
+| nivel | para qué |
+|---|---|
+| **Account** | un tope para toda la cuenta (solo llamadas de pago por uso) |
+| Workspace | uno por espacio de trabajo |
+| **API Key** | uno por clave |
+
+Decidido para empezar: **nivel Account, $10 al mes**, con avisos antes de
+llegar. Más adelante conviene **una clave por uso** (la sonda, «Explícamelo»,
+el Analizador, la medición diaria), cada una con su tope en el nivel API Key:
+así un fallo que se quede repitiendo en una de ellas no deja sin servicio a
+las demás.
+
+⚠️ **Cuando los suscriptores dependan de Qwen, el tope de la cuenta tiene que
+subir con ellos.** Un tope que corta en día 20 los deja sin Qwen el resto del
+mes; el aviso al 80 % es lo que da tiempo de subirlo.
