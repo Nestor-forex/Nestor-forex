@@ -333,3 +333,24 @@ código y un `request_id` (00041628-9541-9439-9560-babcec411ada). Si piden la
 información fiscal, es la del RUT con la dirección vieja, pendiente de
 actualizar en la DIAN. **Cuando la levanten, se relanza la sonda tal cual:**
 la llave de GitHub está bien y no hay que tocar nada del código.
+
+### Lo que contestó Alibaba (2026-11-14, consulta 00657K154RF)
+
+Tras pedir un agente humano, un ingeniero contestó: **«problema de seguridad
+en su cuenta»**, y mandó a verificarla en
+`https://account.alibabacloud.com/kyc/index#/kyc` (dominio oficial). Mientras
+dure, la cuenta no puede comprar nada: eso es lo que da el 403. Revisan en un
+máximo de **3 días laborables** y contestan por correo.
+
+📌 **No es el RUT: es la TARJETA.** La página dice «riesgo potencial con el
+método de pago… completa tu verificación para activar la facturación de pago
+por uso». Pide, por lo visto hasta ahora:
+
+- foto de la **cara delantera** de la tarjeta, con los números del medio
+  tapados (ellos mismos dicen dejar solo los 6 primeros y los 4 últimos);
+- tipo: **Individual** si la tarjeta está a nombre de Néstor (aunque la
+  cuenta sea de empresa) o Empresa si es de una empresa;
+- el nombre del titular, exacto como en la tarjeta.
+
+⚠️ **Falta ver el final del formulario** (puede pedir algo más). Se retoma el
+2026-11-15. La foto de la tarjeta va SOLO a esa página, nunca al chat.
