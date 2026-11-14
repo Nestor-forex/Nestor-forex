@@ -159,6 +159,8 @@ export function analisisParaQwen(a) {
     hh.estacionalidad = { ...e, rDia: c(e.rDia), rMes: c(e.rMes), rHora: c(e.rHora) }
   }
   if (h.diario) hh.diario = { ...h.diario, pct: r(h.diario.pct, 0), margen: r(h.diario.margen, 0), neto: r(h.diario.neto, 2) }
+  // El FVG: bordes con los decimales del par, distancia en pips sin decimales.
+  if (h.fvg?.huecos) hh.fvg = { ...h.fvg, huecos: h.fvg.huecos.map((x) => ({ ...x, abajo: r(x.abajo, d), arriba: r(x.arriba, d), pips: r(x.pips, 0) })) }
   return {
     ...a,
     precio: r(a.precio, d),
