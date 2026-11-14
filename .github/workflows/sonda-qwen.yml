@@ -1,0 +1,42 @@
+name: Sonda de Qwen (tres modelos)
+
+# Le hace las MISMAS preguntas a Qwen Flash, Plus y Max con los datos publicados
+# de hoy, y mide si obedece las reglas, cuánto tarda y cuánto cuesta. Con eso se
+# elige el modelo. Ver la cabecera de app/scripts/sonda-qwen.mjs.
+#
+# ⚠️ GASTA DINERO DE VERDAD, poco: unas 36 consultas, del orden de 50 centavos,
+# con un tope de 2 dólares dentro del guion. Y por encima está el tope de 10
+# dólares al mes de Model Studio, que corta solo.
+#
+# ⚠️ NECESITA EL SECRETO `QWEN_KEY` de este repositorio. Los pasos con clics
+# están en puente-qwen/README.md. Sin él, el guion avisa y sale en rojo.
+#
+# ⚠️⚠️ NO CAMBIA NADA. `permissions: contents: read`: no puede escribir en
+# ninguna rama. Lo que imprime son las respuestas de Qwen y los números.
+#
+# ⚠️ SOLO A MANO. Contesta una pregunta de una vez; no vigila nada.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    # 36 consultas; las de «pensar» pueden tardar medio minuto cada una.
+    timeout-minutes: 25
+    steps:
+      - name: Traer el código
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Sondear
+        working-directory: app
+        env:
+          QWEN_KEY: ${{ secrets.QWEN_KEY }}
+        run: node scripts/sonda-qwen.mjs

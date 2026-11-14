@@ -16034,3 +16034,56 @@ publicarla, comprobar que cada pantalla sigue como la describe: una guía que no
 se toca envejece en silencio cuando cambia la app. Y sigue en pie lo de siempre
 para la landing: ningún número de acierto verificado, ninguna promesa de
 señales.
+
+---
+
+# Fase 5, primera pieza: el puente de Qwen y la sonda (2026-11-14)
+
+```
+puente-qwen/worker.js          el puente (Cloudflare) · las INSTRUCCIONES viven aquí
+puente-qwen/README.md          los clics: la llave de la sonda en GitHub, el puente en Cloudflare
+app/src/lib/qwenValidar.js     las reglas sobre lo que contesta Qwen (sonda y, luego, la app)
+app/scripts/sonda-qwen.mjs     los tres modelos con datos reales, a mano
+app/scripts/prueba-qwen.mjs    ~90 comprobaciones, sin internet ni llave
+.github/workflows/sonda-qwen.yml   solo a mano, permiso de LECTURA, secreto QWEN_KEY
+```
+
+Solo Swing. **No cambia nada de ninguna app** todavía: es la pieza que va
+debajo de «Explícamelo» y del Analizador con Qwen.
+
+⚠️⚠️ **DOS LLAVES, NO UNA.** La sonda (y luego la medición diaria) corre en
+GitHub Actions y lleva su llave como secreto de GitHub `QWEN_KEY`; el puente
+corre en Cloudflare con OTRA llave. Si una se escapa o se pone a gastar, se
+borra esa sola. Antes estaba escrito «la llave va a Cloudflare»: era el plan
+con una sola pieza.
+
+⚠️ **LAS INSTRUCCIONES DE QWEN VIVEN EN `worker.js` Y LA SONDA LAS IMPORTA DE
+AHÍ.** Dos copias se separarían, y la sonda mediría algo distinto de lo que
+reciben los suscriptores. Es el patrón de la lista del reloj. La app solo manda
+la TAREA y los DATOS: desde el teléfono nadie puede quitarle a Qwen la regla de
+no decir «compra».
+
+⚠️ **LOS PROMPTS 3 Y 4 VAN TAL CUAL**, con los datos de la app y un formato JSON
+añadido para poder medirlos. `VERSION` lleva número y fecha: cada versión se
+cuenta aparte.
+
+⚠️ **A QWEN SE LE MANDAN LOS NÚMEROS COMO SE VEN EN PANTALLA**
+(`analisisParaQwen`), no los crudos: un Stop-loss de 1.098682569512187 lo
+redondearía a su manera, y entonces «no cambies los números» dejaría de poder
+comprobarse. Las reglas comparan a medio pip, el lote a dos decimales y el R/B
+con un 5 %.
+
+⚠️ **El puente:** solo atiende con sesión de Firebase **y** ficha `aprobado`
+(lo pregunta a Firestore con el token de la persona: las reglas ya solo dejan
+leer la ficha propia, así que no hace falta otra llave); 5 consultas al día en
+hora de Colombia (admin 50) contadas en un KV de Cloudflare; si Qwen falla, la
+consulta se devuelve; techo de 400 al día para toda la cuenta; CORS solo para
+la app publicada.
+
+📌 **`\b` no sirve detrás de «subirá»:** en JavaScript la «á» no cuenta como
+letra para `\b`, así que `subir[áa]\b` no cazaba nada. Lo cazó la prueba.
+
+**Lo que falta:** que Néstor cree la llave `sonda-github` y la guarde como
+secreto `QWEN_KEY` (README §A), lanzar la sonda, y con sus números elegir el
+modelo. El puente en Cloudflare (README §B) se monta cuando la app tenga el
+botón.
