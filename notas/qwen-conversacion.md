@@ -196,3 +196,59 @@ Lo que Qwen traiga de fuera va **con su enlace** y rotulado como de fuera.
 ⚠️ **Lo que falta medir antes del paso 6: el COSTE.** Preguntar cada día por
 14 + 18 = 32 pares con varios prompts son muchas consultas. La sonda del paso 3
 lo dirá antes de comprometerse.
+
+## 3. La cuenta, creada (2026-11-13), y los precios leídos en la página de Qwen
+
+**Cuenta de negocios** de Alibaba Cloud (la personal dice «aprendizaje personal
+y uso no comercial, acceso limitado»; la de negocios cubre «emprendedores»).
+País: **Colombia** (es el de residencia, para impuestos; no se puede cambiar).
+Tarjeta verificada con un cargo de 1 dólar. **La parte fiscal se SALTÓ**: el
+RUT de Néstor tiene la dirección vieja y hay que actualizarlo en la DIAN antes
+de subirlo; si no, Alibaba tendría dos direcciones distintas para la misma
+persona. Model Studio quedó activado en la región **Singapur**.
+
+⚠️ **La cuota gratis (13 modelos, vence el 2027-02-12) NO incluye ningún
+modelo de análisis.** Son 9 de voz, 1 de imagen, 1 de búsquedas
+(`text-embedding`) y 2 de texto **para personajes** (`qwen-plus-character`,
+`qwen-flash-character`) que no se usan: mediríamos un modelo distinto del que
+tendrán los suscriptores. La página pública de cada modelo dice «quedan 1
+millón de tokens», pero es la oferta general sin iniciar sesión; manda la lista
+de la cuenta.
+
+⚠️ **El interruptor «Stop-on-Exhaust» solo protege la cuota GRATIS.** En los
+modelos de pago no corta nada. Para no llevarse sorpresas hace falta el aviso
+de gasto en **Budgets**.
+
+### Precios por millón de tokens, región Singapur (leídos en qwencloud.com el 2026-11-13)
+
+| | Max (`qwen3.8-max`) | Plus (`qwen3.7-plus`) | Flash (`qwen3.8-flash`) |
+|---|---:|---:|---:|
+| entrada | $2 | $0,32 *(normal $0,40, «20 % de descuento»)* | $0,15 |
+| salida | $6 | $1,28 *(normal $1,60)* | $0,47 |
+| entrada repetida (caché implícita) | $0,25 | $0,064 | $0,016 |
+| por lotes, entrada / salida | $1 / $3 | $0,20 / $0,80 | **no tiene** |
+| RPM / TPM | – / 2.000.000 | 15.000 / 5.000.000 | – / 2.500.000 |
+| contexto | 1M | 1M | 1M |
+
+El Plus sube a $0,96 / $3,84 con entradas de más de 256K (no es nuestro caso).
+**El descuento del Plus puede ser temporal: las cuentas van con el precio
+normal.** Las tres traen «Búsqueda web» como herramienta integrada; **su
+precio aparte todavía no se ha visto** (pestaña «Herramientas integradas» de
+Precios).
+
+**Coste por consulta** (≈5.000 tokens de entrada y 1.000 de salida, sin
+caché): Max **~$0,016** · Plus **~$0,0036** · Flash **~$0,0012**. Con 50
+suscriptores usando las 5 consultas todos los días (7.500 al mes, el peor
+caso): Max ~$120 · Plus ~$27 · Flash ~$9. Las instrucciones fijas son iguales
+en cada consulta y van a precio de caché, así que el real debería salir por
+debajo.
+
+📌 **La dirección para conectarse** que muestra Alibaba en la ficha de cada
+modelo es `https://ap-southeast-1.maas.qwencloudapi.com/compatible-mode/v1`
+(compatible con OpenAI; la llave en `DASHSCOPE_API_KEY`), no la
+`dashscope-intl.aliyuncs.com` que estaba apuntada. La sonda tiene que probar
+cuál responde. Admite la «API de respuestas» y la «API de finalización», y el
+modo de pensar se enciende con `enable_thinking`.
+
+📌 **Para la medición diaria:** la de Max y Plus por **lotes** cuesta la mitad
+y no tiene prisa. Flash no admite lotes.
