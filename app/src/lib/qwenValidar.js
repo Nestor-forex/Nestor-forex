@@ -148,6 +148,17 @@ export function analisisParaQwen(a) {
   if (h.fuerza) hh.fuerza = { ...h.fuerza, vb: r(h.fuerza.vb, 1), vq: r(h.fuerza.vq, 1) }
   if (h.compresion) hh.compresion = { ...h.compresion, v: r(h.compresion.v, 2) }
   if (h.bollinger) hh.bollinger = { pctB: r(h.bollinger.pctB, 2) }
+  // Las seis del 2026-11-15, también como se ven en pantalla.
+  if (h.spread) hh.spread = { ...h.spread, spread: r(h.spread.spread, 1), pctStop: r(h.spread.pctStop, 1), actividad: r(h.spread.actividad, 2) }
+  if (h.cot) hh.cot = { ...h.cot, pctB: r(h.cot.pctB, 1), pctQ: r(h.cot.pctQ, 1) }
+  if (h.oro) hh.oro = { ...h.oro, r: r(h.oro.r, 2), cambio20: r(h.oro.cambio20, 4) }
+  if (Array.isArray(h.correlacion)) hh.correlacion = h.correlacion.map((x) => ({ par: x.par, r: r(x.r, 2) }))
+  if (h.estacionalidad) {
+    const e = h.estacionalidad
+    const c = (x) => (x ? { ...x, medio: r(x.medio, 2), veces: r(x.veces, 2) } : x)
+    hh.estacionalidad = { ...e, rDia: c(e.rDia), rMes: c(e.rMes), rHora: c(e.rHora) }
+  }
+  if (h.diario) hh.diario = { ...h.diario, pct: r(h.diario.pct, 0), margen: r(h.diario.margen, 0), neto: r(h.diario.neto, 2) }
   return {
     ...a,
     precio: r(a.precio, d),
