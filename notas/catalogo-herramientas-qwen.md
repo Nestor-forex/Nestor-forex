@@ -105,8 +105,8 @@ de 20 velas). El lote sale del **perfil de riesgo** del usuario.
 - **COT** (Swing) — fondos especulativos, con percentil de 156 semanas.
 - **Oro** (Swing) — precio y correlación con los 14 pares.
 - **Estacionalidad** — por hora (Intradía), día y mes, con su margen.
-- **Avisos al celular**, y para el administrador **Avisos de los
-  experimentos**.
+- **Avisos al celular** y **Avisos de los experimentos** (cada miembro
+  enciende los suyos; si no toca nada, no le llega ninguno).
 
 En el **tablero completo**: tabla de los pares con su clima, correlación entre
 pares, compresión y Fibonacci, glosario, «Lo que mide positivo» (Swing), y las

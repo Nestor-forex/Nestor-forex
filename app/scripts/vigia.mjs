@@ -531,5 +531,5 @@ linea('«Ruptura de estructura sola» en paralelo (en observación, sin validar)
 // aquí, es que hay una regla anotándose que ningún desglose nombra.
 linea('Tipos que este log no conoce (revisar si sale algo)', resumen.otros)
 console.log(`Avisos al celular: ${JSON.stringify(avisos)}`)
-console.log(`Avisos de experimento (solo administrador): ${JSON.stringify(avisosExperimento)}`)
+console.log(`Avisos de experimento (a quien los encienda): ${JSON.stringify(avisosExperimento)}`)
 console.log('---VIGIA-FIN---')

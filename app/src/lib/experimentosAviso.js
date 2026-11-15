@@ -1,4 +1,4 @@
-// LOS EXPERIMENTOS DE ESTA APP QUE PUEDEN AVISAR AL ADMINISTRADOR (Swing).
+// LOS EXPERIMENTOS DE ESTA APP QUE PUEDEN AVISAR AL CELULAR (Swing).
 //
 // PRIMO: la lista es distinta en cada app. Aquí, las señales de la app, las
 // ventas que están en pausa y las cuatro reglas de la sombra. La cuenta de qué
@@ -20,9 +20,15 @@ export const OPCIONES = [
   { clave: 'ruptura', etiqueta: 'avisosExp.op.ruptura' },
 ]
 
-// Lo que se mandaba antes de los interruptores (2026-11-14): solo «comprar la
-// caída». Vale mientras el administrador no haya tocado ninguno.
-export const DEFECTO = ['caida']
+// Lo que vale mientras alguien no ha tocado ningún interruptor.
+//
+// ⚠️ DESDE EL 2026-11-15 LOS VEN TODOS LOS MIEMBROS, y un suscriptor que no
+// toca nada NO recibe ninguno: encenderlo tiene que ser una decisión suya,
+// leída la advertencia de que no son señales. Solo el administrador conserva lo
+// que recibía antes de los interruptores (solo «comprar la caída»).
+export const DEFECTO_ADMIN = ['caida']
+export const DEFECTO_MIEMBRO = []
+export const defectoPara = (esAdmin) => (esAdmin ? DEFECTO_ADMIN : DEFECTO_MIEMBRO)
 
 // Las que son señales DE LA APP. Por aquí solo suenan mientras los avisos de la
 // app estén en pausa: si se reactivan, ya le llegan por el camino normal y por

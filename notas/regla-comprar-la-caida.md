@@ -111,11 +111,15 @@ experimento o, si el resultado es bueno, darla como señal.
 
 ## 7. Avisos al celular
 
-- **Solo al administrador**, y solo si tiene encendido su interruptor en
-  «Avisos de los experimentos» (pestaña Barrido de Swing). Por defecto está
-  encendido.
+- **Desde el 2026-11-15 cualquier miembro aprobado puede encenderla** en
+  «Avisos de los experimentos» (pestaña Barrido de Swing). Antes era solo para
+  el administrador.
+- **Un suscriptor que no toca nada NO la recibe**: encenderla tiene que ser
+  una decisión suya, después de leer que no es una señal. El administrador la
+  tiene encendida por defecto (es lo que recibía antes).
 - El aviso dice «Experimento · no es una señal», con entrada, SL, TP y R/B.
-- **A los suscriptores no les llega nunca.**
+- Solo suena en los aparatos que tengan activados los avisos en la tarjeta de
+  arriba.
 
 ## 8. Lo que Qwen puede y no puede decir sobre esta regla
 

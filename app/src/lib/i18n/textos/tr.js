@@ -734,9 +734,9 @@ export default {
     pie: (v) => `Spread pip cinsinden, 3'ün üzerinde kehribar rengi. ${v.hora} tarihinde alındı.`,
   },
   avisosExp: {
-    titulo: "Deney uyarıları (yalnızca yönetici)",
+    titulo: "Deney uyarıları",
     noSonSenales: "Bunlar sinyal DEĞİL: uygulamanın ölçmek için kaydettiği deneylerdir.",
-    desc: "Demoda takip etmek istediklerini aç. Gözcü yeni bir tane kaydettiğinde telefonuna DENEY olarak işaretli gelir. Abonelere asla gelmez.",
+    desc: "Demo hesapta takip etmek istediklerini aç. Uygulama yeni bir tane kaydettiğinde telefonuna DENEY olarak işaretli gelir. Yalnızca senin açtıkların çalar: hiçbir şeye dokunmazsan hiçbiri gelmez.",
     nota: "Yalnızca bu cihazda yukarıdaki kartta uyarılar açıksa çalar.",
     encendido: "Açık",
     apagado: "Kapalı",
