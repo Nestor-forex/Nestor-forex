@@ -738,6 +738,25 @@ export default {
       'Aktivität: wie oft sich der Kurs heute geändert hat, laut diesem Broker. Sie sagt NICHT, in welche Richtung oder wie weit: ein Paar kann sich 8.000 Mal ändern und dort enden, wo es angefangen hat. Volumen ist es auch nicht — im Forex gibt es kein echtes, weil keine zentrale Börse es erfasst. Vergleiche Paare jetzt untereinander, nicht Tage miteinander: der Tag ist erst halb vorbei.',
     pie: (v) => `Spread in Pips, ab 3 in Bernstein. Aufgenommen am ${v.hora}.`,
   },
+  avisosExp: {
+    titulo: "Alarme der Experimente",
+    noSonSenales: "Das sind KEINE Signale: Es sind Experimente, die die App aufzeichnet, um sie zu messen.",
+    desc: "Schalte die ein, die du auf einem Demokonto verfolgen willst. Wenn die App ein neues aufzeichnet, kommt es als EXPERIMENT auf dein Handy. Es klingeln nur die, die du einschaltest: Wenn du nichts berührst, bekommst du keines.",
+    nota: "Sie klingeln nur, wenn dieses Gerät die Alarme in der Karte darüber eingeschaltet hat.",
+    encendido: "An",
+    apagado: "Aus",
+    sinPermiso: "Keine Berechtigung, das zu speichern.",
+    noSeGuardo: "Speichern fehlgeschlagen. Versuch es noch einmal.",
+    push: "Experiment · kein Signal",
+    op: {
+      caida: "Den Fall kaufen",
+      app: "Signale der App (Käufe)",
+      pausadas: "Pausierte Verkäufe der App",
+      reversion: "Umkehr (Gegenregel)",
+      bollinger: "Berührung des Bollinger-Bands",
+      ruptura: "Strukturbruch",
+    },
+  },
   avisos: {
     pausados: 'Hinweise pausiert, während wir die Signale überprüfen',
     pausadosPorque:
@@ -757,7 +776,6 @@ export default {
     fallo: 'Die Benachrichtigungen konnten nicht aktiviert werden. Bitte versuche es erneut.',
     soloEsteAparato: 'Benachrichtigungen gelten pro Gerät: Wenn du die App auf Handy und Computer nutzt, aktiviere sie auf beiden.',
     siSirven: "Sie einzuschalten lohnt sich trotzdem für „Meine Alarme\": Die Alarme, die du selbst einrichtest, kommen an, auch wenn die Signale der App pausiert sind.",
-    adminExperimento: "Als Administrator bekommst du außerdem die neuen Signale von „Den Fall kaufen\", als EXPERIMENT markiert, um sie auf einem Demokonto zu testen. Abonnenten bekommen sie nicht.",
   },
 
   riesgoSenales: {
@@ -944,7 +962,6 @@ export default {
     comparaNota: "Pro Risikoeinheit: was pro riskierter Einheit gewonnen oder verloren wurde (+1 heißt das Riskierte gewinnen, −1 heißt es verlieren). Nur so lassen sich Regeln mit unterschiedlich großen Stops fair vergleichen; Pips taugen dafür nicht.",
     backtest: ({ ops, acierto, valor, swap, fecha }) =>
       `Über 5 Jahre Marktdaten (gemessen am ${fecha}): ${ops} Trades, ${acierto} % Trefferquote und ${valor} pro Risikoeinheit inklusive Spread. Mit 0,5 Pips Swap pro Nacht sinkt es auf ${swap}: deshalb hat sie ihre Hürde noch nicht genommen.`,
-    avisoPush: "Experiment · kein Signal",
   },
   historial: {
     esBollinger: 'BOLLINGER',

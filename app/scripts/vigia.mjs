@@ -449,15 +449,17 @@ if (nuevasVisibles.length) {
   }
 }
 
-// Las señales nuevas de los experimentos que avisan («comprar la caída»), SOLO
+// Las señales nuevas de los experimentos que el administrador encendió, SOLO
 // al celular del administrador, para probarlas en demo. Va DESPUÉS de los avisos
 // de la app y aislado igual que ellos: el historial ya está escrito. Ver
 // `enviarAvisosExperimento` — a los suscriptores no les llega nunca.
 let avisosExperimento = { estado: 'sin-senales-nuevas' }
-if (nuevasSombra.length) {
+// Recibe TODAS las nuevas (también las de la app, que con sus avisos en pausa
+// solo le llegan si él enciende su interruptor).
+if (nuevas.length) {
   try {
     const { enviarAvisosExperimento } = await import('./lib/push-envio.mjs')
-    avisosExperimento = await enviarAvisosExperimento(nuevasSombra)
+    avisosExperimento = await enviarAvisosExperimento(nuevas)
   } catch (e) {
     avisosExperimento = { estado: 'error', detalle: e.message }
   }
@@ -529,5 +531,5 @@ linea('«Ruptura de estructura sola» en paralelo (en observación, sin validar)
 // aquí, es que hay una regla anotándose que ningún desglose nombra.
 linea('Tipos que este log no conoce (revisar si sale algo)', resumen.otros)
 console.log(`Avisos al celular: ${JSON.stringify(avisos)}`)
-console.log(`Avisos de experimento (solo administrador): ${JSON.stringify(avisosExperimento)}`)
+console.log(`Avisos de experimento (a quien los encienda): ${JSON.stringify(avisosExperimento)}`)
 console.log('---VIGIA-FIN---')

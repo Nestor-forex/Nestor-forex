@@ -18,6 +18,8 @@ import { AVISOS_PAUSADOS } from '../../src/lib/push/pausa.js'
 import { readFileSync } from 'node:fs'
 import { abrir, leerCuentaDeServicio } from './firestore-rest.mjs'
 import { adminDeEnv } from './vencimientos.mjs'
+import { clavesElegidas } from '../../src/lib/avisosExperimento.js'
+import { DE_LA_APP, OPCIONES, claveDeSenal, defectoPara } from '../../src/lib/experimentosAviso.js'
 
 export const COLECCION = 'pushSubs'
 
@@ -201,7 +203,7 @@ export async function enviarAvisos(nuevas, entorno = process.env, bdInyectada = 
 
 
 // ═════════════════════════════════════════════════════════════════════════
-// AVISOS DE EXPERIMENTO, SOLO AL CELULAR DEL ADMINISTRADOR (2026-11-14)
+// AVISOS DE EXPERIMENTO, A QUIEN LOS ENCIENDA (2026-11-14; abiertos a todos el 2026-11-15)
 // ═════════════════════════════════════════════════════════════════════════
 //
 // Néstor lo pidió así sobre «comprar la caída»:
@@ -209,12 +211,13 @@ export async function enviarAvisos(nuevas, entorno = process.env, bdInyectada = 
 //   > que me dé señales cuando las tenga para ponerlas a prueba tanto ella por
 //   > sí misma dentro de la app como yo por mi lado en demo
 //
-// ⚠️⚠️ SOLO A ÉL. Las reglas de la sombra NO son señales para los suscriptores:
-// lo dice la tarjeta «Qué es esta app» con sus palabras («nunca, jamás deberían
-// verlas como señales para copiar»). Mandárselas a todos sería convertir un
-// experimento sin validar en una señal por la puerta de atrás. Al
-// administrador sí: es quien decide qué se mide, y las va a probar en una
-// cuenta DEMO a la par que la app.
+// ⚠️⚠️ DESDE EL 2026-11-15 LE LLEGAN A QUIEN LOS ENCIENDA, no solo al
+// administrador. Néstor: «ahora sí quiero que la vean todos, no solo el
+// desarrollador». Cada miembro APROBADO elige los suyos en «Avisos de los
+// experimentos»; el aviso dice siempre «Experimento · no es una señal», y la
+// tarjeta lo dice ANTES de cualquier interruptor. Lo que no cambia: un
+// suscriptor que no toca nada NO recibe ninguno (su defecto es la lista
+// vacía). Solo el administrador conserva su defecto de antes.
 //
 // ⚠️ NO PASA POR `AVISOS_PAUSADOS` NI POR `RB_MINIMO`, y no es un descuido:
 //   · la pausa existe porque el filtro de R/B ≥ 1,5 elegía stops demasiado
@@ -222,45 +225,65 @@ export async function enviarAvisos(nuevas, entorno = process.env, bdInyectada = 
 //   · y estas reglas van SIEMPRE a R/B 1:1 por diseño (la vara neutra), así que
 //     un filtro de 1,5 no dejaría pasar ninguna nunca.
 //
-// ⚠️ LA LISTA VA ENUMERADA. Una regla de sombra nueva NO avisa hasta que alguien
-// venga aquí a escribirla — misma forma que `esSombra` y `usaVaraSimetrica`:
-// olvidarse de encenderla retrasa un aviso; olvidarse de apagarla le mandaría
-// a alguien una regla que nadie decidió probar.
-export const EXPERIMENTOS_QUE_AVISAN = new Set(['caida'])
-
-// La etiqueta de cada regla en el aviso. Se reutiliza la del Historial para que
-// el aviso y la pantalla la llamen igual.
-const ETIQUETA_REGLA = { caida: 'historial.esCaida' }
+// ⚠️ QUÉ EXPERIMENTOS SUENAN LO ELIGE CADA UNO (2026-11-15), con un interruptor
+// por experimento en la pestaña Barrido (`AvisosExperimentos.jsx`). Se guarda en
+// su ficha (`avisosExp_swing`) y aquí se lee con `clavesElegidas`, la MISMA cuenta
+// que usa la pantalla: dos copias de «qué está encendido» dejarían interruptores
+// encendidos que no suenan.
+//
+// ⚠️ Mientras alguien no haya tocado ningún interruptor vale `defectoPara`:
+// para un suscriptor, NADA; para el administrador, lo que recibía antes.
+// Una lista vacía SÍ cuenta: lo apagó todo y no se manda nada.
+//
+// ⚠️ Cada señal se reconoce por lo que es (`claveDeSenal`); lo que no reconoce
+// no suena. Una regla nueva no avisa hasta que alguien la escriba en
+// `experimentosAviso.js`.
+//
+// ⚠️ Las señales de la app solo van por aquí mientras sus avisos estén en
+// pausa. Si algún día se reactivan, ya le llegan por el camino normal y por
+// aquí le sonarían dos veces.
 
 export function armarMensajeExperimento(senal, idioma) {
   const t = crearT(idioma)
   const c = senal.crudo
+  const op = OPCIONES.find((o) => o.clave === claveDeSenal(senal))
   return {
-    titulo: `🧪 ${t(ETIQUETA_REGLA[senal.tipo] || 'destacada.experimento')} · ${senal.name} ${t('lado.' + senal.lado)}`,
+    titulo: `🧪 ${t(op?.etiqueta || 'avisosExp.titulo')} · ${senal.name} ${t('lado.' + senal.lado)}`,
     cuerpo:
-      `${t('destacada.avisoPush')} — ` +
+      `${t('avisosExp.push')} — ` +
       `${t('setup.entrada')} ${c.precio.toFixed(c.dec)} · ` +
       `SL ${c.sl.toFixed(c.dec)} · TP ${c.tp.toFixed(c.dec)} · ` +
       `${t('setup.rb')} 1:${c.rr.toFixed(1)}`,
     // Distinto del de las señales de la app, para que un aviso de experimento
     // no reemplace nunca a uno de la app ni al revés.
-    tag: `exp|${senal.name}|${senal.lado}|${senal.tipo}`,
+    tag: `exp|${senal.name}|${senal.lado}|${senal.tipo || 'app'}`,
     url: './',
     en: new Date().toISOString(),
   }
 }
 
+/** Las señales de `nuevas` que pertenecen a un interruptor encendido. */
+export function senalesQueSuenan(nuevas, elegidas) {
+  const on = new Set(elegidas)
+  return (nuevas || []).filter(({ s }) => {
+    const clave = claveDeSenal(s)
+    if (!clave || !on.has(clave) || !s?.crudo) return false
+    if (DE_LA_APP.has(clave) && !AVISOS_PAUSADOS) return false
+    return true
+  })
+}
+
 /**
- * Manda al administrador las señales NUEVAS de las reglas en pruebas que
- * avisan (`EXPERIMENTOS_QUE_AVISAN`).
+ * Manda a cada miembro aprobado las señales NUEVAS de los experimentos que
+ * tiene encendidos. Recibe TODAS las nuevas del vigía (de la app y de la sombra).
  *
  * `entorno.ADMIN_EMAIL` existe solo para la prueba; en producción el correo se
  * lee de `.env.production`, el MISMO sitio del que lo saca la app y el robot de
  * vencimientos. Una tercera copia se desincronizaría el día que cambie.
  */
 export async function enviarAvisosExperimento(nuevas, entorno = process.env, bdInyectada = null) {
-  const candidatas = (nuevas || []).filter(({ s }) => EXPERIMENTOS_QUE_AVISAN.has(s?.tipo) && s?.crudo)
-  if (!candidatas.length) return { estado: 'nada-que-enviar', candidatas: 0 }
+  // Sin ninguna señal que un interruptor pueda encender no se abre Firestore.
+  if (!(nuevas || []).some(({ s }) => claveDeSenal(s) && s?.crudo)) return { estado: 'nada-que-enviar', candidatas: 0 }
 
   let admin = (entorno.ADMIN_EMAIL || '').trim().toLowerCase()
   if (!admin) {
@@ -270,33 +293,52 @@ export async function enviarAvisosExperimento(nuevas, entorno = process.env, bdI
       admin = ''
     }
   }
-  // Sin saber quién es el administrador NO se manda a nadie: mandar «a todos
-  // por si acaso» sería justo lo que esta función existe para impedir.
-  if (!admin) return { estado: 'sin-admin', candidatas: candidatas.length }
+  // El administrador ya no decide A QUIÉN se manda, solo qué tiene encendido
+  // mientras no toque nada (`defectoPara`). Si no se encuentra, se sigue
+  // mandando a quien haya encendido algo: nadie recibe el defecto del
+  // administrador por error, porque el de los demás es la lista vacía.
 
   const cuenta = bdInyectada ? {} : leerCuentaDeServicio(entorno)
   const privada = (entorno.VAPID_PRIVATE_KEY || '').trim()
-  if (!cuenta || !privada) return { estado: 'sin-configurar', candidatas: candidatas.length }
+  if (!cuenta || !privada) return { estado: 'sin-configurar', candidatas: 0 }
 
-  webpush.setVapidDetails(`mailto:${entorno.VAPID_CONTACTO || admin}`, VAPID_PUBLICA, privada)
+  webpush.setVapidDetails(`mailto:${entorno.VAPID_CONTACTO || admin || 'avisos@example.com'}`, VAPID_PUBLICA, privada)
 
   const bd = bdInyectada || (await abrir(cuenta))
   const fichas = await bd.listar('users')
-  const idsAdmin = new Set(
-    fichas.filter((f) => (f.email || '').trim().toLowerCase() === admin && f.id).map((f) => f.id)
-  )
-  if (!idsAdmin.size) return { estado: 'sin-admin', candidatas: candidatas.length }
 
-  const aparatos = (await bd.listar(COLECCION)).filter((s) => s.app === APP && s.endpoint && idsAdmin.has(s.uid))
-  if (!aparatos.length) return { estado: 'sin-aparatos', candidatas: candidatas.length }
+  // Solo quien tiene la puerta abierta. Mandárselos a alguien retirado o
+  // pendiente sería darle el producto por la puerta de atrás.
+  const porPersona = new Map()
+  for (const f of fichas) {
+    if (!f.id) continue
+    const esAdmin = Boolean(admin) && (f.email || '').trim().toLowerCase() === admin
+    if (!esAdmin && f.estado !== 'aprobado') continue
+    const elegidas = clavesElegidas(f, APP, OPCIONES, defectoPara(esAdmin))
+    const suyas = senalesQueSuenan(nuevas, elegidas)
+    if (suyas.length) porPersona.set(f.id, suyas)
+  }
+  if (!porPersona.size) return { estado: 'nada-encendido', personas: 0, candidatas: 0 }
+
+  const aparatos = (await bd.listar(COLECCION)).filter((s) => s.app === APP && s.endpoint && porPersona.has(s.uid))
+  if (!aparatos.length) return { estado: 'sin-aparatos', personas: porPersona.size, candidatas: 0 }
 
   let enviados = 0
   let fallidos = 0
+  let sinTiempo = 0
   const muertas = new Set()
+  // Ahora pueden ser muchas personas: el mismo presupuesto que los avisos de la
+  // app, para no atascar al vigía.
+  const seAcaba = Date.now() + Number(entorno.PUSH_MS_PRESUPUESTO || MS_PRESUPUESTO)
   const msPorAviso = Number(entorno.PUSH_MS_POR_AVISO || MS_POR_AVISO)
   for (const sub of aparatos) {
-    for (const { s } of candidatas) {
+    const suyas = porPersona.get(sub.uid)
+    for (const { s } of suyas) {
       if (muertas.has(sub.ruta)) break
+      if (Date.now() > seAcaba) {
+        sinTiempo++
+        continue
+      }
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
@@ -316,5 +358,15 @@ export async function enviarAvisosExperimento(nuevas, entorno = process.env, bdI
   let limpiadas = 0
   for (const ruta of muertas) if (await bd.borrar(ruta)) limpiadas++
 
-  return { estado: 'enviado', candidatas: candidatas.length, aparatos: aparatos.length, enviados, fallidos, limpiadas }
+  const candidatas = [...porPersona.values()].reduce((n, l) => n + l.length, 0)
+  return {
+    estado: 'enviado',
+    personas: porPersona.size,
+    candidatas,
+    aparatos: aparatos.length,
+    enviados,
+    fallidos,
+    limpiadas,
+    ...(sinTiempo ? { sinTiempo } : {}),
+  }
 }

@@ -16432,3 +16432,95 @@ bien** — y por eso la que más cuidado pide:
 mitad. «La regla que va primera» sin el ±20 al lado es exactamente el truco que
 la app existe para no hacer. Y los números llevan fecha: dentro de un mes serán
 otros, y la tarjeta los lee solos.
+
+---
+
+# Interruptores de avisos por experimento, solo administrador (2026-11-15). En las dos apps
+
+Néstor: *«quiero que yo pueda activar a gusto o preferencia cualquier
+experimento de las apps… quiero activarlas o desactivarlas a mi gusto, pero
+esto es solo para el desarrollador por ahora»*.
+
+```
+src/lib/avisosExperimento.js        la cuenta de qué está encendido     GEMELO
+src/components/AvisosExperimentos.jsx  la tarjeta, debajo de la de avisos  GEMELO
+scripts/prueba-avisos-experimento.mjs                                   GEMELO
+src/lib/experimentosAviso.js        qué experimentos hay en cada app    PRIMO
+scripts/lib/push-envio.mjs          `enviarAvisosExperimento` (en las dos)  PRIMO
+```
+
+Son **100 gemelos**.
+
+| | interruptores | por defecto |
+|---|---|---|
+| Swing | comprar la caída · señales de la app · ventas en pausa · reversión · Bollinger · ruptura | **solo comprar la caída** (lo de antes) |
+| Intradía | modo tendencia · modo rango · retroceso | **nada** (antes no le mandaba ninguno) |
+
+⚠️ **Solo el administrador**: la tarjeta se pinta con `esAdmin` y el programa
+busca al administrador por el correo de `.env.production`. A los suscriptores
+no les llega nada, aunque tengan el campo en su ficha (hay prueba).
+
+⚠️ **La pantalla y el programa usan la MISMA cuenta** (`clavesElegidas`, con el
+mismo `DEFECTO`). Dos copias dejarían interruptores encendidos que no suenan.
+
+⚠️ **«Nunca eligió» ≠ «lo apagó todo».** Sin el campo vale el defecto; con la
+lista vacía no se manda nada.
+
+⚠️ **Cada app guarda en su propio campo** (`avisosExp_swing`,
+`avisosExp_intradia`): comparten la colección `users`. No hubo que tocar las
+reglas de Firestore — el administrador ya puede escribir su ficha entera.
+
+⚠️ **Las señales DE LA APP solo van por aquí mientras sus avisos estén en
+pausa** (`DE_LA_APP` + `AVISOS_PAUSADOS`): si se reactivan, le llegan por el
+camino normal y sonarían dos veces.
+
+⚠️ **Una regla nueva no suena** hasta que alguien la escriba en
+`experimentosAviso.js` (`claveDeSenal` devuelve null para lo desconocido).
+
+⚠️ **Solo suenan si ese aparato tiene los avisos activados** en la tarjeta de
+arriba; la tarjeta lo dice.
+
+Sustituye a la nota fija `avisos.adminExperimento` y a
+`EXPERIMENTOS_QUE_AVISAN`, que se quitaron.
+
+## Y los dos documentos para Qwen
+
+- `notas/regla-comprar-la-caida.md` — la regla entera, sus números con fecha
+  (registro real separado del backtest), el listón y lo que Qwen puede decir.
+- `notas/catalogo-herramientas-qwen.md` — todas las herramientas, tarjetas y
+  reglas de las dos apps. ⚠️ En la fase 5 se resume dentro de `SISTEMA_COMUN`
+  del puente (un solo archivo pegado en Cloudflare).
+
+📌 **«Comprar la caída» está SOLO en Swing**: en Intradía midió −0,08 plano y no
+se anota.
+
+---
+
+# Los interruptores de experimentos, ABIERTOS A TODOS (2026-11-15, tarde). En las dos apps
+
+Néstor, el mismo día: **«ahora sí quiero que la vean todos, no solo el
+desarrollador»**. Lo de «solo administrador» de la sección anterior ya NO es
+verdad.
+
+- La tarjeta «Avisos de los experimentos» la ve **todo miembro aprobado**
+  (`App.jsx` ya no la esconde tras `esAdmin`; le pasa `esAdmin` como prop).
+- `enviarAvisosExperimento` recorre **todas las fichas aprobadas** (más el
+  administrador por correo) y a cada una le manda **lo que ella encendió**, a
+  sus aparatos de esa app, con el presupuesto `MS_PRESUPUESTO` y contando
+  `sinTiempo`.
+- ⚠️ **Un suscriptor que no toca nada NO recibe ninguno**: `defectoPara(esAdmin)`
+  da la lista vacía a los miembros. Solo el administrador conserva su defecto de
+  antes (Swing: «comprar la caída»; Intradía: nada). Encenderlo tiene que ser
+  una decisión de cada uno, después de leer «Esto NO son señales».
+- ⚠️ Sin encontrar al administrador **ya no se para**: se manda lo que cada uno
+  encendió y nadie recibe el defecto del administrador.
+- ⚠️ Retirados y pendientes no reciben nada aunque tengan todo encendido.
+- **`firestore.rules`** deja a cada miembro escribir `avisosExp_swing` y
+  `avisosExp_intradia` (lista blanca + tope de 10). **Hay que publicar las
+  reglas** (`reglas.yml` con «aplicar») o guardar dice «No hay permiso».
+- Título y descripción en los 13 idiomas: fuera «(solo administrador)» y «a los
+  suscriptores no les llega nunca»; ahora «solo suenan los que tú enciendas».
+
+📌 Sigue en pie lo que no cambia: el aviso dice «Experimento · no es una
+señal», no pasa por `RB_MINIMO`, y las señales de la app solo van por aquí
+mientras sus avisos estén en pausa.

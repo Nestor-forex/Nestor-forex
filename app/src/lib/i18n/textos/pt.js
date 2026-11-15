@@ -738,6 +738,25 @@ export default {
       'Atividade: quantas vezes o preço mudou hoje, segundo esta corretora. NÃO diz para onde nem quanto: um par pode mudar 8.000 vezes e terminar onde começou. Também não é volume — no Forex não existe um real, porque não há bolsa central que o registre. Compare pares entre si agora mesmo, não dias entre si: o dia está pela metade.',
     pie: (v) => `Spread em pips, em âmbar se passar de 3. Tomado em ${v.hora}.`,
   },
+  avisosExp: {
+    titulo: "Alertas dos experimentos",
+    noSonSenales: "Isto NÃO são sinais: são experimentos que o app registra para medi-los.",
+    desc: "Ative os que você quiser acompanhar numa conta demo. Quando o app registrar um novo, ele chega ao seu celular marcado como EXPERIMENTO. Só tocam os que você ativar: se não mexer em nada, não recebe nenhum.",
+    nota: "Só tocam se este aparelho tiver os alertas ativados no cartão acima.",
+    encendido: "Ligado",
+    apagado: "Desligado",
+    sinPermiso: "Não há permissão para salvar isto.",
+    noSeGuardo: "Não foi possível salvar. Tente de novo.",
+    push: "Experimento · não é um sinal",
+    op: {
+      caida: "Comprar a queda",
+      app: "Sinais do app (compras)",
+      pausadas: "Vendas do app em pausa",
+      reversion: "Reversão (regra contrária)",
+      bollinger: "Toque da banda de Bollinger",
+      ruptura: "Ruptura de estrutura",
+    },
+  },
   avisos: {
     pausados: 'Avisos em pausa enquanto revisamos os sinais',
     pausadosPorque:
@@ -757,7 +776,6 @@ export default {
     fallo: 'Não foi possível ativar os avisos. Tente de novo.',
     soloEsteAparato: 'Os avisos são por aparelho: se você usa o app no celular e no computador, ative em cada um.',
     siSirven: "Ativá-los SERVE para «Meus alertas»: os alertas que você mesmo programar chegam mesmo com os sinais do app em pausa.",
-    adminExperimento: "Como administrador, você recebe também os novos sinais de «comprar a queda», marcados como EXPERIMENTO, para testá-los em demo. Os assinantes não os recebem.",
   },
 
   riesgoSenales: {
@@ -944,7 +962,6 @@ export default {
     comparaNota: "Por unidade de risco: o que se ganhou ou perdeu por cada unidade arriscada (+1 é ganhar o arriscado, −1 é perdê-lo). É a única forma justa de comparar regras com stops de tamanhos diferentes; os pips não servem para isso.",
     backtest: ({ ops, acierto, valor, swap, fecha }) =>
       `Em 5 anos de mercado (medido em ${fecha}): ${ops} operações, ${acierto} % de acerto e ${valor} por unidade de risco contando o spread. Pagando 0,5 pip de swap por noite fica em ${swap}: por isso ainda não passou do seu limite.`,
-    avisoPush: "Experimento · não é um sinal",
   },
   historial: {
     esBollinger: 'BOLLINGER',

@@ -19,7 +19,9 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { generateKeyPairSync, randomBytes } from 'node:crypto'
-import { APP, EXPERIMENTOS_QUE_AVISAN, armarMensaje, armarMensajeExperimento, enviarAvisos, enviarAvisosExperimento } from './lib/push-envio.mjs'
+import { APP, armarMensaje, armarMensajeExperimento, enviarAvisos, enviarAvisosExperimento, senalesQueSuenan } from './lib/push-envio.mjs'
+import { DEFECTO_ADMIN, DEFECTO_MIEMBRO, OPCIONES, claveDeSenal, defectoPara } from '../src/lib/experimentosAviso.js'
+import { campoAvisosExp, clavesElegidas } from '../src/lib/avisosExperimento.js'
 
 let fallos = 0
 const comprobar = (bien, que) => {
@@ -222,48 +224,70 @@ console.log('\n8. Los avisos están en pausa y no se escapa ninguno')
 // las pruebe en demo. Lo que no puede pasar nunca: que le lleguen a un
 // suscriptor, que avise otra regla de sombra que nadie decidió, o que la pausa
 // de las señales de la app las calle (son otra cosa y van siempre a 1:1).
-console.log('\n9. Avisos de experimento: solo al administrador')
+console.log('\n9. Avisos de experimento: a cada miembro aprobado, lo que él encienda')
 {
   const ADMIN = 'admin@ejemplo.com'
+  const campo = campoAvisosExp(APP)
   const exp = (name, lado, tipo) => ({
     s: { name, lado, tipo, crudo: { precio: 0.68024, sl: 0.67209, tp: 0.68838, rr: 1, dec: 5 } },
   })
-  const delAdmin = { ...aparatoFalso(`${base}/exp-admin`), uid: 'u-admin' }
-  const deOtro = { ...aparatoFalso(`${base}/exp-otro`), uid: 'u-otro' }
   const bdDos = (fichas, aparatos) => ({
     listar: async (col) => (col === 'users' ? fichas : aparatos),
     borrar: async () => true,
   })
+  const ap = (id) => ({ ...aparatoFalso(`${base}/exp-${id}`), uid: `u-${id}` })
+  const env = { VAPID_PRIVATE_KEY: ENTORNO.VAPID_PRIVATE_KEY, ADMIN_EMAIL: ADMIN }
+  const llegadas = (antes) => recibidas.slice(antes).map((n) => n.url.match(/exp-([a-z]+)/)?.[1]).sort().join()
+  const tres = [exp('AUD/USD', 'COMPRA', 'caida'), exp('EUR/CAD', 'COMPRA', 'reversion'), exp('GBP/USD', 'VENTA', 'bollinger')]
+  // admin sin tocar nada · socio sin tocar nada · socio con reversión · retirado
+  // con todo encendido · pendiente con todo encendido.
+  const todo = ['caida', 'reversion', 'bollinger']
   const fichas = [
     { id: 'u-admin', email: 'Admin@Ejemplo.com' },
-    { id: 'u-otro', email: 'socio@ejemplo.com' },
+    { id: 'u-quieto', email: 'quieto@ejemplo.com', estado: 'aprobado' },
+    { id: 'u-socio', email: 'socio@ejemplo.com', estado: 'aprobado', [campo]: ['reversion'] },
+    { id: 'u-retirado', email: 'ret@ejemplo.com', estado: 'retirado', [campo]: todo },
+    { id: 'u-pendiente', email: 'pen@ejemplo.com', estado: 'pendiente', [campo]: todo },
   ]
+  const aparatos = ['admin', 'quieto', 'socio', 'retirado', 'pendiente'].map(ap)
   const antes = recibidas.length
   // ⚠️ SIN `PUSH_SIN_PAUSA`: la pausa de los avisos de la app NO las calla.
-  const r = await enviarAvisosExperimento(
-    [exp('AUD/USD', 'COMPRA', 'caida'), exp('EUR/CAD', 'COMPRA', 'reversion'), exp('GBP/USD', 'VENTA', 'bollinger')],
-    { VAPID_PRIVATE_KEY: ENTORNO.VAPID_PRIVATE_KEY, ADMIN_EMAIL: ADMIN },
-    bdDos(fichas, [delAdmin, deOtro])
-  )
-  const nuevas = recibidas.slice(antes)
-  comprobar(r.estado === 'enviado' && r.candidatas === 1, 'solo «comprar la caída» avisa; la reversión y Bollinger no')
-  comprobar(r.enviados === 1 && nuevas.length === 1, 'sale UN aviso, aunque haya dos aparatos suscritos')
-  comprobar(nuevas.every((n) => n.url.includes('exp-admin')), 'y va al aparato del administrador, nunca al del socio')
+  const r = await enviarAvisosExperimento(tres, env, bdDos(fichas, aparatos))
+  comprobar(r.estado === 'enviado' && r.personas === 2 && r.enviados === 2, 'suenan dos personas, una señal cada una')
+  comprobar(llegadas(antes) === 'admin,socio', 'al administrador «comprar la caída» (su defecto) y al socio la reversión que encendió')
+  comprobar(!llegadas(antes).includes('quieto'), 'un suscriptor que NO tocó nada no recibe ninguno: su defecto es la lista vacía')
+  comprobar(!/retirado|pendiente/.test(llegadas(antes)), 'ni retirados ni pendientes reciben nada aunque tengan todo encendido')
 
-  const sinAdmin = await enviarAvisosExperimento(
+  const antes2 = recibidas.length
+  const sinAdmin = await enviarAvisosExperimento(tres, { ...env, ADMIN_EMAIL: 'nadie@ejemplo.com' }, bdDos(fichas, aparatos))
+  comprobar(sinAdmin.estado === 'enviado' && llegadas(antes2) === 'socio', 'sin encontrar al administrador se sigue mandando lo que cada uno encendió, y nadie recibe su defecto')
+
+  const nada = await enviarAvisosExperimento([exp('EUR/CAD', 'COMPRA', 'inventada')], env, bdDos(fichas, []))
+  comprobar(nada.estado === 'nada-que-enviar', 'una regla que nadie escribió en `experimentosAviso.js` no avisa')
+
+  const apagado = await enviarAvisosExperimento(
     [exp('AUD/USD', 'COMPRA', 'caida')],
-    { VAPID_PRIVATE_KEY: ENTORNO.VAPID_PRIVATE_KEY, ADMIN_EMAIL: 'nadie@ejemplo.com' },
-    bdDos(fichas, [delAdmin, deOtro])
+    env,
+    bdDos([{ id: 'u-admin', email: ADMIN, [campo]: [] }], [ap('admin')])
   )
-  comprobar(sinAdmin.estado === 'sin-admin' && !sinAdmin.enviados, 'si el administrador no está en la lista NO se manda a nadie «por si acaso»')
+  comprobar(apagado.estado === 'nada-encendido' && !apagado.enviados, 'con TODO apagado (lista vacía) no suena nada, ni siquiera «comprar la caída»')
 
-  const nada = await enviarAvisosExperimento([exp('EUR/CAD', 'COMPRA', 'reversion')], { ADMIN_EMAIL: ADMIN }, bdDos(fichas, []))
-  comprobar(nada.estado === 'nada-que-enviar', 'una regla de sombra que no está en la lista no avisa')
-  comprobar(EXPERIMENTOS_QUE_AVISAN.size === 1 && EXPERIMENTOS_QUE_AVISAN.has('caida'), 'la lista va enumerada y hoy es solo «comprar la caída»')
+  const sinTiempo = await enviarAvisosExperimento(tres, { ...env, PUSH_MS_PRESUPUESTO: '-1' }, bdDos(fichas, aparatos))
+  comprobar(sinTiempo.sinTiempo === 2 && !sinTiempo.enviados, 'con el presupuesto agotado se corta y se cuenta lo que quedó sin mandar')
+
+  comprobar(claveDeSenal({ lado: 'COMPRA' }) === 'app', 'una compra de la app es «señales de la app»')
+  comprobar(claveDeSenal({ lado: 'VENTA', tipo: 'tendencia' }) === 'pausadas', 'una venta de la app, con las ventas en pausa, es «ventas en pausa»')
+  comprobar(claveDeSenal({ lado: 'COMPRA', tipo: 'lss' }) === 'ruptura', 'la de estructura es «ruptura»')
+  comprobar(claveDeSenal({ lado: 'COMPRA', tipo: 'loQueVenga' }) === null, 'un tipo nuevo no pertenece a ningún interruptor')
+  comprobar(JSON.stringify(DEFECTO_ADMIN) === '["caida"]' && DEFECTO_MIEMBRO.length === 0, 'por defecto: el administrador, «comprar la caída»; un miembro, nada')
+  comprobar(defectoPara(true) === DEFECTO_ADMIN && defectoPara(false) === DEFECTO_MIEMBRO, '`defectoPara` elige cuál')
+  const suena = senalesQueSuenan([exp('EUR/USD', 'COMPRA', undefined), exp('EUR/USD', 'VENTA', undefined)], ['app'])
+  comprobar(suena.length === 1 && suena[0].s.lado === 'COMPRA', 'con «señales de la app» encendido suena la compra; la venta en pausa va por su propio interruptor')
+  comprobar(clavesElegidas({ [campo]: ['caida', 'basura', 7, 'caida'] }, APP, OPCIONES, DEFECTO_ADMIN).join() === 'caida', 'lo guardado se limpia: sin repetidos ni claves que no existen')
 
   const m = armarMensajeExperimento(exp('AUD/USD', 'COMPRA', 'caida').s, 'es')
   console.log(`     es → ${m.titulo} | ${m.cuerpo}`)
-  comprobar(m.titulo.includes('COMPRAR LA CAÍDA') && m.titulo.includes('AUD/USD COMPRA'), 'el título dice la regla, el par y el lado')
+  comprobar(m.titulo.includes('Comprar la caída') && m.titulo.includes('AUD/USD COMPRA'), 'el título dice la regla, el par y el lado')
   comprobar(/no es una señal/.test(m.cuerpo) && m.cuerpo.includes('SL') && m.cuerpo.includes('1:1.0'), 'el cuerpo dice que no es una señal y trae los niveles')
   comprobar(m.tag.startsWith('exp|') && m.tag !== armarMensaje(exp('AUD/USD', 'COMPRA', 'caida').s, 'es').tag, 'su etiqueta no puede reemplazar un aviso de la app')
   const en = armarMensajeExperimento(exp('AUD/USD', 'COMPRA', 'caida').s, 'en')
@@ -276,8 +300,8 @@ console.log('\n9. Avisos de experimento: solo al administrador')
   const v = readFileSync(new URL('./vigia.mjs', import.meta.url), 'utf8')
   const iSeparar = v.indexOf('separarSombra(nuevas)')
   const iBarrido = v.indexOf("escribir(BARRIDO")
-  const iLlamada = v.indexOf('enviarAvisosExperimento(nuevasSombra)')
-  comprobar(iSeparar > 0 && iLlamada > iSeparar && iLlamada > iBarrido, 'el vigía avisa DESPUÉS de separar la sombra y de escribir todo lo irrecuperable')
+  const iLlamada = v.indexOf('enviarAvisosExperimento(nuevas)')
+  comprobar(iSeparar > 0 && iLlamada > iSeparar && iLlamada > iBarrido, 'el vigía avisa DESPUÉS de separar la sombra y de escribir todo lo irrecuperable, con TODAS las nuevas')
 }
 
 servidor.close()
