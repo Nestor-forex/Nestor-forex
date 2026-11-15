@@ -45,7 +45,7 @@ const casi = (a, b, tol = 1e-6) => Math.abs(a - b) < tol
 
 const archivo = (pares, extra = {}) => ({
   actualizadoEl: '2026-09-08T20:00:00.000Z',
-  cuenta: 'AvaTrade (cuenta de Néstor)',
+  cuenta: 'cuenta real del desarrollador de las apps',
   pares,
   ...extra,
 })
@@ -135,7 +135,7 @@ console.log('\n5. Cuándo se tomó la foto')
 
 console.log('\n6. De quién es la cuenta: el archivo lo dice, la app no lo supone')
 {
-  // ⚠️ Es el spread de la cuenta de Néstor en AvaTrade, NO el del suscriptor.
+  // ⚠️ Es el spread de una cuenta real del desarrollador, NO el del suscriptor.
   // El dato viaja DENTRO del archivo para que la pantalla no tenga que
   // acordarse, y para que el día que el puente lo publique otra persona el
   // rótulo cambie solo.
@@ -196,6 +196,28 @@ console.log('\n7. Los símbolos del puente son EXACTAMENTE los que usan las dos 
   const conocidos = new Set([...PAIR_NAMES, ...EXTRAS_INTRADIA])
   const sobran = delPuente.filter((p) => !conocidos.has(p))
   ok(sobran.length === 0, `ningún par que no use nadie (sobran: ${sobran.join(', ') || 'ninguno'})`)
+}
+
+console.log('\n8. El archivo PÚBLICO no nombra al bróker')
+{
+  // ⚠️ `estado/mt5.json` es público (rama `datos` de un repositorio público) y
+  // Néstor lo pidió con estas palabras: «jamás debe decir cuál es el nombre de
+  // mi bróker, no le voy a hacer publicidad». El 2026-11-15 el archivo
+  // publicado seguía diciéndolo, porque en su PC corría un puente de antes del
+  // 2026-10-30. Esto vigila que el puente del repositorio no vuelva a hacerlo.
+  //
+  // La lista va A MANO: es la de brókers conocidos, no una calculada.
+  const BROKERS = /ava\s*trade|ava-real|metaquotes|ic\s*markets|pepperstone|exness|xm\.com|oanda|fxpro|admiral/i
+  const py = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'puente-mt5', 'bridge_mt5.py'), 'utf8')
+  const m = py.match(/"cuenta"\s*:\s*"([^"]*)"/)
+  ok(Boolean(m), 'el puente escribe un campo `cuenta` con un texto fijo')
+  ok(m && !BROKERS.test(m[1]), `el texto de \`cuenta\` no nombra a ningún bróker (es «${m?.[1] ?? '—'}»)`)
+  // Y que el puente no lea el nombre de MT5 para escribirlo: account_info()
+  // y terminal_info() traen la compañía, el servidor y el número de cuenta.
+  ok(!/account_info\s*\(|terminal_info\s*\(/.test(py), 'el puente no le pide a MT5 los datos de la cuenta')
+  ok(!BROKERS.test(py), 'el puente no menciona a ningún bróker por su nombre, ni en un comentario')
+  const cal = archivo({ 'EUR/USD': { bid: 1.1547, ask: 1.1548 } })
+  ok(!BROKERS.test(JSON.stringify(cal)), 'el archivo de prueba tampoco lo nombra')
 }
 
 console.log(fallos ? `\n${fallos} comprobación(es) fallaron.` : '\nTodo bien.')
