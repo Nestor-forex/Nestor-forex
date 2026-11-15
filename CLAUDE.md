@@ -16287,3 +16287,148 @@ dice que el movimiento es demasiado chico.
   serie entera) y con él las señales. La forma limpia es un programa aparte que
   baje ~800 velas solo para las medias (Swing 14 créditos/día; Intradía 7 por
   corrida) y las publique. **Pendiente de que Néstor decida.**
+
+---
+
+# «Comprar la caída» destacada, sus señales al celular de Néstor, y la EMA 200 (2026-11-14)
+
+Néstor pidió tres cosas: un renglón aparte y destacado para «comprar la caída»
+—«que me diga que esa medida es la que por ahora está dando mejores
+resultados»—, que le mande sus señales «para ponerlas a prueba tanto ella por
+sí misma dentro de la app como yo por mi lado en demo», y decidir lo de las
+velas de la EMA 200 «si no se gastan muchos créditos».
+
+⚠️ **NINGUNA SEÑAL CAMBIA.** Swing sigue en −0,04 por unidad de riesgo e
+Intradía en −0,13. «Comprar la caída» sigue en la sombra: no se propone a nadie.
+
+## Lo que dice el registro real, comprobado antes de construir nada
+
+| (registro hacia adelante, 2026-11-14) | ops | acierto | pips | por 1R |
+|---|---:|---:|---:|---:|
+| **comprar la caída** (vara aprobada, desde 2026-10-12) | 25 | **56 % ±20** | **+252** | **+0,12** |
+| las ventas en pausa | 32 | 56 % | −458 | −0,09 |
+| las señales de la app | 45 | 47 % | −1.554 | −0,13 |
+| la reversión | 57 | 42 % | −365 | −0,16 |
+| Bollinger | 17 | 41 % | −315 | −0,18 |
+| ruptura de estructura | 6 | 33 % | −261 | −0,33 |
+
+**Néstor tenía razón: es la única en positivo.** Y con 25 operaciones el ±20
+incluye el 50 % que hace falta para empatar: todavía no se distingue de la
+suerte. Las dos cosas van juntas en la tarjeta.
+
+## 1. La tarjeta destacada (`ReglaDestacada.jsx`, solo Swing)
+
+Arriba del todo del Historial, con borde del color de la marca. Lleva: aviso de
+que es un experimento ANTES de los números · qué hace la regla · los nueve
+datos (acierto con su ±, acertadas, falladas, ops, pips, por unidad de riesgo,
+el 50 % para empatar, abiertas ahora, días de mediana) · el aviso de las 150 ·
+**lo que tiene abierto ahora con entrada, SL y TP** (es lo que Néstor copia en
+demo) · la tabla contra las demás reglas · el BACKTEST rotulado con sus dos
+números (+0,041 con spread, −0,003 pagando swap) · las 34 de la geometría vieja.
+
+⚠️⚠️ **«VA PRIMERA» LO CALCULA `compararReglas`, no se escribe.** Si otra la
+pasa, la etiqueta se va sola y la tabla dice quién va. Escrita a mano habría
+sido `medicion.queSignifica` otra vez.
+
+⚠️ **Se compara en UNIDADES DE RIESGO, nunca en pips** (`porRiesgoDe`: ganada
+= su R/B, perdida = −1). La app pone stops de ~150 pips y esta regla de ~80.
+
+⚠️ **Mínimo 10 operaciones para poder ir primera** (`MIN_OPS_COMPARAR`), y si
+todas pierden no va primera ninguna: perder menos no es ir bien.
+
+⚠️ El bloque viejo de «comprar la caída» se quitó de más abajo: dos bloques con
+los mismos números se separarían el día que se tocara uno.
+
+## 2. Sus señales, SOLO al celular del administrador
+
+`enviarAvisosExperimento` en `push-envio.mjs`, llamado por el vigía al final,
+después de escribir todo lo irrecuperable. Título «🧪 COMPRAR LA CAÍDA · par
+lado», cuerpo «Experimento · no es una señal — Entrada · SL · TP · R/B».
+
+⚠️⚠️ **A los suscriptores NO les llega nunca**: su regla («nunca, jamás
+deberían verlas como señales para copiar») es de Néstor. El administrador sale
+del correo de `.env.production` (el mismo sitio que usa la app); sin
+encontrarlo **no se manda a nadie**, nunca «a todos por si acaso».
+
+⚠️ **No pasa por `AVISOS_PAUSADOS` ni por `RB_MINIMO`**: la pausa es de las
+señales DE LA APP, y estas reglas van siempre a 1:1, así que un filtro de 1,5
+no dejaría pasar ninguna.
+
+⚠️ **La lista `EXPERIMENTOS_QUE_AVISAN` va enumerada**: una regla de sombra
+nueva no avisa hasta que alguien la escriba ahí.
+
+📌 **Un error mío, cazado por el revisor de código y no por las pruebas:** la
+llamada quedó pegada DENTRO de la salida temprana «hoy ya corrió», donde
+`nuevasSombra` todavía no existe — el vigía habría reventado en esa rama. Ahora
+`prueba-push.mjs` (bloque 9) exige que la llamada vaya después de separar la
+sombra y de escribir el barrido. Y el vigía se corrió entero con el doble de
+velas para comprobarlo.
+
+## 3. ⚠️⚠️ EL BOTÓN DE ACTIVAR AVISOS LLEVABA MESES ESCONDIDO
+
+`AvisosCard.jsx` (GEMELO), con los avisos de la app en pausa, enseñaba el motivo
+y NADA más. Tenía sentido hasta el 2026-10-31, cuando llegaron «Mis avisos»,
+que usan el MISMO permiso del celular y NO están en pausa. **Desde entonces un
+miembro nuevo podía programar avisos que nunca le iban a sonar**, porque no
+había dónde activar el permiso. No fallaba nada. Salió al ir a mandarle a Néstor
+los de «comprar la caída».
+
+Ahora: la pausa arriba en ámbar, «activarlos sí sirve para Mis avisos», y el
+interruptor. En Swing, al administrador se le dice además que le llegan los
+experimentos (`notaExtra`, lo pone `App.jsx`; el componente es gemelo y no
+puede saberlo). Cambio emparejado con Intradía.
+
+## 4. La EMA 200: SÍ, y sin gastar ni un crédito
+
+Twelve Data cobra por consulta, no por vela. Así que el vigía y el publicador
+piden **950 días** (Intradía **700 velas**) en la MISMA consulta, y:
+
+- el barrido, las señales, el ATR y el historial siguen saliendo de los **300
+  de siempre** (`recortarUltimas` — lo que devuelve la API cuando se le piden
+  300), **idénticos a antes**;
+- solo las medias del Analizador usan la serie larga (`cierresLargos`), y solo
+  si termina el MISMO día/vela que el barrido.
+
+⚠️ **Lo que Néstor preguntó —si «cambiar los cálculos de Swing» era bueno o
+malo— era MALO**: dar las 950 velas al barrido entero habría cambiado el ATR
+(Wilder recorre la serie entera), el stop y las señales, y el historial dejaría
+de describir una sola cosa a mitad de camino. Por eso NO se hizo, y
+`prueba-medias-largas.mjs` (en las dos apps) exige que todo lo que no son las
+medias salga idéntico. Comprobado que muerde por los dos lados.
+
+📌 **Para las mediciones futuras no aporta**: el banco de pruebas ya se baja
+1.500 velas por su cuenta. Aporta en pantalla: la EMA 200 que tiene cualquier
+gráfico. Las medias siguen sin decidir ninguna señal.
+
+---
+
+# «Comprar la caída», explicada para suscriptores (la DECIMOQUINTA, 2026-11-14)
+
+Va con las catorce de la serie. Es la primera que presenta una regla que **va
+bien** — y por eso la que más cuidado pide:
+
+> **Comprar la caída: la que mejor va ahora, y por qué todavía no te la damos
+> como señal.**
+>
+> Compra el par el día que marca su precio más bajo de los últimos 10 días, sin
+> esperar a que rebote. Stop y objetivo a la misma distancia (1:1).
+>
+> En las operaciones reales que la app anota sola va **56 % de acierto, +252
+> pips, +0,12 por cada unidad arriesgada**: la única regla en positivo de todas
+> las que medimos. Te enseñamos la tabla entera con las demás, para que lo
+> compruebes.
+>
+> **Y ahora lo que casi nadie te diría:** son 25 operaciones. Con 25, ese 56 %
+> puede moverse ±20 puntos solo por casualidad — y para ganar con 1:1 hace
+> falta pasar del 50 %. O sea que hoy no se puede distinguir de la suerte. En
+> cinco años de backtest midió +0,04, y pagando el swap de cada noche se queda
+> en cero. Por eso necesita llegar a 150 operaciones reales antes de que te la
+> demos como señal.
+>
+> **Si llega y aguanta, quien esté suscrito ese día la recibirá primero.** Si
+> no aguanta, también te lo diremos.
+
+⚠️ **Lo que NO se puede hacer con este texto:** publicarlo sin la segunda
+mitad. «La regla que va primera» sin el ±20 al lado es exactamente el truco que
+la app existe para no hacer. Y los números llevan fecha: dentro de un mes serán
+otros, y la tarjeta los lee solos.

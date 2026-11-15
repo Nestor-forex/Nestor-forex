@@ -23,7 +23,7 @@
 
 import { fileURLToPath } from 'node:url'
 import { computarBarrido, derivarVista, usaVaraSimetrica } from '../src/lib/marketCalc.js'
-import { leerLlave, obtenerVelas } from './lib/velas.mjs'
+import { VELAS_MEDIAS, leerLlave, obtenerVelas } from './lib/velas.mjs'
 import {
   compararConAnterior,
   escribir,
@@ -104,8 +104,11 @@ if (automatico && !dentroDeVentana(ahora)) {
   process.exit(0)
 }
 
-const { fechas, rates, rangosPar } = await obtenerVelas(leerLlave())
-const data = computarBarrido(fechas, rates, rangosPar)
+// `velasLargas`: en la MISMA consulta (sin créditos de más) llegan también
+// ~950 días, solo para las medias del Analizador. El barrido, las señales y el
+// historial siguen saliendo de los 300 de siempre — ver `recortarUltimas`.
+const { fechas, rates, rangosPar, largo } = await obtenerVelas(leerLlave(), { velasLargas: VELAS_MEDIAS })
+const data = computarBarrido(fechas, rates, rangosPar, { largo })
 
 // ⚠️ La segunda defensa, ANTES DE ESCRIBIR NADA: la última vela tiene que ser
 // la de hoy. Ver `velaDeOtroDia` para por qué hace falta aunque haya ventana.
@@ -446,6 +449,20 @@ if (nuevasVisibles.length) {
   }
 }
 
+// Las señales nuevas de los experimentos que avisan («comprar la caída»), SOLO
+// al celular del administrador, para probarlas en demo. Va DESPUÉS de los avisos
+// de la app y aislado igual que ellos: el historial ya está escrito. Ver
+// `enviarAvisosExperimento` — a los suscriptores no les llega nunca.
+let avisosExperimento = { estado: 'sin-senales-nuevas' }
+if (nuevasSombra.length) {
+  try {
+    const { enviarAvisosExperimento } = await import('./lib/push-envio.mjs')
+    avisosExperimento = await enviarAvisosExperimento(nuevasSombra)
+  } catch (e) {
+    avisosExperimento = { estado: 'error', detalle: e.message }
+  }
+}
+
 console.log('---VIGIA-INICIO---')
 console.log(`Corrida: ${ahora.toISOString()}`)
 console.log(`Última vela diaria: ${data.ultima}`)
@@ -512,4 +529,5 @@ linea('«Ruptura de estructura sola» en paralelo (en observación, sin validar)
 // aquí, es que hay una regla anotándose que ningún desglose nombra.
 linea('Tipos que este log no conoce (revisar si sale algo)', resumen.otros)
 console.log(`Avisos al celular: ${JSON.stringify(avisos)}`)
+console.log(`Avisos de experimento (solo administrador): ${JSON.stringify(avisosExperimento)}`)
 console.log('---VIGIA-FIN---')

@@ -199,16 +199,38 @@ async function bajarTanda(simbolos, apiKey, velas) {
  * tiene un manifiesto de quién pide cada cosa y FALLA si aparece un guion
  * nuevo que no haya decidido, para que no se cuele por descuido.
  */
-export async function obtenerVelas(apiKey, { minBarras = 60, velas = 300, rejilla = 'limpia' } = {}) {
-  if (rejilla !== 'limpia' && rejilla !== 'cruda') {
-    throw new Error(`rejilla debe ser 'limpia' o 'cruda', no ${JSON.stringify(rejilla)}`)
-  }
-  const porPar = {}
-  for (let i = 0; i < PARES.length; i += POR_TANDA) {
-    if (i > 0) await esperar(PAUSA_MS)
-    Object.assign(porPar, await bajarTanda(PARES.slice(i, i + POR_TANDA), apiKey, velas))
-  }
+/**
+ * Cuántos días de calendario se piden cuando hacen falta las MEDIAS LARGAS.
+ *
+ * La EMA de 200 necesita 3 veces su periodo para salir bien (`VECES_EMA` en
+ * `medias.js`): 600 días de MERCADO. Con la rejilla limpia, de cada 7 días de
+ * calendario quedan 5 de mercado, así que 950 dan ~678 — con margen para los
+ * feriados en que algún par no cotiza.
+ *
+ * ⚠️ NO CUESTA NI UN CRÉDITO MÁS: Twelve Data cobra por consulta, no por vela.
+ */
+export const VELAS_MEDIAS = 950
 
+/**
+ * De cada par, solo los `n` días MÁS RECIENTES.
+ *
+ * Es lo que devuelve la API cuando se le piden `n`: por eso, al pedir más para
+ * las medias, el barrido de siempre se arma con esto y sale IDÉNTICO al de
+ * antes. Si el barrido cambiara, cambiarían el ATR (Wilder recorre la serie
+ * entera), el stop y las señales — y el historial dejaría de describir una sola
+ * cosa a mitad de camino. Hay comprobación.
+ */
+export function recortarUltimas(porPar, n) {
+  const salida = {}
+  for (const [sym, mapa] of Object.entries(porPar)) {
+    const fechas = [...mapa.keys()].sort().slice(-n)
+    salida[sym] = new Map(fechas.map((d) => [d, mapa.get(d)]))
+  }
+  return salida
+}
+
+// De los mapas por par a lo que lee `computarBarrido`.
+function armar(porPar) {
   // Solo los días que trajeron dato en LOS 14, para no dejar huecos si alguno
   // no cotizó por feriado local.
   const primero = porPar[PARES[0]]
@@ -237,9 +259,38 @@ export async function obtenerVelas(apiKey, { minBarras = 60, velas = 300, rejill
     }
     rangosPar[d] = filaRangos
   }
+  return { fechas, rates, rangosPar }
+}
+
+/**
+ * @param velasLargas  (opcional) si se da, se piden ESOS días en la misma
+ *                     consulta y vuelven aparte, en `largo`, solo para las
+ *                     medias largas. El barrido de siempre sigue saliendo de los
+ *                     últimos `velas`, idéntico a antes. Ver `VELAS_MEDIAS`.
+ */
+export async function obtenerVelas(apiKey, { minBarras = 60, velas = 300, rejilla = 'limpia', velasLargas = null } = {}) {
+  if (rejilla !== 'limpia' && rejilla !== 'cruda') {
+    throw new Error(`rejilla debe ser 'limpia' o 'cruda', no ${JSON.stringify(rejilla)}`)
+  }
+  const pedirDias = Number.isFinite(velasLargas) && velasLargas > velas ? velasLargas : velas
+  const porParTodo = {}
+  for (let i = 0; i < PARES.length; i += POR_TANDA) {
+    if (i > 0) await esperar(PAUSA_MS)
+    Object.assign(porParTodo, await bajarTanda(PARES.slice(i, i + POR_TANDA), apiKey, pedirDias))
+  }
+  const porPar = pedirDias > velas ? recortarUltimas(porParTodo, velas) : porParTodo
+  const { fechas, rates, rangosPar } = armar(porPar)
 
   const cruda = { fechas, rates, rangosPar }
   const salida = rejilla === 'cruda' ? cruda : limpiar(cruda)
+
+  // La serie larga, con la MISMA rejilla, solo para las medias. Sin
+  // `velasLargas` no existe y `computarBarrido` usa la de siempre.
+  if (pedirDias > velas) {
+    const largoCrudo = armar(porParTodo)
+    const largo = rejilla === 'cruda' ? largoCrudo : limpiar(largoCrudo)
+    salida.largo = { fechas: largo.fechas, rates: largo.rates }
+  }
 
   // ⚠️ EL MÍNIMO SE COMPRUEBA DESPUÉS DE LIMPIAR, no antes.
   //

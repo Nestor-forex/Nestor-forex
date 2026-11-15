@@ -121,10 +121,10 @@ console.log('\n7. ⚠️ NINGUNA regla de la sombra se enseña sin su aviso')
   // lo que no tenga aviso», un experimento nuevo al que se le olvidara el
   // aviso saldría en positivo sin nada al lado — que es justo lo que este
   // archivo entero existe para impedir.
-  const SIN_AVISO = {
-    caidaVieja:
-      'NO es un experimento vivo: son las operaciones que «comprar la caída» anotó hasta el 2026-10-12 con una geometría que no era la aprobada. Su número no va camino de 150 porque ese registro está cerrado, así que un aviso de «faltan N» sería falso. Lo que necesita es la frase que dice por qué no cuentan, y la tiene.',
-  }
+  // (Hasta el 2026-11-14 aquí estaba `caidaVieja`. Ya no hace falta: el bloque
+  // de «comprar la caída» —con sus operaciones de la geometría vieja— se mudó a
+  // `ReglaDestacada.jsx`, y se comprueba aparte justo debajo.)
+  const SIN_AVISO = {}
 
   for (const r of reglas) {
     if (r in SIN_AVISO) continue
@@ -146,10 +146,21 @@ console.log('\n7. ⚠️ NINGUNA regla de la sombra se enseña sin su aviso')
   // ⚠️ Pero SÍ tiene que decir por qué no cuentan, y en los 13 idiomas. Sin
   // esa frase, 29 operaciones aparecerían en pantalla sin que nada explicara
   // que no suman — peor que esconderlas, porque se leerían como que sí.
+  // «COMPRAR LA CAÍDA» VIVE EN SU TARJETA DESTACADA desde el 2026-11-14, arriba
+  // del Historial. No sale en la lista de arriba (no usa `resumen.caida.total
+  // > 0`), así que se comprueba por nombre: que esté montada, que lleve su
+  // aviso con SU conteo y la frase de la geometría vieja.
+  const DESTACADA = readFileSync(fileURLToPath(new URL('../src/components/ReglaDestacada.jsx', import.meta.url)), 'utf8')
+  comprobar('la pantalla monta la tarjeta destacada de «comprar la caída»', /<ReglaDestacada resumen=\{resumen\} filas=\{filasCaida\} \/>/.test(PANTALLA))
   comprobar(
-    'la pantalla pinta el texto que explica la geometría vieja',
-    /t\('historial\.caidaVieja'/.test(PANTALLA)
+    'la tarjeta destacada enseña su número CON el aviso, contando SUS operaciones',
+    /const c = resumen\?\.caida\b/.test(DESTACADA) && DESTACADA.includes('<AvisoSombra ops={c?.total ?? 0} />')
   )
+  comprobar(
+    'y pinta el texto que explica la geometría vieja',
+    /t\('historial\.caidaVieja'/.test(DESTACADA)
+  )
+  comprobar('«va primera» lo calcula `compararReglas`, no se escribe a mano', /compararReglas\(resumen\.porRiesgo\)/.test(DESTACADA) && /lider === 'caida'/.test(DESTACADA))
 }
 
 console.log('\n8. ⚠️ Los textos de cada regla ya NO escriben el conteo a mano')

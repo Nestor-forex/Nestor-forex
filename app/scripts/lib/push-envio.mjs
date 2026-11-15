@@ -15,7 +15,9 @@ import { VAPID_PUBLICA } from '../../src/lib/push/vapid.js'
 // justifican, está en ese archivo. Se comparte con la pantalla del interruptor
 // para que la app no prometa avisos que no van a llegar.
 import { AVISOS_PAUSADOS } from '../../src/lib/push/pausa.js'
+import { readFileSync } from 'node:fs'
 import { abrir, leerCuentaDeServicio } from './firestore-rest.mjs'
+import { adminDeEnv } from './vencimientos.mjs'
 
 export const COLECCION = 'pushSubs'
 
@@ -195,4 +197,124 @@ export async function enviarAvisos(nuevas, entorno = process.env, bdInyectada = 
     // si sale seguido, es que hay demasiados aparatos para el presupuesto.
     ...(sinTiempo ? { sinTiempo } : {}),
   }
+}
+
+
+// ═════════════════════════════════════════════════════════════════════════
+// AVISOS DE EXPERIMENTO, SOLO AL CELULAR DEL ADMINISTRADOR (2026-11-14)
+// ═════════════════════════════════════════════════════════════════════════
+//
+// Néstor lo pidió así sobre «comprar la caída»:
+//
+//   > que me dé señales cuando las tenga para ponerlas a prueba tanto ella por
+//   > sí misma dentro de la app como yo por mi lado en demo
+//
+// ⚠️⚠️ SOLO A ÉL. Las reglas de la sombra NO son señales para los suscriptores:
+// lo dice la tarjeta «Qué es esta app» con sus palabras («nunca, jamás deberían
+// verlas como señales para copiar»). Mandárselas a todos sería convertir un
+// experimento sin validar en una señal por la puerta de atrás. Al
+// administrador sí: es quien decide qué se mide, y las va a probar en una
+// cuenta DEMO a la par que la app.
+//
+// ⚠️ NO PASA POR `AVISOS_PAUSADOS` NI POR `RB_MINIMO`, y no es un descuido:
+//   · la pausa existe porque el filtro de R/B ≥ 1,5 elegía stops demasiado
+//     estrechos en las señales DE LA APP. Esto no son señales de la app;
+//   · y estas reglas van SIEMPRE a R/B 1:1 por diseño (la vara neutra), así que
+//     un filtro de 1,5 no dejaría pasar ninguna nunca.
+//
+// ⚠️ LA LISTA VA ENUMERADA. Una regla de sombra nueva NO avisa hasta que alguien
+// venga aquí a escribirla — misma forma que `esSombra` y `usaVaraSimetrica`:
+// olvidarse de encenderla retrasa un aviso; olvidarse de apagarla le mandaría
+// a alguien una regla que nadie decidió probar.
+export const EXPERIMENTOS_QUE_AVISAN = new Set(['caida'])
+
+// La etiqueta de cada regla en el aviso. Se reutiliza la del Historial para que
+// el aviso y la pantalla la llamen igual.
+const ETIQUETA_REGLA = { caida: 'historial.esCaida' }
+
+export function armarMensajeExperimento(senal, idioma) {
+  const t = crearT(idioma)
+  const c = senal.crudo
+  return {
+    titulo: `🧪 ${t(ETIQUETA_REGLA[senal.tipo] || 'destacada.experimento')} · ${senal.name} ${t('lado.' + senal.lado)}`,
+    cuerpo:
+      `${t('destacada.avisoPush')} — ` +
+      `${t('setup.entrada')} ${c.precio.toFixed(c.dec)} · ` +
+      `SL ${c.sl.toFixed(c.dec)} · TP ${c.tp.toFixed(c.dec)} · ` +
+      `${t('setup.rb')} 1:${c.rr.toFixed(1)}`,
+    // Distinto del de las señales de la app, para que un aviso de experimento
+    // no reemplace nunca a uno de la app ni al revés.
+    tag: `exp|${senal.name}|${senal.lado}|${senal.tipo}`,
+    url: './',
+    en: new Date().toISOString(),
+  }
+}
+
+/**
+ * Manda al administrador las señales NUEVAS de las reglas en pruebas que
+ * avisan (`EXPERIMENTOS_QUE_AVISAN`).
+ *
+ * `entorno.ADMIN_EMAIL` existe solo para la prueba; en producción el correo se
+ * lee de `.env.production`, el MISMO sitio del que lo saca la app y el robot de
+ * vencimientos. Una tercera copia se desincronizaría el día que cambie.
+ */
+export async function enviarAvisosExperimento(nuevas, entorno = process.env, bdInyectada = null) {
+  const candidatas = (nuevas || []).filter(({ s }) => EXPERIMENTOS_QUE_AVISAN.has(s?.tipo) && s?.crudo)
+  if (!candidatas.length) return { estado: 'nada-que-enviar', candidatas: 0 }
+
+  let admin = (entorno.ADMIN_EMAIL || '').trim().toLowerCase()
+  if (!admin) {
+    try {
+      admin = adminDeEnv(readFileSync(new URL('../../.env.production', import.meta.url), 'utf8'))
+    } catch {
+      admin = ''
+    }
+  }
+  // Sin saber quién es el administrador NO se manda a nadie: mandar «a todos
+  // por si acaso» sería justo lo que esta función existe para impedir.
+  if (!admin) return { estado: 'sin-admin', candidatas: candidatas.length }
+
+  const cuenta = bdInyectada ? {} : leerCuentaDeServicio(entorno)
+  const privada = (entorno.VAPID_PRIVATE_KEY || '').trim()
+  if (!cuenta || !privada) return { estado: 'sin-configurar', candidatas: candidatas.length }
+
+  webpush.setVapidDetails(`mailto:${entorno.VAPID_CONTACTO || admin}`, VAPID_PUBLICA, privada)
+
+  const bd = bdInyectada || (await abrir(cuenta))
+  const fichas = await bd.listar('users')
+  const idsAdmin = new Set(
+    fichas.filter((f) => (f.email || '').trim().toLowerCase() === admin && f.id).map((f) => f.id)
+  )
+  if (!idsAdmin.size) return { estado: 'sin-admin', candidatas: candidatas.length }
+
+  const aparatos = (await bd.listar(COLECCION)).filter((s) => s.app === APP && s.endpoint && idsAdmin.has(s.uid))
+  if (!aparatos.length) return { estado: 'sin-aparatos', candidatas: candidatas.length }
+
+  let enviados = 0
+  let fallidos = 0
+  const muertas = new Set()
+  const msPorAviso = Number(entorno.PUSH_MS_POR_AVISO || MS_POR_AVISO)
+  for (const sub of aparatos) {
+    for (const { s } of candidatas) {
+      if (muertas.has(sub.ruta)) break
+      try {
+        await webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          JSON.stringify(armarMensajeExperimento(s, sub.idioma || 'es')),
+          { timeout: msPorAviso }
+        )
+        enviados++
+      } catch (e) {
+        if (MUERTA.has(e?.statusCode)) muertas.add(sub.ruta)
+        else {
+          fallidos++
+          console.log(`  aviso de experimento no entregado (código ${e?.statusCode ?? '?'})`)
+        }
+      }
+    }
+  }
+  let limpiadas = 0
+  for (const ruta of muertas) if (await bd.borrar(ruta)) limpiadas++
+
+  return { estado: 'enviado', candidatas: candidatas.length, aparatos: aparatos.length, enviados, fallidos, limpiadas }
 }

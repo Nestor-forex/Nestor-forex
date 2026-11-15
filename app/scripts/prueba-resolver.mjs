@@ -8,7 +8,7 @@
 // comprobaciones para tan pocas líneas.
 
 import { claveDe, resolver, resumir } from './lib/resolver.mjs'
-import { cuentaDe, masEstiradaQue, partirPorRsi } from '../src/lib/historialCalc.js'
+import { MIN_OPS_COMPARAR, compararReglas, cuentaDe, masEstiradaQue, partirPorRsi, porRiesgoDe, resumir as resumirHist } from '../src/lib/historialCalc.js'
 
 let fallos = 0
 const comprobar = (bien, que) => {
@@ -528,6 +528,32 @@ console.log('\n17. El reparto por RSI de las reversiones ya anotadas')
   comprobar(c.total === 2 && c.acierto === 50 && c.pips === 2, '`cuentaDe` cuenta acierto y pips')
   comprobar(cuentaDe([]).acierto === null, 'y sin nada devuelve null, no 0 % de acierto')
 }
+
+console.log('\n12. «Va primera»: se cuenta en unidades de riesgo y nunca con muestras de juguete')
+{
+  const g = (rr) => ({ resultado: 'ganada', rr })
+  const p = { resultado: 'perdida', rr: 1 }
+  comprobar(porRiesgoDe([g(1), g(1), p]) === 1 / 3, 'una ganada vale su R/B y una perdida −1: (1 + 1 − 1) / 3')
+  comprobar(porRiesgoDe([g(0.5), p]) === -0.25, 'con R/B 1:0.5, acertar la mitad PIERDE')
+  comprobar(porRiesgoDe([]) === null && porRiesgoDe([{ resultado: 'abierta' }]) === null, 'sin nada juzgado → null, no 0')
+  comprobar(porRiesgoDe([{ resultado: 'ganada' }]) === null, 'una ganada sin su R/B → null, nunca un número inventado')
+
+  const chica = compararReglas({ a: { total: 2, porRiesgo: 1 }, b: { total: 30, porRiesgo: 0.1 } })
+  comprobar(chica.lider === 'b', `con menos de ${MIN_OPS_COMPARAR} operaciones no se puede ir primera (2 de 2 no gana a 30)`)
+  comprobar(chica.filas.at(-1).regla === 'a' && !chica.filas.at(-1).comparable, 'y va al final, marcada como no comparable')
+  const negativas = compararReglas({ a: { total: 40, porRiesgo: -0.05 }, b: { total: 40, porRiesgo: -0.2 } })
+  comprobar(negativas.lider === null && negativas.filas[0].regla === 'a', 'si todas pierden NADIE va primera: perder menos no es ir bien')
+
+  // Con el cubo de verdad: el líder sale de las MISMAS listas que el porcentaje.
+  const r = resumirHist([
+    ...Array.from({ length: 6 }, (_, i) => ({ clave: `c${i}`, tipo: 'caida', vara: 'simetrica', sombra: true, resultado: 'ganada', rr: 1, pips: 50 })),
+    ...Array.from({ length: 5 }, (_, i) => ({ clave: `d${i}`, tipo: 'caida', vara: 'simetrica', sombra: true, resultado: 'perdida', rr: 1, pips: -50 })),
+    ...Array.from({ length: 12 }, (_, i) => ({ clave: `v${i}`, tipo: 'caida', sombra: true, resultado: 'ganada', rr: 6.7, pips: 300 })),
+  ])
+  comprobar(r.porRiesgo.caida.total === r.caida.total && r.caida.total === 11, 'la geometría vieja NO entra en «va primera» (son otra estrategia)')
+  comprobar(Math.abs(r.porRiesgo.caida.porRiesgo - 1 / 11) < 1e-12, 'y su resultado es el de las 11 de la vara aprobada')
+}
+
 
 console.log(fallos ? `\n✗ ${fallos} comprobaciones fallaron\n` : '\n✓ todo bien\n')
 process.exit(fallos ? 1 : 0)

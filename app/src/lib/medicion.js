@@ -106,6 +106,24 @@ export const MEDICION = {
     acierto: 54,
     porRiesgo: 0.05,
   },
+
+  // «Comprar la caída» (C10: comprar el día que el par hace su mínimo de 10
+  // días, vender el que hace su máximo), con la vara NEUTRA 1:1, que es la
+  // geometría con la que se aprobó y con la que el vigía la anota desde el
+  // 2026-10-12. Mismo banco y misma fecha que las filas de arriba.
+  //
+  // ⚠️ VAN LOS DOS NÚMEROS, Y EL SEGUNDO ES EL INCÓMODO. Con spread mide
+  // +0,041; pagando 0,5 pips de swap por noche cae a −0,003. Por eso falla uno
+  // de los seis criterios de su listón (`scripts/lib/preregistro.mjs`). Enseñar
+  // solo el primero sería elegir la mitad que cuadra.
+  //
+  // (corrida del 2026-10-06, fila C10: 1772 · 53% · +0.041 · con swap −0.003)
+  caida: {
+    operaciones: 1772,
+    acierto: 53,
+    porRiesgo: 0.041,
+    conSwap: -0.003,
+  },
 }
 
 // ⚠️⚠️ AQUÍ VIVÍA `REAL`, Y SE BORRÓ EL 2026-09-16. NO VOLVER A TRAERLO.

@@ -27,7 +27,9 @@ export function leerLlave() {
 // sin querer (`lss-banco.mjs`). Copiarla aquí dejaría dos listas que se
 // separarían el día que la app añadiera un par, y el humo mediría sobre un
 // universo distinto del de producción sin que nada fallara.
-export { PARES } from '../velas.mjs'
+// `VELAS_MEDIAS` y `recortarUltimas` igual: los importan el vigía y el
+// publicador, y una copia aquí se separaría del original.
+export { PARES, VELAS_MEDIAS, recortarUltimas } from '../velas.mjs'
 
 // Azar DETERMINISTA: con `Math.random` una prueba que falla no se puede
 // repetir, y entonces no es una prueba.
@@ -44,9 +46,12 @@ function azarador(semilla = 7) {
 // ella ningún par pasa el umbral y la prueba pasaría comparando listas vacías)
 // y un PASEO para que haya retrocesos que muevan el RSI (sin él se queda
 // clavado arriba y el filtro rechaza todas las señales).
-export async function obtenerVelas(_llave, { velas = 1500 } = {}) {
+export async function obtenerVelas(_llave, { velas = 1500, velasLargas = null } = {}) {
   const azar = azarador()
-  const dias = Math.min(velas, 1500)
+  // Con `velasLargas`, como el lector de verdad: se inventan TODOS los días y
+  // el barrido sale de los últimos `velas`; la serie entera va en `largo`.
+  const conLargas = Number.isFinite(velasLargas) && velasLargas > velas
+  const dias = Math.min(conLargas ? velasLargas : velas, 1500)
 
   const fechas = []
   // Empieza un lunes (2022-01-03) para que los días de semana caigan donde
@@ -96,5 +101,12 @@ export async function obtenerVelas(_llave, { velas = 1500 } = {}) {
     rangosPar[d] = fila
   })
 
-  return { fechas, rates, rangosPar }
+  if (!conLargas) return { fechas, rates, rangosPar }
+  const ult = fechas.slice(-velas)
+  return {
+    fechas: ult,
+    rates: Object.fromEntries(ult.map((d) => [d, rates[d]])),
+    rangosPar: Object.fromEntries(ult.map((d) => [d, rangosPar[d]])),
+    largo: { fechas, rates },
+  }
 }

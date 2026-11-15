@@ -262,7 +262,23 @@ export const rsi = (c, p = 14) => {
  * riesgo/beneficio hasta números que no existen (15 a 1), porque el
  * denominador era ficticio.
  */
-export function computarBarrido(fechas, rates, rangosPar = null) {
+/**
+ * Los cierres de un par sacados de la serie LARGA (ver `VELAS_MEDIAS` en
+ * `scripts/lib/velas.mjs`), o null si no sirve.
+ *
+ * ⚠️ Solo sirve si termina EL MISMO DÍA que el barrido: una serie larga que
+ * acabara un día antes daría una media de ayer junto al precio de hoy, y se
+ * leería como de hoy. Entonces se usan los cierres de siempre.
+ */
+export function cierresLargos(largo, b, q, ultimaFecha) {
+  const f = largo?.fechas
+  if (!Array.isArray(f) || !f.length || f.at(-1) !== ultimaFecha || !largo.rates) return null
+  const v = (c, d) => (c === 'USD' ? 1 : largo.rates[d]?.[c])
+  const serie = f.map((d) => v(q, d) / v(b, d))
+  return serie.every((x) => Number.isFinite(x)) ? serie : null
+}
+
+export function computarBarrido(fechas, rates, rangosPar = null, { largo = null } = {}) {
   const serie = {}
   CCY.forEach((c) => (serie[c] = fechas.map((d) => (c === 'USD' ? 1 : rates[d][c]))))
   const L = fechas.length - 1
@@ -378,7 +394,11 @@ export function computarBarrido(fechas, rates, rangosPar = null) {
       bajos20,
       // Las medias del Analizador, ya calculadas: necesitan la serie entera de
       // cierres y el barrido publicado solo lleva los últimos 20. Son 6 números.
-      medias: mediasDe(closes, PERIODOS_MEDIAS),
+      // ⚠️ Con la serie LARGA si la hay (vigía y publicador la piden en la
+      // misma consulta, sin créditos de más), para que la EMA de 200 tenga las
+      // 600 velas que pide. Las medias NO deciden ninguna señal: solo las lee
+      // el Analizador. Todo lo demás de este par sigue saliendo de `closes`.
+      medias: mediasDe(cierresLargos(largo, b, q, fechas.at(-1)) ?? closes, PERIODOS_MEDIAS),
       // Series completas, alineadas con `fechas`. Las usa scripts/lib/
       // resolver.mjs para saber si una señal llegó a su objetivo o a su stop:
       // hace falta el recorrido entero, no solo el último valor. Se exponen

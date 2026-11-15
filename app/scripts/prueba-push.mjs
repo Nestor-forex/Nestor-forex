@@ -19,7 +19,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { generateKeyPairSync, randomBytes } from 'node:crypto'
-import { APP, armarMensaje, enviarAvisos } from './lib/push-envio.mjs'
+import { APP, EXPERIMENTOS_QUE_AVISAN, armarMensaje, armarMensajeExperimento, enviarAvisos, enviarAvisosExperimento } from './lib/push-envio.mjs'
 
 let fallos = 0
 const comprobar = (bien, que) => {
@@ -216,6 +216,68 @@ console.log('\n8. Los avisos están en pausa y no se escapa ninguno')
 
   const antes = borrados.length
   comprobar(antes === borrados.length, 'en pausa no toca Firestore para nada')
+}
+
+// Las señales de «comprar la caída» le llegan SOLO al administrador, para que
+// las pruebe en demo. Lo que no puede pasar nunca: que le lleguen a un
+// suscriptor, que avise otra regla de sombra que nadie decidió, o que la pausa
+// de las señales de la app las calle (son otra cosa y van siempre a 1:1).
+console.log('\n9. Avisos de experimento: solo al administrador')
+{
+  const ADMIN = 'admin@ejemplo.com'
+  const exp = (name, lado, tipo) => ({
+    s: { name, lado, tipo, crudo: { precio: 0.68024, sl: 0.67209, tp: 0.68838, rr: 1, dec: 5 } },
+  })
+  const delAdmin = { ...aparatoFalso(`${base}/exp-admin`), uid: 'u-admin' }
+  const deOtro = { ...aparatoFalso(`${base}/exp-otro`), uid: 'u-otro' }
+  const bdDos = (fichas, aparatos) => ({
+    listar: async (col) => (col === 'users' ? fichas : aparatos),
+    borrar: async () => true,
+  })
+  const fichas = [
+    { id: 'u-admin', email: 'Admin@Ejemplo.com' },
+    { id: 'u-otro', email: 'socio@ejemplo.com' },
+  ]
+  const antes = recibidas.length
+  // ⚠️ SIN `PUSH_SIN_PAUSA`: la pausa de los avisos de la app NO las calla.
+  const r = await enviarAvisosExperimento(
+    [exp('AUD/USD', 'COMPRA', 'caida'), exp('EUR/CAD', 'COMPRA', 'reversion'), exp('GBP/USD', 'VENTA', 'bollinger')],
+    { VAPID_PRIVATE_KEY: ENTORNO.VAPID_PRIVATE_KEY, ADMIN_EMAIL: ADMIN },
+    bdDos(fichas, [delAdmin, deOtro])
+  )
+  const nuevas = recibidas.slice(antes)
+  comprobar(r.estado === 'enviado' && r.candidatas === 1, 'solo «comprar la caída» avisa; la reversión y Bollinger no')
+  comprobar(r.enviados === 1 && nuevas.length === 1, 'sale UN aviso, aunque haya dos aparatos suscritos')
+  comprobar(nuevas.every((n) => n.url.includes('exp-admin')), 'y va al aparato del administrador, nunca al del socio')
+
+  const sinAdmin = await enviarAvisosExperimento(
+    [exp('AUD/USD', 'COMPRA', 'caida')],
+    { VAPID_PRIVATE_KEY: ENTORNO.VAPID_PRIVATE_KEY, ADMIN_EMAIL: 'nadie@ejemplo.com' },
+    bdDos(fichas, [delAdmin, deOtro])
+  )
+  comprobar(sinAdmin.estado === 'sin-admin' && !sinAdmin.enviados, 'si el administrador no está en la lista NO se manda a nadie «por si acaso»')
+
+  const nada = await enviarAvisosExperimento([exp('EUR/CAD', 'COMPRA', 'reversion')], { ADMIN_EMAIL: ADMIN }, bdDos(fichas, []))
+  comprobar(nada.estado === 'nada-que-enviar', 'una regla de sombra que no está en la lista no avisa')
+  comprobar(EXPERIMENTOS_QUE_AVISAN.size === 1 && EXPERIMENTOS_QUE_AVISAN.has('caida'), 'la lista va enumerada y hoy es solo «comprar la caída»')
+
+  const m = armarMensajeExperimento(exp('AUD/USD', 'COMPRA', 'caida').s, 'es')
+  console.log(`     es → ${m.titulo} | ${m.cuerpo}`)
+  comprobar(m.titulo.includes('COMPRAR LA CAÍDA') && m.titulo.includes('AUD/USD COMPRA'), 'el título dice la regla, el par y el lado')
+  comprobar(/no es una señal/.test(m.cuerpo) && m.cuerpo.includes('SL') && m.cuerpo.includes('1:1.0'), 'el cuerpo dice que no es una señal y trae los niveles')
+  comprobar(m.tag.startsWith('exp|') && m.tag !== armarMensaje(exp('AUD/USD', 'COMPRA', 'caida').s, 'es').tag, 'su etiqueta no puede reemplazar un aviso de la app')
+  const en = armarMensajeExperimento(exp('AUD/USD', 'COMPRA', 'caida').s, 'en')
+  comprobar(en.titulo.includes('BUY') && /not a signal/.test(en.cuerpo), 'en inglés, BUY y «not a signal»')
+
+  // ⚠️ EL SITIO DE LA LLAMADA EN EL VIGÍA. La primera versión quedó pegada por
+  // error DENTRO de la salida temprana «hoy ya corrió», donde `nuevasSombra`
+  // todavía no existe: el vigía habría reventado en esa rama. Lo cazó el
+  // linter, no esta prueba — por eso ahora hay una.
+  const v = readFileSync(new URL('./vigia.mjs', import.meta.url), 'utf8')
+  const iSeparar = v.indexOf('separarSombra(nuevas)')
+  const iBarrido = v.indexOf("escribir(BARRIDO")
+  const iLlamada = v.indexOf('enviarAvisosExperimento(nuevasSombra)')
+  comprobar(iSeparar > 0 && iLlamada > iSeparar && iLlamada > iBarrido, 'el vigía avisa DESPUÉS de separar la sombra y de escribir todo lo irrecuperable')
 }
 
 servidor.close()

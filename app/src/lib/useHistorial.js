@@ -126,7 +126,7 @@ export function unir(senales, resultados) {
 
   const conResultado = (s) => {
     const r = porClave.get(`${s.id}@${s.vistoEl}`)
-    return { ...s, resultado: r?.resultado || 'abierta', pips: r?.pips, exacto: r?.exacto }
+    return { ...s, resultado: r?.resultado || 'abierta', pips: r?.pips, exacto: r?.exacto, dias: r?.diasTardados }
   }
   const masNuevaPrimero = (a, b) => (a.vistoEl < b.vistoEl ? 1 : -1)
 
