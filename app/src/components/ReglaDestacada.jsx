@@ -170,7 +170,11 @@ export default function ReglaDestacada({ resumen, filas }) {
             acierto: bt.acierto,
             valor: `${bt.porRiesgo >= 0 ? '+' : ''}${bt.porRiesgo.toFixed(3)}`,
             swap: `${bt.conSwap >= 0 ? '+' : ''}${bt.conSwap.toFixed(3)}`,
-            fecha: fmtFecha(MEDICION.fecha, locale),
+            // ⚠️ Cifras LATINAS en la fecha: la misma frase lleva 1772, 53 y
+            // +0.041 en latinas, y en árabe `toLocaleDateString` sacaría «٦» —
+            // dos sistemas de dígitos en una frase, el fallo del COT del
+            // 2026-09-29. Salió mirando la captura.
+            fecha: fmtFecha(MEDICION.fecha, conCifrasLatinas(locale)),
           })}
         </p>
       </div>
@@ -182,6 +186,12 @@ export default function ReglaDestacada({ resumen, filas }) {
       )}
     </div>
   )
+}
+
+// El mismo idioma, con cifras latinas (`-u-nu-latn`).
+function conCifrasLatinas(locale) {
+  const l = String(locale || 'es')
+  return l.includes('-u-') ? l : `${l}-u-nu-latn`
 }
 
 function mediana(xs) {
@@ -206,7 +216,7 @@ function Abierta({ f, t, locale }) {
       {/* Los niveles van en un solo bloque `ltr`: son datos, no frase. En
           árabe, sueltos dentro de una fila `rtl`, se dibujarían al revés. */}
       <div className="mono" dir="ltr" style={{ fontSize: 11.5, color: 'var(--text-secondary)', marginTop: 3 }}>
-        {t('setup.entrada')} {fmt(f.precio)} · SL {fmt(f.sl)} · TP {fmt(f.tp)} · R/B 1:{f.rr}
+        <bdi>{t('setup.entrada')}</bdi> {fmt(f.precio)} · SL {fmt(f.sl)} · TP {fmt(f.tp)} · R/B 1:{f.rr}
       </div>
     </div>
   )
