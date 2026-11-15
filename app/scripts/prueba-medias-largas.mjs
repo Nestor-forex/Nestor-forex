@@ -81,7 +81,7 @@ console.log('\n2. El barrido sale IDÉNTICO con y sin la serie larga')
   const con = computarBarrido(corto.fechas, corto.rates, corto.rangosPar, {
     largo: { fechas: largo.fechas, rates: largo.rates },
   })
-  const quitarMedias = (x) => JSON.stringify({ ...x, pares: x.pares.map(({ medias, ...resto }) => resto) })
+  const quitarMedias = (x) => JSON.stringify({ ...x, pares: x.pares.map(({ medias: _medias, ...resto }) => resto) })
   comprobar(quitarMedias(sin) === quitarMedias(con), 'todo lo que no son las medias es idéntico (ATR, RSI, EMA de la app, fuerza, extremos…)')
   const ema200 = (b) => b.pares[0].medias.ema.find((e) => e.p === 200)?.v
   comprobar(ema200(sin) === null, 'sin la serie larga la EMA 200 sale vacía (como hasta hoy)')

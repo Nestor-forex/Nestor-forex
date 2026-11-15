@@ -83,21 +83,7 @@ const ahora = new Date()
 const automatico = process.env.VIGIA_SOLO_SI_FALTA === '1'
 const estadoPrevio = leerEstado(ESTADO)
 if (automatico && yaCorrioHoy(estadoPrevio, ahora)) {
-  // Las señales nuevas de los experimentos que avisan («comprar la caída»), SOLO
-// al celular del administrador, para probarlas en demo. Va DESPUÉS de los avisos
-// de la app y aislado igual que ellos: el historial ya está escrito. Ver
-// `enviarAvisosExperimento` — a los suscriptores no les llega nunca.
-let avisosExperimento = { estado: 'sin-senales-nuevas' }
-if (nuevasSombra.length) {
-  try {
-    const { enviarAvisosExperimento } = await import('./lib/push-envio.mjs')
-    avisosExperimento = await enviarAvisosExperimento(nuevasSombra)
-  } catch (e) {
-    avisosExperimento = { estado: 'error', detalle: e.message }
-  }
-}
-
-console.log('---VIGIA-INICIO---')
+  console.log('---VIGIA-INICIO---')
   console.log(`Hoy ya corrió (${estadoPrevio.actualizadoEl}). Este intento no hace nada.`)
   console.log('---VIGIA-FIN---')
   process.exit(0)
@@ -460,6 +446,20 @@ if (nuevasVisibles.length) {
     avisos = await enviarAvisos(nuevasVisibles)
   } catch (e) {
     avisos = { estado: 'error', detalle: e.message }
+  }
+}
+
+// Las señales nuevas de los experimentos que avisan («comprar la caída»), SOLO
+// al celular del administrador, para probarlas en demo. Va DESPUÉS de los avisos
+// de la app y aislado igual que ellos: el historial ya está escrito. Ver
+// `enviarAvisosExperimento` — a los suscriptores no les llega nunca.
+let avisosExperimento = { estado: 'sin-senales-nuevas' }
+if (nuevasSombra.length) {
+  try {
+    const { enviarAvisosExperimento } = await import('./lib/push-envio.mjs')
+    avisosExperimento = await enviarAvisosExperimento(nuevasSombra)
+  } catch (e) {
+    avisosExperimento = { estado: 'error', detalle: e.message }
   }
 }
 

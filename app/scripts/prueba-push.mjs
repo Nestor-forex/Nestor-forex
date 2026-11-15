@@ -268,6 +268,16 @@ console.log('\n9. Avisos de experimento: solo al administrador')
   comprobar(m.tag.startsWith('exp|') && m.tag !== armarMensaje(exp('AUD/USD', 'COMPRA', 'caida').s, 'es').tag, 'su etiqueta no puede reemplazar un aviso de la app')
   const en = armarMensajeExperimento(exp('AUD/USD', 'COMPRA', 'caida').s, 'en')
   comprobar(en.titulo.includes('BUY') && /not a signal/.test(en.cuerpo), 'en inglés, BUY y «not a signal»')
+
+  // ⚠️ EL SITIO DE LA LLAMADA EN EL VIGÍA. La primera versión quedó pegada por
+  // error DENTRO de la salida temprana «hoy ya corrió», donde `nuevasSombra`
+  // todavía no existe: el vigía habría reventado en esa rama. Lo cazó el
+  // linter, no esta prueba — por eso ahora hay una.
+  const v = readFileSync(new URL('./vigia.mjs', import.meta.url), 'utf8')
+  const iSeparar = v.indexOf('separarSombra(nuevas)')
+  const iBarrido = v.indexOf("escribir(BARRIDO")
+  const iLlamada = v.indexOf('enviarAvisosExperimento(nuevasSombra)')
+  comprobar(iSeparar > 0 && iLlamada > iSeparar && iLlamada > iBarrido, 'el vigía avisa DESPUÉS de separar la sombra y de escribir todo lo irrecuperable')
 }
 
 servidor.close()
