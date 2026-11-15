@@ -369,9 +369,10 @@ Las tres las confirmó Néstor y las tres están hechas:
 2. ✅ **Publica a la rama `datos`**, como todo lo demás del proyecto. Render
    se apaga: sin servidor no hay agujeros que tapar, ni servicio que pagar, ni
    preguntarse si sigue vivo.
-3. ✅ **Rotulado por lo que es.** El archivo trae el campo `cuenta` y la
-   pantalla lo enseña arriba, no en la letra pequeña: es el spread de **la
-   cuenta de Néstor en AvaTrade**, no el del suscriptor. Nunca «tu spread».
+3. ✅ **Rotulado por lo que es.** Es el spread de **una cuenta real del
+   desarrollador de la app**, no el del suscriptor. Nunca «tu spread». Y el
+   archivo público **no nombra al bróker** (lo pidió Néstor; lo vigila el
+   bloque 8 de `app/scripts/prueba-mt5.mjs`).
 
 ⚠️ **Lo que sigue pendiente**, y no es de código: que Néstor cree el permiso de
 GitHub (§0) y deje el puente corriendo. Hasta entonces la app enseña «Todavía
