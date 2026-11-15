@@ -354,3 +354,22 @@ por uso». Pide, por lo visto hasta ahora:
 
 ⚠️ **Falta ver el final del formulario** (puede pedir algo más). Se retoma el
 2026-11-15. La foto de la tarjeta va SOLO a esa página, nunca al chat.
+
+---
+
+## Lo que Qwen tiene que saber de las apps (2026-11-15)
+
+Néstor: *«Qwen debe tener total acceso para que vea cada una de las
+herramientas o indicadores de las apps para que sepa qué hacer cuando se le
+pida que haga algo con cualquier cosa de las apps»*.
+
+Está en **`notas/catalogo-herramientas-qwen.md`** (todas las herramientas del
+Analizador, las tarjetas, las reglas en pruebas con su geometría, lo del
+usuario y lo que Qwen nunca puede hacer), y la regla que más le importa a
+Néstor, entera, en **`notas/regla-comprar-la-caida.md`**.
+
+⚠️ **En la fase 5 ese catálogo hay que meterlo, resumido, dentro de
+`SISTEMA_COMUN` de `puente-qwen/worker.js`**: el puente es un solo archivo que
+se pega en Cloudflare y no puede leer otros. Cada vez que cambie una
+herramienta se cambian los dos sitios y sube `VERSION`. Los NÚMEROS no van en
+las instrucciones: los manda la app con cada consulta (`analisisParaQwen`).
