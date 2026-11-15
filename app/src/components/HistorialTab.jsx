@@ -1,5 +1,6 @@
 import { useIdioma } from '../lib/i18n'
 import AvisoSombra from './AvisoSombra'
+import ReglaDestacada from './ReglaDestacada'
 import SenalesSombra from './SenalesSombra'
 import TarjetaPlegable from './TarjetaPlegable'
 import { useHistorial } from '../lib/useHistorial'
@@ -27,7 +28,7 @@ const COLOR = {
 
 export default function HistorialTab() {
   const { t, locale } = useIdioma()
-  const { cargando, error, senales, filas, filasReversion, filasTodas, resumen } = useHistorial()
+  const { cargando, error, senales, filasReversion, filasCaida, filasTodas, resumen } = useHistorial()
 
   if (cargando) return <Aviso>{t('historial.cargando')}</Aviso>
   if (error) return <Aviso ambar>{t('historial.error')}</Aviso>
@@ -63,6 +64,12 @@ export default function HistorialTab() {
               las ventas pausadas. El 2026-09-15, un operador externo leyendo
               esta pantalla confundió el número con otra cosa — y confundirlo
               es gratis mientras el bloque no diga de quién es. */}
+          {/* «Comprar la caída», arriba de todo y destacada (2026-11-14). Lo
+              pidió Néstor: es la única regla que va en positivo en el registro
+              real. Ver `ReglaDestacada.jsx` — «va primera» lo CALCULA la app, y
+              la tarjeta dice antes de cualquier número que es un experimento. */}
+          <ReglaDestacada resumen={resumen} filas={filasCaida} />
+
           <div style={{ fontSize: 12.5, fontWeight: 600 }}>{t('historial.appTitulo')}</div>
           <Resumen resumen={resumen} t={t} />
 
@@ -79,46 +86,11 @@ export default function HistorialTab() {
             </div>
           )}
 
-          {/* La tercera regla, desde el 2026-09-07. Su bloque es idéntico al de
-              la reversión y eso es a propósito: son dos experimentos con el
-              mismo estatus, y darle a uno más presencia que al otro sería
-              sugerir que uno vale más antes de que ninguno haya demostrado
-              nada. Aparece solo cuando tiene algo resuelto que enseñar. */}
-          {/* ⚠️ La condición mira los DOS cubos. Si mirara solo `caida`, el día
-              que se arregló la geometría (2026-10-12) el contador volvió a 0 y
-              las 29 operaciones de la vara vieja habrían desaparecido de la
-              pantalla sin que nada lo dijera — el fallo del cajón `otros`,
-              otra vez. Aparecen, y la línea de abajo dice qué son. */}
-          {(resumen.caida.total > 0 || resumen.caidaVieja.total > 0) && (
-            <div style={{ ...BLOQUE_EXPERIMENTO }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 12.5, fontWeight: 600 }}>{t('historial.caidaTitulo')}</span>
-                <Etiqueta>{t('historial.esCaida')}</Etiqueta>
-              </div>
-              {resumen.caida.total > 0 && (
-                <>
-                  <Resumen resumen={{ todas: resumen.caida }} t={t} />
-                  <AvisoSombra ops={resumen.caida.total} />
-                </>
-              )}
-              <p style={{ ...TEXTO, margin: 0 }}>{t('historial.caidaIntro')}</p>
-              {/* ⚠️⚠️ Lo que NO se puede ablandar: estas operaciones no entran
-                  en el porcentaje de arriba y la frase dice por qué. Con la
-                  geometría vieja basta acertar el 13 % para empatar y con la
-                  aprobada hace falta el 50 %, así que un promedio de las dos
-                  no contesta ninguna de las dos preguntas. Pero esconderlas
-                  sería peor: se anotaron de verdad y tienen que verse. */}
-              {resumen.caidaVieja.total > 0 && (
-                <p style={{ ...TEXTO, margin: 0, color: 'var(--text-muted)' }}>
-                  {t('historial.caidaVieja', {
-                    n: resumen.caidaVieja.total,
-                    acierto: resumen.caidaVieja.acierto,
-                    pips: resumen.caidaVieja.pips,
-                  })}
-                </p>
-              )}
-            </div>
-          )}
+          {/* «Comprar la caída» ya no va aquí: subió arriba, a su tarjeta
+              destacada (`ReglaDestacada.jsx`), con su cuenta, sus operaciones
+              abiertas y las de la geometría vieja. Dos bloques con los mismos
+              números en la misma pantalla se separarían el día que se tocara
+              uno solo. */}
 
           {/* ⚠️ La cuarta, desde el 2026-09-21. Néstor pidió verla —el
               2026-09-20 se decidió esconderla, y él cambió de idea— y esto es

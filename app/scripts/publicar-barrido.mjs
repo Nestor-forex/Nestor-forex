@@ -84,7 +84,7 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { computarBarrido } from '../src/lib/marketCalc.js'
-import { leerLlave, obtenerVelas } from './lib/velas.mjs'
+import { VELAS_MEDIAS, leerLlave, obtenerVelas } from './lib/velas.mjs'
 import { escribir, yaCorrioEstaHora } from './lib/vigia-nucleo.mjs'
 import { armarBarrido, anchoDeLaVelaEnCurso } from './lib/barrido-publicado.mjs'
 
@@ -110,8 +110,11 @@ if (process.env.SOLO_SI_FALTA_LA_HORA === '1' && yaCorrioEstaHora(ultimoGenerado
   process.exit(0)
 }
 
-const { fechas, rates, rangosPar } = await obtenerVelas(leerLlave())
-const data = computarBarrido(fechas, rates, rangosPar)
+// `velasLargas`: en la MISMA consulta (sin créditos de más) llegan también
+// ~950 días, solo para las medias del Analizador. El barrido, las señales y el
+// historial siguen saliendo de los 300 de siempre — ver `recortarUltimas`.
+const { fechas, rates, rangosPar, largo } = await obtenerVelas(leerLlave(), { velasLargas: VELAS_MEDIAS })
+const data = computarBarrido(fechas, rates, rangosPar, { largo })
 const barrido = armarBarrido(data, ahora)
 const texto = JSON.stringify(barrido) + '\n'
 

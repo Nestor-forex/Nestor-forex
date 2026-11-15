@@ -76,6 +76,67 @@ export function cuentaDe(lista) {
 }
 
 /**
+ * Lo que dejó cada operación medido en «unidades de riesgo»: una ganada vale
+ * su R/B (con 1:1, +1) y una perdida vale −1. Es la ÚNICA forma justa de
+ * comparar reglas con stops distintos: los pips no sirven, porque una regla
+ * con stops de 150 pips gana o pierde más pips que otra con stops de 50 sin
+ * ser mejor ni peor. Es la misma unidad del banco de pruebas («por 1R»).
+ *
+ * ⚠️ `null` —no 0— cuando no hay nada juzgado, o cuando una ganada no trae su
+ * R/B: «no se sabe» y «empata» son cosas distintas. Misma regla que `cuentaDe`.
+ */
+export function porRiesgoDe(lista) {
+  const l = (Array.isArray(lista) ? lista : []).filter(
+    (r) => r.resultado === 'ganada' || r.resultado === 'perdida'
+  )
+  if (!l.length) return null
+  let suma = 0
+  for (const r of l) {
+    if (r.resultado === 'perdida') suma -= 1
+    else if (typeof r.rr === 'number' && Number.isFinite(r.rr)) suma += r.rr
+    else return null
+  }
+  return suma / l.length
+}
+
+/**
+ * Con menos de estas operaciones juzgadas una regla NO entra en la comparación
+ * de «cuál va primera». Sin un mínimo, una regla con 2 ganadas de 2 iría
+ * primera con un 100 %, que es exactamente el espejismo que el ± de esta app
+ * existe para desactivar.
+ */
+export const MIN_OPS_COMPARAR = 10
+
+/**
+ * Las reglas ordenadas por su resultado por unidad de riesgo en el REGISTRO
+ * REAL, de mejor a peor, con las que tienen pocas operaciones al final.
+ *
+ * ⚠️ «Va primera» NO quiere decir «funciona»: con 25 operaciones el margen es
+ * de ±20 puntos de acierto. Lo dice la pantalla al lado, y lo dice el aviso de
+ * cuántas operaciones le faltan para las 150.
+ *
+ * @param porRiesgo  { regla: { total, porRiesgo } }
+ * @returns lista `{ regla, total, porRiesgo, comparable }` y `lider` (la regla
+ *          que va primera, solo si es comparable Y va en positivo; si no, null:
+ *          ir «primera» perdiendo dinero no es ir bien).
+ */
+export function compararReglas(porRegla) {
+  const filas = Object.entries(porRegla || {}).map(([regla, c]) => ({
+    regla,
+    total: c?.total ?? 0,
+    porRiesgo: c?.porRiesgo ?? null,
+    comparable: (c?.total ?? 0) >= MIN_OPS_COMPARAR && c?.porRiesgo !== null && c?.porRiesgo !== undefined,
+  }))
+  filas.sort((a, b) => {
+    if (a.comparable !== b.comparable) return a.comparable ? -1 : 1
+    return (b.porRiesgo ?? -Infinity) - (a.porRiesgo ?? -Infinity)
+  })
+  const primera = filas[0]
+  const lider = primera && primera.comparable && primera.porRiesgo > 0 ? primera.regla : null
+  return { filas, lider }
+}
+
+/**
  * ¿Esta señal también pasaría un umbral de RSI MÁS EXIGENTE que el que la
  * generó?
  *
@@ -217,7 +278,23 @@ export function resumir(resultados) {
   const CONOCIDOS = new Set(['reversion', 'caida', 'lss', 'bollinger'])
   const otros = todasJuzgadas.filter((r) => r.tipo && !CONOCIDOS.has(r.tipo) && r.tipo !== 'tendencia')
 
+  // Lo mismo, en unidades de riesgo, para poder comparar reglas entre sí. Se
+  // saca de las MISMAS listas que los porcentajes de arriba: si se armara
+  // aparte, el día que una se tocara y la otra no, «la que va primera» saldría
+  // de otros números que los que la pantalla enseña.
+  const porRiesgo = {
+    app: { total: juzgadas.length, porRiesgo: porRiesgoDe(juzgadas) },
+    caida: { total: deCaida.length, porRiesgo: porRiesgoDe(deCaida) },
+    reversion: { total: deReversion.length, porRiesgo: porRiesgoDe(deReversion) },
+    bollinger: { total: deBollinger.length, porRiesgo: porRiesgoDe(deBollinger) },
+    ruptura: { total: deRuptura.length, porRiesgo: porRiesgoDe(deRuptura) },
+    // Las ventas de la app que se anotan sin proponerse. Van en la comparación
+    // para que nadie pueda decir que se dejó fuera algo que iba mejor.
+    pausadas: { total: ventasPausadas.length, porRiesgo: porRiesgoDe(ventasPausadas) },
+  }
+
   return {
+    porRiesgo,
     todas: cuenta(juzgadas),
     reversion: cuenta(deReversion),
     caida: cuenta(deCaida),
