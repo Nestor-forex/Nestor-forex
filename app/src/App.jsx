@@ -7,6 +7,7 @@ import Header from './components/Header'
 import BottomNav from './components/BottomNav'
 import BarridoTab from './components/BarridoTab'
 import AvisosCard from './components/AvisosCard'
+import AvisosExperimentos from './components/AvisosExperimentos'
 import MisAvisos from './components/MisAvisos'
 import FiltroPares from './components/FiltroPares'
 import CotizacionesVivo from './components/CotizacionesVivo'
@@ -246,13 +247,10 @@ export default function App() {
                   {/* Va aquí y no en una pestaña propia porque es donde
                       aparecen las señales: el aviso es para no tener que
                       volver a esta pantalla a mirar. */}
-                  <AvisosCard
-                    uid={authUser.uid}
-                    // Solo al administrador: las señales de «comprar la caída»
-                    // le llegan para probarlas en demo (ver
-                    // `enviarAvisosExperimento` en push-envio.mjs).
-                    notaExtra={esAdmin ? t('avisos.adminExperimento') : null}
-                  />
+                  <AvisosCard uid={authUser.uid} />
+                  {/* Solo el administrador elige qué experimentos le suenan
+                      (ver `enviarAvisosExperimento` en push-envio.mjs). */}
+                  {esAdmin && <AvisosExperimentos uid={authUser.uid} ficha={perfil} />}
                   {/* ⚠️ EL CALENDARIO SE MUDÓ AQUÍ DESDE EL TABLERO COMPLETO
                       (2026-09-15), y el motivo lo dio Néstor con tres palabras:
                       **«¿dónde está el calendario?»**.

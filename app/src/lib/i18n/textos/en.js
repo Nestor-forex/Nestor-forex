@@ -738,6 +738,25 @@ export default {
       'Activity: how many times the price changed today, according to this broker. It does NOT say which way or how far: a pair can change 8,000 times and end where it started. Nor is it volume — no real volume exists in Forex, because there is no central exchange to record it. Compare pairs with each other right now, not days with each other: the day is only half done.',
     pie: (v) => `Spread in pips, amber above 3. Taken on ${v.hora}.`,
   },
+  avisosExp: {
+    titulo: "Experiment alerts (administrator only)",
+    noSonSenales: "These are NOT signals: they are experiments the app records to measure them.",
+    desc: "Turn on the ones you want to follow on demo. When the watcher records a new one, it reaches your phone marked as EXPERIMENT. Subscribers never get them.",
+    nota: "They only sound if this device has alerts turned on in the card above.",
+    encendido: "On",
+    apagado: "Off",
+    sinPermiso: "There is no permission to save this.",
+    noSeGuardo: "Could not save. Try again.",
+    push: "Experiment · not a signal",
+    op: {
+      caida: "Buy the drop",
+      app: "App signals (buys)",
+      pausadas: "Paused app sells",
+      reversion: "Reversal (contrary rule)",
+      bollinger: "Bollinger band touch",
+      ruptura: "Structure break",
+    },
+  },
   avisos: {
     pausados: 'Alerts paused while we review the signals',
     pausadosPorque:
@@ -757,7 +776,6 @@ export default {
     fallo: 'Alerts could not be turned on. Please try again.',
     soloEsteAparato: 'Alerts are set per device: if you use the app on your phone and your computer, turn them on in each one.',
     siSirven: "Turning them on DOES work for \"My alerts\": the alerts you set up yourself reach you even while the app's signals are paused.",
-    adminExperimento: "As administrator you also receive the new \"buy the drop\" signals, marked as EXPERIMENT, so you can test them on demo. Subscribers do not get them.",
   },
 
   riesgoSenales: {
@@ -944,7 +962,6 @@ export default {
     comparaNota: "Per unit of risk: what was won or lost for each unit risked (+1 means winning what was risked, −1 means losing it). It is the only fair way to compare rules with stops of different sizes; pips cannot do that.",
     backtest: ({ ops, acierto, valor, swap, fecha }) =>
       `Over 5 years of market data (measured on ${fecha}): ${ops} trades, ${acierto}% hit rate and ${valor} per unit of risk counting the spread. Paying 0.5 pips of swap per night it drops to ${swap}: that is why it has not passed its bar yet.`,
-    avisoPush: "Experiment · not a signal",
   },
   historial: {
     esBollinger: 'BOLLINGER',

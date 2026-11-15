@@ -733,6 +733,25 @@ export default {
       'Hareket: bu aracı kuruma göre fiyatın bugün kaç kez değiştiği. Yönü de mesafeyi de SÖYLEMEZ: bir parite 8.000 kez değişip başladığı yerde bitebilir. Hacim de değildir — Forex’te gerçek bir hacim yoktur, çünkü onu kaydeden merkezi bir borsa yoktur. Pariteleri şu anda birbiriyle karşılaştır, günleri birbiriyle değil: gün henüz yarısında.',
     pie: (v) => `Spread pip cinsinden, 3'ün üzerinde kehribar rengi. ${v.hora} tarihinde alındı.`,
   },
+  avisosExp: {
+    titulo: "Deney uyarıları (yalnızca yönetici)",
+    noSonSenales: "Bunlar sinyal DEĞİL: uygulamanın ölçmek için kaydettiği deneylerdir.",
+    desc: "Demoda takip etmek istediklerini aç. Gözcü yeni bir tane kaydettiğinde telefonuna DENEY olarak işaretli gelir. Abonelere asla gelmez.",
+    nota: "Yalnızca bu cihazda yukarıdaki kartta uyarılar açıksa çalar.",
+    encendido: "Açık",
+    apagado: "Kapalı",
+    sinPermiso: "Bunu kaydetme izni yok.",
+    noSeGuardo: "Kaydedilemedi. Tekrar dene.",
+    push: "Deney · sinyal değil",
+    op: {
+      caida: "Düşüşü almak",
+      app: "Uygulama sinyalleri (alış)",
+      pausadas: "Duraklatılmış uygulama satışları",
+      reversion: "Dönüş (karşıt kural)",
+      bollinger: "Bollinger bandına dokunma",
+      ruptura: "Yapı kırılımı",
+    },
+  },
   avisos: {
     pausados: 'Sinyalleri gözden geçirirken bildirimler duraklatıldı',
     pausadosPorque:
@@ -752,7 +771,6 @@ export default {
     fallo: 'Bildirimler açılamadı. Lütfen tekrar dene.',
     soloEsteAparato: 'Bildirimler cihaz başına ayarlanır: uygulamayı hem telefonda hem bilgisayarda kullanıyorsan, her birinde aç.',
     siSirven: "Açmak yine de «Uyarılarım» için işe yarar: kendi kurduğun uyarılar, uygulamanın sinyalleri duraklatılmış olsa bile sana ulaşır.",
-    adminExperimento: "Yönetici olarak «Düşüşü almak» kuralının yeni sinyalleri de DENEY olarak işaretli şekilde sana gelir, demoda denemen için. Abonelere gelmez.",
   },
 
   riesgoSenales: {
@@ -939,7 +957,6 @@ export default {
     comparaNota: "Risk birimi başına: riske atılan her birim için kazanılan ya da kaybedilen miktar (+1 riske atılanı kazanmak, −1 onu kaybetmek demektir). Farklı büyüklükte stoplu kuralları adil karşılaştırmanın tek yolu budur; pip bunu yapamaz.",
     backtest: ({ ops, acierto, valor, swap, fecha }) =>
       `5 yıllık piyasa verisinde (${fecha} tarihinde ölçüldü): ${ops} işlem, %${acierto} isabet ve spread dahil risk birimi başına ${valor}. Gece başına 0,5 pip swap ödenince ${swap} oluyor: bu yüzden henüz eşiğini geçemedi.`,
-    avisoPush: "Deney · sinyal değil",
   },
   historial: {
     esBollinger: 'BOLLINGER',

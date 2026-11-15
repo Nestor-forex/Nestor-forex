@@ -738,6 +738,25 @@ export default {
       "Activité : combien de fois le prix a changé aujourd'hui, selon ce courtier. Elle ne dit NI dans quel sens NI de combien : une paire peut changer 8 000 fois et finir là où elle a commencé. Ce n'est pas non plus du volume — il n'en existe pas de réel sur le Forex, car aucune bourse centrale ne l'enregistre. Compare les paires entre elles à cet instant, pas les journées entre elles : la journée est à moitié faite.",
     pie: (v) => `Spread en pips, en ambre au-dessus de 3. Relevé le ${v.hora}.`,
   },
+  avisosExp: {
+    titulo: "Alertes des expériences (administrateur seulement)",
+    noSonSenales: "Ce ne sont PAS des signaux : ce sont des expériences que l'application enregistre pour les mesurer.",
+    desc: "Active celles que tu veux suivre en démo. Quand le veilleur en enregistre une nouvelle, elle arrive sur ton téléphone marquée EXPÉRIENCE. Les abonnés ne la reçoivent jamais.",
+    nota: "Elles ne sonnent que si cet appareil a les alertes activées dans la carte du dessus.",
+    encendido: "Activé",
+    apagado: "Désactivé",
+    sinPermiso: "Pas de permission pour enregistrer ceci.",
+    noSeGuardo: "Impossible d'enregistrer. Réessaie.",
+    push: "Expérience · ce n'est pas un signal",
+    op: {
+      caida: "Acheter la chute",
+      app: "Signaux de l'application (achats)",
+      pausadas: "Ventes de l'application en pause",
+      reversion: "Retournement (règle contraire)",
+      bollinger: "Toucher de bande de Bollinger",
+      ruptura: "Cassure de structure",
+    },
+  },
   avisos: {
     pausados: 'Alertes en pause pendant que nous vérifions les signaux',
     pausadosPorque:
@@ -757,7 +776,6 @@ export default {
     fallo: 'Impossible d’activer les alertes. Réessaie.',
     soloEsteAparato: 'Les alertes se règlent par appareil : si tu utilises l’app sur le téléphone et l’ordinateur, active-les sur chacun.',
     siSirven: "Les activer SERT pour « Mes alertes » : les alertes que tu programmes toi-même t'arrivent même quand les signaux de l'application sont en pause.",
-    adminExperimento: "En tant qu'administrateur, tu reçois aussi les nouveaux signaux de « acheter la chute », marqués EXPÉRIENCE, pour les tester en démo. Les abonnés ne les reçoivent pas.",
   },
 
   riesgoSenales: {
@@ -944,7 +962,6 @@ export default {
     comparaNota: "Par unité de risque : ce qui a été gagné ou perdu pour chaque unité risquée (+1 veut dire gagner ce qui a été risqué, −1 le perdre). C'est la seule façon équitable de comparer des règles avec des stops de tailles différentes ; les pips ne le permettent pas.",
     backtest: ({ ops, acierto, valor, swap, fecha }) =>
       `Sur 5 ans de marché (mesuré le ${fecha}) : ${ops} opérations, ${acierto} % de réussite et ${valor} par unité de risque en comptant le spread. En payant 0,5 pip de swap par nuit, elle tombe à ${swap} : c'est pourquoi elle n'a pas encore passé sa barre.`,
-    avisoPush: "Expérience · ce n'est pas un signal",
   },
   historial: {
     esBollinger: 'BOLLINGER',

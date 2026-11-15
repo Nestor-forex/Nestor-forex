@@ -793,6 +793,25 @@ export default {
     fuenteCierre: 'Twelve Data',
   },
 
+  avisosExp: {
+    titulo: "Avisos de los experimentos (solo administrador)",
+    noSonSenales: "Esto NO son señales: son experimentos que la app anota para medirlos.",
+    desc: "Enciende los que quieras seguir en demo. Cuando el vigía anote uno nuevo, te llega al celular marcado como EXPERIMENTO. A los suscriptores no les llega nunca.",
+    nota: "Solo suenan si este aparato tiene los avisos activados en la tarjeta de arriba.",
+    encendido: "Encendido",
+    apagado: "Apagado",
+    sinPermiso: "No hay permiso para guardar esto.",
+    noSeGuardo: "No se pudo guardar. Inténtalo otra vez.",
+    push: "Experimento · no es una señal",
+    op: {
+      caida: "Comprar la caída",
+      app: "Señales de la app (compras)",
+      pausadas: "Ventas de la app en pausa",
+      reversion: "Reversión (regla contraria)",
+      bollinger: "Toque de banda de Bollinger",
+      ruptura: "Ruptura de estructura",
+    },
+  },
   avisos: {
     // Se le dice al miembro por qué están apagados, en vez de dejar el
     // interruptor puesto y que se quede esperando un aviso que no va a llegar.
@@ -815,7 +834,6 @@ export default {
     fallo: 'No se pudieron activar los avisos. Inténtalo de nuevo.',
     soloEsteAparato: 'Los avisos se activan por aparato: si usas la app en el celular y en el computador, actívalos en cada uno.',
     siSirven: "Activarlos SÍ sirve para «Mis avisos»: los avisos que tú programes te llegan aunque las señales de la app estén en pausa.",
-    adminExperimento: "Como administrador te llegan además las señales nuevas de «comprar la caída», marcadas como EXPERIMENTO, para que las pruebes en demo. A los suscriptores no les llegan.",
   },
 
   riesgoSenales: {
@@ -1002,7 +1020,6 @@ export default {
     comparaNota: "Por unidad de riesgo: lo que se ganó o se perdió por cada unidad arriesgada (+1 es ganar lo arriesgado, −1 es perderlo). Es la única forma justa de comparar reglas con stops de distinto tamaño; los pips no sirven para eso.",
     backtest: ({ ops, acierto, valor, swap, fecha }) =>
       `Sobre 5 años de mercado (medido el ${fecha}): ${ops} operaciones, ${acierto} % de acierto y ${valor} por unidad de riesgo contando el spread. Pagando 0,5 pips de swap por noche queda en ${swap}: por eso todavía no pasa su listón.`,
-    avisoPush: "Experimento · no es una señal",
   },
   historial: {
     esBollinger: 'BOLLINGER',
