@@ -16,7 +16,7 @@ Estado: ⬜ por hacer · 🟨 en obra · ✅ hecho · ❓ falta una decisión de
 | 2 | **Avisos inteligentes por contexto**: noticia de impacto alto para una divisa de tus pares en los próximos ~15-30 min; dos pares de tu lista muy correlacionados (Swing); spread de un par tuyo muy por encima de lo normal | las dos (la correlación solo Swing) | ✅ (PR, 2026-11-16) | nada |
 | 3 | **Planes por app** (Swing, Intradía, Combo) y **pago anticipado con 2 semanas de regalo** | las dos | ❓ | precios y decisión de Néstor; ver abajo |
 | 4 | **Insignias de disciplina y aprendizaje** (gamificación ética): premiar usar el stop, respetar el freno del día, completar lecciones; **nunca** premiar ganancias | las dos | ✅ (PR, 2026-11-16; las de lecciones y práctica, cuando existan) | nada (las de lecciones, del curso) |
-| 5 | **Modo práctica** (paper trading ligero): anotar operaciones de práctica que la app sigue con precios reales y resuelve sola, separadas del Diario real | las dos | ⬜ | nada |
+| 5 | **Modo práctica** (paper trading ligero): anotar operaciones de práctica que la app sigue con precios reales y resuelve sola, separadas del Diario real | las dos | ✅ (PR, 2026-11-16; hay que publicar las reglas de Firestore) | nada |
 | 6 | **«Qué es y qué no es» obligatorio antes del primer uso de la IA** | las dos | ⬜ | Qwen (fase 5) |
 | 7 | **Página web de presentación + tutorial básico** con capturas reales | aparte | ⬜ | precios (3) para la sección de planes |
 | 8 | **Curso detallado** para principiantes: teoría, ejemplos, fórmulas y ejercicios en demo, enlazado con las insignias y el modo práctica | aparte | ⬜ | 4 y 5 para los ejercicios |

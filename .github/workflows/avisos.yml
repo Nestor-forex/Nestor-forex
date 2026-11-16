@@ -104,3 +104,21 @@ jobs:
           else
             node scripts/mandar-avisos.mjs --aplicar
           fi
+
+      # El modo práctica (2026-11-16): resuelve las operaciones de práctica de
+      # las dos apps con las velas de los barridos publicados. Va en este mismo
+      # workflow porque ya corre cada 15 minutos y el reloj de fuera lo pulsa.
+      # `if: always()`: que fallen los avisos no puede dejar sin resolver la
+      # práctica, ni al revés. Sin «solo mirar» marcado ESCRIBE, igual que el
+      # paso de arriba: el reloj lo pulsa sin inputs.
+      - name: Resolver las operaciones de práctica
+        if: always()
+        working-directory: app
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ "${{ inputs.solo_mirar }}" = "true" ]; then
+            node scripts/resolver-practica.mjs
+          else
+            node scripts/resolver-practica.mjs --aplicar
+          fi
