@@ -373,3 +373,11 @@ Néstor, entera, en **`notas/regla-comprar-la-caida.md`**.
 se pega en Cloudflare y no puede leer otros. Cada vez que cambie una
 herramienta se cambian los dos sitios y sube `VERSION`. Los NÚMEROS no van en
 las instrucciones: los manda la app con cada consulta (`analisisParaQwen`).
+
+## Qwen4-Max (visto el 2026-11-16)
+
+La portada de Alibaba Cloud anunciaba **«Qwen4-Max ya está disponible»**: más
+nuevo que los tres modelos de la sonda (`qwen3.8-flash`, `qwen3.7-plus`,
+`qwen3.8-max`). Néstor pidió recordarlo. **Sin comprobar todavía**: con la cuenta
+nueva, mirar en Model Studio si está en Singapur, su nombre exacto para la API y su
+precio, y decidir con él si entra en la sonda (`MODELOS` de `puente-qwen/worker.js`).
