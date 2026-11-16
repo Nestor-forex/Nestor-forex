@@ -34,6 +34,8 @@ import { useCalendario } from './lib/useCalendario'
 import { useCot } from './lib/useCot'
 import { useOro } from './lib/useOro'
 import { decidirModo, filtrarMercado, guardarModo, leerModo, resumenVista } from './lib/vistaPares'
+import { useAvisos } from './lib/useAvisos'
+import { PAIR_NAMES } from './lib/pairs'
 
 // La clave con la que se recuerda qué setup está abierto en la pantalla de
 // detalle. Lleva el `tipo` a propósito: ver el comentario de `detalle`.
@@ -112,8 +114,18 @@ export default function App() {
     guardarModo(m)
     setModoVista({ valor: m, pudoLeer: true })
   }
+  // El arranque guiado guarda la lista con el MISMO `seguir` que la pestaña de
+  // avisos: dos formas de escribir `seguimiento` se separarían sin avisar.
+  const avisosUsuario = useAvisos(authUser?.uid, perfil)
   const filtroPares = (
-    <FiltroPares resumen={resumenPares} modo={modo} onModo={cambiarVista} onIrAvisos={() => setTab('avisos')} />
+    <FiltroPares
+      resumen={resumenPares}
+      modo={modo}
+      onModo={cambiarVista}
+      onIrAvisos={() => setTab('avisos')}
+      pares={PAIR_NAMES}
+      onSeguir={(lista) => avisosUsuario.seguir(lista)}
+    />
   )
 
   useEffect(() => {
