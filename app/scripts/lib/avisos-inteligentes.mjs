@@ -17,12 +17,12 @@ export async function mandarInteligentes({ fichas, subsPorUid, contexto, aplicar
   for (const f of Array.isArray(fichas) ? fichas : []) {
     // Solo a quien tiene la puerta abierta: mandar avisos a un retirado sería
     // darle el producto por una puerta de atrás.
-    if (f?.estado !== 'aprobado' || !f.uid) continue
+    if (f?.estado !== 'aprobado' || !f.id) continue
     const avisos = avisosParaPersona(f, contexto, ahora)
     if (!avisos.length) continue
     r.personas++
     r.candidatos += avisos.length
-    const subs = subsPorUid.get(f.uid) || []
+    const subs = subsPorUid.get(f.id) || []
     // Sin aparato no se marca nada: marcar «ya avisado» algo que nunca llegó lo
     // escondería para siempre.
     if (!subs.length) {
@@ -38,7 +38,7 @@ export async function mandarInteligentes({ fichas, subsPorUid, contexto, aplicar
     for (const a of avisos) marcas[a.clave] = ahora.toISOString()
     let ok = false
     try {
-      ok = (await marcar(`users/${f.uid}`, marcas)) !== false
+      ok = (await marcar(f.ruta, marcas)) !== false
     } catch {
       ok = false
     }
