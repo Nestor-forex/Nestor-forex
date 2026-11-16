@@ -16556,3 +16556,52 @@ fecha o el evento en la clave.
 ⚠️ **`firestore.rules` añade `avisosInt`**: hay que publicarlas (Actions →
 «Publicar las reglas de Firestore», casilla «aplicar») o guardar los interruptores
 dice «No hay permiso».
+
+---
+
+# Punto 4 del plan: las insignias (2026-11-16). En las dos apps
+
+```
+src/lib/insignias.js            qué insignias tiene cada persona   GEMELO
+src/components/Insignias.jsx    «Tus insignias», en el Diario       GEMELO
+scripts/prueba-insignias.mjs    comprobaciones sin internet         GEMELO
+```
+
+Siete: perfil de riesgo completo · lista de pares · una plantilla del
+Analizador · un aviso propio · 10 operaciones en el Diario · 10 con una nota
+de por qué · 5 días respetando el freno. Van con «para qué sirve» y el aviso de
+que ninguna premia ganar dinero ANTES de la lista.
+
+⚠️⚠️ **NINGUNA PREMIA GANAR NI ACERTAR.** `prueba-insignias.mjs` comprueba que
+convertir todas las pérdidas en ganancias no cambia ninguna insignia, y que el
+código no mira acierto ni suma de ganancias. Contar solo las ganadoras tumba 3.
+
+⚠️ **La del freno mira la REGLA, no el dinero:** un día cuenta si, en el orden
+en que se cerraron, no se cerró ninguna operación DESPUÉS de tocar el freno del
+día o las pérdidas seguidas. Tocarlo y parar lo respeta; un día sin tocarlo
+también. Sin perfil completo no se cuenta (`null`, no 0). Las operaciones
+viejas o importadas no tienen `cerradaEnMs`, así que su orden es aproximado.
+
+⚠️ **NO SE GUARDA NADA**: se calculan cada vez con el Diario y la ficha. No hay
+nada que inflar a mano ni que añadir a las reglas de Firestore. Si se borran
+operaciones, la cuenta baja.
+
+⚠️ **Ni verde ni rojo**: la insignia conseguida va con `--cta` (cian en Swing,
+dorado en Intradía). El verde aquí significa dinero.
+
+⚠️ El Diario de cada app es su colección: en Intradía cuentan las operaciones
+del Diario de Intradía. La ficha (perfil, lista, avisos, plantillas) es la misma.
+
+Las insignias del curso y del modo práctica llegan con ellos (puntos 5 y 8).
+
+## ⚠️ El archivo de Swing pasó de 2 MiB y el build FALLABA
+
+Con las insignias, `dist/assets/index-*.js` llegó a 2,11 MB y
+`vite-plugin-pwa` se niega a guardar en caché un archivo de más de 2 MiB: **el
+build fallaba y no se habría publicado nada**. `vite.config.js` (las dos apps)
+lleva ahora `injectManifest.maximumFileSizeToCacheInBytes: 4 MiB`. Intradía va
+en 1,9 MB. El día que se acerque a 4, lo que toca es partir el archivo
+(`import()` dinámico), no subir el número.
+
+📌 En árabe, «Stop-loss» dentro de una frase se partía en dos líneas por el
+guion («-Stop / loss»). Va aislado (LRI/PDI) y con guion que no parte (U+2011).
