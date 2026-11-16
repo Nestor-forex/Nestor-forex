@@ -18,6 +18,8 @@ import { crearT } from '../src/lib/i18n/crearT.js'
 import { VAPID_PUBLICA } from '../src/lib/push/vapid.js'
 import { abrir, leerCuentaDeServicio } from './lib/firestore-rest.mjs'
 import { armarNotificacion, datosPorPar, mandarATodos } from './lib/avisos-usuario.mjs'
+import { mandarInteligentes } from './lib/avisos-inteligentes.mjs'
+import { EDAD_MAXIMA_PRECIO_MIN } from '../src/lib/alertas.js'
 
 const APLICAR = process.argv.includes('--aplicar')
 
@@ -26,6 +28,10 @@ const FUENTES = {
   mt5: `${RAW}/Nestor-forex/datos/estado/mt5.json`,
   swing: `${RAW}/Nestor-forex/datos/estado/barrido.json`,
   intradia: `${RAW}/Nestor-forex-intradia/datos/estado/barrido.json`,
+  // Para los avisos inteligentes: el calendario y las muestras de spread que
+  // publica el puente. Todo de la rama `datos` de Swing.
+  calendario: `${RAW}/Nestor-forex/datos/estado/calendario.json`,
+  spreads: (fecha) => `${RAW}/Nestor-forex/datos/spreads/${fecha}.jsonl`,
 }
 
 // Cuánto puede durar el envío entero. El límite por notificación no basta:
@@ -51,6 +57,25 @@ async function bajar(url, queEs) {
   } catch (e) {
     console.log(`  ⚠️ ${queEs}: ${e?.message || e}`)
     return null
+  }
+}
+
+async function bajarLineas(url) {
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(15_000), cache: 'no-cache' })
+    if (!r.ok) return []
+    const out = []
+    for (const l of (await r.text()).split('\n')) {
+      try {
+        const j = JSON.parse(l)
+        if (j && j.s && typeof j.s === 'object') out.push(j.s)
+      } catch {
+        // una línea a medio escribir no tumba el resto
+      }
+    }
+    return out
+  } catch {
+    return []
   }
 }
 
@@ -151,8 +176,60 @@ const resumen = await mandarATodos({
 })
 
 // Las suscripciones muertas se borran para no gastar tiempo en ellas cada vuelta.
+// ─────────────────────────────────────────────────────────────────────────
+// AVISOS INTELIGENTES — los que la app manda sola sobre los pares de cada uno
+// ─────────────────────────────────────────────────────────────────────────
+const ahora = new Date()
+const hoy = ahora.toISOString().slice(0, 10)
+const ayer = new Date(ahora.getTime() - 86_400_000).toISOString().slice(0, 10)
+const [cal, spHoy, spAyer] = await Promise.all([
+  bajar(FUENTES.calendario, 'calendario'),
+  bajarLineas(FUENTES.spreads(hoy)),
+  bajarLineas(FUENTES.spreads(ayer)),
+])
+// ⚠️ El spread actual solo vale si la foto del puente es fresca: con el PC
+// apagado, el último dato puede ser de ayer y avisaría de algo que ya no pasa.
+const edadMt5 = mt5?.actualizadoEl ? (ahora.getTime() - new Date(mt5.actualizadoEl).getTime()) / 60_000 : Infinity
+const spreadActual = {}
+if (edadMt5 <= EDAD_MAXIMA_PRECIO_MIN) for (const [par, d] of Object.entries(mt5?.pares || {})) spreadActual[par] = d?.spread
+const contexto = {
+  eventos: Array.isArray(cal?.eventos) ? cal.eventos : [],
+  correl: bSwing?.correl || null,
+  spreadActual,
+  spreadHistorico: [...spAyer, ...spHoy],
+  hoyISO: hoy,
+}
+console.log(`  calendario: ${contexto.eventos.length} eventos · spreads: ${contexto.spreadHistorico.length} lecturas · puente ${Number.isFinite(edadMt5) ? Math.round(edadMt5) + ' min' : '—'}`)
+
+const intel = await mandarInteligentes({
+  fichas,
+  subsPorUid,
+  contexto,
+  aplicar: APLICAR,
+  seAcabaEn: Date.now() + MS_PRESUPUESTO,
+  marcar: (ruta, intelEnviados) => bd.actualizar(ruta, { intelEnviados }),
+  t: (idioma) => crearT(idioma),
+  ahora,
+  async enviar(sub, mensaje) {
+    try {
+      await webpush.sendNotification(
+        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        JSON.stringify(mensaje),
+        { timeout: MS_POR_AVISO }
+      )
+      return 'ok'
+    } catch (e) {
+      if (MUERTA.has(e?.statusCode)) return 'muerta'
+      console.log(`  aviso inteligente no entregado (código ${e?.statusCode ?? '?'})`)
+      return 'fallo'
+    }
+  },
+})
+console.log(`\n  Avisos inteligentes: ${intel.candidatos} para ${intel.personas} persona(s) · enviados ${intel.enviados}${intel.noSeMarco ? ` · sin marcar ${intel.noSeMarco}` : ''}${intel.sinAparato ? ` · sin aparato ${intel.sinAparato}` : ''}`)
+
 let limpiadas = 0
-if (APLICAR) for (const ruta of resumen.muertas) if (await bd.borrar(ruta)) limpiadas++
+const todasMuertas = [...new Set([...resumen.muertas, ...intel.muertas])]
+if (APLICAR) for (const ruta of todasMuertas) if (await bd.borrar(ruta)) limpiadas++
 
 console.log('')
 for (const [k, v] of Object.entries({ ...resumen, muertas: resumen.muertas.length, limpiadas })) {

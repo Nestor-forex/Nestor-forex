@@ -13,7 +13,7 @@ Estado: ⬜ por hacer · 🟨 en obra · ✅ hecho · ❓ falta una decisión de
 | # | qué | app | estado | depende de |
 |---|---|---|---|---|
 | 1 | **Arranque guiado con «Mis pares»**: al entrar la primera vez, preguntar qué opera y proponer pares con un toque, sin pantalla vacía | las dos | ✅ (PR, 2026-11-16) | nada |
-| 2 | **Avisos inteligentes por contexto**: noticia de impacto alto para una divisa de tus pares en los próximos ~15-30 min; dos pares de tu lista muy correlacionados (Swing); spread de un par tuyo muy por encima de lo normal | las dos (la correlación solo Swing) | ⬜ | nada |
+| 2 | **Avisos inteligentes por contexto**: noticia de impacto alto para una divisa de tus pares en los próximos ~15-30 min; dos pares de tu lista muy correlacionados (Swing); spread de un par tuyo muy por encima de lo normal | las dos (la correlación solo Swing) | ✅ (PR, 2026-11-16) | nada |
 | 3 | **Planes por app** (Swing, Intradía, Combo) y **pago anticipado con 2 semanas de regalo** | las dos | ❓ | precios y decisión de Néstor; ver abajo |
 | 4 | **Insignias de disciplina y aprendizaje** (gamificación ética): premiar usar el stop, respetar el freno del día, completar lecciones; **nunca** premiar ganancias | las dos | ⬜ | nada (las de lecciones, del curso) |
 | 5 | **Modo práctica** (paper trading ligero): anotar operaciones de práctica que la app sigue con precios reales y resuelve sola, separadas del Diario real | las dos | ⬜ | nada |

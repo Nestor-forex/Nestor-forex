@@ -16524,3 +16524,35 @@ verdad.
 📌 Sigue en pie lo que no cambia: el aviso dice «Experimento · no es una
 señal», no pasa por `RB_MINIMO`, y las señales de la app solo van por aquí
 mientras sus avisos estén en pausa.
+
+---
+
+# Punto 2 del plan: avisos inteligentes (2026-11-16). En las dos apps
+
+```
+src/lib/avisosInteligentes.js        las reglas de cuándo suena cada uno   GEMELO
+src/components/AvisosInteligentes.jsx  los interruptores, en la pestaña Avisos  GEMELO
+scripts/lib/avisos-inteligentes.mjs  el bucle de envío                     solo Swing
+scripts/mandar-avisos.mjs            los llama en cada vuelta (cada 15 min)  solo Swing
+scripts/prueba-avisos-inteligentes.mjs                                     solo Swing
+```
+
+Tres avisos que la app manda sola sobre los pares de la LISTA de cada persona:
+noticia de impacto alto para una de sus divisas en los próximos 30 min · dos de
+sus pares con |correlación| ≥ 0,8 (solo hay dato en el barrido de Swing) ·
+spread de un par suyo ≥ 2 veces su mediana de hoy y ayer (spreads/<fecha>.jsonl,
+solo con la foto del puente fresca, ≤45 min).
+
+⚠️ **Arrancan apagados** (`users/{uid}.avisosInt`, lista de los encendidos) y
+**sin lista de pares no suena nada**: se dice en pantalla. Ninguno dice qué hacer;
+el cuerpo termina en «No es una señal».
+
+⚠️ **Se marca antes de mandar** (`users/{uid}.intelEnviados`, mapa clave→fecha,
+podado a 8 días) y si la marca falla no se manda. `intelEnviados` NO está en la
+lista blanca de las reglas a propósito: solo lo escribe la cuenta de servicio.
+La correlación vuelve a sonar pasada una semana; noticias y spread llevan la
+fecha o el evento en la clave.
+
+⚠️ **`firestore.rules` añade `avisosInt`**: hay que publicarlas (Actions →
+«Publicar las reglas de Firestore», casilla «aplicar») o guardar los interruptores
+dice «No hay permiso».
