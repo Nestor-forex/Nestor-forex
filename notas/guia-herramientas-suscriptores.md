@@ -542,6 +542,94 @@ midiendo; vuelven solo si el banco de pruebas da positivo en las ventas.
 
 ---
 
+## 12 · Modo práctica — operar sin dinero
+
+**Dónde:** se crea en la pestaña **Analizar** con el botón **«Practicar esta
+operación (sin dinero)»**, y se sigue en la pestaña **Diario**, en la tarjeta
+**«Modo práctica»**. En las dos apps.
+
+**Para qué sirve:** para probar una forma de operar **sin arriesgar dinero**.
+Armas la operación como si fuera de verdad y la app la sigue sola con los
+precios reales hasta que toca el Stop-loss o el Take-profit. Con el tiempo ves
+si esa forma de operar funciona antes de ponerle dinero. Es lo que hacen los
+traders con experiencia con cualquier idea nueva, y es la mejor forma de
+empezar si estás aprendiendo.
+
+**Paso a paso:**
+
+1. Ve a **Analizar**, elige el par, **tu** dirección y cómo poner el Stop-loss.
+2. Mira la tarjeta: entrada, Stop-loss, Take-profit y la relación
+   riesgo/beneficio.
+3. Pulsa **«Practicar esta operación (sin dinero)»**. Sale el aviso *«Guardada
+   en el modo práctica»* y un enlace para verla en el Diario.
+4. No tienes que hacer nada más: la app la revisa cada 15 minutos con los
+   precios reales y la cierra sola.
+5. En el Diario, la tarjeta **«Modo práctica»** te enseña las abiertas, las
+   resueltas y tus números.
+
+**Cómo se lee:**
+
+- **Acierto** con su **±**: cuánto puede moverse solo por casualidad (ver la
+  explicación del margen de error). Con pocas operaciones es grande.
+- **Resultado** y **Por operación**, en **R**. **1 R es lo que arriesgabas.**
+  Perder es siempre **−1 R**; ganar es lo que daba tu Take-profit (con una
+  relación 1:2, ganar es **+2 R**). Se mide en R y no en dólares porque la
+  práctica no tiene lote.
+- **Caducada:** la app no pudo mirarla a tiempo y esas velas ya no se ven. No
+  cuenta ni como ganada ni como perdida.
+- **No válida:** el precio de entrada era viejo o no estaba dentro de la vela,
+  o los niveles estaban al revés. No cuenta.
+
+**Cómo decide la app, para que sea justo:**
+
+- Solo cuentan las velas que **empiezan después** de crear la operación. Así
+  nadie puede ver que el precio ya llegó a un nivel y «practicar» con el precio
+  de antes.
+- Si una misma vela toca el Stop-loss **y** el Take-profit, cuenta como
+  **perdida**: la vela no dice cuál pasó primero y se elige el peor caso.
+- En Intradía, en los cruces (pares sin dólar), los máximos y mínimos son
+  aproximados y un poco más anchos, así que es algo más fácil que cuenten como
+  perdida.
+
+**Lo que NO hace:**
+
+- **No es dinero real ni una señal.** La dirección la eliges tú.
+- **No puedes escribir el resultado a mano**, ni borrar una operación ya
+  resuelta. Solo se puede borrar una abierta. Si se pudiera borrar las
+  perdidas, el número no diría nada.
+- Como mucho **20 abiertas** a la vez.
+
+---
+
+## 13 · Tus insignias — premios por disciplina, nunca por ganar
+
+**Dónde:** pestaña **Diario**, tarjeta **«Tus insignias»**. En las dos apps.
+
+**Para qué sirve:** los traders que duran no son los que más aciertan: son los
+que repiten buenos hábitos. Las insignias te marcan el camino de esos hábitos,
+sobre todo si estás empezando.
+
+**Las ocho:**
+
+1. **Sabes cuánto arriesgas** — completa tu perfil de riesgo.
+2. **Sabes qué operas** — elige tu lista de pares.
+3. **Tu método por escrito** — guarda una plantilla en el Analizador.
+4. **Que el mercado te llame** — programa un aviso propio.
+5. **Diario constante** — anota 10 operaciones, ganes o pierdas.
+6. **Escribes por qué** — anota 10 operaciones con una nota de por qué entraste.
+7. **Respetas tu freno** — 5 días sin abrir otra operación después de tocar tu
+   freno del día o tus pérdidas seguidas. Un día en que no lo tocas también
+   cuenta.
+8. **Practicas sin dinero** — termina 5 operaciones del modo práctica, ganes o
+   pierdas.
+
+**Lo que NO hace:** **ninguna premia ganar dinero, acertar ni operar más.**
+Premiar eso empujaría a arriesgar más para conseguir la medalla. No se guarda
+nada aparte: se calculan con tus datos cada vez, así que si borras operaciones
+la cuenta baja.
+
+---
+
 ## Una sola frase para recordar todo
 
 > **La app te ahorra el tiempo de mirar; la decisión y la operación son tuyas.**

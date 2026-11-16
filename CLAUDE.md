@@ -16605,3 +16605,70 @@ en 1,9 MB. El día que se acerque a 4, lo que toca es partir el archivo
 
 📌 En árabe, «Stop-loss» dentro de una frase se partía en dos líneas por el
 guion («-Stop / loss»). Va aislado (LRI/PDI) y con guion que no parte (U+2011).
+
+---
+
+# Punto 5 del plan: el modo práctica (2026-11-16). En las dos apps
+
+```
+src/lib/practica.js            las cuentas: ficha, resolver, resumen     GEMELO
+src/lib/usePractica.js         la colección users/{uid}/practica        GEMELO
+src/components/Practica.jsx    «Modo práctica», en el Diario            GEMELO
+scripts/prueba-practica.mjs    ~60 comprobaciones                       GEMELO
+scripts/lib/practica-robot.mjs el bucle de resolver                     solo Swing
+scripts/resolver-practica.mjs  el programa                              solo Swing
+scripts/prueba-practica-robot.mjs                                       solo Swing
+.github/workflows/avisos.yml   + paso «Resolver las operaciones de práctica»
+scripts/lib/barrido-publicado.mjs  + `fechas20`                         PRIMO
+```
+
+Son **109 gemelos**. Operaciones sin dinero: se crean en el Analizador con
+«Practicar esta operación (sin dinero)» (los niveles salen de la misma tarjeta,
+no hay un segundo cálculo) y la app las cierra sola. El resultado va en **R**
+(la práctica no tiene lote). La insignia nueva, **«Practicas sin dinero»**,
+cuenta 5 terminadas, ganadas o perdidas igual.
+
+## Las decisiones que no hay que ablandar
+
+⚠️⚠️ **EL RESULTADO LO ESCRIBE SOLO EL PROGRAMA.** Las reglas de `practica` no
+tienen `update`, al crear no se puede traer `estado` ni `r`, y **solo se puede
+borrar una abierta**. Borrar las perdidas resueltas inventaría el acierto.
+
+⚠️ **`creado == request.time`**: la hora la pone el servidor. Y el programa
+marca **no válida** una operación cuya vela de entrada tenga más de 4 velas
+respecto a `creado` (`velaVieja`) o cuyo precio no esté dentro de esa vela
+(`fueraDeVela`).
+
+⚠️⚠️ **SOLO CUENTAN LAS VELAS QUE EMPIEZAN DESPUÉS DE `creado`.** En Intradía el
+precio de entrada es el cierre de la última hora CERRADA, así que la hora en
+curso ya había empezado; sin esto alguien podría ver que esa hora tocó el TP y
+«practicar» con el precio de antes. En Swing equivale a juzgar desde el día
+siguiente, como el Historial.
+
+⚠️ **Mismas reglas que el Historial**: la vela de entrada no cuenta, y una vela
+que toca SL y TP cuenta como **perdida**.
+
+⚠️ **Lo que no se puede saber no se inventa**: sin `fechas20` o sin el par
+espera; si la última vela revisada ya salió de las 20 del barrido, **caducada**.
+La marca `revisadoHasta` solo avanza sobre velas CERRADAS (la última va a
+medias en Swing).
+
+⚠️ **`fechas20` es nuevo en los dos `barrido.json`.** Hasta que cada publicador
+corra con el código nuevo, el programa no resuelve nada de esa app (espera, en
+verde). Son las fechas de las MISMAS 20 velas de `altos20`/`bajos20`.
+
+⚠️ **Hay que publicar las reglas de Firestore** (Actions → «Publicar las
+reglas de Firestore», casilla «aplicar»). Sin eso, guardar dice «falta activar
+el permiso» (`sinPermiso`).
+
+📌 Una sola colección para las dos apps (`app` en cada ficha), filtrada en el
+teléfono: con filtro y orden en la consulta haría falta un índice nuevo.
+
+📌 La insignia lee `resumenPractica(...).resueltas` y no filtra `'ganada'` a
+mano: `prueba-insignias.mjs` falla si `insignias.js` nombra ganancias, y así
+la definición de «terminada» vive en un solo sitio.
+
+📌 Mi lectura de la captura en árabe me engañó otra vez: creí ver «R 1−» y al
+medir la posición de cada letra salió «−1 R», correcto. **Antes de «arreglar»
+una dirección de texto, medirla.** (Lo que sí hacía falta: aislar «1 R» y
+«−1 R» con LRI/PDI en vez de LRM, que no aísla.)
