@@ -12,7 +12,7 @@ Estado: ⬜ por hacer · 🟨 en obra · ✅ hecho · ❓ falta una decisión de
 
 | # | qué | app | estado | depende de |
 |---|---|---|---|---|
-| 1 | **Arranque guiado con «Mis pares»**: al entrar la primera vez, preguntar qué opera y proponer pares con un toque, sin pantalla vacía | las dos | ⬜ | nada |
+| 1 | **Arranque guiado con «Mis pares»**: al entrar la primera vez, preguntar qué opera y proponer pares con un toque, sin pantalla vacía | las dos | ✅ (PR, 2026-11-16) | nada |
 | 2 | **Avisos inteligentes por contexto**: noticia de impacto alto para una divisa de tus pares en los próximos ~15-30 min; dos pares de tu lista muy correlacionados (Swing); spread de un par tuyo muy por encima de lo normal | las dos (la correlación solo Swing) | ⬜ | nada |
 | 3 | **Planes por app** (Swing, Intradía, Combo) y **pago anticipado con 2 semanas de regalo** | las dos | ❓ | precios y decisión de Néstor; ver abajo |
 | 4 | **Insignias de disciplina y aprendizaje** (gamificación ética): premiar usar el stop, respetar el freno del día, completar lecciones; **nunca** premiar ganancias | las dos | ⬜ | nada (las de lecciones, del curso) |
@@ -22,6 +22,7 @@ Estado: ⬜ por hacer · 🟨 en obra · ✅ hecho · ❓ falta una decisión de
 | 8 | **Curso detallado** para principiantes: teoría, ejemplos, fórmulas y ejercicios en demo, enlazado con las insignias y el modo práctica | aparte | ⬜ | 4 y 5 para los ejercicios |
 | 9 | **Muro de análisis de la comunidad** (moderado) | las dos | ❓ | decidir quién modera y las reglas; ver abajo |
 | 10 | **Diario: revisar cierres parciales y moneda de la cuenta** en la importación | las dos | ⬜ | un informe real con cierres parciales |
+| 11 | **Vista ancha a voluntad** en PC, laptop y tableta (y el celular en horizontal): hoy la app es una columna de 430 px centrada aunque la pantalla sea ancha. Un botón para elegir vista estrecha o ancha | las dos | ⬜ | nada |
 
 ## Lo que la otra conversación dio por hecho y NO existe todavía
 
@@ -74,10 +75,14 @@ Más «paga 1 mes, recibe 6 semanas». Antes estaba escrito 15 USD/mes con 1 mes
 (2026-09-15). Sigue pendiente el precio por región (Venezuela, Argentina). **Lo
 decide Néstor.**
 
-## Orden propuesto
+## Orden acordado con Néstor (2026-11-16)
 
-1. Arranque guiado (1) → 2. Avisos inteligentes (2) → 3. Modo práctica (5) →
-4. Insignias (4) → 5. Planes por app (3), cuando decida precios →
-6. Página web y tutorial (7) → 7. Curso (8) → 8. IA: aviso obligatorio (6), con
-Qwen → 9. Muro de la comunidad (9), al final y con reglas escritas.
-La revisión del Diario (10) va cuando haya un informe real con cierres parciales.
+**Primero, en este orden: 1 → 2 → 4 → 5 → 6 → 9 → 10.** Después, una por una:
+**3, 7 y 8**, que para él van casi juntas (planes, página web y curso).
+
+La 11 (vista ancha) la pidió en el mismo mensaje; va junto a la 1, porque las dos
+tocan cómo se ve la app al abrirla.
+
+⚠️ La 6 depende de Qwen (cuenta nueva de Alibaba, desde el 2026-11-20) y la 9 de
+que Néstor decida quién modera y qué se permite: si se llega a ellas antes, se
+salta a la siguiente y se vuelve después.
