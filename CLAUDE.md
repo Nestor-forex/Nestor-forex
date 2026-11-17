@@ -16917,6 +16917,12 @@ bróker ya no está en el archivo público**.
 es la propia ventana: cada minuto escribe «precio al segundo: N escrituras»;
 si las reglas lo rechazaran saldría «[ERROR precio al segundo]».
 
+✅ **Confirmado a los minutos con foto de la ventana:** 56, 60, 60, 60, 60, 61,
+60 escrituras por minuto, sin un solo error. O sea que la cuenta del puente
+escribe y las reglas la dejan. A ~60 por minuto son ~3.600 por hora: con el PC
+encendido 10 h son ~36.000 al día, por encima de las 20.000 gratis — el exceso
+se paga en el plan Blaze y son centavos al mes.
+
 📌 **La llave de GitHub del puente se cambió ese mismo día.** En una foto de
 la carpeta, la vista de búsqueda del Explorador enseñaba el contenido de
 `token.txt`. Se borró la llave «puente mt5» y se hizo otra (solo el repo
