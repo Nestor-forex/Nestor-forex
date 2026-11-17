@@ -16903,3 +16903,32 @@ aparezca lo llevan **codificado en base64**, porque escribirlo para vigilar que
 no se escriba sería justo lo que vigilan. ⚠️ **Sigue en el historial de git**
 de las dos ramas `main` y de la rama `datos`; reescribir ese historial pondría
 en riesgo el historial de señales, que es irrecuperable, y no se hizo.
+
+## ✅ Encendido en el PC de Néstor (2026-11-17, 12:19 hora de Colombia)
+
+Fusionados #188 (Swing) y #130 (Intradía), reglas publicadas, y Néstor puso el
+puente nuevo. La ventana dijo «Precio al segundo: ENCENDIDO», o sea que la
+cuenta del puente entró en Firebase. Comprobado desde fuera: `estado/mt5.json`
+salió a las 17:19:45 UTC con los 18 pares y `cuenta` genérica — **el nombre del
+bróker ya no está en el archivo público**.
+
+⚠️ **Lo que NO se comprobó desde aquí:** que lleguen las escrituras a
+`vivo/precios`. Esta sesión no tiene sesión de Firebase para leerlo. La pista
+es la propia ventana: cada minuto escribe «precio al segundo: N escrituras»;
+si las reglas lo rechazaran saldría «[ERROR precio al segundo]».
+
+📌 **La llave de GitHub del puente se cambió ese mismo día.** En una foto de
+la carpeta, la vista de búsqueda del Explorador enseñaba el contenido de
+`token.txt`. Se borró la llave «puente mt5» y se hizo otra (solo el repo
+Nestor-forex, Contents: lectura y escritura, vence el 2027-11-17). **El día
+que venza, el puente deja de publicar en silencio.** Lección: al pedir una foto
+de esa carpeta, pedir la vista normal, nunca la de búsqueda.
+
+📌 La carpeta `nestor-forex-bridge` está dentro de OneDrive: Microsoft guarda
+copia de `token.txt` y `firebase_puente.txt`.
+
+📌 Tres tropiezos de Windows que costaron una foto cada uno: el Explorador
+crea «Documento de texto» y si se borra el nombre entero se va también el
+`.txt` (sale tipo «Archivo»); el diálogo de Guardar dice «Abrir» mientras
+hay una carpeta seleccionada; y el Bloc de notas nuevo abre con pestañas, así
+que hay que mirar en cuál se escribe.
