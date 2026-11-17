@@ -12,3 +12,6 @@ token.txt
 # LA CONTRASENA DE LA CUENTA DEL PUENTE EN FIREBASE TAMPOCO SE SUBE (2026-11-17).
 # Es la que deja escribir el precio al segundo en Firestore.
 firebase_puente.txt
+
+# Lo que Python genera solo al correr el puente: no es código y no va al repositorio.
+__pycache__/

@@ -16903,3 +16903,68 @@ aparezca lo llevan **codificado en base64**, porque escribirlo para vigilar que
 no se escriba sería justo lo que vigilan. ⚠️ **Sigue en el historial de git**
 de las dos ramas `main` y de la rama `datos`; reescribir ese historial pondría
 en riesgo el historial de señales, que es irrecuperable, y no se hizo.
+
+## ✅ Encendido en el PC de Néstor (2026-11-17, 12:19 hora de Colombia)
+
+Fusionados #188 (Swing) y #130 (Intradía), reglas publicadas, y Néstor puso el
+puente nuevo. La ventana dijo «Precio al segundo: ENCENDIDO», o sea que la
+cuenta del puente entró en Firebase. Comprobado desde fuera: `estado/mt5.json`
+salió a las 17:19:45 UTC con los 18 pares y `cuenta` genérica — **el nombre del
+bróker ya no está en el archivo público**.
+
+⚠️ **Lo que NO se comprobó desde aquí:** que lleguen las escrituras a
+`vivo/precios`. Esta sesión no tiene sesión de Firebase para leerlo. La pista
+es la propia ventana: cada minuto escribe «precio al segundo: N escrituras»;
+si las reglas lo rechazaran saldría «[ERROR precio al segundo]».
+
+✅ **Confirmado a los minutos con foto de la ventana:** 56, 60, 60, 60, 60, 61,
+60 escrituras por minuto, sin un solo error. O sea que la cuenta del puente
+escribe y las reglas la dejan. A ~60 por minuto son ~3.600 por hora: con el PC
+encendido 10 h son ~36.000 al día, por encima de las 20.000 gratis — el exceso
+se paga en el plan Blaze y son centavos al mes.
+
+📌 **La llave de GitHub del puente se cambió ese mismo día.** En una foto de
+la carpeta, la vista de búsqueda del Explorador enseñaba el contenido de
+`token.txt`. Se borró la llave «puente mt5» y se hizo otra (solo el repo
+Nestor-forex, Contents: lectura y escritura, vence el 2027-11-17). **El día
+que venza, el puente deja de publicar en silencio.** Lección: al pedir una foto
+de esa carpeta, pedir la vista normal, nunca la de búsqueda.
+
+📌 La carpeta `nestor-forex-bridge` está dentro de OneDrive: Microsoft guarda
+copia de `token.txt` y `firebase_puente.txt`.
+
+📌 Tres tropiezos de Windows que costaron una foto cada uno: el Explorador
+crea «Documento de texto» y si se borra el nombre entero se va también el
+`.txt` (sale tipo «Archivo»); el diálogo de Guardar dice «Abrir» mientras
+hay una carpeta seleccionada; y el Bloc de notas nuevo abre con pestañas, así
+que hay que mirar en cuál se escribe.
+
+## ⚠️ La app NO escuchaba el precio al segundo, y lo vio Néstor (2026-11-17, tarde)
+
+Con el puente escribiendo 60 veces por minuto, las dos pantallas (Barrido y
+Analizar) seguían diciendo «foto de las 12:29 (hace 5 min)». **El puente
+estaba bien**: se comprobó leyendo `vivo/precios` con una cuenta de prueba
+creada y borrada en el momento, y traía la hora de ese mismo segundo.
+
+**El fallo era de la app.** `usePrecioMt5` empezaba a escuchar en cuanto se
+abría, con la pantalla de entrada delante y SIN SESIÓN. Las reglas solo dejan
+leer con sesión, Firestore contestaba `permission-denied` (comprobado con el
+SDK de verdad: sin sesión, error; con sesión, un dato por segundo), la escucha
+se paraba en silencio y **nadie la volvía a encender al entrar**.
+
+📌 Ni el build, ni las pruebas, ni el banco de navegador lo veían: todos
+probaban `combinarConVivo` con datos ya entregados, nunca el arranque de la
+escucha contra unas reglas que exigen sesión.
+
+**El arreglo** (`src/lib/escuchaVivo.js`, GEMELO, con
+`scripts/prueba-escucha-vivo.mjs`, GEMELO): sin sesión no se escucha ni se
+intenta; cada cambio de sesión (`onAuthStateChanged`) para y vuelve a empezar;
+un error se marca por escucha para que uno tardío no apague la nueva; y al
+salir se olvida el último precio. La lógica salió del hook para poder probarla
+sin navegador. Quitar la condición de sesión tumba 2 comprobaciones.
+
+⚠️ **Para verlo hay que cerrar la app del todo y volver a abrirla**: una
+ventana que estaba abierta sigue corriendo el código viejo.
+
+De paso: `#188` había subido `puente-mt5/__pycache__/*.pyc` (lo que Python
+genera al correr). Quitado y añadido al `.gitignore` del puente.
