@@ -27,9 +27,13 @@ QUE CAMBIO RESPECTO A LA VERSION ANTERIOR, Y POR QUE
 
    Sin servidor no hay agujeros que tapar.
 
-3. CADA 15 MINUTOS, no cada 15 segundos. Antes era una peticion a un servidor;
-   ahora cada corrida deja un commit en GitHub, y uno cada 15 segundos serian
-   miles al dia. El spread no cambia tanto como para eso.
+3. CADA 5 MINUTOS el precio (era 15 hasta el 2026-11-17) y cada 15 la muestra
+   de spreads. Cada corrida deja un commit en GitHub, y uno cada pocos segundos
+   serian miles al dia; ademas GitHub sirve el archivo con 5 minutos de cache,
+   asi que publicar mas a menudo no lo haria llegar antes.
+
+4. AHORA MANDA EL SWAP (2026-11-17): cuanto cobra o paga esta cuenta por dejar
+   la operacion abierta de noche, en pips. Lo usa el modo practica.
 
 ─────────────────────────────────────────────────────────────────────────
 LO QUE HACE FALTA PARA QUE FUNCIONE
@@ -65,8 +69,18 @@ import MetaTrader5 as mt5
 REPO = "Nestor-forex/Nestor-forex"
 RAMA = "datos"
 
-# Cada cuantos minutos se publica.
-CADA_MINUTOS = 15
+# Cada cuantos minutos se publica el PRECIO (estado/mt5.json).
+#
+# ⚠️ 2026-11-17: bajo de 15 a 5. Nestor vio el precio de las apps con atraso y
+# pidio, con razon, que con el puente encendido el precio fuera el de MT5 y no
+# uno de hace un cuarto de hora. Menos de 5 no sirve de nada: GitHub sirve el
+# archivo con una cache de 5 minutos, asi que publicar cada minuto no haria que
+# llegara antes a los telefonos.
+CADA_MINUTOS = 5
+
+# Cada cuantas vueltas se guarda una MUESTRA de spreads (spreads/<fecha>.jsonl).
+# Para medir basta una cada 15 minutos, como antes: 3 vueltas de 5.
+MUESTRA_CADA_VUELTAS = 3
 
 # Los simbolos a vigilar. Son los 14 pares de Swing mas los 4 que solo usa
 # Intradia, para que un solo puente sirva a las dos apps.
@@ -151,6 +165,21 @@ def leer_mt5():
             "spread": round((float(tick.ask) - float(tick.bid)) / pip, 2),
         }
 
+        # EL SWAP de esta cuenta, en PIPS POR NOCHE (2026-11-17). Lo usa el
+        # modo practica para descontar lo que cuesta dejar la operacion abierta
+        # de noche: Nestor pidio cuentas reales, sin nada hipotetico.
+        #
+        # ⚠️ Solo se manda si MT5 lo da en PUNTOS, que es lo normal. En otros
+        # modos (dinero, porcentaje) el numero significa otra cosa, y mandarlo
+        # como pips seria un dato bien leido de una cosa distinta. Entonces no
+        # se manda y la app dice "sin dato".
+        info = mt5.symbol_info(symbol)
+        if info is not None and getattr(info, "swap_mode", None) == mt5.SYMBOL_SWAP_MODE_POINTS and info.point:
+            fila["swapLargo"] = round(float(info.swap_long) * float(info.point) / pip, 3)
+            fila["swapCorto"] = round(float(info.swap_short) * float(info.point) / pip, 3)
+            # Que dia cobra el triple: 0 = domingo ... 6 = sabado.
+            fila["swap3"] = int(info.swap_rollover3days)
+
         # El tick volume, que es el otro dato que no teniamos. Sale de la vela
         # diaria en curso.
         #
@@ -206,7 +235,7 @@ def leer_publicado(token, ruta):
     return r.text if r.status_code == 200 else ""
 
 
-def una_vuelta(token):
+def una_vuelta(token, con_muestra=True):
     ahora = datetime.now(timezone.utc)
     datos, saltados = leer_mt5()
 
@@ -263,6 +292,8 @@ def una_vuelta(token):
     # ⚠️ Va en `spreads/`, LEJOS de `historial/`. El historial de senales es lo
     # unico irreparable del proyecto y ningun guion nuevo tiene por que
     # escribir cerca de el.
+    if not con_muestra:
+        return
     dia = ahora.strftime("%Y-%m-%d")
     ruta_muestras = f"spreads/{dia}.jsonl"
     linea = json.dumps(
@@ -298,15 +329,17 @@ def main():
     print(f"Publicando en {REPO}, rama {RAMA}, cada {CADA_MINUTOS} minutos.")
     print("Deja esta ventana abierta. Para parar: cierra la ventana.")
 
+    vuelta = 0
     while True:
         print(f"\n{datetime.now().strftime('%H:%M:%S')} — leyendo MT5…")
         try:
-            una_vuelta(token)
+            una_vuelta(token, con_muestra=(vuelta % MUESTRA_CADA_VUELTAS == 0))
         except Exception as e:
             # ⚠️ Un fallo NO para el puente. Si se cae internet un minuto, la
             # vuelta siguiente lo arregla sola. Pararse dejaria a la app sin
             # datos hasta que alguien se diera cuenta.
             print(f"  [ERROR] {e}")
+        vuelta += 1
         time.sleep(CADA_MINUTOS * 60)
 
 

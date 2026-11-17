@@ -146,6 +146,9 @@ async function bajarTanda(simbolos, apiKey, velas) {
         c: parseFloat(v.close),
         h: parseFloat(v.high),
         l: parseFloat(v.low),
+        // La apertura (2026-11-17), para que la gráfica de la práctica dibuje
+        // velas de verdad. Viene en la MISMA consulta: no cuesta créditos.
+        o: parseFloat(v.open),
       })
     }
     salida[sym] = mapa
@@ -255,6 +258,10 @@ function armar(porPar) {
         h: Number.isFinite(v.h) ? v.h : v.c,
         l: Number.isFinite(v.l) ? v.l : v.c,
         c: v.c,
+        // ⚠️ Sin apertura NO se pone el cierre en su lugar: una vela con la
+        // apertura inventada se dibujaría como si fuera real. Se deja fuera y
+        // la gráfica cae a barras de máximo-mínimo.
+        ...(Number.isFinite(v.o) ? { o: v.o } : {}),
       }
     }
     rangosPar[d] = filaRangos

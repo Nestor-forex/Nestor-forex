@@ -31,6 +31,8 @@ import { useMembers } from './lib/useMembers'
 import { useTrades } from './lib/useTrades'
 import { usePractica } from './lib/usePractica'
 import { useMarketData } from './lib/useMarketData'
+import { useMT5Quotes } from './lib/useMT5Quotes'
+import { fuenteDePrecios } from './lib/precioVivo'
 import { useCalendario } from './lib/useCalendario'
 import { useCot } from './lib/useCot'
 import { useOro } from './lib/useOro'
@@ -68,6 +70,10 @@ export default function App() {
   // una segunda escucha del MISMO documento.
   const { authUser, cargandoAuth, perfil, perfilEstado, esAdmin, registrar, ingresar, salir } = useAuthUser()
   const mercado = useMarketData()
+  // De dónde sale el precio que se ve: MT5 si el puente está encendido y su
+  // foto es reciente, Twelve Data si no. Ver `lib/precioVivo.js`.
+  const mt5 = useMT5Quotes()
+  const fp = fuenteDePrecios(mt5)
   // El calendario va en su propio archivo y con su propio horario: el barrido
   // lo publica el vigía una vez al día de lunes a viernes, y el calendario
   // cada cuatro horas TODOS los días, porque el feed cubre la semana en curso
@@ -243,7 +249,7 @@ export default function App() {
         {authUser && perfilEstado === 'aprobado' && !detalle && tab !== 'tablero' && (
           <>
             <Header nombreApp={NOMBRE_APP} saludo={esAdmin ? t('comun.administrador') : authUser.email || ''} onSalir={salirYVolver} />
-            <main style={{ flex: 1, padding: '18px 18px 96px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <main className="nf-main" style={{ flex: 1, padding: '18px 18px 96px' }}>
               {tab === 'barrido' && (
                 <>
                   {filtroPares}
@@ -258,6 +264,8 @@ export default function App() {
                     monedas={vista.monedas}
                     pares={vista.pares}
                     corte={vista.corte}
+                    fp={fp}
+                    mt5Hora={mt5.actualizadoEl}
                     onVerTablero={() => setTab('tablero')}
                   />
                   {/* Va aquí y no en una pestaña propia porque es donde
@@ -416,6 +424,8 @@ export default function App() {
             compresionPares={vista.compresionPares}
             riesgoSenales={vista.riesgoSenales}
             corte={vista.corte}
+                    fp={fp}
+                    mt5Hora={mt5.actualizadoEl}
           />
         )}
       </div>

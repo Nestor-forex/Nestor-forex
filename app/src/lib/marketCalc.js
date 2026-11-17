@@ -392,6 +392,14 @@ export function computarBarrido(fechas, rates, rangosPar = null, { largo = null 
       // aquí arriba para el soporte y la resistencia.
       altos20: last20,
       bajos20,
+      // Las APERTURAS de esos mismos 20 días (2026-11-17), para que la gráfica
+      // de la práctica dibuje velas de verdad. Solo si están las 20: con una
+      // sola que falte no se publica nada, y la gráfica dibuja barras de
+      // máximo-mínimo en vez de inventar la apertura que falta.
+      abiertos20: (() => {
+        const xs = fechas.slice(-20).map((d) => rangosPar?.[d]?.[nombre]?.o)
+        return xs.length === 20 && xs.every(Number.isFinite) ? xs : undefined
+      })(),
       // Las medias del Analizador, ya calculadas: necesitan la serie entera de
       // cierres y el barrido publicado solo lleva los últimos 20. Son 6 números.
       // ⚠️ Con la serie LARGA si la hay (vigía y publicador la piden en la
