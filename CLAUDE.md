@@ -17012,3 +17012,41 @@ el mismo día (`diasTablero` y `estilo`).
 
 📌 Néstor (2026-11-17): **«Importar operaciones del bróker» NO se quita**, es
 de ayuda a los usuarios. Los cierres parciales lo AMPLÍAN, no lo sustituyen.
+
+---
+
+# El cierre parcial, explicado para suscriptores (la DECIMOSEXTA, 2026-11-17)
+
+Néstor la pidió guardada «para la web cuando promocionemos las apps». Va con
+las quince de la serie. Hoy la app todavía NO entiende los cierres parciales al
+importar del bróker: este texto se publica solo cuando eso esté hecho.
+
+> **Qué es un cierre parcial.** Cerrar **solo una parte** de una operación y
+> dejar el resto abierto. Compras 0.02 lotes de EUR/USD; el precio sube 30 pips
+> a tu favor; cierras 0.01 y esa mitad ya ganó; la otra mitad sigue abierta por
+> si el precio sigue subiendo.
+>
+> **Para qué lo usan los traders:**
+> · **Asegurar algo de ganancia.** Si el precio se da la vuelta, la mitad que
+>   cerraste ya está cobrada.
+> · **Arriesgar menos con lo que queda.** Muchos mueven el Stop-loss del resto
+>   al precio de entrada: esa parte ya no puede perder (salvo el spread).
+> · **Dejar correr el resto** sin la presión de tener toda la operación en juego.
+> · **Salir por partes:** un tercio en el primer objetivo, otro en el segundo, y
+>   el último se deja correr.
+>
+> **La parte honesta:** cerrar por partes es una forma de **manejar** la
+> operación, no de **acertar más**. Cambia cómo se reparten las ganancias y las
+> pérdidas, no la dirección del mercado. Algo parecido —mover el Stop-loss a la
+> entrada— lo medimos sobre cinco años de mercado real y **no mejoró el
+> resultado**.
+>
+> **Por qué la app tiene que entenderlos.** Cuando haces un cierre parcial, MT5
+> no lo escribe como una sola operación: la parte en pedazos. Si la app no los
+> junta, tu Diario cuenta la misma operación dos veces o pierde una mitad, y tu
+> acierto, tu freno del día y tus insignias salen mal. La app los reconoce como
+> **una sola operación con su resultado total**, y lee en qué moneda está tu
+> cuenta en vez de suponer que es en dólares.
+
+⚠️ **Lo que NO se puede decir con este texto:** que cerrar por partes gana más.
+No está medido; lo único medido es el breakeven, y no mejoró.
