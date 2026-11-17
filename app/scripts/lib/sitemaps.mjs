@@ -8,7 +8,7 @@
 //     ⚠️ NINGUNA página con esas palabras en su dirección.
 //        …pero sí que no la publican abiertamente.
 //
-// Y lo imprimió sobre AvaTrade **habiendo leído CERO páginas**: sus cinco
+// Y lo imprimió sobre el bróker del desarrollador **habiendo leído CERO páginas**: sus cinco
 // sitemaps devolvieron 403 uno detrás de otro. O sea que el informe afirmaba
 // «no la publican» cuando lo que había pasado es **que no se pudo mirar**.
 //

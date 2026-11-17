@@ -35,6 +35,7 @@ import { dirname, join } from 'node:path'
 
 import { PAIR_NAMES } from '../src/lib/pairs.js'
 import { minutosDesde, normalizarRespuesta } from '../src/lib/useMT5Quotes.js'
+import { combinarConVivo, fuenteDePrecios, segundosDesde, EDAD_MAX_VIVO_S } from '../src/lib/precioVivo.js'
 
 let fallos = 0
 const ok = (cond, que) => {
@@ -207,7 +208,12 @@ console.log('\n8. El archivo PÚBLICO no nombra al bróker')
   // 2026-10-30. Esto vigila que el puente del repositorio no vuelva a hacerlo.
   //
   // La lista va A MANO: es la de brókers conocidos, no una calculada.
-  const BROKERS = /ava\s*trade|ava-real|metaquotes|ic\s*markets|pepperstone|exness|xm\.com|oanda|fxpro|admiral/i
+  //
+  // ⚠️ El nombre del bróker de Néstor va CODIFICADO, no escrito: este archivo
+  // también es público, y una lista que lo escribiera para vigilar que no se
+  // escriba sería justo lo que vigila (2026-11-17).
+  const SUYO = Buffer.from('YXZhXHMqdHJhZGV8YXZhLXJlYWw=', 'base64').toString('utf8')
+  const BROKERS = new RegExp(`${SUYO}|metaquotes|ic\\s*markets|pepperstone|exness|xm\\.com|oanda|fxpro|admiral`, 'i')
   const py = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'puente-mt5', 'bridge_mt5.py'), 'utf8')
   const m = py.match(/"cuenta"\s*:\s*"([^"]*)"/)
   ok(Boolean(m), 'el puente escribe un campo `cuenta` con un texto fijo')
@@ -218,6 +224,60 @@ console.log('\n8. El archivo PÚBLICO no nombra al bróker')
   ok(!BROKERS.test(py), 'el puente no menciona a ningún bróker por su nombre, ni en un comentario')
   const cal = archivo({ 'EUR/USD': { bid: 1.1547, ask: 1.1548 } })
   ok(!BROKERS.test(JSON.stringify(cal)), 'el archivo de prueba tampoco lo nombra')
+}
+
+console.log('\n9. El precio AL SEGUNDO (Firestore) se junta con la foto de cada 5 minutos')
+{
+  const ahora = new Date('2026-11-17T15:00:30.000Z')
+  const deArchivo = {
+    estado: 'ok',
+    actualizadoEl: '2026-11-17T14:58:00.000Z',
+    quotes: normalizarRespuesta(archivo({ 'EUR/USD': { bid: 1.1, ask: 1.1001, ticks: 900, swapLargo: -0.5, swapCorto: 0.1, swap3: 3 } })),
+  }
+  const vivo = { actualizadoEl: '2026-11-17T15:00:29.000Z', quotes: normalizarRespuesta({ pares: { 'EUR/USD': { bid: 1.1004, ask: 1.1005 } } }) }
+
+  const r = combinarConVivo(deArchivo, vivo, ahora)
+  ok(r.alSegundo === true, 'con una foto de hace 1 s, manda el precio al segundo')
+  ok(r.quotes['EUR/USD'].bid === 1.1004 && r.quotes['EUR/USD'].ask === 1.1005, 'el BID y el ASK son los del segundo')
+  ok(casi(r.quotes['EUR/USD'].spread, 1), 'el spread sale del BID y el ASK del segundo')
+  ok(r.quotes['EUR/USD'].ticks === 900 && r.quotes['EUR/USD'].swapLargo === -0.5 && r.quotes['EUR/USD'].swap3 === 3,
+    'la actividad y el swap, que el segundo no trae, salen del archivo')
+  ok(r.actualizadoEl === vivo.actualizadoEl, 'la hora que se enseña es la del segundo')
+  ok(fuenteDePrecios({ ...r, ahora }).alSegundo === true, 'la pantalla dice «al segundo»')
+
+  const viejo = combinarConVivo(deArchivo, { ...vivo, actualizadoEl: '2026-11-17T14:58:00.000Z' }, ahora)
+  ok(viejo.alSegundo === false && viejo.quotes['EUR/USD'].bid === 1.1,
+    `con una foto de hace más de ${EDAD_MAX_VIVO_S} s, vuelve a la de cada 5 minutos`)
+  ok(fuenteDePrecios({ ...viejo, ahora }).alSegundo !== true, 'y entonces la pantalla NO dice «al segundo»')
+  ok(combinarConVivo(deArchivo, null, ahora).alSegundo === false, 'sin foto al segundo, el archivo tal cual')
+  ok(combinarConVivo(deArchivo, { ...vivo, actualizadoEl: null }, ahora).alSegundo === false, 'sin hora no se sabe la edad: no es «al segundo»')
+  ok(combinarConVivo(deArchivo, { ...vivo, quotes: {} }, ahora).alSegundo === false, 'sin pares no es «al segundo»')
+  ok(segundosDesde(null) === null && segundosDesde('basura') === null, '`segundosDesde` no se inventa una edad')
+
+  const soloVivo = combinarConVivo({ estado: 'sin-datos', actualizadoEl: null, quotes: {} }, vivo, ahora)
+  ok(soloVivo.estado === 'ok' && soloVivo.quotes['EUR/USD'].swapLargo === null,
+    'con el archivo vacío vale el segundo, y el swap queda en `null` («no lo sé»), nunca 0')
+}
+
+console.log('\n10. El puente entra en Firestore SIN tener la contraseña escrita')
+{
+  const raiz = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
+  const py = readFileSync(join(raiz, 'puente-mt5', 'bridge_mt5.py'), 'utf8')
+  const ignorado = readFileSync(join(raiz, 'puente-mt5', '.gitignore'), 'utf8')
+  const reglas = readFileSync(join(raiz, 'firestore.rules'), 'utf8')
+  ok(/firebase_puente\.txt/.test(py) && /NF_PUENTE_CLAVE/.test(py), 'la contraseña se lee de un archivo o de una variable de entorno')
+  ok(!/"password"\s*:\s*"/.test(py), 'no hay ninguna contraseña escrita en el puente')
+  ok(/^firebase_puente\.txt$/m.test(ignorado), '`firebase_puente.txt` está en el .gitignore del puente')
+  const correo = py.match(/CORREO_PUENTE\s*=\s*"([^"]+)"/)?.[1]
+  ok(Boolean(correo) && reglas.includes(`request.auth.token.email == '${correo}'`),
+    'el correo de la cuenta del puente es el MISMO que dejan escribir las reglas')
+  ok(/match \/vivo\/precios/.test(reglas) && /hasOnly\(\['actualizadoEl', 'pares'\]\)/.test(reglas),
+    'las reglas solo aceptan los dos campos que escribe el puente')
+  ok(/"actualizadoEl"/.test(py) && /"pares"/.test(py) && !/"cuenta"[^\n]*stringValue/.test(py),
+    'el puente escribe en Firestore justo esos dos campos')
+  const cada = Number(py.match(/PRECIO_CADA_SEGUNDOS\s*=\s*(\d+(?:\.\d+)?)/)?.[1])
+  ok(cada >= 1, `el puente no escribe más de una vez por segundo (escribe cada ${cada} s)`)
+  ok(/pares != ultimo_enviado/.test(py), 'solo escribe si el precio cambió: con el mercado quieto no gasta')
 }
 
 console.log(fallos ? `\n${fallos} comprobación(es) fallaron.` : '\nTodo bien.')

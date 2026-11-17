@@ -26,7 +26,7 @@
 //      antes. Van diez familias de filtros medidas y diez que no aportan nada.
 //
 // ⚠️ El User-Agent es HONESTO. Un 403 a un programa es una respuesta, y se
-// respeta: es la línea que no se cruzó con Myfxbook, Dukascopy ni AvaTrade.
+// respeta: es la línea que no se cruzó con Myfxbook, Dukascopy ni el bróker del desarrollador.
 //
 // ⚠️ Varias direcciones son CONJETURAS sobre dónde vive el canal de cada
 // sitio. Un 404 solo dice que esa dirección no es, no que la fuente no sirva.

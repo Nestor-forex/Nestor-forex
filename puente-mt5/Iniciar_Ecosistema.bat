@@ -8,7 +8,7 @@ start cmd /k "node server.js"
 
 timeout /t 3 > nul
 
-echo [2/3] Iniciando Puente Python (MT5 + AvaTrade)...
+echo [2/3] Iniciando Puente Python (MT5)...
 cd /d "C:\Users\nesdi\OneDrive\Documents\nestor-forex-bridge"
 start cmd /k "python bridge_mt5.py"
 

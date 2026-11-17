@@ -61,7 +61,7 @@
 //
 // ⚠️ Y el User-Agent es HONESTO. Si una fuente contesta 403 a un programa,
 // eso es una respuesta y se respeta: no se disfraza de navegador. Es la línea
-// que este proyecto no cruzó con Myfxbook, Dukascopy ni AvaTrade.
+// que este proyecto no cruzó con Myfxbook, Dukascopy ni el bróker del desarrollador.
 //
 // Correr con: Actions → «Sonda del contexto que no vemos» → Run workflow.
 // No gasta créditos de Twelve Data salvo el candidato que lo dice, y no

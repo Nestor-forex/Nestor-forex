@@ -678,32 +678,37 @@ la cuenta baja.
 **Dónde:** debajo del título del Barrido, en el tablero completo y en la tarjeta
 del Analizador.
 
-**Qué dice:**
+**Qué dice:** el precio llega por uno de estos tres caminos, y la app te dice
+siempre por cuál:
 
-- **Con el puente de MT5 encendido:** «Precio de MT5, de una cuenta real del
-  desarrollador: foto de las 9:49 p. m. (hace 3 min)». El puente publica cada
-  5 minutos, así que puede ir unos minutos por detrás del mercado — por eso va
-  siempre la hora.
-- **Con el puente apagado:** «Precio de Twelve Data: el cierre de la última
-  vela…», cada cuánto se actualiza en esa app (Swing dos veces al día; Intradía
-  una vez por hora) y **por qué**: el puente está apagado, o su última foto es
-  demasiado vieja.
+- **Al segundo:** «Precio al segundo de MT5, de una cuenta real del
+  desarrollador». Es el BID y el ASK de un bróker de verdad, actualizado cada
+  segundo mientras el precio se mueve. Funciona **mientras el computador del
+  desarrollador tenga MT5 abierto y su puente encendido**.
+- **Foto de cada 5 minutos:** si el precio al segundo no llega, la app usa la
+  foto que el mismo puente deja cada 5 minutos: «Precio de MT5… foto de las
+  9:49 p. m. (hace 3 min)». Va siempre con su hora.
+- **Twelve Data:** con el puente apagado, el cierre de la última vela del
+  barrido. Dice cada cuánto se actualiza en esa app (Swing dos veces al día;
+  Intradía una vez por hora) y **por qué** se ve ese: el puente está apagado, o
+  su última foto es demasiado vieja.
 
-**En el Analizador:** con el puente encendido, la entrada es la de un bróker de
-verdad: **el ASK si compras y el BID si vendes**, y todas las cuentas de la
-tarjeta salen de ahí. Con el puente apagado, del cierre de Twelve Data, que no
-trae ASK ni BID, y la tarjeta lo dice.
+La app cambia de uno a otro **sola**, sin que tengas que tocar nada.
 
-**Lo que NO es:** tiempo real al segundo. Va siempre con su hora para que nadie
-lo lea como precio de este instante.
+**En el Analizador:** con MT5, la entrada es la de un bróker de verdad: **el
+ASK si compras y el BID si vendes**, y todas las cuentas de la tarjeta salen de
+ahí. Con Twelve Data, del cierre, que no trae ASK ni BID, y la tarjeta lo dice.
 
-**Por qué hoy no es al segundo, explicado sin rodeos:** el puente toma la foto
-de los precios en un computador con MT5 abierto y la deja en un archivo público.
-Ese archivo tarda hasta 5 minutos en llegar a los teléfonos, porque así lo
-guarda en caché el servidor que lo entrega. Por eso, en un día normal, el precio
-de MT5 que ves tiene entre 0 y 10 minutos, y la app siempre te dice de qué hora
-es. Y si ese computador está apagado, el precio pasa a ser el de Twelve Data, y
-la app también te lo dice.
+**Lo que NO es — y conviene leerlo antes de operar:**
+
+- **No es el precio de tu bróker.** Es el de una cuenta real del desarrollador.
+  El tuyo puede diferir unos décimos de pip y su spread puede ser otro.
+- **La operación la abres en la plataforma de tu bróker, nunca en esta app.**
+  Esta app sirve para decidir (qué par, dónde va el stop, de qué tamaño); el
+  precio con el que entras es el que te da tu bróker en ese momento.
+- **En el minuto en que sale una noticia fuerte**, el precio puede moverse
+  20-50 pips en segundos. Ahí no se entra mirando ninguna app de información:
+  se mira la plataforma del bróker.
 
 ---
 

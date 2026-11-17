@@ -8,3 +8,7 @@
 # Esta linea es una red de seguridad, no la unica proteccion: el archivo vive
 # en el computador de Nestor, no aqui.
 token.txt
+
+# LA CONTRASENA DE LA CUENTA DEL PUENTE EN FIREBASE TAMPOCO SE SUBE (2026-11-17).
+# Es la que deja escribir el precio al segundo en Firestore.
+firebase_puente.txt

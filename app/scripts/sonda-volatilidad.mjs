@@ -23,7 +23,7 @@ import { NO_SE_SABE, PROHIBE, decidirConRobots } from './lib/robots.mjs'
 import { plausibleIV, veredictoSonda } from './lib/volatilidad.mjs'
 
 // Un User-Agent HONESTO. Un 403 a un programa es una respuesta y se respeta:
-// es la línea que no se cruzó con Myfxbook, Dukascopy ni AvaTrade.
+// es la línea que no se cruzó con Myfxbook, Dukascopy ni el bróker del desarrollador.
 const UA = 'nestor-forex-sonda/1.0 (+https://github.com/Nestor-forex/Nestor-forex)'
 
 // ─────────────────────────────────────────────────────────────────────────

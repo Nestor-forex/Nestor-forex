@@ -137,7 +137,7 @@ console.log('10. Siempre dice POR QUÉ')
 console.log('11. ⚠️⚠️ «No encontré» y «no pude mirar» NO son lo mismo')
 {
   // Este bloque existe por un fallo REAL del 2026-09-14: la sonda dijo
-  // «ninguna página con esas palabras» sobre AvaTrade habiendo leído CERO
+  // «ninguna página con esas palabras» sobre el bróker del desarrollador habiendo leído CERO
   // páginas, porque sus cinco sitemaps dieron 403. El informe afirmaba «no la
   // publican» cuando lo que pasó es que no se pudo mirar.
   const nada = veredictoBusqueda({ leidos: 5, fallidos: 5, paginas: 0, encontradas: [] })

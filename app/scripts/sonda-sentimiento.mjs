@@ -166,7 +166,7 @@ const FUENTES = [
   // ── TERCERA RONDA (2026-09-14): el bróker de Néstor ─────────────────────
   //
   // Néstor preguntó: «¿y con el bróker con el que yo opero no se puede?
-  // ¿AvaTrade tiene eso?».
+  // ¿mi bróker tiene eso?».
   //
   // La pregunta tiene DOS mitades y solo una se sondea aquí:
   //
@@ -183,32 +183,27 @@ const FUENTES = [
   // buscan las direcciones que hablen de sentimiento. Si existe una página
   // así, sale su dirección exacta; si no sale ninguna, eso también es una
   // respuesta y vale más que cinco 404 míos.
-  {
-    id: 'avatrade-portada',
-    nota: 'La portada, solo para ver si nombra el sentimiento y para leer su robots.txt.',
-    url: 'https://www.avatrade.com/',
-  },
+  //
+  // 📌 QUITADA EL 2026-11-17. Esta ronda ya corrió (el sitio respondió 403 a
+  // un programa, portada y sitemaps) y su resultado está en CLAUDE.md. Néstor
+  // pidió que el nombre de su bróker no aparezca en ningún sitio público, y
+  // la dirección lo decía. Si algún día se quiere repetir, se pone a mano en
+  // una copia local de este guion, sin subirla.
 ]
 
 // ⚠️ A quién se le pregunta POR SUS PROPIAS DIRECCIONES en vez de adivinarlas.
 // Ver el comentario de la tercera ronda. Se leen los `Sitemap:` del robots.txt
 // y se buscan rutas que hablen de esto.
-const BUSCAR_EN_SITEMAPS = [
-  {
-    id: 'avatrade',
-    origen: 'https://www.avatrade.com',
-    // Sin acentos ni mayúsculas: se compara en minúsculas. «positioning» y
-    // «traders» entran porque no todo el mundo lo llama «sentiment».
-    palabras: ['sentiment', 'sentimiento', 'positioning', 'client-position', 'traders-position'],
-  },
-]
+//
+// Cada entrada lleva `id`, `origen` y `palabras` (sin acentos ni mayúsculas:
+// se compara en minúsculas). Vacía desde el 2026-11-17: ver la tercera ronda.
+const BUSCAR_EN_SITEMAPS = []
 
 // Solo para la fuente que sobrevivió: enseñar el HTML ALREDEDOR de la palabra
 // clave. Es lo que distingue «el número está en la página» de «el número lo
 // trae después otra petición», y sin verlo no se puede decidir nada.
 const MIRAR_ALREDEDOR = {
   'fxblue-sentimiento': ['net-short', 'Updated', 'updated', 'GMT', 'UTC'],
-  'avatrade-portada': ['sentiment', 'Sentiment'],
 }
 
 const recorta = (v, n = 220) => {
