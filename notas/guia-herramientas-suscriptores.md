@@ -612,11 +612,12 @@ Desde el 2026-11-17 la gráfica se parece a la de una plataforma:
   gráfica el rojo es tu Stop-loss y el verde tu Take-profit. Si el barrido
   todavía no trae la apertura de las velas, se dibujan máximo y mínimo y la
   línea de cierres, sin inventar la apertura.
-- **Todo lo que programaste**: el soporte y la resistencia, el pivote, las
-  medias, las bandas de Bollinger, los niveles de Fibonacci y los huecos (FVG)
-  que tenías encendidos en el Analizador **en el momento de crear la
-  operación**, tal como estaban entonces. Debajo hay un botón por cada uno para
-  enseñarlo u ocultarlo. Si un nivel queda muy lejos (una EMA 200, por ejemplo),
+- **Todas las herramientas**: el soporte y la resistencia, el pivote, las
+  medias, las bandas de Bollinger, los niveles de Fibonacci y los huecos (FVG),
+  tal como estaban **en el momento de crear la operación**. Debajo hay un botón
+  por cada una para enseñarla u ocultarla. Desde el 2026-11-17 se guardan
+  todas, las tengas encendidas en el Analizador o no; las operaciones de antes
+  solo traen las que tenías encendidas al crearlas. Si un nivel queda muy lejos (una EMA 200, por ejemplo),
   sale como una flecha en el borde con su precio, para no aplastar las velas.
 - **Caducada:** la app no pudo mirarla a tiempo y esas velas ya no se ven. No
   cuenta ni como ganada ni como perdida.
@@ -694,6 +695,14 @@ siempre por cuál:
   su última foto es demasiado vieja.
 
 La app cambia de uno a otro **sola**, sin que tengas que tocar nada.
+
+**Al abrir la app:** durante uno o dos segundos verás «Conectando con el precio
+al segundo de MT5…». Es el tiempo de preguntar si el puente está encendido. La
+app no enseña ningún precio como «el de ahora» hasta saberlo, así que la línea
+no cambia de mensaje a los pocos segundos. Si no hay respuesta en 6 segundos
+(por ejemplo, sin internet), pasa a la foto de 5 minutos o a Twelve Data y te
+dice cuál. Mientras dice «conectando», el Analizador no deja guardar una
+práctica.
 
 **En el Analizador:** con MT5, la entrada es la de un bróker de verdad: **el
 ASK si compras y el BID si vendes**, y todas las cuentas de la tarjeta salen de
