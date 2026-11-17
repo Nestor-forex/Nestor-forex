@@ -20,6 +20,8 @@ import Noticias from './components/Noticias'
 import HistorialTab from './components/HistorialTab'
 import TableroCompleto from './components/TableroCompleto'
 import { useConstancia } from './lib/useConstancia'
+import { useEstilo } from './lib/useEstilo'
+import MiEstilo from './components/MiEstilo'
 import SetupDetalle from './components/SetupDetalle'
 import AnalizadorTab from './components/AnalizadorTab'
 import { useT } from './lib/i18n'
@@ -132,6 +134,8 @@ export default function App() {
   // El arranque guiado guarda la lista con el MISMO `seguir` que la pestaña de
   // avisos: dos formas de escribir `seguimiento` se separarían sin avisar.
   const avisosUsuario = useAvisos(authUser?.uid, perfil)
+  // «¿Cómo operas?»: la tarjeta sale en el Barrido mientras no haya respondido.
+  const miEstilo = useEstilo(authUser?.uid, perfil)
   const filtroPares = (
     <FiltroPares
       resumen={resumenPares}
@@ -259,6 +263,7 @@ export default function App() {
               {tab === 'barrido' && (
                 <>
                   {filtroPares}
+                  {miEstilo.sabido && !miEstilo.estilo && <MiEstilo estilo={null} guardar={miEstilo.guardar} />}
                   <BarridoTab
                     loading={vista.loading}
                     error={vista.error}
