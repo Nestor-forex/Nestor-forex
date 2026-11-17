@@ -323,23 +323,32 @@ dato».
 
 ## 4 · Mis pares — ver solo lo tuyo, o verlo todo
 
-**Dónde:** se eligen en la pestaña **Avisos** (sección «Mis pares»); el botón
-para cambiar de vista está arriba del **Barrido** y del tablero completo.
+**Dónde:** arriba del **Barrido**, con el botón **«Cambiar mis pares»** (desde el
+2026-11-17), o en la pestaña **Avisos** (sección «Mis pares»). Es la misma lista
+en los dos sitios. El botón para cambiar de vista está arriba del **Barrido** y
+del tablero completo.
 
 **Para qué sirve:** no todo el mundo opera igual. Hay quien sigue dieciocho
 pares y quien lleva años operando solo EUR/USD. Esto deja la app con lo tuyo.
 
 **Paso a paso:**
 
-1. Abre la pestaña **Avisos**.
-2. En **Mis pares**, toca los pares que operas. Toca otra vez uno para quitarlo.
-3. Vuelve al **Barrido**. Arriba verás **«Mis pares (3)»** y **«Todos (14)»**:
-   toca el que quieras ver.
+1. En el **Barrido**, toca **«Cambiar mis pares»** (o **«Elegir mis pares»** si
+   todavía no tienes lista).
+2. Toca los pares que operas. Toca otra vez uno para quitarlo.
+3. Pulsa **«Guardar mi lista»**. Arriba verás **«Mis pares (3)»** y
+   **«Todos (14)»**: toca el que quieras ver.
 4. Siempre dice cuántos estás viendo: **«Viendo 3 de 14 pares»**, para que
    nunca te preguntes por qué hay pocas filas.
 
 **En qué te ayuda:** menos ruido al decidir, menos tentación de operar un par
 que no conoces, y más rápido por la mañana.
+
+**Para los dos tipos de trader:** hay quien opera siempre el mismo par, porque
+así lo sigue de cerca todos los días, y hay quien prefiere analizar pares
+distintos cada día. La app sirve para los dos: puedes dejar tu lista fija, o
+cambiarla en un minuto el día que quieras probar con otras divisas, y volver a
+la de antes cuando quieras. No se pierde nada.
 
 **Lo que NO se recorta nunca:** el **ranking de fuerza** de las ocho divisas.
 Ese número sale de comparar cada divisa contra las otras siete; recortarlo a tus
@@ -573,8 +582,20 @@ empezar si estás aprendiendo.
   explicación del margen de error). Con pocas operaciones es grande.
 - **Resultado** y **Por operación**, en **R**. **1 R es lo que arriesgabas.**
   Perder es siempre **−1 R**; ganar es lo que daba tu Take-profit (con una
-  relación 1:2, ganar es **+2 R**). Se mide en R y no en dólares porque la
-  práctica no tiene lote.
+  relación 1:2, ganar es **+2 R**).
+- **En dólares** (desde el 2026-11-17): si llenaste tu **perfil de riesgo**, la
+  app guarda cuánto arriesgabas y con qué lote, igual que la calculadora. Al
+  terminar dice **«Si hubieras arriesgado lo de tu perfil: +$25.00»**. Es
+  hipotético: no descuenta spread ni swap, que en una cuenta real sí se pagan.
+
+**La gráfica de cada operación** (desde el 2026-11-17): debajo de cada operación
+hay un botón **«Ver la gráfica»**. Dibuja las últimas 20 velas del par y, encima,
+lo que elegiste: la **entrada** (blanca), el **Stop-loss** (rojo) y el
+**Take-profit** (verde), con una franja roja hasta el Stop-loss y una verde
+hasta el Take-profit. La línea vertical punteada es la vela en la que entraste,
+y cuando la operación termina sale un círculo de color donde tocó el nivel.
+Son **las mismas velas con las que la app decide** si ganó o perdió, así que lo
+que ves es exactamente lo que se juzgó.
 - **Caducada:** la app no pudo mirarla a tiempo y esas velas ya no se ven. No
   cuenta ni como ganada ni como perdida.
 - **No válida:** el precio de entrada era viejo o no estaba dentro de la vela,

@@ -24,6 +24,24 @@ Estado: ⬜ por hacer · 🟨 en obra · ✅ hecho · ❓ falta una decisión de
 | 10 | **Diario: revisar cierres parciales y moneda de la cuenta** en la importación | las dos | ⬜ | un informe real con cierres parciales |
 | 11 | **Vista ancha a voluntad** en PC, laptop y tableta (y el celular en horizontal): hoy la app es una columna de 430 px centrada aunque la pantalla sea ancha. Un botón para elegir vista estrecha o ancha | las dos | ⬜ | nada |
 
+## Lo que se me quedó fuera al hacer esta lista (Néstor lo señaló el 2026-11-17)
+
+Releída entera la conversación original. Estas recomendaciones estaban y no
+entraron en la tabla:
+
+| qué | dónde lo dice | estado |
+|---|---|---|
+| **Riesgo en dólares en el modo práctica** («la app le muestra el riesgo en dólares, usando su calculadora») | rec. 3 | ✅ 2026-11-17 |
+| **Gráfica de cada operación de práctica** (lo pidió Néstor con una foto; la otra IA dice «hacer un seguimiento de cómo habría evolucionado») | rec. 3 | ✅ 2026-11-17 |
+| **Ejercicios del curso conectados con la práctica** («con los datos actuales del par X, ¿dónde colocarías tu stop basado en el ATR? Ingrésalo aquí») | rec. 3 | ⬜ va con el curso (8) |
+| **Insignia «Analista constante»** (revisar el tablero 5 días seguidos) | rec. 5 | ⬜ |
+| **Insignias ligadas a módulos del curso** («Maestro de la correlación») | rec. 5 | ⬜ va con el curso (8) |
+| **Exportar los análisis y los resultados de la práctica** | razonamiento de la otra IA | ⬜ |
+| **Arranque por tipo de trading** (tendencias, rangos, noticias), además de por divisas | rec. 1 | ⬜ hoy pregunta solo por divisas |
+
+Y lo que Néstor pidió además el mismo día: **cambiar «Mis pares» desde el mismo
+Barrido** (✅ 2026-11-17).
+
 ## Lo que la otra conversación dio por hecho y NO existe todavía
 
 - **La IA (Qwen)**: está diseñada (`puente-qwen/worker.js`) pero no instalada. Falta
