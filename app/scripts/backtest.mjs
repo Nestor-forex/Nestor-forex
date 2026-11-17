@@ -813,7 +813,7 @@ console.log('PARTIR DE CUÁL la conclusión cambia.')
 // señal ni lo que hizo el precio, así que repetir las corridas sería regalar
 // veinte minutos de máquina. Se reutilizan `revCorridas` y `neutraPartida`.
 //
-// La columna «real» son los spreads que Néstor leyó en su cuenta de AvaTrade
+// La columna «real» son los spreads que Néstor leyó en su cuenta real
 // el 2026-09-07 con el mercado ABIERTO (sesión de Asia). Ver `costes.mjs`.
 //
 // ⚠️ NO sustituyen a la tabla oficial, y el motivo no es que estén inflados:

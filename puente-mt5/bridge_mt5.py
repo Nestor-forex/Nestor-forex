@@ -35,6 +35,18 @@ QUE CAMBIO RESPECTO A LA VERSION ANTERIOR, Y POR QUE
 4. AHORA MANDA EL SWAP (2026-11-17): cuanto cobra o paga esta cuenta por dejar
    la operacion abierta de noche, en pips. Lo usa el modo practica.
 
+5. Y EL PRECIO AL SEGUNDO (2026-11-17, lo pidio Nestor con el plan de pago de
+   Firebase). Ademas de lo de arriba, cada segundo escribe el BID y el ASK de
+   los 18 pares en Firestore (el documento `vivo/precios`), y las apps lo
+   escuchan. Solo escribe si el precio cambio: con el mercado quieto o cerrado
+   no gasta nada. Si esto falla, lo de los 5 minutos sigue igual: las apps
+   pasan solas a esa foto y lo dicen en pantalla.
+
+   Para entrar en Firestore usa UNA CUENTA PROPIA DEL PUENTE (no la de Nestor,
+   no la llave maestra de Firebase). Su contrasena va en un archivo
+   `firebase_puente.txt` al lado de este guion, que NO se sube a ninguna parte.
+   Sin ese archivo, el puente funciona como antes, cada 5 minutos.
+
 ─────────────────────────────────────────────────────────────────────────
 LO QUE HACE FALTA PARA QUE FUNCIONE
 ─────────────────────────────────────────────────────────────────────────
@@ -44,6 +56,7 @@ LO QUE HACE FALTA PARA QUE FUNCIONE
     entrega precio de los simbolos que esten ahi.
   · Un permiso de GitHub para poder escribir. Ver TOKEN mas abajo.
   · pip install MetaTrader5 requests
+  · Para el precio al segundo: el archivo `firebase_puente.txt` (ver arriba).
 
 ⚠️ ESTE GUION NO SABE NI LA CONTRASENA NI EL NUMERO DE CUENTA DEL BROKER.
 `mt5.initialize()` se llama SIN argumentos: se engancha al MT5 que ya esta
@@ -132,6 +145,133 @@ def leer_token():
 
 
 API = "https://api.github.com"
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# EL PRECIO AL SEGUNDO (Firestore)
+# ─────────────────────────────────────────────────────────────────────────
+# Cada cuantos segundos se mira el precio y, si cambio, se escribe.
+PRECIO_CADA_SEGUNDOS = 1
+
+PROYECTO_FIREBASE = "nestor-forex"
+# ⚠️ Esta llave NO es secreta: es la que usa la app web para hablar con
+# Firebase y ya esta publicada en `app/.env.production`. Firebase la documenta
+# como segura de publicar. Lo que protege el documento son las REGLAS de
+# Firestore, que solo dejan escribir a la cuenta del puente.
+FIREBASE_API_KEY = "AIzaSyBbIOnRPd8mmmBsmitm1orl6WXsdZfPgE8"
+# La cuenta propia del puente. El correo tambien esta en `firestore.rules`; sin
+# la contrasena no sirve de nada.
+CORREO_PUENTE = "puente-mt5@nestor-forex.firebaseapp.com"
+DOC_VIVO = (
+    f"https://firestore.googleapis.com/v1/projects/{PROYECTO_FIREBASE}"
+    "/databases/(default)/documents/vivo/precios"
+)
+
+
+def leer_clave_firebase():
+    """
+    La contrasena de la cuenta del puente.
+
+    ⚠️ NUNCA SE ESCRIBE AQUI DENTRO, por lo mismo que el permiso de GitHub: este
+    archivo esta en un repositorio publico. Se busca en la variable de entorno
+    NF_PUENTE_CLAVE o en `firebase_puente.txt` al lado de este guion, que el
+    `.gitignore` de esta carpeta no deja subir.
+    """
+    c = os.environ.get("NF_PUENTE_CLAVE", "").strip()
+    if c:
+        return c
+    archivo = Path(__file__).with_name("firebase_puente.txt")
+    if archivo.exists():
+        return archivo.read_text(encoding="utf-8").strip()
+    return ""
+
+
+class SesionFirebase:
+    """Entra con la cuenta del puente y renueva el permiso antes de que caduque."""
+
+    def __init__(self, clave):
+        self.clave = clave
+        self.http = requests.Session()
+        self.id_token = None
+        self.refresh = None
+        self.caduca = 0.0
+
+    def _guardar(self, id_token, refresh, segundos):
+        self.id_token = id_token
+        self.refresh = refresh
+        # Se renueva 5 minutos antes de que caduque (dura una hora).
+        self.caduca = time.time() + max(60, int(segundos) - 300)
+
+    def entrar(self):
+        r = self.http.post(
+            "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword",
+            params={"key": FIREBASE_API_KEY},
+            json={"email": CORREO_PUENTE, "password": self.clave, "returnSecureToken": True},
+            timeout=20,
+        )
+        if r.status_code != 200:
+            # ⚠️ No se imprime la respuesta entera: no lleva la contrasena, pero
+            # tampoco hace falta. Basta el motivo.
+            motivo = r.json().get("error", {}).get("message", r.status_code) if r.content else r.status_code
+            raise RuntimeError(f"Firebase no dejo entrar a la cuenta del puente ({motivo})")
+        d = r.json()
+        self._guardar(d["idToken"], d["refreshToken"], d.get("expiresIn", 3600))
+
+    def token(self):
+        if self.id_token and time.time() < self.caduca:
+            return self.id_token
+        if self.refresh:
+            r = self.http.post(
+                "https://securetoken.googleapis.com/v1/token",
+                params={"key": FIREBASE_API_KEY},
+                data={"grant_type": "refresh_token", "refresh_token": self.refresh},
+                timeout=20,
+            )
+            if r.status_code == 200:
+                d = r.json()
+                self._guardar(d["id_token"], d["refresh_token"], d.get("expires_in", 3600))
+                return self.id_token
+        self.entrar()
+        return self.id_token
+
+
+def leer_bid_ask():
+    """Solo el BID y el ASK de cada simbolo: lo minimo, para poder hacerlo cada segundo."""
+    pares = {}
+    for symbol in SYMBOLS:
+        tick = mt5.symbol_info_tick(symbol)
+        if tick is None or not tick.bid or not tick.ask:
+            continue
+        pares[con_barra(symbol)] = (float(tick.bid), float(tick.ask))
+    return pares
+
+
+def escribir_vivo(sesion, pares, ahora):
+    """
+    Escribe `vivo/precios` entero. Las reglas de Firestore solo aceptan los
+    campos `actualizadoEl` (texto) y `pares` (como mucho 30).
+    """
+    campos_pares = {
+        par: {"mapValue": {"fields": {"bid": {"doubleValue": b}, "ask": {"doubleValue": a}}}}
+        for par, (b, a) in pares.items()
+    }
+    cuerpo = {
+        "fields": {
+            "actualizadoEl": {"stringValue": ahora.isoformat()},
+            "pares": {"mapValue": {"fields": campos_pares}},
+        }
+    }
+    r = sesion.http.patch(
+        DOC_VIVO,
+        headers={"Authorization": f"Bearer {sesion.token()}"},
+        json=cuerpo,
+        timeout=10,
+    )
+    if r.status_code == 401:
+        # El permiso caduco antes de tiempo: se fuerza uno nuevo en la proxima.
+        sesion.caduca = 0
+    if r.status_code != 200:
+        raise RuntimeError(f"Firestore respondio {r.status_code}: {r.text[:200]}")
 
 
 def pip_de(symbol):
@@ -327,20 +467,66 @@ def main():
         return
     print("Conectado a MetaTrader 5.")
     print(f"Publicando en {REPO}, rama {RAMA}, cada {CADA_MINUTOS} minutos.")
+
+    # El precio al segundo, si esta la contrasena de la cuenta del puente.
+    sesion = None
+    clave = leer_clave_firebase()
+    if not clave:
+        print("Precio al segundo: APAGADO (falta firebase_puente.txt). Se sigue cada 5 minutos.")
+    else:
+        sesion = SesionFirebase(clave)
+        try:
+            sesion.entrar()
+            print(f"Precio al segundo: ENCENDIDO (cada {PRECIO_CADA_SEGUNDOS} s, solo si cambia).")
+        except Exception as e:
+            print(f"Precio al segundo: no se pudo encender — {e}")
+            print("  Se sigue cada 5 minutos y se reintenta solo.")
     print("Deja esta ventana abierta. Para parar: cierra la ventana.")
 
     vuelta = 0
+    proxima_publicacion = 0.0
+    ultimo_enviado = None
+    escrituras_minuto = 0
+    proximo_resumen = time.time() + 60
+    esperar_hasta = 0.0  # tras un fallo de Firestore, una pausa antes de reintentar
     while True:
-        print(f"\n{datetime.now().strftime('%H:%M:%S')} — leyendo MT5…")
-        try:
-            una_vuelta(token, con_muestra=(vuelta % MUESTRA_CADA_VUELTAS == 0))
-        except Exception as e:
-            # ⚠️ Un fallo NO para el puente. Si se cae internet un minuto, la
-            # vuelta siguiente lo arregla sola. Pararse dejaria a la app sin
-            # datos hasta que alguien se diera cuenta.
-            print(f"  [ERROR] {e}")
-        vuelta += 1
-        time.sleep(CADA_MINUTOS * 60)
+        inicio = time.time()
+
+        # 1. Cada 5 minutos: el archivo de la rama `datos` (con swap y actividad).
+        if inicio >= proxima_publicacion:
+            print(f"\n{datetime.now().strftime('%H:%M:%S')} — leyendo MT5…")
+            try:
+                una_vuelta(token, con_muestra=(vuelta % MUESTRA_CADA_VUELTAS == 0))
+            except Exception as e:
+                # ⚠️ Un fallo NO para el puente. Si se cae internet un minuto, la
+                # vuelta siguiente lo arregla sola. Pararse dejaria a la app sin
+                # datos hasta que alguien se diera cuenta.
+                print(f"  [ERROR] {e}")
+            vuelta += 1
+            proxima_publicacion = inicio + CADA_MINUTOS * 60
+
+        # 2. Cada segundo: el precio en Firestore, solo si cambio.
+        if sesion is not None and inicio >= esperar_hasta:
+            try:
+                pares = leer_bid_ask()
+                if pares and pares != ultimo_enviado:
+                    escribir_vivo(sesion, pares, datetime.now(timezone.utc))
+                    ultimo_enviado = pares
+                    escrituras_minuto += 1
+            except Exception as e:
+                print(f"  [ERROR precio al segundo] {e}")
+                print("  Se reintenta en un minuto. Mientras, las apps usan la foto de cada 5 minutos.")
+                esperar_hasta = inicio + 60
+
+        if sesion is not None and time.time() >= proximo_resumen:
+            print(f"  precio al segundo: {escrituras_minuto} escrituras en el ultimo minuto")
+            escrituras_minuto = 0
+            proximo_resumen = time.time() + 60
+
+        if sesion is None:
+            time.sleep(max(1.0, proxima_publicacion - time.time()))
+        else:
+            time.sleep(max(0.05, PRECIO_CADA_SEGUNDOS - (time.time() - inicio)))
 
 
 if __name__ == "__main__":

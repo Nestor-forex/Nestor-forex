@@ -1535,7 +1535,7 @@ NOMBRA.** El código que lo usa se actualiza solo; el texto que lo describe, no.
 
 # El ensayo con los spreads reales de Néstor (2026-09-05, Intradía)
 
-Néstor leyó los 18 spreads de su cuenta de AvaTrade y los pasó. **Con el mercado
+Néstor leyó los 18 spreads de su cuenta real y los pasó. **Con el mercado
 cerrado**, así que están inflados: media 4,36 pips contra los 2,17 de la tabla.
 Guardados como `SPREAD_NESTOR_FINDE`, marcados, y **no se usan por defecto**.
 
@@ -1652,7 +1652,7 @@ correcto —no juzgar con una vela sin terminar— pero por otro motivo.
 
 # Los spreads REALES, y una predicción mía que era falsa (2026-09-07)
 
-Néstor leyó los 18 spreads de su cuenta de AvaTrade el domingo por la noche,
+Néstor leyó los 18 spreads de su cuenta real el domingo por la noche,
 **con el mercado abierto** (sesión de Asia). Son los primeros números reales de
 un bróker de verdad que ha tenido el proyecto.
 
@@ -2169,7 +2169,7 @@ directo. **Menos piezas de otros = menos formas de romperse en silencio.**
 
 # ⚠️ HALLAZGO: el puente a MT5 YA EXISTE y no estaba documentado (2026-09-08)
 
-Néstor pidió «armemos un puente de mis apps a MT5 + AvaTrade». Al ir a
+Néstor pidió «armemos un puente de mis apps a MT5 + mi bróker». Al ir a
 diseñarlo apareció que **la mitad ya está construida y funcionando**:
 
 ```
@@ -2325,7 +2325,7 @@ promesas. Es del mismo tipo que la explicación del volumen y la de TradingView.
 Preguntó si su PC puede servir el puente de MT5 a los suscriptores,
 manteniéndolo encendido de 6 am a 4 pm de lunes a viernes y avisándoles.
 
-Mandó **foto de su MT5 real** (Ava-Real 1-MT5, Ava Trade Markets Ltd), con la
+Mandó **foto de su MT5 real** (su cuenta real), con la
 ventana de Observación del Mercado enseñando Bid y Ask por símbolo — que es
 justo lo que `useMT5Quotes` lee. Dato útil: **sus símbolos no llevan sufijo**
 (`AUDCAD`, `AUDUSD`, no `AUDUSD.r`), así que `normalizarPar` funciona tal cual.
@@ -2356,13 +2356,13 @@ publica `barrido.json`, y la app lo lee de ahí.
 | Riesgo sobre la cuenta real | alto | ninguno: solo salidas |
 
 📌 Con eso el horario deja de ser un problema que hay que anunciar y pasa a ser
-un detalle: la app enseña «spread de AvaTrade a las 15:40» y el suscriptor sabe
+un detalle: la app enseña «spread de la cuenta real del desarrollador a las 15:40» y el suscriptor sabe
 cuándo se tomó. Es el mismo patrón del aviso «Sin conexión — mostrando el
 barrido guardado del [fecha]» que ya existe.
 
 ## ⚠️ La honestidad que hay que poner en pantalla
 
-Es **el spread de la cuenta de Néstor en AvaTrade**, no el del suscriptor. Hay
+Es **el spread de la cuenta real de Néstor**, no el del suscriptor. Hay
 que rotularlo así y nunca como «tu spread»: un suscriptor con otro bróker vería
 números que no son los suyos. Sigue siendo útil —es un spread REAL de un bróker
 real, mucho mejor que la tabla estimada `SPREAD_PIPS`— pero solo si se dice de
@@ -2515,7 +2515,7 @@ servidor de Render deja de hacer falta —ni pagarlo, ni preguntarse si sigue
 vivo— y con el PC apagado la app enseña el último dato **con su hora**, como ya
 hace con «Sin conexión — mostrando el barrido guardado del…».
 
-⚠️ Y rotularlo por lo que es: el spread de **la cuenta de Néstor en AvaTrade**,
+⚠️ Y rotularlo por lo que es: el spread de **la cuenta real de Néstor**,
 nunca «tu spread».
 
 ---
@@ -2746,7 +2746,7 @@ tanto**, y solo vale la pena si el puente se demora.
 
 ## Lo que NO cambia con el puente, y hay que decirlo igual
 
-Sea a mano o automático, es **el spread de la cuenta de Néstor en AvaTrade**.
+Sea a mano o automático, es **el spread de la cuenta real de Néstor**.
 No es el del suscriptor. Eso hay que rotularlo siempre, y el puente no lo
 arregla.
 
@@ -4204,10 +4204,10 @@ las cinco publica un feed de verdad, se lanza otra vez y se ve en un minuto.
 
 ---
 
-# ¿Y el sentimiento de AvaTrade, el bróker de Néstor? (2026-09-14)
+# ¿Y el sentimiento del bróker de Néstor? (2026-09-14)
 
 Néstor: **«¿y con los sentimientos del bróker con el que yo opero no se puede?
-¿AvaTrade tiene eso? ¿lo podemos sacar de ahí?»**. La pregunta tiene dos
+¿mi bróker tiene eso? ¿lo podemos sacar de ahí?»**. La pregunta tiene dos
 mitades y se contestan por caminos distintos.
 
 ## Mitad 1: por MT5 NO se puede, y está comprobado en el código
@@ -4218,14 +4218,14 @@ de MT5 no expone las posiciones de los DEMÁS clientes.** De posiciones solo da
 las de la cuenta abierta en ese terminal — una persona. **Una persona no es
 sentimiento.**
 
-📌 Para que MT5 diera «el 70 % está comprado», AvaTrade tendría que agregar a
+📌 Para que MT5 diera «el 70 % está comprado», el bróker tendría que agregar a
 todos sus clientes y publicarlo, y eso no pasa por el programa: pasa por su web
 o su app. O sea que **el puente es nuestro canal autorizado al bróker y ese
 dato no viaja dentro**. No hay nada que «sacar de ahí».
 
 ## Mitad 2: por su web tampoco. La puerta está cerrada a los programas
 
-**AvaTrade responde 403 con «Just a moment…»** — la pantalla de desafío de
+**Su sitio responde 403 con «Just a moment…»** — la pantalla de desafío de
 Cloudflare. No solo la portada: **sus cinco sitemaps también dieron 403**, uno
 detrás de otro.
 
@@ -4282,7 +4282,7 @@ destapó un error en la propia herramienta.
 
 ## El veredicto, entonces
 
-**AvaTrade no cambia nada.** La #5 sigue fuera, ahora con un motivo más: ni
+**El bróker de Néstor no cambia nada.** La #5 sigue fuera, ahora con un motivo más: ni
 siquiera el bróker con el que Néstor opera —donde tenemos acceso autorizado y
 funcionando— puede dar ese dato, ni por el programa ni por la web.
 
@@ -8778,7 +8778,7 @@ estas sesiones los hosts están bloqueados y los cuatro bloques salen «NO SE PU
 MIRAR», que es exactamente lo que tiene que decir.
 
 ⚠️ **El User-Agent es HONESTO.** Un 403 a un programa es una respuesta y se
-respeta. Es la línea que no se cruzó con Myfxbook, Dukascopy ni AvaTrade.
+respeta. Es la línea que no se cruzó con Myfxbook, Dukascopy ni el bróker del desarrollador.
 
 ⚠️ **Y se mira el `robots.txt` del único sitio comercial de la lista** (Stooq).
 Los organismos públicos —Tesoro de EE. UU., BCE, MoF japonés— publican para que
@@ -16753,7 +16753,7 @@ puente-mt5/bridge_mt5.py       precio cada 5 min (era 15) + swap por par
 - El rótulo de Intradía «Vela H1 más reciente: 8:00 p. m.» se leía como una hora
   de atraso: era la hora en que EMPEZÓ la vela en curso. Ahora dice «la que
   empezó a las…».
-- ⚠️ **El `mt5.json` publicado hoy dice `"cuenta": "AvaTrade (cuenta de Nestor)"`**:
+- ⚠️ **El `mt5.json` publicado hoy dice `"cuenta"` con el nombre del bróker**:
   el puente que corre en su PC es el VIEJO. El del repositorio ya dice «cuenta
   real del desarrollador». Hasta que lo reemplace, el nombre del bróker está en
   un archivo público. La app no lo enseña.
@@ -16860,3 +16860,46 @@ qué hora es».
 maestra de Firebase y viviría en un PC de casa). Lo seguro: una cuenta de
 usuario solo para el puente y una regla de Firestore que solo le deje escribir
 `vivo/precios`. Pendiente de que Néstor decida.
+
+## ✅ CONSTRUIDO el mismo día (2026-11-17): al segundo, con plan de pago
+
+Néstor: **«al segundo con plan de pago, dame los pasos»**. Aprobó también la
+frase: «precio al segundo de una cuenta real del desarrollador mientras su
+puente esté encendido; si no, el de Twelve Data, y la app siempre te dice cuál
+ves y de qué hora es».
+
+```
+puente-mt5/bridge_mt5.py     + escribe vivo/precios cada 1 s, solo si cambió
+puente-mt5/.gitignore        + firebase_puente.txt
+app/src/lib/usePrecioMt5.js  la escucha (una sola por app)        GEMELO (nuevo)
+app/src/lib/precioVivo.js    + combinarConVivo, segundosDesde      GEMELO
+app/src/components/FuentePrecio.jsx  + «al segundo»               GEMELO
+firestore.rules              + match /vivo/precios                 GEMELO
+```
+
+- **La cuenta del puente:** `puente-mt5@nestor-forex.firebaseapp.com`, creada
+  por Néstor en Firebase → Authentication. Su contraseña vive solo en su PC
+  (`firebase_puente.txt` o `NF_PUENTE_CLAVE`). El correo está en las reglas y
+  en el puente a la vista: sin la contraseña no sirve.
+- **Sin ese archivo el puente funciona como antes** (cada 5 min). Si Firestore
+  falla, se pausa un minuto y lo de los 5 minutos sigue igual.
+- **La app junta las dos fotos:** la del segundo manda en BID/ASK/spread si
+  tiene ≤ 60 s (`EDAD_MAX_VIVO_S`); el swap y la actividad salen del archivo.
+  Si no, el archivo; si también es viejo, Twelve Data.
+- **Una sola escucha por app** aunque la pidan tres pantallas, y **ninguna con
+  la app en segundo plano**: cada cambio que llega es una lectura pagada. La
+  cabecera se redibuja cada 15 s; la tabla de precios y el Analizador, cada 1.
+- **Las reglas dejan leer a cualquiera con sesión** sin mirar si está aprobado:
+  mirarlo sería un `get()` por cada cambio, o sea pagar dos lecturas por
+  segundo. Es un precio de mercado, no un dato de nadie.
+- ⚠️ **Hay que publicar las reglas** (`reglas.yml` con «aplicar») o el puente
+  recibe 403 y la app sigue con la foto de 5 minutos.
+
+## Y el nombre del bróker, fuera del repositorio (2026-11-17)
+
+Quitado de todos los archivos de las dos apps (comentarios, notas, el `.bat`,
+la sonda de sentimiento y esta memoria). Las tres pruebas que vigilan que no
+aparezca lo llevan **codificado en base64**, porque escribirlo para vigilar que
+no se escriba sería justo lo que vigilan. ⚠️ **Sigue en el historial de git**
+de las dos ramas `main` y de la rama `datos`; reescribir ese historial pondría
+en riesgo el historial de señales, que es irrecuperable, y no se hizo.

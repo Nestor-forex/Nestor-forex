@@ -31,7 +31,7 @@ import { useMembers } from './lib/useMembers'
 import { useTrades } from './lib/useTrades'
 import { usePractica } from './lib/usePractica'
 import { useMarketData } from './lib/useMarketData'
-import { useMT5Quotes } from './lib/useMT5Quotes'
+import { usePrecioMt5 } from './lib/usePrecioMt5'
 import { fuenteDePrecios } from './lib/precioVivo'
 import { useCalendario } from './lib/useCalendario'
 import { useCot } from './lib/useCot'
@@ -72,7 +72,10 @@ export default function App() {
   const mercado = useMarketData()
   // De dónde sale el precio que se ve: MT5 si el puente está encendido y su
   // foto es reciente, Twelve Data si no. Ver `lib/precioVivo.js`.
-  const mt5 = useMT5Quotes()
+  // Al segundo cuando el puente nuevo está encendido (`usePrecioMt5`). La
+  // cabecera solo se redibuja cada 15 s: redibujar la app entera cada segundo
+  // por una línea de texto no tiene sentido. La escucha es una sola igual.
+  const mt5 = usePrecioMt5({ cadaMs: 15_000 })
   const fp = fuenteDePrecios(mt5)
   // El calendario va en su propio archivo y con su propio horario: el barrido
   // lo publica el vigía una vez al día de lunes a viernes, y el calendario
