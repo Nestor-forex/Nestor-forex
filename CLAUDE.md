@@ -16968,3 +16968,24 @@ ventana que estaba abierta sigue corriendo el código viejo.
 
 De paso: `#188` había subido `puente-mt5/__pycache__/*.pyc` (lo que Python
 genera al correr). Quitado y añadido al `.gitignore` del puente.
+
+# Qwen espera hasta DESPUÉS del 2026-11-20 (Néstor, 2026-11-17)
+
+> fusiona y seguimos con Qwen pero Qwen si no lo podemos abrir despues del 20
+> que fue la fecha que nos dieron por lo del cierre de la cuenta
+
+La cuenta de Qwen no se puede abrir hasta pasado el **20 de noviembre de
+2026**: es la fecha que le dieron por el cierre de una cuenta. **No pedirle la
+llave ni que cree la cuenta antes de esa fecha.** Hay un recordatorio programado
+para el 2026-11-21.
+
+Lo que ya está hecho y espera: el puente (`puente-qwen/`), la sonda
+(`sonda-qwen.mjs`), las reglas sobre lo que contesta (`qwenValidar.js`) y sus
+pruebas. Lo que falta empieza con dos llaves (la de la sonda como secreto
+`QWEN_KEY` en GitHub y otra en Cloudflare), y sigue con la sonda, la elección
+del modelo y los botones de la app.
+
+Ese mismo día se fusionaron los PR #190 (Swing) y #132 (Intradía): la línea del
+precio dice «Conectando…» en vez de enseñar la foto de 5 minutos mientras no se
+sabe si hay precio al segundo, y la práctica guarda todas las herramientas que
+la gráfica sabe dibujar.
