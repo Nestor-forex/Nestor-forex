@@ -16797,3 +16797,66 @@ no se puede no pasa nada. Ante la duda, vertical.
 **Hay que publicar las reglas de Firestore** (campos nuevos de `practica`) y
 **Néstor tiene que reemplazar `bridge_mt5.py` en su PC** para que lleguen el
 precio cada 5 min y el swap.
+
+---
+
+# El precio AL SEGUNDO: lo que cuesta, y lo que pidió Néstor (2026-11-17)
+
+Néstor, después de fusionar #186/#129: **«creo que esto es súper atractivo como
+apps de información y garantizar esto sería maravilloso y va con nuestra
+filosofía. y hay que recalcarlo en la exposición para la presentación de las
+apps en la web para los suscriptores»**.
+
+⚠️ **NO ESTÁ CONSTRUIDO.** Hoy el precio de MT5 llega con 0-10 min (puente cada
+5 min + caché de 5 min de `raw.githubusercontent.com`) y la pantalla lo dice.
+La landing **no puede** decir «al segundo» hasta que exista y se haya medido.
+
+## Por qué el camino de hoy no puede bajar de ~5 min
+
+`raw.githubusercontent.com` sirve con `cache-control: max-age=300` (medido).
+Publicar más a menudo en la rama `datos` no lo hace llegar antes, y además
+llenaría la rama de commits.
+
+## El camino que sí lo haría: el puente escribe en Firebase
+
+El puente escribe un documento (`vivo/precios`, los 18 pares) y la app lo
+escucha con `onSnapshot`. Firestore cobra **una lectura por cada vez que ese
+documento cambia y le llega a cada teléfono que lo escucha**.
+
+Plan gratuito de Firestore (Standard): **50.000 lecturas, 20.000 escrituras y
+20.000 borrados al día**, se reinicia a medianoche del Pacífico. Pasado eso,
+plan Blaze: **$0,03 por 100.000 lecturas** (precio de la página de Google el
+2026-11-17; confirmarlo en la página antes de decidir).
+
+| cada cuánto escribe el puente | escrituras/día (24 h) | lecturas por persona y hora con la app abierta | horas-persona al día que caben gratis |
+|---|---:|---:|---:|
+| 1 s | 86.400 ❌ (gratis: 20.000) | 3.600 | ~14 |
+| 2 s | 43.200 ❌ | 1.800 | ~28 |
+| 5 s | 17.280 ✅ | 720 | ~69 |
+
+O sea que **al segundo NO cabe en el plan gratuito**, ni por escrituras ni por
+lecturas en cuanto haya un puñado de suscriptores. En Blaze sale barato: 100
+suscriptores × 2 h/día × 22 días ≈ 15,8 millones de lecturas ≈ **$4,75 al mes**
+en lecturas, más las escrituras pasadas del cupo (del orden de unos pocos
+dólares). ⚠️ Pasar a Blaze exige poner una tarjeta en Firebase y conviene un
+tope de presupuesto con alerta.
+
+Alternativa: **Realtime Database**, que cobra por datos descargados y no por
+lecturas. Gratis: 10 GB/mes y **máximo 100 conexiones a la vez** (el 101 no
+entra). Con ~1 KB por actualización al segundo, ~3,6 MB por persona y hora →
+unas 2.800 horas-persona al mes gratis; en Blaze $1/GB.
+
+## Lo que NO se puede garantizar aunque se construya
+
+**Al segundo solo mientras el computador de Néstor tenga MT5 abierto e
+internet.** Si se apaga, la app vuelve sola a Twelve Data y lo dice — eso ya
+está hecho. Prometer «al segundo» sin ese matiz sería exactamente lo que este
+proyecto no hace. La frase honesta para la landing, cuando exista:
+«precio al segundo de una cuenta real del desarrollador mientras su puente esté
+encendido; cuando no, el de Twelve Data, y la app siempre te dice cuál ves y de
+qué hora es».
+
+⚠️ **La credencial del puente** no puede ser la cuenta de servicio (es la llave
+maestra de Firebase y viviría en un PC de casa). Lo seguro: una cuenta de
+usuario solo para el puente y una regla de Firestore que solo le deje escribir
+`vivo/precios`. Pendiente de que Néstor decida.

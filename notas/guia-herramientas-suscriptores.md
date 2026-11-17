@@ -697,6 +697,14 @@ trae ASK ni BID, y la tarjeta lo dice.
 **Lo que NO es:** tiempo real al segundo. Va siempre con su hora para que nadie
 lo lea como precio de este instante.
 
+**Por qué hoy no es al segundo, explicado sin rodeos:** el puente toma la foto
+de los precios en un computador con MT5 abierto y la deja en un archivo público.
+Ese archivo tarda hasta 5 minutos en llegar a los teléfonos, porque así lo
+guarda en caché el servidor que lo entrega. Por eso, en un día normal, el precio
+de MT5 que ves tiene entre 0 y 10 minutos, y la app siempre te dice de qué hora
+es. Y si ese computador está apagado, el precio pasa a ser el de Twelve Data, y
+la app también te lo dice.
+
 ---
 
 ## 15 · Vista vertical u horizontal (las dos apps)
