@@ -16989,3 +16989,26 @@ Ese mismo día se fusionaron los PR #190 (Swing) y #132 (Intradía): la línea d
 precio dice «Conectando…» en vez de enseñar la foto de 5 minutos mientras no se
 sabe si hay precio al segundo, y la práctica guarda todas las herramientas que
 la gráfica sabe dibujar.
+
+---
+
+# Exportar, «Analista constante» y «¿Cómo operas?» (2026-11-17). En las dos apps
+
+Fusionados #191 (Swing) y #133 (Intradía); reglas de Firestore publicadas
+el mismo día (`diasTablero` y `estilo`).
+
+- **Exportar** (`exportar.js`, GEMELO): la práctica se baja en `.csv` con
+  TODAS sus operaciones; decimal del idioma (con coma decimal, separador `;`)
+  y lo que no se sabe va VACÍO, nunca 0. El análisis se comparte
+  (`navigator.share`) o se baja en `.txt`, y termina con el aviso de que no
+  es una señal.
+- **«Analista constante»** (`constancia.js`): 5 días HÁBILES seguidos abriendo
+  el tablero completo; los fines de semana ni cuentan ni cortan la racha. Se
+  guarda el DÍA (`users/{uid}.diasTablero`, últimos 14), nunca la medalla.
+- **«¿Cómo operas?»** (`estilo.js`, `MiEstilo.jsx`): tendencias / rangos /
+  noticias / todavía no sé. Solo decide con qué herramientas ARRANCA el
+  Analizador; no cambia señales ni dice qué estilo es mejor. Lo último que
+  usó la persona manda sobre el estilo. Se guarda en `users/{uid}.estilo`.
+
+📌 Néstor (2026-11-17): **«Importar operaciones del bróker» NO se quita**, es
+de ayuda a los usuarios. Los cierres parciales lo AMPLÍAN, no lo sustituyen.
