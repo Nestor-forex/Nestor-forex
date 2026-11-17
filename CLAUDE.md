@@ -16672,3 +16672,43 @@ la definición de «terminada» vive en un solo sitio.
 medir la posición de cada letra salió «−1 R», correcto. **Antes de «arreglar»
 una dirección de texto, medirla.** (Lo que sí hacía falta: aislar «1 R» y
 «−1 R» con LRI/PDI en vez de LRM, que no aísla.)
+
+---
+
+# «Cambiar mis pares», gráfica y dólares en la práctica (2026-11-17). En las dos apps
+
+Néstor, después de ver el modo práctica: el botón «Mis pares» del Barrido «no
+cambia nunca», la práctica tiene que tener una gráfica «como la de la foto»
+(la del detalle de la señal), y que se me habían quedado cosas fuera de la
+conversación con la otra IA.
+
+- **`FiltroPares.jsx` (GEMELO) tiene un editor**: «Cambiar mis pares» (o
+  «Elegir mis pares» sin lista) abre las pastillas de todos los pares con la
+  lista actual marcada. Guarda con el MISMO `avisosUsuario.seguir` de Mis avisos
+  (dos listas se separarían) y solo se cierra si se guardó. `App.jsx` le pasa
+  `seguimiento`.
+- **`GraficoPractica.jsx` (GEMELO)**: barras de máximo-mínimo + cierres de las
+  20 velas del barrido, entrada/SL/TP con franjas, la vela de entrada y dónde
+  terminó. ⚠️ **Usa las MISMAS velas con las que decide el programa**
+  (`graficoDePractica`); con otras podría enseñar un toque que el programa no
+  vio. Sin `fechas20` o con un número roto no dibuja nada y lo dice.
+  `useMarketData` expone `velasPractica` y el Diario se lo pasa a la tarjeta.
+- **`riesgoUsd` y `lote` opcionales en la ficha**, sacados de `a.lote` del
+  Analizador (el perfil de riesgo). `resumenPractica` da `dinero = Σ R × riesgo`
+  solo de las que lo guardaron (`null` si ninguna). Hipotético: sin spread ni
+  swap. **Las reglas de Firestore cambian**: hay que publicarlas.
+- Lo omitido está en `notas/plan-herramientas-nuevas.md`, sección «Lo que se me
+  quedó fuera».
+
+📌 **La conversación original está en el transcript de la sesión** (línea del
+2026-11-16, «eres un profesional seo…»); no se guardó en el repo. Lo que se
+saque de ella va al plan.
+
+## «Intradía llega con una hora de atraso» — la explicación, comprobada
+
+No es atraso del dato, son dos cosas: (1) el rótulo dice la hora en que
+**EMPEZÓ** la vela en curso («vela de las 8:00 p. m.» a las 8:49), y (2) el
+barrido sale de **Twelve Data una vez por hora** (minuto 26), no de MT5; el
+puente solo alimenta la tarjeta del spread y la actividad, cada 15 min y con el
+PC encendido. Propuesto, **sin hacer**: rotular «precio de las 8:49» y usar el
+bid de MT5 cuando la foto del puente esté fresca.
