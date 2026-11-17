@@ -11,6 +11,7 @@ import BarraFuerza from './BarraFuerza'
 import Sparkline from './Sparkline'
 import Glosario from './Glosario'
 import Frescura from './Frescura'
+import FuentePrecio from './FuentePrecio'
 import ClimaMercado from './ClimaMercado'
 import Correlacion from './Correlacion'
 import Compresion from './Compresion'
@@ -158,7 +159,7 @@ function RazonList({ items, emptyText }) {
   )
 }
 
-export default function TableroCompleto({ onVolver, onVerSetup, filtro = null, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], setupsPausados = [], setupsBollinger = [], correlaciones = [], riesgoSenales = [], compresionPares = [], corte, generadoEl, horasViejo, costePorAntiguedad }) {
+export default function TableroCompleto({ onVolver, onVerSetup, filtro = null, loading, error, stale, guardadoEl, monedas, pares, compras, ventas, vigilancia, setups, setupsReversion = [], setupsPausados = [], setupsBollinger = [], correlaciones = [], riesgoSenales = [], compresionPares = [], corte, fp = null, mt5Hora = null, generadoEl, horasViejo, costePorAntiguedad }) {
   const { t, locale } = useIdioma()
   // Cómo le va de verdad a la regla de reversión, contado en vivo. Ver el
   // porqué en `useResumenReal`: este número estuvo escrito a mano y se quedó
@@ -195,7 +196,7 @@ export default function TableroCompleto({ onVolver, onVerSetup, filtro = null, l
         </div>
       </header>
 
-      <main style={{ flex: 1, padding: '20px 18px 48px', display: 'flex', flexDirection: 'column', gap: 32 }}>
+      <main className="nf-main" style={{ flex: 1, padding: '20px 18px 48px', '--nf-gap': '32px' }}>
         {/* El mismo control que en la pestaña Barrido, y con el mismo estado:
             quien filtra allí llega aquí filtrado, y lo ve dicho. Si el
             contador solo saliera en una de las dos pantallas, la otra
@@ -209,6 +210,7 @@ export default function TableroCompleto({ onVolver, onVerSetup, filtro = null, l
               {t('tablero.sesionActiva')} <span style={{ color: 'var(--text)' }}>{sesion}</span>
             </div>
             <div>{loading ? '…' : corte}</div>
+            <FuentePrecio fp={fp} actualizadoEl={mt5Hora} style={{ fontSize: 12.5 }} />
             {/* Cuándo se CALCULÓ, que no es la fecha de la vela. Ver `Frescura`. */}
             <Frescura generadoEl={generadoEl} horasViejo={horasViejo} costePorAntiguedad={costePorAntiguedad} style={{ fontSize: 12.5 }} />
           </div>

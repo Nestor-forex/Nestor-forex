@@ -16712,3 +16712,88 @@ barrido sale de **Twelve Data una vez por hora** (minuto 26), no de MT5; el
 puente solo alimenta la tarjeta del spread y la actividad, cada 15 min y con el
 PC encendido. Propuesto, **sin hacer**: rotular «precio de las 8:49» y usar el
 bid de MT5 cuando la foto del puente esté fresca.
+
+---
+
+# El precio con su fuente, la vista horizontal y la práctica de verdad (2026-11-17). En las dos apps
+
+Néstor, después de fusionar #185/#128: **«me parece muy mal este error de
+ofrecer información en tiempo real y no lo sea… la idea es que la dé el puente
+encendido y cuando no lo esté que lo dé Twelve Data, pero con la información de
+qué es y por qué es»**. Y en el mismo mensaje: la gráfica de la práctica con
+todo lo programado, el dinero de la práctica con spread y swap REALES («no
+quiero cuentas hipotéticas… contradice nuestra esencia de honestidad»), y el
+botón de vista vertical/horizontal que llevaba pendiente desde el 2026-11-16.
+
+```
+src/lib/precioVivo.js          qué fuente manda y la entrada al ASK/BID   GEMELO
+src/components/FuentePrecio.jsx la línea «de dónde y de qué hora»          GEMELO
+src/lib/vistaPantalla.js       vertical u horizontal                       GEMELO
+src/components/SelectorVista.jsx el botón, en la cabecera                  GEMELO
+src/lib/practica.js            + costesPractica, nochesDeSwap, marcas      GEMELO
+src/components/GraficoPractica.jsx velas reales + lo programado           GEMELO
+puente-mt5/bridge_mt5.py       precio cada 5 min (era 15) + swap por par
+```
+
+## El precio
+
+- **Puente encendido** (foto de MT5 de ≤ 20 min, `EDAD_MAX_MT5_MIN`): el precio
+  es el de MT5 con la HORA de la foto. **Apagado o foto vieja:** Twelve Data, y
+  la línea dice por qué y cada cuánto se actualiza en esa app.
+- ⚠️ **No es tiempo real al segundo y la pantalla no lo promete.** El puente
+  escribe un archivo en la rama `datos` y `raw.githubusercontent.com` lo sirve
+  con `cache-control: max-age=300` (medido). Por eso el puente pasó de 15 a 5
+  minutos y no a menos: publicar cada minuto no lo haría llegar antes. **Tiempo
+  real de verdad pediría otro canal** (Firestore escrito por el puente, por
+  ejemplo), con una credencial en el PC de Néstor y lecturas que cuentan contra
+  el plan gratuito: decisión suya, no construida.
+- **Analizador:** con MT5 la entrada es el **ASK para comprar y el BID para
+  vender** (`fichaConPrecioVivo`), así que el spread ya va dentro y todas las
+  cuentas salen de ahí.
+- El rótulo de Intradía «Vela H1 más reciente: 8:00 p. m.» se leía como una hora
+  de atraso: era la hora en que EMPEZÓ la vela en curso. Ahora dice «la que
+  empezó a las…».
+- ⚠️ **El `mt5.json` publicado hoy dice `"cuenta": "AvaTrade (cuenta de Nestor)"`**:
+  el puente que corre en su PC es el VIEJO. El del repositorio ya dice «cuenta
+  real del desarrollador». Hasta que lo reemplace, el nombre del bróker está en
+  un archivo público. La app no lo enseña.
+
+## La práctica, con lo que cuesta de verdad
+
+- Cada operación guarda al crearse `fuente` (`mt5`/`twelve`), `spread` (y
+  `spreadEl` si sale de una foto vieja), `swap` del lado que toca y `swap3`. El
+  resultado neto (`costesPractica`) resta el spread solo si la entrada fue de
+  Twelve, y suma el swap por noche (22:00 UTC, lunes a viernes, triple el día
+  `swap3`). **Lo que no se sabe dice «sin dato», nunca un número.**
+- ⚠️ **El swap solo llega con el puente NUEVO**, y solo si MT5 lo da en puntos
+  (`SYMBOL_SWAP_MODE_POINTS`); en otro modo no se manda. Hasta entonces la línea
+  del swap dice «sin dato».
+- Entrada de MT5 en el resolver: tolerancia de spread + 3 pips contra la vela de
+  Twelve (dos fuentes no dan el mismo número al pip). En Intradía la vela de una
+  entrada de MT5 es la hora en curso; en Swing, la última del barrido (la vela
+  diaria de la fuente no cambia de fecha a medianoche).
+
+## La gráfica
+
+- **Velas completas** con `abiertos20`, nuevo en los dos barridos (la apertura
+  viene en la misma consulta: cero créditos). En los cruces de Intradía la
+  apertura se deriva exacta, como el cierre. En la vela fundida de Swing
+  (domingo + lunes) la apertura es la del domingo. **Sin las 20 aperturas no se
+  publica nada y se dibujan barras, sin inventarla.**
+- Velas en blanco y negro (hueca la que sube): el rojo y el verde son el SL y el
+  TP en esa gráfica.
+- `marcas`: una foto de lo que estaba encendido en el Analizador al crear la
+  operación (S/R, pivote, medias, Bollinger, Fibonacci, FVG), con un botón por
+  familia. La escala la deciden las velas y los tres niveles; una marca fuera
+  sale como flecha en el borde con su precio.
+
+## La vista
+
+`html[data-vista]` y `--ancho-app` (430 px o 1280). En horizontal `.nf-main` se
+reparte en columnas de 400 px; con una sola pieza (Analizador) no. Se intenta
+`screen.orientation.lock` (solo funciona en Android con la app instalada) y si
+no se puede no pasa nada. Ante la duda, vertical.
+
+**Hay que publicar las reglas de Firestore** (campos nuevos de `practica`) y
+**Néstor tiene que reemplazar `bridge_mt5.py` en su PC** para que lleguen el
+precio cada 5 min y el swap.

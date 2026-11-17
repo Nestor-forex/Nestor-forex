@@ -583,10 +583,19 @@ empezar si estás aprendiendo.
 - **Resultado** y **Por operación**, en **R**. **1 R es lo que arriesgabas.**
   Perder es siempre **−1 R**; ganar es lo que daba tu Take-profit (con una
   relación 1:2, ganar es **+2 R**).
-- **En dólares** (desde el 2026-11-17): si llenaste tu **perfil de riesgo**, la
-  app guarda cuánto arriesgabas y con qué lote, igual que la calculadora. Al
-  terminar dice **«Si hubieras arriesgado lo de tu perfil: +$25.00»**. Es
-  hipotético: no descuenta spread ni swap, que en una cuenta real sí se pagan.
+- **Neto (con spread y swap)** y **En dinero** (desde el 2026-11-17): la app
+  descuenta lo que cuesta operar de verdad, con el spread y el swap de **una
+  cuenta real del desarrollador de la app** (no los de tu bróker):
+  - si entraste con el puente de MT5 encendido, la entrada ya fue al precio de
+    compra (ASK) o de venta (BID), así que **el spread ya va dentro**;
+  - si entraste con el precio de Twelve Data, se resta el spread de la última
+    foto de MT5 de ese par, y se dice de qué hora es;
+  - el **swap** se cobra (o se paga) por cada noche que la operación siguió
+    abierta: a las 22:00 UTC de lunes a viernes, triple el día que dice el
+    bróker.
+  Cada operación enseña la cuenta entera: **Bruto · Spread · Swap · Neto**. Si
+  falta un dato, dice **«sin dato»** en esa línea y no inventa un número. Si
+  llenaste tu **perfil de riesgo**, sale además el neto en dólares.
 
 **La gráfica de cada operación** (desde el 2026-11-17): debajo de cada operación
 hay un botón **«Ver la gráfica»**. Dibuja las últimas 20 velas del par y, encima,
@@ -596,6 +605,19 @@ hasta el Take-profit. La línea vertical punteada es la vela en la que entraste,
 y cuando la operación termina sale un círculo de color donde tocó el nivel.
 Son **las mismas velas con las que la app decide** si ganó o perdió, así que lo
 que ves es exactamente lo que se juzgó.
+
+Desde el 2026-11-17 la gráfica se parece a la de una plataforma:
+- **Velas completas** (apertura, máximo, mínimo y cierre) en blanco y negro: la
+  que sube va hueca y la que baja rellena. No van en verde y rojo porque en esta
+  gráfica el rojo es tu Stop-loss y el verde tu Take-profit. Si el barrido
+  todavía no trae la apertura de las velas, se dibujan máximo y mínimo y la
+  línea de cierres, sin inventar la apertura.
+- **Todo lo que programaste**: el soporte y la resistencia, el pivote, las
+  medias, las bandas de Bollinger, los niveles de Fibonacci y los huecos (FVG)
+  que tenías encendidos en el Analizador **en el momento de crear la
+  operación**, tal como estaban entonces. Debajo hay un botón por cada uno para
+  enseñarlo u ocultarlo. Si un nivel queda muy lejos (una EMA 200, por ejemplo),
+  sale como una flecha en el borde con su precio, para no aplastar las velas.
 - **Caducada:** la app no pudo mirarla a tiempo y esas velas ya no se ven. No
   cuenta ni como ganada ni como perdida.
 - **No válida:** el precio de entrada era viejo o no estaba dentro de la vela,
@@ -648,6 +670,49 @@ sobre todo si estás empezando.
 Premiar eso empujaría a arriesgar más para conseguir la medalla. No se guarda
 nada aparte: se calculan con tus datos cada vez, así que si borras operaciones
 la cuenta baja.
+
+---
+
+## 14 · De dónde sale el precio que ves (las dos apps)
+
+**Dónde:** debajo del título del Barrido, en el tablero completo y en la tarjeta
+del Analizador.
+
+**Qué dice:**
+
+- **Con el puente de MT5 encendido:** «Precio de MT5, de una cuenta real del
+  desarrollador: foto de las 9:49 p. m. (hace 3 min)». El puente publica cada
+  5 minutos, así que puede ir unos minutos por detrás del mercado — por eso va
+  siempre la hora.
+- **Con el puente apagado:** «Precio de Twelve Data: el cierre de la última
+  vela…», cada cuánto se actualiza en esa app (Swing dos veces al día; Intradía
+  una vez por hora) y **por qué**: el puente está apagado, o su última foto es
+  demasiado vieja.
+
+**En el Analizador:** con el puente encendido, la entrada es la de un bróker de
+verdad: **el ASK si compras y el BID si vendes**, y todas las cuentas de la
+tarjeta salen de ahí. Con el puente apagado, del cierre de Twelve Data, que no
+trae ASK ni BID, y la tarjeta lo dice.
+
+**Lo que NO es:** tiempo real al segundo. Va siempre con su hora para que nadie
+lo lea como precio de este instante.
+
+---
+
+## 15 · Vista vertical u horizontal (las dos apps)
+
+**Dónde:** en la cabecera, al lado del idioma: un botón con el dibujo de una
+pantalla.
+
+**Qué hace:** cambia cómo se acomoda la app.
+- **Vertical:** una columna, como un teléfono (así funcionó siempre).
+- **Horizontal:** aprovecha el ancho de un PC, una laptop o una tableta: las
+  tarjetas se reparten en columnas.
+
+**Lo que hay que saber:** en un PC o una laptop la pantalla no gira; lo que
+cambia es el acomodo. En un teléfono o una tableta, gira el aparato; si la app
+está instalada en Android, intenta girar la pantalla sola. La elección se
+guarda en ese aparato.
 
 ---
 

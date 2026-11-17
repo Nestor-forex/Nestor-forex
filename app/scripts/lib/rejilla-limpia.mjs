@@ -165,7 +165,16 @@ export function limpiar({ fechas, rates, rangosPar } = {}) {
       // en producción, una fila con menos campos que sus vecinas es una trampa
       // esperando a que alguien lea `c` y le salga `undefined` un lunes de
       // cada siete, sin error y sin patrón visible.
-      nuevo[p] = { h: Math.max(...hs), l: Math.min(...ls), ...(Number.isFinite(base[p]?.c) ? { c: base[p].c } : {}) }
+      // La APERTURA de la vela fundida es la del día MÁS TEMPRANO (el domingo):
+      // la vela empieza cuando empieza el primero de los días que la forman.
+      const temprano = Math.min(...fundir)
+      const o = rangosPar[fechas[temprano]]?.[p]?.o
+      nuevo[p] = {
+        h: Math.max(...hs),
+        l: Math.min(...ls),
+        ...(Number.isFinite(base[p]?.c) ? { c: base[p].c } : {}),
+        ...(Number.isFinite(o) ? { o } : {}),
+      }
     }
     salida.rangosPar[f] = nuevo
   }
