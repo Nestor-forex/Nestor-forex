@@ -653,7 +653,7 @@ Desde el 2026-11-17 la gráfica se parece a la de una plataforma:
 que repiten buenos hábitos. Las insignias te marcan el camino de esos hábitos,
 sobre todo si estás empezando.
 
-**Las ocho:**
+**Las nueve:**
 
 1. **Sabes cuánto arriesgas** — completa tu perfil de riesgo.
 2. **Sabes qué operas** — elige tu lista de pares.
@@ -661,16 +661,35 @@ sobre todo si estás empezando.
 4. **Que el mercado te llame** — programa un aviso propio.
 5. **Diario constante** — anota 10 operaciones, ganes o pierdas.
 6. **Escribes por qué** — anota 10 operaciones con una nota de por qué entraste.
-7. **Respetas tu freno** — 5 días sin abrir otra operación después de tocar tu
+7. **Analista constante** — abre el tablero completo 5 días hábiles seguidos.
+   Los fines de semana ni cuentan ni cortan la racha (el mercado está cerrado).
+8. **Respetas tu freno** — 5 días sin abrir otra operación después de tocar tu
    freno del día o tus pérdidas seguidas. Un día en que no lo tocas también
    cuenta.
-8. **Practicas sin dinero** — termina 5 operaciones del modo práctica, ganes o
+9. **Practicas sin dinero** — termina 5 operaciones del modo práctica, ganes o
    pierdas.
 
 **Lo que NO hace:** **ninguna premia ganar dinero, acertar ni operar más.**
-Premiar eso empujaría a arriesgar más para conseguir la medalla. No se guarda
-nada aparte: se calculan con tus datos cada vez, así que si borras operaciones
-la cuenta baja.
+Premiar eso empujaría a arriesgar más para conseguir la medalla. Las insignias
+se calculan con tus datos cada vez, así que si borras operaciones la cuenta
+baja. Lo único que se guarda aparte son los días en que abriste el tablero
+(los últimos 14), porque ningún otro dato lo dice.
+
+## Exportar tus resultados y tus análisis
+
+**La tabla de tu práctica:** pestaña **Diario** → **Modo práctica** → abajo,
+**«Descargar mis resultados (tabla)»**. Se baja un archivo que abren Excel y
+Google Sheets, con TODAS tus operaciones de práctica (también las abiertas y
+las que no se pudieron juzgar), sus niveles y lo que dieron en bruto y en neto.
+Los números van con la coma o el punto de tu idioma. Una casilla vacía es un
+dato que no se sabe, nunca un cero.
+
+**Tu análisis:** pestaña **Analizar** → elige par, dirección y método → al
+final, **«Compartir o guardar este análisis»**. En el celular abre el menú
+para mandarlo por WhatsApp o correo; en la computadora descarga un texto. Va
+con el par, la dirección, el precio, el Stop-loss y el Take-profit con sus
+pips, el R/B, el lote y las herramientas principales, y **termina siempre con
+el aviso de que no es una señal**, por si alguien lo reenvía.
 
 ---
 
