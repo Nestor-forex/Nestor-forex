@@ -22,7 +22,7 @@ Estado: ⬜ por hacer · 🟨 en obra · ✅ hecho · ❓ falta una decisión de
 | 8 | **Curso detallado** para principiantes: teoría, ejemplos, fórmulas y ejercicios en demo, enlazado con las insignias y el modo práctica | aparte | ⬜ | 4 y 5 para los ejercicios |
 | 9 | **Muro de análisis de la comunidad** (moderado) | las dos | ❓ | decidir quién modera y las reglas; ver abajo |
 | 10 | **Diario: revisar cierres parciales y moneda de la cuenta** en la importación | las dos | ⬜ | un informe real con cierres parciales |
-| 11 | **Vista ancha a voluntad** en PC, laptop y tableta (y el celular en horizontal): hoy la app es una columna de 430 px centrada aunque la pantalla sea ancha. Un botón para elegir vista estrecha o ancha | las dos | ⬜ | nada |
+| 11 | **Vista ancha a voluntad** en PC, laptop y tableta (y el celular en horizontal): hoy la app es una columna de 430 px centrada aunque la pantalla sea ancha. Un botón para elegir vista estrecha o ancha | las dos | ✅ 2026-11-17 | nada |
 
 ## Lo que se me quedó fuera al hacer esta lista (Néstor lo señaló el 2026-11-17)
 
