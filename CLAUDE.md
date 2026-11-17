@@ -16938,3 +16938,33 @@ crea «Documento de texto» y si se borra el nombre entero se va también el
 `.txt` (sale tipo «Archivo»); el diálogo de Guardar dice «Abrir» mientras
 hay una carpeta seleccionada; y el Bloc de notas nuevo abre con pestañas, así
 que hay que mirar en cuál se escribe.
+
+## ⚠️ La app NO escuchaba el precio al segundo, y lo vio Néstor (2026-11-17, tarde)
+
+Con el puente escribiendo 60 veces por minuto, las dos pantallas (Barrido y
+Analizar) seguían diciendo «foto de las 12:29 (hace 5 min)». **El puente
+estaba bien**: se comprobó leyendo `vivo/precios` con una cuenta de prueba
+creada y borrada en el momento, y traía la hora de ese mismo segundo.
+
+**El fallo era de la app.** `usePrecioMt5` empezaba a escuchar en cuanto se
+abría, con la pantalla de entrada delante y SIN SESIÓN. Las reglas solo dejan
+leer con sesión, Firestore contestaba `permission-denied` (comprobado con el
+SDK de verdad: sin sesión, error; con sesión, un dato por segundo), la escucha
+se paraba en silencio y **nadie la volvía a encender al entrar**.
+
+📌 Ni el build, ni las pruebas, ni el banco de navegador lo veían: todos
+probaban `combinarConVivo` con datos ya entregados, nunca el arranque de la
+escucha contra unas reglas que exigen sesión.
+
+**El arreglo** (`src/lib/escuchaVivo.js`, GEMELO, con
+`scripts/prueba-escucha-vivo.mjs`, GEMELO): sin sesión no se escucha ni se
+intenta; cada cambio de sesión (`onAuthStateChanged`) para y vuelve a empezar;
+un error se marca por escucha para que uno tardío no apague la nueva; y al
+salir se olvida el último precio. La lógica salió del hook para poder probarla
+sin navegador. Quitar la condición de sesión tumba 2 comprobaciones.
+
+⚠️ **Para verlo hay que cerrar la app del todo y volver a abrirla**: una
+ventana que estaba abierta sigue corriendo el código viejo.
+
+De paso: `#188` había subido `puente-mt5/__pycache__/*.pyc` (lo que Python
+genera al correr). Quitado y añadido al `.gitignore` del puente.
