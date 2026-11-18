@@ -24,6 +24,7 @@
 import { fileURLToPath } from 'node:url'
 import { computarBarrido, derivarVista, usaVaraSimetrica } from '../src/lib/marketCalc.js'
 import { VELAS_MEDIAS, leerLlave, obtenerVelas } from './lib/velas.mjs'
+import { armarHistoria } from './lib/historia-publicada.mjs'
 import {
   compararConAnterior,
   escribir,
@@ -56,6 +57,7 @@ const LOG_CORRIDAS = `${DATOS}/historial/corridas.jsonl`
 // El barrido ya calculado, que es lo que lee la app. Ver el comentario de
 // abajo sobre por qué la app no pide los precios ella misma.
 const BARRIDO = `${DATOS}/estado/barrido.json`
+const HISTORIA = `${DATOS}/estado/historia.json`
 const LOG_RESULTADOS = `${DATOS}/historial/resultados.jsonl`
 // El COT ya publicado, que es el mismo archivo que lee la app. No se vuelve a
 // bajar de la CFTC: lo publica `publicar-cot.mjs` todos los días y aquí solo se
@@ -429,6 +431,18 @@ for (const r of resultados) {
 // llevaba desde el 2026-08-09 publicando sin una sola comprobación, mientras la
 // app hermana sí la tenía desde el 2026-09-02.
 escribir(BARRIDO, JSON.stringify(armarBarrido(data, ahora)) + '\n')
+
+// La historia para el laboratorio «prueba tu propia regla» (2026-11-18). Sale
+// de la serie larga que ya se bajó para las medias: cero créditos más.
+// ⚠️ Aislada en un `try`: un fallo aquí no puede costarle el día al historial,
+// que ya está escrito arriba.
+try {
+  const historia = armarHistoria(largo, ahora)
+  if (historia) escribir(HISTORIA, JSON.stringify(historia) + '\n')
+  else console.log('Historia del laboratorio: no se pudo armar (sin serie larga). Se deja la de ayer.')
+} catch (e) {
+  console.log(`Historia del laboratorio: falló (${e.message}). Se deja la de ayer.`)
+}
 
 // Avisos al celular. Va al FINAL y aislado, igual que en la app hermana: para
 // cuando llegamos aquí el historial ya está escrito en disco, así que ni un

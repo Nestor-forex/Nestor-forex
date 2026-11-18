@@ -96,7 +96,7 @@ export async function obtenerVelas(_llave, { velas = 1500, velasLargas = null } 
     for (const par of PAIR_NAMES) {
       const p = px(par, d)
       const a = 0.004 + azar() * 0.004
-      fila[par] = { h: p * (1 + a), l: p * (1 - a) }
+      fila[par] = { h: p * (1 + a), l: p * (1 - a), c: p }
     }
     rangosPar[d] = fila
   })
@@ -107,6 +107,6 @@ export async function obtenerVelas(_llave, { velas = 1500, velasLargas = null } 
     fechas: ult,
     rates: Object.fromEntries(ult.map((d) => [d, rates[d]])),
     rangosPar: Object.fromEntries(ult.map((d) => [d, rangosPar[d]])),
-    largo: { fechas, rates },
+    largo: { fechas, rates, rangosPar },
   }
 }
