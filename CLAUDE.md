@@ -17069,3 +17069,41 @@ Analizador detrás de un enlace subrayado.
   se guardó).
 - Textos nuevos en los 13 idiomas: `estilo.nota` (la tarjeta se queda aquí) y
   `estilo.alCambiar`.
+
+---
+
+# El curso arranca dentro de las apps (2026-11-18). En las dos apps
+
+```
+src/lib/curso.js            progreso y orden, sin React         GEMELO
+src/lib/curso/es.js         las lecciones, como datos           GEMELO
+src/lib/useCurso.js         guarda users/{uid}.curso            GEMELO
+src/components/Curso.jsx    la pantalla                         GEMELO
+scripts/prueba-curso.mjs                                        GEMELO
+```
+
+Botón **«Curso»** en la cabecera de todas las pestañas. Hechos el **módulo 0**
+(qué es y qué no es la app · por qué los números chicos no dicen nada) y el
+**módulo 2** (arriesgar un % fijo · Stop-loss, Take-profit y R/B · el lote sale
+del Stop-loss). Los demás salen como «próximamente». Insignia nueva: terminar
+un módulo. El plan entero y las decisiones de Néstor: `notas/curso-y-web.md`.
+
+⚠️ **Cada lección lleva siempre «Lo que esto NO te dice»**, nunca dice compra o
+venta, y los números que vienen del código se LEEN (el 150 de `sombra.js`, el
+margen de `diagnostico.js`). El ejemplo del lote está comprobado contra
+`calcularLote`.
+
+⚠️ **El contenido está solo en español**; los botones en los 13 idiomas. En
+árabe el contenido va con `dir="ltr" lang="es"` o los puntos saltan al
+principio (lo vio la captura).
+
+⚠️ **Hay que publicar las reglas de Firestore** (`curso`, lista de 100) o marcar
+una lección dice «falta activar el permiso».
+
+## ⚠️ RECORDATORIOS PARA NÉSTOR (los pidió así)
+
+- **«IA integrada» va en la web solo mientras la vemos nosotros.** Recordarlo
+  siempre hasta que Qwen esté instalada y funcionando.
+- **Los módulos gratis se discuten de último.**
+- El laboratorio «prueba tu propia regla» (punto 12 del plan) está anotado y
+  sin construir.

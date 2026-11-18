@@ -19,6 +19,7 @@ import Calendario from './components/Calendario'
 import Noticias from './components/Noticias'
 import HistorialTab from './components/HistorialTab'
 import TableroCompleto from './components/TableroCompleto'
+import Curso from './components/Curso'
 import { useConstancia } from './lib/useConstancia'
 import { useEstilo } from './lib/useEstilo'
 import MiEstilo from './components/MiEstilo'
@@ -258,7 +259,7 @@ export default function App() {
 
         {authUser && perfilEstado === 'aprobado' && !detalle && tab !== 'tablero' && (
           <>
-            <Header nombreApp={NOMBRE_APP} saludo={esAdmin ? t('comun.administrador') : authUser.email || ''} onSalir={salirYVolver} />
+            <Header nombreApp={NOMBRE_APP} saludo={esAdmin ? t('comun.administrador') : authUser.email || ''} onSalir={salirYVolver} onAprender={() => { setTab('curso'); window.scrollTo?.(0, 0) }} />
             <main className="nf-main" style={{ flex: 1, padding: '18px 18px 96px' }}>
               {tab === 'barrido' && (
                 <>
@@ -395,6 +396,7 @@ export default function App() {
                   onVerPractica={() => setTab('diario')}
                 />
               )}
+              {tab === 'curso' && <Curso uid={authUser.uid} ficha={perfil} onIr={(destino) => { setTab(destino); window.scrollTo?.(0, 0) }} />}
               {tab === 'historial' && <HistorialTab />}
               {tab === 'avisos' && <MisAvisos uid={authUser.uid} perfil={perfil} />}
               {tab === 'calc' && <CalculadoraTab ratesUSD={mercado.ratesUSD} loadingTasas={mercado.loading} errorTasas={mercado.error} uid={authUser.uid} ficha={perfil} />}

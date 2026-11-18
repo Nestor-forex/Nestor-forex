@@ -147,3 +147,42 @@ salta.
 2. **¿Solo texto e imágenes al principio, o hay que grabar video desde ya?**
 3. **¿Los primeros módulos gratis para quien no se ha suscrito?** Sirve para
    vender, pero exige que se vean sin cuenta.
+
+---
+
+## 5. Lo que decidió Néstor (2026-11-18)
+
+1. **«IA integrada» SÍ va en la web**, como vista previa para nosotros: la web
+   todavía no se lanza. ⚠️ **Recordárselo hasta que Qwen esté instalada y
+   funcionando**: la web no se publica con ese sello si la IA no existe.
+2. **Nunca se ofrecen resultados de señales.** La página de transparencia se
+   queda como «Lo que medimos, lo que funciona y lo que no».
+3. **El curso y el tutorial van en la web Y en las apps**, con un botón en las
+   apps que lleva directo. Hecho así: el curso vive en la app (que ya es una
+   página web) y la web enlaza a él; las lecciones se escriben una sola vez.
+4. **La IA se queda dentro de las apps, para suscriptores.**
+5. **Insignias, no certificados.**
+6. **Videos:** solo texto e imágenes al principio. Lo que sí se puede hacer
+   desde aquí son grabaciones de pantalla de la app sin voz, con el texto
+   escrito encima; voz narrada no.
+7. ⚠️ **Los módulos gratis se discuten AL FINAL. Recordárselo.**
+
+## 6. «Prueba tu propia regla» (el laboratorio) — idea de Néstor, sin construir
+
+Que el usuario arme su propia regla con las herramientas de la app (RSI, medias,
+fuerza, Bollinger, mínimos de N días, la geometría del stop…) y la app la pruebe
+sobre años de mercado real **con la misma vara honesta que usamos nosotros**:
+vara neutra, spread y swap descontados, las dos mitades por separado y el margen
+de error al lado. Es otro punto de distinción y se puede hacer:
+
+- **Los datos sin gastar créditos:** el vigía ya baja la historia cada día;
+  publicarla una vez al día en la rama `datos` y que la prueba corra en el
+  teléfono de la persona. El motor de pruebas ya está escrito en JavaScript.
+- ⚠️ **El riesgo de engañarse:** quien prueba cien variantes encuentra una que
+  «gana» por suerte. La app tiene que decir cuántas variantes lleva probadas y
+  enseñar siempre las dos mitades.
+- **El paso siguiente, el bueno de verdad:** guardar la regla y que el vigía la
+  anote cada día hacia adelante, como nuestras reglas en la sombra. Eso es un
+  experimento propio de verdad. Cuesta más (escrituras en Firebase por persona).
+- En Intradía la historia es de ~7 meses de velas de una hora y los cruces se
+  derivan.
