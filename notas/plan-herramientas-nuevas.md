@@ -19,10 +19,11 @@ Estado: ⬜ por hacer · 🟨 en obra · ✅ hecho · ❓ falta una decisión de
 | 5 | **Modo práctica** (paper trading ligero): anotar operaciones de práctica que la app sigue con precios reales y resuelve sola, separadas del Diario real | las dos | ✅ (PR, 2026-11-16; hay que publicar las reglas de Firestore) | nada |
 | 6 | **«Qué es y qué no es» obligatorio antes del primer uso de la IA** | las dos | ⬜ | Qwen (fase 5) |
 | 7 | **Página web de presentación + tutorial básico** con capturas reales | aparte | ⬜ | precios (3) para la sección de planes |
-| 8 | **Curso detallado** para principiantes: teoría, ejemplos, fórmulas y ejercicios en demo, enlazado con las insignias y el modo práctica | aparte | ⬜ | 4 y 5 para los ejercicios |
+| 8 | **Curso detallado** para principiantes: teoría, ejemplos, fórmulas y ejercicios en demo, enlazado con las insignias y el modo práctica | las dos (y la web enlaza) | 🟨 módulos 0 y 2 hechos (2026-11-18) | 4 y 5 para los ejercicios |
 | 9 | **Muro de análisis de la comunidad** (moderado) | las dos | ❓ | decidir quién modera y las reglas; ver abajo |
 | 10 | **Diario: revisar cierres parciales y moneda de la cuenta** en la importación | las dos | ⬜ | un informe real con cierres parciales |
 | 11 | **Vista ancha a voluntad** en PC, laptop y tableta (y el celular en horizontal): hoy la app es una columna de 430 px centrada aunque la pantalla sea ancha. Un botón para elegir vista estrecha o ancha | las dos | ✅ 2026-11-17 | nada |
+| 12 | **Laboratorio: prueba tu propia regla** con años de mercado real y la misma vara honesta (y, después, que el vigía la anote hacia adelante) | las dos | ⬜ idea de Néstor (2026-11-18); ver `notas/curso-y-web.md` §6 | nada técnico; decidir cuándo |
 
 ## Lo que se me quedó fuera al hacer esta lista (Néstor lo señaló el 2026-11-17)
 
@@ -34,10 +35,10 @@ entraron en la tabla:
 | **Riesgo en dólares en el modo práctica** («la app le muestra el riesgo en dólares, usando su calculadora») | rec. 3 | ✅ 2026-11-17 |
 | **Gráfica de cada operación de práctica** (lo pidió Néstor con una foto; la otra IA dice «hacer un seguimiento de cómo habría evolucionado») | rec. 3 | ✅ 2026-11-17 |
 | **Ejercicios del curso conectados con la práctica** («con los datos actuales del par X, ¿dónde colocarías tu stop basado en el ATR? Ingrésalo aquí») | rec. 3 | ⬜ va con el curso (8) |
-| **Insignia «Analista constante»** (revisar el tablero 5 días seguidos) | rec. 5 | ⬜ |
+| **Insignia «Analista constante»** (revisar el tablero 5 días seguidos) | rec. 5 | ✅ 2026-11-17 |
 | **Insignias ligadas a módulos del curso** («Maestro de la correlación») | rec. 5 | ⬜ va con el curso (8) |
-| **Exportar los análisis y los resultados de la práctica** | razonamiento de la otra IA | ⬜ |
-| **Arranque por tipo de trading** (tendencias, rangos, noticias), además de por divisas | rec. 1 | ⬜ hoy pregunta solo por divisas |
+| **Exportar los análisis y los resultados de la práctica** | razonamiento de la otra IA | ✅ 2026-11-17 |
+| **Arranque por tipo de trading** (tendencias, rangos, noticias), además de por divisas | rec. 1 | ✅ 2026-11-17 («¿Cómo operas?», siempre a la vista desde el 2026-11-18) |
 
 Y lo que Néstor pidió además el mismo día: **cambiar «Mis pares» desde el mismo
 Barrido** (✅ 2026-11-17).
