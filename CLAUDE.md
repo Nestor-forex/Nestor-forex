@@ -17050,3 +17050,22 @@ importar del bróker: este texto se publica solo cuando eso esté hecho.
 
 ⚠️ **Lo que NO se puede decir con este texto:** que cerrar por partes gana más.
 No está medido; lo único medido es el breakeven, y no mejoró.
+
+## «¿Cómo operas?» se queda SIEMPRE a la vista (2026-11-18). En las dos apps
+
+Néstor: «ese botón debe estar siempre a la vista y disponible para que el
+usuario modifique la forma de operar a su preferencia». Tenía razón: la tarjeta
+desaparecía del Barrido al contestar, y cambiarlo exigía saber que estaba en el
+Analizador detrás de un enlace subrayado.
+
+- En el Barrido la tarjeta ya no se va: sin estilo sale entera; con estilo, en
+  una línea («Tu estilo: Opero rangos») con un botón **«Cambiar»** relleno del
+  color de la marca, que vuelve a abrir las cuatro opciones con su descripción.
+- En el Analizador, el mismo botón (ya no un enlace).
+- ⚠️ **Cambiar el estilo en el Barrido ahora sí cambia el Analizador:** lo
+  último que usó la persona se guarda con el `estilo` de ese momento, y si al
+  abrir el Analizador el estilo es otro, arranca con las herramientas del
+  estilo nuevo. Un registro viejo sin `estilo` se respeta (no se sabe con cuál
+  se guardó).
+- Textos nuevos en los 13 idiomas: `estilo.nota` (la tarjeta se queda aquí) y
+  `estilo.alCambiar`.
