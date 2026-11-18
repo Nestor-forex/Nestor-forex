@@ -17107,3 +17107,71 @@ una lección dice «falta activar el permiso».
 - **Los módulos gratis se discuten de último.**
 - El laboratorio «prueba tu propia regla» (punto 12 del plan) está anotado y
   sin construir.
+
+## Módulos 1 y 3, la página web del curso y el primer video (2026-11-18)
+
+Néstor: «fusiona y sigue con el curso… el curso en la web da una sensación más
+académica y profesional y en las apps es la ventaja de la suscripción».
+
+- **Módulos 1 (el lenguaje del Forex) y 3 (tu freno del día)** en las dos apps.
+  El ejemplo del freno se calcula con `frenoEnDolares` y
+  `operacionesHastaElFreno` sobre `SUGERIDO`: si cambian los frenos que propone
+  la app, la lección cambia sola.
+- **`curso.html`** (solo Swing): vista previa sin suscripción, curso entero con
+  la ficha aprobada. Detalle en `notas/curso-y-web.md` §7.
+  ⚠️ **Es una puerta, no una caja fuerte**: los repositorios son públicos.
+- **Videos sin voz** en `public/curso/videos/` (WebM + MP4), compartidos por las
+  dos apps. ⚠️ El Chromium de las pruebas no reproduce MP4 (H.264): por eso va
+  también el WebM, y el banco de navegador comprueba con ese.
+- `prueba-curso-web.mjs` (solo Swing): las lecciones solo se pintan con la ficha
+  aprobada, y las imágenes de la vista previa existen.
+
+---
+
+# El laboratorio «prueba tu propia regla» (2026-11-18). En las dos apps
+
+Néstor: «hazlo mencionando el riesgo al usuario y que guarde la regla… y dime
+si es posible que todo usuario que haga sus propias reglas yo las pueda ver».
+
+```
+src/lib/laboratorio.js        el motor: indicadores, probar, resumir       GEMELO
+src/lib/useHistoria.js        baja las velas guardadas de cada app         GEMELO
+src/lib/useReglas.js          users/{uid}/reglas + todas para el admin     GEMELO
+src/components/Laboratorio.jsx  plegado al final del Analizador             GEMELO
+scripts/prueba-laboratorio.mjs                                             GEMELO
+scripts/lib/historia-publicada.mjs  arma estado/historia.json              PRIMO
+scripts/prueba-historia-publicada.mjs                                      PRIMO
+```
+
+La persona elige lado (la app no lo elige), hasta 4 condiciones juntas (RSI,
+precio contra EMA/SMA, rompe el mínimo/máximo de N velas, %B de Bollinger),
+Stop-loss en 1/1,5/2 ATR y Take-profit a 1/1,5/2 veces el riesgo. La app la
+prueba sobre las velas guardadas y da operaciones, acierto con su ±, el acierto
+de equilibrio, resultado en R, las dos mitades y por par.
+
+- **Mismas reglas que el Historial:** entrada al cierre de la vela de la señal,
+  vela que toca SL y TP = perdida, spread descontado (la MISMA `spreadDe` de
+  `scripts/lib/costes.mjs`, importada desde la pantalla), swap no. Una
+  operación por par a la vez.
+- **El aviso va antes de cualquier control** (sobreajuste: muchas variantes
+  sobre los mismos datos acaban ganando por casualidad) y **cada prueba se
+  cuenta** en el teléfono (`lab_probadas`) y se guarda con la regla.
+- **Antes de guardar se dice que el desarrollador puede ver las reglas.** El
+  admin las lee todas con una consulta de grupo de colección
+  (`match /{ruta=**}/reglas/{reglaId}`, solo leer), las ve dentro del propio
+  laboratorio con el nombre de quien la hizo, puede cargarlas y guardar una
+  copia (`copiaDe`). Una regla guardada **no se edita** (no hay `update`).
+- **Las velas no cuestan créditos:** salen de la serie larga que ya se baja
+  para las medias. Swing: el vigía escribe `estado/historia.json` una vez al
+  día (~680 velas diarias, 14 pares reales, ~230 KB). Intradía: el publicador,
+  solo cuando cambia el día (700 velas de una hora; los cruces derivados, con
+  máximo y mínimo aproximados). La app la baja solo al abrir la tarjeta.
+- ⚠️ **Hay que publicar las reglas de Firestore** o guardar dice «falta activar
+  el permiso». Y **hasta la primera corrida del vigía/publicador con este
+  código no hay `historia.json`**: la tarjeta dice que no pudo bajar las velas.
+- ⚠️ **Fase 2, sin hacer:** que el vigía siga una regla guardada hacia adelante
+  con días nuevos. Cuesta poco (se calcula sobre las velas que ya baja) pero
+  cada regla seguida es un registro más que vigilar: decisión de Néstor.
+- 📌 En un mercado inventado con tendencia, comprar con RSI ≤ 30 dio 8 % y
+  vender 92 %: el motor es simétrico. Un mercado inventado sirve para la
+  plomería, nunca para conclusiones.

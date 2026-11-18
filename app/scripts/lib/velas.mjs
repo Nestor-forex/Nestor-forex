@@ -296,7 +296,9 @@ export async function obtenerVelas(apiKey, { minBarras = 60, velas = 300, rejill
   if (pedirDias > velas) {
     const largoCrudo = armar(porParTodo)
     const largo = rejilla === 'cruda' ? largoCrudo : limpiar(largoCrudo)
-    salida.largo = { fechas: largo.fechas, rates: largo.rates }
+    // `rangosPar` va también para el laboratorio (`historia.json`): las
+    // medias solo leen `fechas` y `rates`, así que el barrido no cambia.
+    salida.largo = { fechas: largo.fechas, rates: largo.rates, rangosPar: largo.rangosPar }
   }
 
   // ⚠️ EL MÍNIMO SE COMPRUEBA DESPUÉS DE LIMPIAR, no antes.

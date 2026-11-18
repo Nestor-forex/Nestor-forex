@@ -186,3 +186,32 @@ de error al lado. Es otro punto de distinción y se puede hacer:
   experimento propio de verdad. Cuesta más (escrituras en Firebase por persona).
 - En Intradía la historia es de ~7 meses de velas de una hora y los cruces se
   derivan.
+
+## 7. La página web del curso (2026-11-18, hecha)
+
+Néstor insistió: el curso también en la web, porque en computador, portátil o
+tableta se lee con más amplitud y da una sensación más académica; en las apps
+queda como la ventaja de tenerlo siempre a mano.
+
+- **`app/curso.html`** (solo en la app de swing): la MISMA app compilada con
+  otra puerta de entrada. Misma cuenta, mismas reglas de Firestore, mismas
+  lecciones y el mismo progreso. Dirección: `https://nestor-forex.github.io/Nestor-forex/curso.html`.
+- **Sin suscripción activa** solo se ve la vista previa: el temario (títulos),
+  tres capturas reales de lecciones (`public/curso/vista-*.png`) y el botón de
+  entrar. Pendiente o retirado dicen por qué no se abre.
+- **Con la ficha aprobada**, el curso entero: índice a la izquierda, lección a
+  la derecha. En pantallas estrechas vuelve a una columna.
+- ⚠️ **Es una PUERTA, no una caja fuerte.** Mientras los dos repositorios sean
+  públicos, el texto de las lecciones se puede leer en GitHub. No venderlo como
+  contenido protegido. Protegerlo de verdad pediría sacar las lecciones del
+  repositorio (guardarlas en Firestore con lectura solo para aprobados) o hacer
+  privados los repositorios.
+
+## 8. Los videos (2026-11-18, el primero hecho)
+
+Sin voz por ahora, con el texto escrito encima; Néstor tiene ideas para la voz.
+Se graban con Playwright sobre la app de verdad y se guardan en
+`app/public/curso/videos/` de swing en dos formatos (WebM y MP4: el iPhone no
+abre WebM y el Chromium de las pruebas no abre MP4). Las dos apps los piden a
+la página de swing (`URL_VIDEOS` en `curso.js`). El primero: `m2-3-lote`
+(20 s, 140-150 KB), en la lección «El lote sale del Stop-loss».
