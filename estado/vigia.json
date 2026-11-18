@@ -1,6 +1,6 @@
 {
-  "actualizadoEl": "2026-11-17T15:21:02.185Z",
-  "cierre": "2026-11-17",
+  "actualizadoEl": "2026-11-18T15:20:34.646Z",
+  "cierre": "2026-11-18",
   "senales": [
     "USD/CHF|COMPRA|tendencia",
     "USD/CAD|COMPRA|tendencia",
@@ -11,8 +11,9 @@
     "AUD/USD|COMPRA|reversion",
     "NZD/USD|COMPRA|reversion",
     "USD/CHF|VENTA|reversion",
-    "NZD/USD|COMPRA|caida",
+    "AUD/USD|COMPRA|caida",
     "USD/CHF|VENTA|caida",
+    "GBP/USD|COMPRA|caida",
     "EUR/USD|COMPRA|bollinger",
     "USD/CAD|COMPRA|lss"
   ]
