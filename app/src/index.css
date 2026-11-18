@@ -227,3 +227,34 @@ html[data-vista='horizontal'] .nf-main:not(:has(> :only-child)) > * {
     display: none;
   }
 }
+
+/* La página del curso en computador y tableta (curso.html). En pantallas
+   estrechas todo vuelve a una columna. */
+.curso-web {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.curso-web-indice {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding-inline-end: 8px;
+}
+.curso-web-leccion {
+  max-width: 760px;
+}
+@media (max-width: 760px) {
+  .curso-web {
+    grid-template-columns: 1fr;
+  }
+  .curso-web-indice {
+    position: static;
+    max-height: none;
+  }
+}

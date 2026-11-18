@@ -17107,3 +17107,21 @@ una lección dice «falta activar el permiso».
 - **Los módulos gratis se discuten de último.**
 - El laboratorio «prueba tu propia regla» (punto 12 del plan) está anotado y
   sin construir.
+
+## Módulos 1 y 3, la página web del curso y el primer video (2026-11-18)
+
+Néstor: «fusiona y sigue con el curso… el curso en la web da una sensación más
+académica y profesional y en las apps es la ventaja de la suscripción».
+
+- **Módulos 1 (el lenguaje del Forex) y 3 (tu freno del día)** en las dos apps.
+  El ejemplo del freno se calcula con `frenoEnDolares` y
+  `operacionesHastaElFreno` sobre `SUGERIDO`: si cambian los frenos que propone
+  la app, la lección cambia sola.
+- **`curso.html`** (solo Swing): vista previa sin suscripción, curso entero con
+  la ficha aprobada. Detalle en `notas/curso-y-web.md` §7.
+  ⚠️ **Es una puerta, no una caja fuerte**: los repositorios son públicos.
+- **Videos sin voz** en `public/curso/videos/` (WebM + MP4), compartidos por las
+  dos apps. ⚠️ El Chromium de las pruebas no reproduce MP4 (H.264): por eso va
+  también el WebM, y el banco de navegador comprueba con ese.
+- `prueba-curso-web.mjs` (solo Swing): las lecciones solo se pintan con la ficha
+  aprobada, y las imágenes de la vista previa existen.
