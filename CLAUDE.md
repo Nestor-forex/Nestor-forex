@@ -16989,3 +16989,83 @@ Ese mismo día se fusionaron los PR #190 (Swing) y #132 (Intradía): la línea d
 precio dice «Conectando…» en vez de enseñar la foto de 5 minutos mientras no se
 sabe si hay precio al segundo, y la práctica guarda todas las herramientas que
 la gráfica sabe dibujar.
+
+---
+
+# Exportar, «Analista constante» y «¿Cómo operas?» (2026-11-17). En las dos apps
+
+Fusionados #191 (Swing) y #133 (Intradía); reglas de Firestore publicadas
+el mismo día (`diasTablero` y `estilo`).
+
+- **Exportar** (`exportar.js`, GEMELO): la práctica se baja en `.csv` con
+  TODAS sus operaciones; decimal del idioma (con coma decimal, separador `;`)
+  y lo que no se sabe va VACÍO, nunca 0. El análisis se comparte
+  (`navigator.share`) o se baja en `.txt`, y termina con el aviso de que no
+  es una señal.
+- **«Analista constante»** (`constancia.js`): 5 días HÁBILES seguidos abriendo
+  el tablero completo; los fines de semana ni cuentan ni cortan la racha. Se
+  guarda el DÍA (`users/{uid}.diasTablero`, últimos 14), nunca la medalla.
+- **«¿Cómo operas?»** (`estilo.js`, `MiEstilo.jsx`): tendencias / rangos /
+  noticias / todavía no sé. Solo decide con qué herramientas ARRANCA el
+  Analizador; no cambia señales ni dice qué estilo es mejor. Lo último que
+  usó la persona manda sobre el estilo. Se guarda en `users/{uid}.estilo`.
+
+📌 Néstor (2026-11-17): **«Importar operaciones del bróker» NO se quita**, es
+de ayuda a los usuarios. Los cierres parciales lo AMPLÍAN, no lo sustituyen.
+
+---
+
+# El cierre parcial, explicado para suscriptores (la DECIMOSEXTA, 2026-11-17)
+
+Néstor la pidió guardada «para la web cuando promocionemos las apps». Va con
+las quince de la serie. Hoy la app todavía NO entiende los cierres parciales al
+importar del bróker: este texto se publica solo cuando eso esté hecho.
+
+> **Qué es un cierre parcial.** Cerrar **solo una parte** de una operación y
+> dejar el resto abierto. Compras 0.02 lotes de EUR/USD; el precio sube 30 pips
+> a tu favor; cierras 0.01 y esa mitad ya ganó; la otra mitad sigue abierta por
+> si el precio sigue subiendo.
+>
+> **Para qué lo usan los traders:**
+> · **Asegurar algo de ganancia.** Si el precio se da la vuelta, la mitad que
+>   cerraste ya está cobrada.
+> · **Arriesgar menos con lo que queda.** Muchos mueven el Stop-loss del resto
+>   al precio de entrada: esa parte ya no puede perder (salvo el spread).
+> · **Dejar correr el resto** sin la presión de tener toda la operación en juego.
+> · **Salir por partes:** un tercio en el primer objetivo, otro en el segundo, y
+>   el último se deja correr.
+>
+> **La parte honesta:** cerrar por partes es una forma de **manejar** la
+> operación, no de **acertar más**. Cambia cómo se reparten las ganancias y las
+> pérdidas, no la dirección del mercado. Algo parecido —mover el Stop-loss a la
+> entrada— lo medimos sobre cinco años de mercado real y **no mejoró el
+> resultado**.
+>
+> **Por qué la app tiene que entenderlos.** Cuando haces un cierre parcial, MT5
+> no lo escribe como una sola operación: la parte en pedazos. Si la app no los
+> junta, tu Diario cuenta la misma operación dos veces o pierde una mitad, y tu
+> acierto, tu freno del día y tus insignias salen mal. La app los reconoce como
+> **una sola operación con su resultado total**, y lee en qué moneda está tu
+> cuenta en vez de suponer que es en dólares.
+
+⚠️ **Lo que NO se puede decir con este texto:** que cerrar por partes gana más.
+No está medido; lo único medido es el breakeven, y no mejoró.
+
+## «¿Cómo operas?» se queda SIEMPRE a la vista (2026-11-18). En las dos apps
+
+Néstor: «ese botón debe estar siempre a la vista y disponible para que el
+usuario modifique la forma de operar a su preferencia». Tenía razón: la tarjeta
+desaparecía del Barrido al contestar, y cambiarlo exigía saber que estaba en el
+Analizador detrás de un enlace subrayado.
+
+- En el Barrido la tarjeta ya no se va: sin estilo sale entera; con estilo, en
+  una línea («Tu estilo: Opero rangos») con un botón **«Cambiar»** relleno del
+  color de la marca, que vuelve a abrir las cuatro opciones con su descripción.
+- En el Analizador, el mismo botón (ya no un enlace).
+- ⚠️ **Cambiar el estilo en el Barrido ahora sí cambia el Analizador:** lo
+  último que usó la persona se guarda con el `estilo` de ese momento, y si al
+  abrir el Analizador el estilo es otro, arranca con las herramientas del
+  estilo nuevo. Un registro viejo sin `estilo` se respeta (no se sabe con cuál
+  se guardó).
+- Textos nuevos en los 13 idiomas: `estilo.nota` (la tarjeta se queda aquí) y
+  `estilo.alCambiar`.
