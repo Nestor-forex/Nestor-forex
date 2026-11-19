@@ -18,6 +18,7 @@ import { useT } from '../lib/i18n'
 import { useAuthUser } from '../lib/useAuthUser'
 import { firebaseListo } from '../lib/firebase'
 import { MODULOS, PROXIMOS } from '../lib/curso'
+import { PRECIO_SEGUIMIENTO_USD } from '../lib/laboratorio'
 
 const BASE = import.meta.env.BASE_URL
 // Capturas reales de lecciones, en `public/curso/`. Son la vista previa: se
@@ -39,6 +40,35 @@ function Cabecera({ t, onSalir }) {
         <SelectorIdioma compacto />
       </div>
     </header>
+  )
+}
+
+// Lo que la suscripción trae además del curso (2026-11-19). Lo pidió Néstor:
+// que los suscriptores se enteren de que tienen ese beneficio. Usa los MISMOS
+// textos que el laboratorio de las apps, para que la web y la app no digan
+// cosas distintas, y el precio se lee de la misma constante.
+function Beneficios({ t }) {
+  const P = { margin: 0, fontSize: 14, lineHeight: 1.6, color: 'var(--text-secondary)' }
+  return (
+    <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <h2 style={{ margin: 0, fontSize: 18 }}>{t('cursoWeb.beneficios')}</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14 }}>
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8, borderColor: 'var(--cta)', borderWidth: 2 }}>
+          <strong style={{ fontSize: 16 }}>🧪 {t('lab.titulo')}</strong>
+          <p style={P}>{t('lab.paraQue')}</p>
+          <strong style={{ fontSize: 15 }}>💡 {t('lab.beneficioTitulo')}</strong>
+          <p style={P}>{t('lab.beneficio')}</p>
+        </div>
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8, borderColor: 'var(--cta)', borderWidth: 2 }}>
+          <strong style={{ fontSize: 16 }}>📈 {t('lab.adelanteTitulo')}</strong>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--cta)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{t('lab.adelanteServicio', { precio: PRECIO_SEGUIMIENTO_USD })}</span>
+          <p style={P}>{t('lab.adelanteQue')}</p>
+          <p style={P}>{t('lab.adelantePara')}</p>
+          <p style={P}>{t('lab.adelantePros')}</p>
+          <p style={{ ...P, color: 'var(--amber)' }}>{t('lab.adelanteNo')}</p>
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -81,6 +111,7 @@ function VistaPrevia({ t, estado, auth }) {
         </ol>
       </section>
 
+      <Beneficios t={t} />
     </div>
   )
 }
@@ -98,7 +129,12 @@ export default function CursoWeb() {
     contenido = <p style={{ color: 'var(--text-muted)' }}>…</p>
   } else if (aprobado) {
     // El botón «Hazlo en la app» lleva a la app: la herramienta vive allí.
-    contenido = <Curso uid={authUser.uid} ficha={perfil} web onIr={() => window.open(BASE, '_blank', 'noopener')} />
+    contenido = (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+        <Curso uid={authUser.uid} ficha={perfil} web onIr={() => window.open(BASE, '_blank', 'noopener')} />
+        <Beneficios t={t} />
+      </div>
+    )
   } else {
     const auth = !authUser ? (
       verEntrar ? (

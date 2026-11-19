@@ -122,3 +122,19 @@ jobs:
           else
             node scripts/resolver-practica.mjs --aplicar
           fi
+
+      # El seguimiento hacia adelante del laboratorio (2026-11-19): avanza las
+      # reglas guardadas de quienes tienen el servicio activo con las velas
+      # nuevas. Mismo razonamiento que el paso de arriba: va aquí porque ya
+      # corre cada 15 minutos, `if: always()`, y ESCRIBE salvo «solo mirar».
+      - name: Seguir las reglas del laboratorio hacia adelante
+        if: always()
+        working-directory: app
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ "${{ inputs.solo_mirar }}" = "true" ]; then
+            node scripts/seguir-reglas.mjs
+          else
+            node scripts/seguir-reglas.mjs --aplicar
+          fi
