@@ -1,5 +1,11 @@
 # Nestor Forex Swing — memoria del proyecto
 
+> ⚠️⚠️ **ANTES DE PUBLICAR NADA, Y AL TERMINAR CADA TAREA GRANDE: recordarle a
+> Néstor la lista de `notas/pendientes-antes-de-publicar.md`.** Lo pidió así
+> (2026-11-19): **las apps no salen al público sin la «caja fuerte»
+> activada**, y al activarla hay que recordarle las opciones A (proteger el
+> curso) y B (proteger todo). Hoy está en la opción C: sin hacer.
+
 App móvil de trading Forex para Néstor (administrador) y miembros invitados.
 Barrido diario del mercado, diario de operaciones y calculadora de riesgo.
 Ver `README.md` para el handoff de diseño original y `app/README.md` para
@@ -17175,3 +17181,22 @@ de equilibrio, resultado en R, las dos mitades y por par.
 - 📌 En un mercado inventado con tendencia, comprar con RSI ≤ 30 dio 8 % y
   vender 92 %: el motor es simétrico. Un mercado inventado sirve para la
   plomería, nunca para conclusiones.
+
+---
+
+# El laboratorio: permiso de copia, informe al autor y seguimiento hacia adelante (2026-11-19). En las dos apps
+
+Néstor lo pidió así: que la app diga que el desarrollador puede ver las reglas guardadas; que, **si el usuario está de acuerdo**, el desarrollador pueda copiarlas y probarlas con otras medidas; que si alguna sale positiva se le informe al usuario con las medidas; que ese beneficio esté **destacado** en las apps y en la web; y el seguimiento hacia adelante como **servicio adicional de 3 USD al mes**, con su descripción antes del botón «Solicitar activación».
+
+- **Permiso de copia:** casilla al guardar, **sin marcar por defecto** (`permiteCopia`, false si no se marca). El administrador ve todas las reglas (ya se decía), pero solo puede guardar una copia y escribir el informe si hay permiso.
+- **Informe al autor:** el administrador escribe `informe: { texto, metricas, el }` en la regla del miembro (regla de Firestore: solo ese campo, fecha del servidor). La persona lo ve en «Mis reglas» con el aviso de que es un resultado del pasado y no una señal.
+- **Tarjeta destacada** «Tu idea puede valer más», arriba del laboratorio (después del aviso de sobreajuste), y la misma explicación en `curso.html` (sección «Lo que tu suscripción trae además del curso», visible sin suscripción, con los MISMOS textos `lab.*`).
+- **Seguimiento hacia adelante:** se pide con `users/{uid}.seguimientoSolicitado` (hora del servidor); lo activa **solo el administrador** con `seguimientoActivo`, desde la propia tarjeta del laboratorio. El pago es a mano, como la suscripción. Con el servicio activo, el dueño enciende/apaga «Seguir hacia adelante» en hasta `MAX_SEGUIDAS` (5) reglas por app; al encender, `seguirDesde` lo pone el servidor y volver a encender empieza de cero.
+- **El programa** (`scripts/seguir-reglas.mjs`, solo Swing, paso nuevo en `avisos.yml`, cada 15 min): solo si alguien tiene el servicio; baja las dos `historia.json`, avanza cada regla con `avanzarAdelante` (motor del laboratorio) y escribe `adelante` **solo si cambió**. Cuentan solo las operaciones que **empiezan después** de activar; las cerradas se guardan (máx. 300) porque la historia de Intradía solo trae ~29 días. Los 4 spreads que solo tiene Intradía van copiados y `prueba-seguir-reglas.mjs` los compara con el otro repositorio.
+- El precio sale de `PRECIO_SEGUIMIENTO_USD` en `laboratorio.js`; la pantalla y la web lo leen.
+
+⚠️ **Hay que publicar las reglas de Firestore** después de fusionar, o guardar con permiso, pedir el servicio, seguir una regla o enviar un informe dicen «falta activar el permiso».
+
+## La «caja fuerte»: pendiente de que Néstor lo entienda y decida
+
+Pidió que nadie llegue a ningún contenido de las apps ni de la web. Se le preguntó y eligió «explícamelo mejor primero». Lo que hay que explicarle: el programa de una app web siempre se puede ver desde el navegador (eso no se puede evitar en ninguna app web); lo que sí se protege es el CONTENIDO (lecciones y videos en Firebase solo para aprobados, con el texto original en un repositorio privado; y, si quiere, los datos de las señales también, que es un cambio de varios días y cuesta lecturas de Firebase). No construir nada sin su decisión.
