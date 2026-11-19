@@ -1,5 +1,11 @@
 # Nestor Forex Swing — memoria del proyecto
 
+> ⚠️⚠️ **ANTES DE PUBLICAR NADA, Y AL TERMINAR CADA TAREA GRANDE: recordarle a
+> Néstor la lista de `notas/pendientes-antes-de-publicar.md`.** Lo pidió así
+> (2026-11-19): **las apps no salen al público sin la «caja fuerte»
+> activada**, y al activarla hay que recordarle las opciones A (proteger el
+> curso) y B (proteger todo). Hoy está en la opción C: sin hacer.
+
 App móvil de trading Forex para Néstor (administrador) y miembros invitados.
 Barrido diario del mercado, diario de operaciones y calculadora de riesgo.
 Ver `README.md` para el handoff de diseño original y `app/README.md` para
