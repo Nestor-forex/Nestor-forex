@@ -52,6 +52,11 @@ export const PAIRS = [
 export const VENTANAS_FUERZA = Object.freeze([1, 5, 20])
 export const PESOS_FUERZA = Object.freeze([0.2, 0.4, 0.4])
 
+// Cuántas velas miran el RSI y el ATR. Se exportan para que el curso (módulo
+// 5) diga el número que la app usa de verdad, en vez de llevarlo escrito.
+export const PERIODO_RSI = 14
+export const PERIODO_ATR = 14
+
 export const PERIODOS_MEDIAS = Object.freeze({ sma: [20, 50, 200], ema: [20, 50, 200] })
 
 export const emaLast = (c, p) => {
@@ -135,7 +140,7 @@ export const MIN_ATR_FIBONACCI = 2
 // —cuánto se movió el día, distancia del máximo al cierre anterior, distancia
 // del mínimo al cierre anterior—. Los dos últimos cuentan el hueco entre
 // días, que el método de abajo se pierde entero.
-export const atrWilder = (highs, lows, closes, p = 14) => {
+export const atrWilder = (highs, lows, closes, p = PERIODO_ATR) => {
   const tr = []
   for (let i = 1; i < closes.length; i++) {
     tr.push(
@@ -233,7 +238,7 @@ const atrCierres = (closes) => {
   return ((sum / 14) * closes[L])
 }
 
-export const rsi = (c, p = 14) => {
+export const rsi = (c, p = PERIODO_RSI) => {
   let g = 0
   let l = 0
   for (let i = 1; i <= p; i++) {
@@ -774,8 +779,12 @@ export const usaVaraSimetrica = (tipo) =>
 // método «la de la app»). Una copia allí se separaría el día que alguien
 // tocara una de las dos, y el Analizador diría «la geometría de la app» de
 // algo que ya no lo es — sin que nada fallara.
+// El cojín de ATR que se pone por fuera del extremo de 10 días. Exportado para
+// que el curso (módulo 5) lo lea en vez de copiarlo.
+export const COJIN_ATR_STOP = 0.5
+
 export const nivelesApp = (p, compra) => ({
-  sl: compra ? p.lo10 - 0.5 * p.atrAbs : p.hi10 + 0.5 * p.atrAbs,
+  sl: compra ? p.lo10 - COJIN_ATR_STOP * p.atrAbs : p.hi10 + COJIN_ATR_STOP * p.atrAbs,
   tp: compra ? Math.max(p.hi20, p.c + 2 * p.atrAbs) : Math.min(p.lo20, p.c - 2 * p.atrAbs),
 })
 
