@@ -63,10 +63,10 @@ Se discuten **de último**. Recordárselo.
   indicador, con ejemplos de cómo usarla (lo pidió Néstor el 2026-11-19).
   Desde el 2026-11-20 las **10 lecciones** (módulos 0 a 3) tienen el suyo,
   grabado en CADA app (los de Intradía muestran Intradía). Los de
-  herramientas van por tandas: hechas 3 tandas, 18 en Swing y 15 en
+  herramientas están COMPLETOS desde el 2026-11-20: 21 en Swing y 18 en
   Intradía (el COT, el oro y la correlación solo existen en Swing). «Mi perfil
-  de riesgo» y «Tu freno de hoy» ya tienen video como lecciones (módulos 2 y
-  3). Faltan: modo práctica, laboratorio, Diario e importar del bróker.
+  de riesgo» y «Tu freno de hoy» tienen video como lecciones (módulos 2 y 3).
+  Si se añade una herramienta nueva, lleva su video.
   Faltan los demás de herramientas y los de los módulos 4 a 12.
 - El recorrido guiado dentro de la app la primera vez que alguien entra.
 
