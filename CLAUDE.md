@@ -17248,3 +17248,75 @@ tarjeta CERRADA ya lo anuncia en su `avance` (`lab.avance`, 13 idiomas, el
 precio se lee de `PRECIO_SEGUIMIENTO_USD`). El bloque del administrador para
 activar pedidos subió con él. `prueba-laboratorio.mjs` (bloque 10) falla si el
 botón vuelve a quedar detrás del paso 1.
+
+---
+
+# El laboratorio y el seguimiento, en DOS tarjetas (2026-11-20). En las dos apps
+
+Néstor: «quiero que esas dos reglas estén en el mismo lugar pero separadas, no
+una dentro de la otra»; «no entiendo muy bien las activaciones, quiero que sea
+muy fácil»; y que quede claro que **no todas las reglas guardadas se analizan:
+el desarrollador elige algunas al azar y se le avisa al dueño si dio
+resultados**.
+
+```
+src/components/Laboratorio.jsx         solo «Prueba tu propia regla»       GEMELO
+src/components/SeguimientoAdelante.jsx la tarjeta del servicio (3 USD)      GEMELO (nuevo)
+src/lib/laboratorioVista.js            estilos y formatos compartidos       GEMELO (nuevo)
+src/lib/laboratorio.js                 + pasoActual                         GEMELO
+```
+
+Son **145 gemelos**. `Laboratorio` monta las dos tarjetas una detrás de otra
+(el hook `useReglas` se llama una sola vez y se pasa a la segunda).
+
+- **`lab.azar`** sale dos veces en el laboratorio (arriba, junto al
+  beneficio, y junto al botón de guardar) y en `curso.html`.
+- **La tarjeta del seguimiento dice su estado CERRADA** (`lab.estadoSinPedir`
+  / `estadoPedido` / `estadoActivo`) y dentro lleva los **3 pasos numerados**
+  (`pasoActual`: 1 pedir, 2 lo activa el desarrollador, 3 elegir reglas, 4
+  hecho), la lista de reglas con el botón de seguir y el bloque del admin.
+- El botón de seguir **ya no está en «Mis reglas guardadas»** del laboratorio;
+  allí solo sale una nota si la regla se sigue.
+- Se quitaron `lab.adelanteActivo` y `lab.adelanteSolicitado` de los 13
+  idiomas (decían «abajo en Mis reglas»). `lab.avance` pasó a texto sin precio.
+- `prueba-laboratorio.mjs` bloque 10: una tarjeta por archivo, la segunda
+  DESPUÉS de cerrar la primera, el botón de pedir solo en la suya, el estado en
+  el `avance` y lo del azar antes del constructor y junto a guardar.
+
+📌 `prueba-idiomas` toma las comillas «» del español como huecos de una
+función: en una frase-función del español van “ ”.
+
+📌 Pendiente, anterior a este cambio: la cabecera se sale 4-7 px a 390 px (el
+botón «Salir» se corta) desde que se añadió el botón «Curso».
+
+---
+
+# Módulo 4 del curso: «Quién manda hoy» (2026-11-20). En las dos apps
+
+Tres lecciones en `src/lib/curso/es.js` (gemelo), cada una con su video
+grabado en CADA app:
+
+- **m4-1 La fuerza de cada divisa:** cada divisa contra las otras siete, en
+  tres plazos con pesos.
+- **m4-2 La diferencia que la app mira en cada par:** la «Dif» del tablero
+  completo y el umbral; en Intradía el umbral sube en las horas de más
+  movimiento.
+- **m4-3 Por qué «10 contra 0» no es mucha diferencia:** la escala de 0 a 10
+  es un orden (siempre hay un 10 y un 0). Ejemplo real con fecha: Intradía,
+  2026-10-12, USD 10,0 y CHF 0,0 con la Dif máxima en 0,31 contra 0,59.
+
+⚠️ **Las ventanas y los pesos de la fuerza se leen del código.**
+`marketCalc.js` (primo) exporta ahora `VENTANAS_FUERZA` (Swing `[1, 5, 20]`,
+Intradía `[1, 4, 24]`) y `PESOS_FUERZA` (`[0.2, 0.4, 0.4]`), y
+`computarBarrido` los usa. La lección los importa junto con `UMBRAL_FUERZA`, y
+`prueba-curso.mjs` lo comprueba.
+
+📌 Las escenas de los videos (`grabar.mjs`, primo) leen de la pantalla:
+- el ranking de fuerza;
+- la Dif más grande y una por debajo del umbral, en las tarjetas del tablero.
+
+`m4-3` falla si la escala no va de 0,0 a 10,0.
+
+📌 Una opción equivocada de una pregunta («Que el par va a subir») tumbó la
+prueba de palabras prohibidas: la regla vale también para las respuestas
+incorrectas.

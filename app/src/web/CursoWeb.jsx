@@ -58,6 +58,7 @@ function Beneficios({ t }) {
           <p style={P}>{t('lab.paraQue')}</p>
           <strong style={{ fontSize: 15 }}>💡 {t('lab.beneficioTitulo')}</strong>
           <p style={P}>{t('lab.beneficio')}</p>
+          <p style={{ ...P, fontWeight: 600 }}>🎲 {t('lab.azar')}</p>
         </div>
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8, borderColor: 'var(--cta)', borderWidth: 2 }}>
           <strong style={{ fontSize: 16 }}>📈 {t('lab.adelanteTitulo')}</strong>
