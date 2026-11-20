@@ -762,3 +762,44 @@ guarda en ese aparato.
 > **La app te ahorra el tiempo de mirar; la decisión y la operación son tuyas.**
 > Nada de lo que ves aquí es asesoría financiera. Operar en Forex tiene riesgo
 > alto y puedes perder tu dinero.
+
+---
+
+## Laboratorio y Seguimiento hacia adelante (dos tarjetas, al final del Analizador)
+
+Están en el mismo sitio pero son **dos tarjetas separadas**, una debajo de la
+otra. Cada una lleva lo suyo.
+
+### Laboratorio: prueba tu propia regla (incluido en la suscripción)
+
+- **Qué es:** armas una regla (hacia qué lado operas, hasta 4 condiciones,
+  Stop-loss y Take-profit) y la app cuenta cómo le habría ido sobre las velas
+  guardadas, con el spread descontado.
+- **Paso a paso:** 1) eliges COMPRA o VENTA (la app no lo elige); 2) añades
+  condiciones; 3) eliges el Stop-loss y el Take-profit; 4) tocas «Probar»;
+  5) si quieres, le pones nombre y la guardas.
+- **Antes de guardar se avisa** de que el desarrollador puede ver las reglas
+  guardadas, y hay una casilla (sin marcar) para darle permiso de copiarla.
+- **No todas las reglas guardadas se analizan.** El desarrollador elige
+  algunas al azar, y solo entre las que tienen permiso. Si la tuya da
+  resultados, te avisamos en «Mis reglas guardadas» con las medidas con las
+  que se midió.
+- **Lo que NO hace:** un resultado sobre el pasado no es una señal. Con
+  muchas pruebas sobre las mismas velas siempre sale alguna que «gana» por
+  casualidad, y por eso la app cuenta cuántas pruebas llevas.
+
+### Seguimiento hacia adelante (servicio aparte, 3 USD al mes)
+
+- **Qué es:** la app sigue tu regla guardada con velas nuevas, que la regla
+  nunca vio, y anota cada operación con su resultado.
+- **La tarjeta cerrada dice el estado:** sin pedir, pedido o activo (con
+  cuántas reglas sigues de las 5).
+- **Se activa en 3 pasos, numerados en la tarjeta:**
+  1. Tocas «Solicitar activación».
+  2. El desarrollador te escribe para el pago y te lo activa. El paso sale
+     marcado cuando está activo.
+  3. En «Tus reglas guardadas» (dentro de esa misma tarjeta) tocas «Seguir
+     hacia adelante» en hasta 5 reglas.
+- **Lo que NO hace:** no abre operaciones en tu bróker ni te dice cuándo
+  entrar. Solo mide, y con pocas operaciones el resultado todavía no
+  significa nada.
