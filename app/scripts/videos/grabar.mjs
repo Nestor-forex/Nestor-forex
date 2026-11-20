@@ -20,37 +20,16 @@
 // vez de grabar un rótulo inventado.
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs'
 import { execFileSync } from 'node:child_process'
-import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { readFile, readdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { abrir, desmarcar, llevar, marcar, ponerRotulo } from './banco.mjs'
+import { abrir, abrirTarjeta, bajar, cajaDe, desmarcar, espera, exigir, FIN, irA, llevar, marcar, ponerRotulo, tarjeta } from './banco.mjs'
+import { ESCENAS_HERRAMIENTAS } from './escenas-herramientas.mjs'
 import { OPS_PARA_CREER } from '../../src/lib/sombra.js'
 import { margen } from '../../src/lib/diagnostico.js'
 
 const VIDEOS = fileURLToPath(new URL('../../public/curso/videos/', import.meta.url))
-const FIN = 'Esto es formación, no una señal. La decisión es tuya.'
-const espera = (p, s) => p.waitForTimeout(s * 1000)
 const coma = (x) => String(x).replace('.', ',')
-
-function exigir(v, que) {
-  if (v === null || v === undefined || v === '' || Number.isNaN(v)) throw new Error(`No encontré ${que} en la pantalla: no grabo un rótulo inventado.`)
-  return v
-}
-
-const irA = async (p, pestaña) => {
-  await p.locator('nav button', { hasText: pestaña }).first().click()
-  await espera(p, 1.2)
-  await p.evaluate(() => window.scrollTo(0, 0))
-}
-const tarjeta = (p, titulo) => p.locator('button[aria-expanded]', { hasText: titulo }).first()
-const abrirTarjeta = async (p, titulo) => {
-  const b = tarjeta(p, titulo)
-  if ((await b.getAttribute('aria-expanded')) !== 'true') await b.click()
-  await espera(p, 0.6)
-  return b
-}
-// La caja que envuelve un título: el antepasado más cercano con clase `card`.
-const cajaDe = (p, texto) => p.locator('.card', { hasText: texto }).last()
 
 const ESCENAS = {
   // ─── Módulo 0 ───────────────────────────────────────────────────────────────
@@ -128,7 +107,7 @@ const ESCENAS = {
   'm1-1': {
     desc: 'Video sin voz: la fuerza de las 8 divisas en el Barrido, con los datos reales de ese día. Se toma un par de la lista, se dice cuál es la moneda base y cuál la cotizada, y se busca la fuerza de cada una en el ranking.',
     async correr(p, r, datos) {
-      const b = JSON.parse(await readFile(join(datos, 'estado/barrido.json'), 'utf8'))
+      const b = JSON.parse(await readFile(join(datos, 'swing', 'estado/barrido.json'), 'utf8'))
       const orden = Object.entries(b.esc).sort((a, z) => z[1] - a[1])
       const [fuerte, debil] = [orden[0], orden[orden.length - 1]]
       const nombres = b.pares.map((x) => x.name)
@@ -204,7 +183,7 @@ const ESCENAS = {
   'm1-3': {
     desc: 'Video sin voz: la tarjeta «Lo que cuesta abrir la operación» del Barrido, con el spread real de una cuenta del desarrollador ese día. Se compara el spread de EUR/USD con el de un cruce y se calcula cuánto pesa sobre un Stop-loss corto y uno largo.',
     async correr(p, r, datos) {
-      const m = JSON.parse(await readFile(join(datos, 'estado/mt5.json'), 'utf8'))
+      const m = JSON.parse(await readFile(join(datos, 'swing', 'estado/mt5.json'), 'utf8'))
       const sp = (par) => exigir(m.pares?.[par]?.spread, `el spread de ${par}`)
       const s1 = sp('EUR/USD')
       const s2 = sp('EUR/NZD')
@@ -326,6 +305,43 @@ const ESCENAS = {
     },
   },
 
+  'm2-3-lote': {
+    desc: 'Video sin voz: la calculadora con un perfil de 1.000 USD y un 1 % por operación. El Stop-loss pasa de 25 a 50 pips, el lote baja a la mitad y lo que se arriesga se queda igual.',
+    async correr(p, r) {
+      await irA(p, 'Riesgo')
+      await llevar(p, p.getByText('Calculadora de lote y riesgo').first(), 20)
+      await p.locator('select.field').first().selectOption('EUR/USD')
+      const leer = (etq) => p.evaluate((e) => {
+        const x = [...document.querySelectorAll('span')].find((y) => y.textContent.trim() === e)
+        return x?.nextElementSibling?.textContent?.trim() || null
+      }, etq)
+      const stop = p.getByPlaceholder('Stop en pips').first()
+      await r('Tu perfil: 1.000 USD y 1 % por operación. Arriesgas 10 USD.')
+      await espera(p, 3.4)
+      await marcar(p, stop)
+      await r('Pon el Stop-loss a 25 pips…')
+      await stop.click()
+      await stop.pressSequentially('25', { delay: 350 })
+      await espera(p, 0.8)
+      const lote25 = exigir(await leer('Lote sugerido'), 'el lote con 25 pips')
+      await r(`Stop-loss a 25 pips → ${lote25}.`)
+      await espera(p, 3.4)
+      await r('Ahora aleja el Stop-loss a 50 pips…')
+      await stop.fill('')
+      await stop.pressSequentially('50', { delay: 350 })
+      await espera(p, 0.8)
+      const lote50 = exigir(await leer('Lote sugerido'), 'el lote con 50 pips')
+      const riesgo = exigir(await leer('Riesgo USD'), 'el riesgo en dólares')
+      await desmarcar(p)
+      await r(`Stop-loss a 50 pips → ${lote50}.`)
+      await espera(p, 3.4)
+      await r(`El lote cambió. Lo que arriesgas, no: siguen siendo ${riesgo}.`)
+      await espera(p, 3.8)
+      await r(FIN)
+      await espera(p, 2.8)
+    },
+  },
+
   // ─── Módulo 3 ───────────────────────────────────────────────────────────────
   'm3-1': {
     desc: 'Video sin voz: dos maneras de cerrar el mismo mal día con 1.000 USD, y la pestaña Riesgo con los dos frenos de «Mi perfil de riesgo»: la pérdida máxima del día y las pérdidas seguidas, que se ponen antes, con la cabeza fría.',
@@ -394,22 +410,8 @@ const ESCENAS = {
   },
 }
 
-async function bajar(carpeta) {
-  const B = 'https://raw.githubusercontent.com/Nestor-forex/Nestor-forex/datos'
-  await mkdir(join(carpeta, 'estado'), { recursive: true })
-  await mkdir(join(carpeta, 'historial'), { recursive: true })
-  const archivos = ['barrido', 'calendario', 'cot', 'oro', 'tasas', 'mt5', 'noticias', 'estacionalidad', 'historia'].map((f) => `estado/${f}.json`)
-  archivos.push('historial/senales.jsonl', 'historial/resultados.jsonl')
-  for (const a of archivos) {
-    const res = await fetch(`${B}/${a}`)
-    if (!res.ok) throw new Error(`${a}: HTTP ${res.status}`)
-    await writeFile(join(carpeta, a), Buffer.from(await res.arrayBuffer()))
-    console.log('  bajado', a)
-  }
-}
-
 async function grabar(datos, id) {
-  const escena = ESCENAS[id]
+  const escena = ESCENAS[id] || ESCENAS_HERRAMIENTAS[id]
   if (!escena) throw new Error(`No hay escena «${id}»`)
   const tmp = join(datos, '..', `grabando-${id}`)
   await rm(tmp, { recursive: true, force: true })
@@ -436,7 +438,7 @@ if (args[0] === '--bajar') {
   for (const [id, e] of Object.entries(ESCENAS)) console.log(id, '→', e.desc)
 } else {
   const datos = exigir(args[0], 'la carpeta de datos (node grabar.mjs <carpeta> [ids])')
-  const ids = args.length > 1 ? args.slice(1) : Object.keys(ESCENAS)
+  const ids = args.length > 1 ? args.slice(1) : [...Object.keys(ESCENAS), ...Object.keys(ESCENAS_HERRAMIENTAS)]
   for (const id of ids) await grabar(datos, id)
 }
 

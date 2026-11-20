@@ -631,6 +631,8 @@ export default {
     descargado: "تم تنزيل الملف.",
   },
   curso: {
+    herramientas: "الأدوات بالفيديو",
+    herramientasDesc: "فيديو قصير لكل أداة في هذا التطبيق: ما هي، وكيف تُستخدم، وما الذي لا تخبرك به.",
     aprender: "الدورة",
     video: "شاهده",
     empezar: "ابدأ",
