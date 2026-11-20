@@ -17320,3 +17320,34 @@ Intradía `[1, 4, 24]`) y `PESOS_FUERZA` (`[0.2, 0.4, 0.4]`), y
 📌 Una opción equivocada de una pregunta («Que el par va a subir») tumbó la
 prueba de palabras prohibidas: la regla vale también para las respuestas
 incorrectas.
+
+---
+
+# Módulo 5 del curso: «Tendencia y rango» (2026-11-20). En las dos apps
+
+Tres lecciones en `src/lib/curso/es.js` (gemelo), cada una con su video grabado
+en CADA app:
+
+- **m5-1 Tendencia: el precio y sus medias.** EMA rápida y lenta de ESTA app
+  (Swing 20/50, Intradía 9/21, de `PERIODOS_MEDIAS.ema`), qué es «Alcista»,
+  «Bajista» y «Rango», y lo que exige la app para un experimento (sale de
+  `TENDENCIA_MIN`: «media» en Swing, «alineada» en Intradía).
+- **m5-2 RSI y ATR.** `PERIODO_RSI` y `PERIODO_ATR` (nuevos, 14, ya son el valor
+  por defecto de `rsi` y `atrWilder`); si el RSI decide algo sale de `RSI_MAX`
+  (Swing no, Intradía 70); la distancia del Stop-loss sale de `COJIN_ATR_STOP`
+  (Swing, nuevo, 0,5, lo usa `nivelesApp`) o `ATR_STOP` (Intradía, 1,5).
+- **m5-3 Rango: soportes, resistencias y compresión.** Los cortes de
+  `UMBRALES_COMPRESION` y `VELAS_ATRAS_COMPRESION`; en Intradía el modo rango
+  con `COMPRESION_MIN`, `RANGO_MIN_ATR` y `RANGO_BORDE` (ahora exportados).
+
+⚠️ Lo que solo existe en una app se lee con `import * as MC`: un nombre que la
+otra no exporta sale `undefined` en vez de romper la importación del gemelo.
+`prueba-curso.mjs` comprueba que cada número de las lecciones sale del código, y
+que las EMA de la lección son las que usa `const tend = …` de verdad.
+
+📌 **El banco de grabación encendía el método equivocado.** `chip(p, 'ATR')`
+buscaba por trozo de texto y pulsaba «1,5 ATR a cada lado» (paso 3) en vez de la
+herramienta ATR (paso 4), y el rótulo del Stop-loss dejaba de cuadrar con la
+pantalla. Ahora `chip` busca el texto exacto y se queda con el ÚLTIMO. El video
+de herramientas `h-atr` se grabó con el fallo (su rótulo no dice nada falso,
+pero enseña cambiar de método): se puede regrabar.
