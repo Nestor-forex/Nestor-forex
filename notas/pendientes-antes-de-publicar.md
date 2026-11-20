@@ -28,7 +28,16 @@ lo que se protege es el CONTENIDO.
 
 ## 2. Qwen (la IA) — después del 2026-11-20
 
-- Abrir la cuenta solo después del 20 (fecha del cierre de la cuenta vieja).
+- ✅ **Cuenta nueva abierta el 2026-11-20** (la vieja se cerró ese día, con
+  correo de confirmación): Cuenta **personal**, país Colombia, mismo correo y
+  celular, tarjeta puesta, información fiscal **omitida** (el RUT sigue con la
+  dirección vieja).
+- ⏳ **Verificación de identidad enviada el 2026-11-20** con la licencia de
+  conducir. Alibaba responde en máximo 3 días hábiles, por correo. Hasta que
+  la aprueben no se activa Model Studio ni se crean llaves: la vez pasada, sin
+  verificar, todo lo de pago daba 403.
+- Después: Model Studio en Singapur, Budgets 5 USD al mes (nivel Account),
+  mirar si existe Qwen4-Max (nombre y precio), y solo entonces las llaves.
 - Dos llaves separadas: `QWEN_KEY` en GitHub (sonda) y otra en Cloudflare
   (puente). Nunca en el chat.
 - Lanzar la sonda, elegir el modelo, montar el puente.
@@ -54,7 +63,10 @@ Se discuten **de último**. Recordárselo.
   indicador, con ejemplos de cómo usarla (lo pidió Néstor el 2026-11-19).
   Desde el 2026-11-20 las **10 lecciones** (módulos 0 a 3) tienen el suyo,
   grabado en CADA app (los de Intradía muestran Intradía). Los de
-  herramientas van por tandas: la primera trae 9 (+ el COT en Swing).
+  herramientas van por tandas: hechas 3 tandas, 18 en Swing y 15 en
+  Intradía (el COT, el oro y la correlación solo existen en Swing). «Mi perfil
+  de riesgo» y «Tu freno de hoy» ya tienen video como lecciones (módulos 2 y
+  3). Faltan: modo práctica, laboratorio, Diario e importar del bróker.
   Faltan los demás de herramientas y los de los módulos 4 a 12.
 - El recorrido guiado dentro de la app la primera vez que alguien entra.
 
@@ -87,6 +99,24 @@ Los 5 correos de `notas/correos-permiso-noticias.md` los manda Néstor. Sin
 respuesta escrita no se añade ninguna de esas fuentes.
 
 ## 10. Seguridad de las cuentas y derechos de autor
+
+📌 **Néstor (2026-11-20): «esta configuración de seguridad vamos a dejarla
+para último… en realidad quiero es blindar son la web y las apps».** O sea:
+lo que de verdad le importa proteger es la caja fuerte del punto 1; el
+blindaje de las cuentas va al final.
+
+**Alibaba Cloud, pendiente** (Centro de cuentas → Configuración de seguridad;
+la contraseña y el celular ya quedaron configurados el 2026-11-20):
+- **TOTP**: activarlo con Google Authenticator o Microsoft Authenticator, y
+  apuntar en papel la clave que muestre. Nunca mandar foto del QR.
+- **Protección de la cuenta**: encender.
+- **Protección de operaciones**: encender.
+- **Estado de inicio de sesión**: bajar de 48 horas a 2-4 horas.
+- NO tocar: máscara de inicio de sesión (la IP de casa cambia y lo dejaría
+  fuera), segundo factor universal (pide llave física), vinculación de
+  terceros.
+
+Y lo demás:
 
 `notas/seguridad-y-proteccion.md`: segundo factor en GitHub, Cloudflare,
 Firebase, Gmail y la cuenta nueva de Qwen; topes de presupuesto; registro de
