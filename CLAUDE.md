@@ -17223,3 +17223,18 @@ Cómo se graba (desde `app/`): `node scripts/videos/grabar.mjs --bajar <carpeta>
 - El rótulo va a 78 px del borde para no tapar la barra; **mirar los cuadros antes de dar un video por bueno** (`ffmpeg … tile=5x2`): en dos videos el rótulo o la cabecera tapaban justo el número que se explicaba, y solo se vio así.
 - Comprobado en el navegador: las 10 lecciones cargan su video y se reproduce. Pesan 7 MB entre todos.
 - Lo siguiente: los ~25 videos de herramientas, con el mismo banco (una escena nueva por herramienta).
+
+## Cada app con SUS videos, y los videos de herramientas (2026-11-20)
+
+Néstor: «supongo que los videos son a la app que corresponde, es decir, que los videos de intradía sean lo que corresponde a ella y así para swing». **No lo eran**: los 10 videos de las lecciones se grabaron en Swing y la app de Intradía los enseñaba igual. Arreglado:
+
+- `URL_VIDEOS` (`curso.js`, gemelo) sale de `APP`: cada app pide los videos a SU página (`/Nestor-forex/` o `/Nestor-forex-intradia/`). Los archivos se llaman igual en las dos, y cada repositorio guarda los suyos en `app/public/curso/videos/`. `prueba-curso.mjs` exige que existan en ESTE repositorio.
+- La herramienta de grabación está en las DOS apps. Son gemelos `banco.mjs`, `dobles.js`, `main.jsx`, `index.html`, `vite.config.js` y `escenas-herramientas.mjs`. **`grabar.mjs` es PRIMO**: las escenas de las lecciones cambian con la pantalla de cada app (en Intradía el ± sale en el bloque del retroceso, no en el de la app).
+- `bajar()` baja las DOS ramas `datos` a `<carpeta>/swing/` y `<carpeta>/intradia/`, porque cada app lee alguno de la otra (el puente de MT5 y las noticias viven en la de swing).
+- Las descripciones de los videos ya no dicen la duración: el texto es gemelo y los videos de cada app duran distinto.
+
+**Videos de herramientas.** Están en `src/lib/curso/herramientas.js` (gemelo). Cada herramienta lleva `apps`: el COT, el oro y la correlación solo existen en Swing, y la pantalla de Intradía no los enseña. Se ven en el curso, en la lista «Las herramientas, en video», debajo de los módulos. Cada una lleva qué es, el video, «Lo que esto NO te dice» y dónde probarla. La escena de cada video vive en `scripts/videos/escenas-herramientas.mjs` con el mismo id, y la prueba exige que las dos listas coincidan. Primera tanda: Barrido, Analizador, RSI, ATR, medias, Bollinger, calendario, tasas, spread y actividad, y el COT (solo Swing).
+
+📌 **Un rótulo verdadero en una app puede ser falso en la otra.** Tres frases se corrigieron antes de grabar: «el RSI se enseña como dato» (en Intradía sí filtra), «Bollinger se mide como experimento» (solo en Swing) y «las tasas cambian solo cuando se reúne el banco» (la fecha que se ve es la de publicación). Lo que cambia entre apps se escribe con `APP`.
+
+📌 **`getByText('RSI')` encuentra el BOTÓN del paso 4, no la fila de la tarjeta**, y el primer video se quedó mirando los botones. `filaLoc` busca la fila saltándose los botones.
