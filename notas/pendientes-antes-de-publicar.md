@@ -52,7 +52,8 @@ Se discuten **de último**. Recordárselo.
 - Faltan los módulos 4 a 12 (temario en `notas/curso-y-web.md`).
 - **Un video por cada cosa**: cada lección, cada herramienta, métrica e
   indicador, con ejemplos de cómo usarla (lo pidió Néstor el 2026-11-19).
-  Hoy hay **uno solo** (`m2-3-lote`, «El lote sale del Stop-loss»).
+  Desde el 2026-11-20 las **10 lecciones** (módulos 0 a 3) tienen el suyo.
+  Faltan los ~25 de herramientas y los de los módulos 4 a 12.
 - El recorrido guiado dentro de la app la primera vez que alguien entra.
 
 ## 6. La página web de venta (landing) — va la última

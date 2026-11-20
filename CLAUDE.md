@@ -17197,6 +17197,29 @@ Néstor lo pidió así: que la app diga que el desarrollador puede ver las regla
 
 ⚠️ **Hay que publicar las reglas de Firestore** después de fusionar, o guardar con permiso, pedir el servicio, seguir una regla o enviar un informe dicen «falta activar el permiso».
 
-## La «caja fuerte»: pendiente de que Néstor lo entienda y decida
+## La «caja fuerte»: decidió la opción C (2026-11-19)
 
-Pidió que nadie llegue a ningún contenido de las apps ni de la web. Se le preguntó y eligió «explícamelo mejor primero». Lo que hay que explicarle: el programa de una app web siempre se puede ver desde el navegador (eso no se puede evitar en ninguna app web); lo que sí se protege es el CONTENIDO (lecciones y videos en Firebase solo para aprobados, con el texto original en un repositorio privado; y, si quiere, los datos de las señales también, que es un cambio de varios días y cuesta lecturas de Firebase). No construir nada sin su decisión.
+Se le explicó y eligió **C: dejarlo como está mientras se construye**, con una condición que no se ablanda: **las apps NO salen al público sin la caja fuerte activada**. Cuando se vaya a activar hay que recordarle las opciones A (proteger el curso) y B (proteger todo). Todo está en `notas/pendientes-antes-de-publicar.md`, que se le recuerda al terminar cada tarea grande.
+
+---
+
+# Un video por lección del curso (2026-11-19). Las 10 lecciones ya tienen el suyo
+
+Néstor: «quiero un video por cada cosa que se debe explicar… comienza por las 10 lecciones que ya existen».
+
+```
+app/scripts/videos/grabar.mjs       las escenas (rótulos) y la conversión a WebM + MP4
+app/scripts/videos/banco.mjs        sirve el banco y los datos, el rótulo y el marco
+app/scripts/videos/dobles.js        el usuario de EJEMPLO y sus operaciones de muestra
+app/scripts/videos/main.jsx · index.html · vite.config.js   la app entera, para grabarla
+app/public/curso/videos/<lección>.webm/.mp4                 compartidos por las dos apps
+```
+
+Cómo se graba (desde `app/`): `node scripts/videos/grabar.mjs --bajar <carpeta>` → `npx vite build --config scripts/videos/vite.config.js` → `node scripts/videos/grabar.mjs <carpeta> [ids]`. Sale a `_videos/` (en `.gitignore`); borrarlo después, o el linter lo lee.
+
+- **La app grabada es la de verdad**, con los datos que publica la rama `datos` ese día. Lo único inventado es el usuario de ejemplo (1.000 USD, 1 %, 3 %, 3) y sus operaciones (`?diario=freno`, `?diario=grupos`). Nunca datos reales de nadie: el repositorio es público.
+- **Los números de los rótulos se LEEN de la pantalla o de los datos al grabar**; si uno no se encuentra, el guion falla en vez de inventarlo. Los del código (150, el margen) se importan.
+- **Mismas reglas que las lecciones:** ningún rótulo dice compra o vende ni hacia dónde irá el precio, y todos terminan con «Esto es formación, no una señal. La decisión es tuya».
+- El rótulo va a 78 px del borde para no tapar la barra; **mirar los cuadros antes de dar un video por bueno** (`ffmpeg … tile=5x2`): en dos videos el rótulo o la cabecera tapaban justo el número que se explicaba, y solo se vio así.
+- Comprobado en el navegador: las 10 lecciones cargan su video y se reproduce. Pesan 7 MB entre todos.
+- Lo siguiente: los ~25 videos de herramientas, con el mismo banco (una escena nueva por herramienta).
