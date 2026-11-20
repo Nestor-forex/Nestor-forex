@@ -17383,3 +17383,28 @@ pero enseña cambiar de método): se puede regrabar.
   m6-1, que contradecía la cabecera.
 - `grabar.mjs` (primo) gana `filaSpread` y `filaTasa`, que leen de la pantalla
   la fila de un par en esas dos tarjetas.
+
+---
+
+# Módulo 7 del curso: «Noticias y bancos centrales» (2026-11-20). En las dos apps
+
+Tres lecciones en `src/lib/curso/es.js` (gemelo), cada una con su video en
+CADA app:
+
+- **m7-1 El calendario:** para qué se mira (la HORA, no la dirección), qué
+  enseña cada noticia, y las `HORAS_VISTA` horas, importadas de `calendario.js`.
+- **m7-2 Lo previsto, lo anterior y la sorpresa:** el botón «¿Qué significa?»
+  y la fórmula sorpresa = dato real − previsto.
+- **m7-3 Las noticias de los bancos centrales:** las cuatro fuentes, el
+  filtro de ING y por qué solo ésas. `prueba-curso.mjs` compara los nombres
+  con `FUENTES_PUBLICABLES` cuando el archivo existe (solo en Swing).
+  ⚠️ No dice que «se pidió permiso» a otras páginas: los correos están
+  redactados pero no consta que se hayan enviado.
+
+📌 **El banco de grabación tiene `reloj`** (`abrir(..., { reloj })` en
+`banco.mjs`, gemelo; `escena.reloj` en `grabar.mjs`). Los videos m7-1 y m7-2
+se graban con el reloj del navegador puesto 2 horas antes de la primera
+noticia con previsto y anterior del `calendario.json` de esa app. Sin eso, un
+viernes de noche el calendario sale vacío. **El primer rótulo del video dice
+la fecha y la hora a la que está puesto el reloj**: los datos son reales, pero
+la hora no es la de la grabación, y eso no puede quedar escondido.
