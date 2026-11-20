@@ -17238,3 +17238,13 @@ Néstor: «supongo que los videos son a la app que corresponde, es decir, que lo
 📌 **Un rótulo verdadero en una app puede ser falso en la otra.** Tres frases se corrigieron antes de grabar: «el RSI se enseña como dato» (en Intradía sí filtra), «Bollinger se mide como experimento» (solo en Swing) y «las tasas cambian solo cuando se reúne el banco» (la fecha que se ve es la de publicación). Lo que cambia entre apps se escribe con `APP`.
 
 📌 **`getByText('RSI')` encuentra el BOTÓN del paso 4, no la fila de la tarjeta**, y el primer video se quedó mirando los botones. `filaLoc` busca la fila saltándose los botones.
+
+## El seguimiento hacia adelante, a la vista (2026-11-20). En las dos apps
+
+Néstor no encontraba el botón «Solicitar activación» (3 USD/mes): estaba al
+FINAL de la tarjeta del laboratorio, detrás del constructor de reglas y de «Mis
+reglas». Ahora va arriba, justo después de «Tu idea puede valer más», y la
+tarjeta CERRADA ya lo anuncia en su `avance` (`lab.avance`, 13 idiomas, el
+precio se lee de `PRECIO_SEGUIMIENTO_USD`). El bloque del administrador para
+activar pedidos subió con él. `prueba-laboratorio.mjs` (bloque 10) falla si el
+botón vuelve a quedar detrás del paso 1.
