@@ -17288,3 +17288,35 @@ función: en una frase-función del español van “ ”.
 
 📌 Pendiente, anterior a este cambio: la cabecera se sale 4-7 px a 390 px (el
 botón «Salir» se corta) desde que se añadió el botón «Curso».
+
+---
+
+# Módulo 4 del curso: «Quién manda hoy» (2026-11-20). En las dos apps
+
+Tres lecciones en `src/lib/curso/es.js` (gemelo), cada una con su video
+grabado en CADA app:
+
+- **m4-1 La fuerza de cada divisa:** cada divisa contra las otras siete, en
+  tres plazos con pesos.
+- **m4-2 La diferencia que la app mira en cada par:** la «Dif» del tablero
+  completo y el umbral; en Intradía el umbral sube en las horas de más
+  movimiento.
+- **m4-3 Por qué «10 contra 0» no es mucha diferencia:** la escala de 0 a 10
+  es un orden (siempre hay un 10 y un 0). Ejemplo real con fecha: Intradía,
+  2026-10-12, USD 10,0 y CHF 0,0 con la Dif máxima en 0,31 contra 0,59.
+
+⚠️ **Las ventanas y los pesos de la fuerza se leen del código.**
+`marketCalc.js` (primo) exporta ahora `VENTANAS_FUERZA` (Swing `[1, 5, 20]`,
+Intradía `[1, 4, 24]`) y `PESOS_FUERZA` (`[0.2, 0.4, 0.4]`), y
+`computarBarrido` los usa. La lección los importa junto con `UMBRAL_FUERZA`, y
+`prueba-curso.mjs` lo comprueba.
+
+📌 Las escenas de los videos (`grabar.mjs`, primo) leen de la pantalla:
+- el ranking de fuerza;
+- la Dif más grande y una por debajo del umbral, en las tarjetas del tablero.
+
+`m4-3` falla si la escala no va de 0,0 a 10,0.
+
+📌 Una opción equivocada de una pregunta («Que el par va a subir») tumbó la
+prueba de palabras prohibidas: la regla vale también para las respuestas
+incorrectas.
