@@ -1,5 +1,11 @@
 # Correos para pedir permiso (los manda Néstor desde su correo)
 
+> ✅ **ENVIADOS.** Néstor dijo el 2026-11-20 que mandó los correos y que, hasta
+> ese día, **ninguna de las plataformas había respondido**. Mientras no llegue
+> un permiso POR ESCRITO, ninguna de esas fuentes se añade a las apps. Si llega
+> una respuesta, se guarda aquí (fecha, quién, qué permite y qué no) antes de
+> tocar el código.
+
 Van en inglés porque los cinco trabajan en inglés. Debajo de cada uno, qué dice
 en español.
 

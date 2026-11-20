@@ -17408,3 +17408,32 @@ noticia con previsto y anterior del `calendario.json` de esa app. Sin eso, un
 viernes de noche el calendario sale vacío. **El primer rótulo del video dice
 la fecha y la hora a la que está puesto el reloj**: los datos son reales, pero
 la hora no es la de la grabación, y eso no puede quedar escondido.
+
+---
+
+# Módulo 8 del curso: «Pares que son la misma apuesta» (2026-11-20). En las dos apps
+
+- **m8-1 Dos operaciones que son una sola:** divisas compartidas y el aviso de
+  «Riesgo concentrado» del Diario. El video usa `?diario=juntas` (dobles.js,
+  gemelo): dos compras abiertas de ejemplo con el euro en común.
+- **m8-2 La correlación:** −1 a +1, cambios diarios, el lado importa (doble
+  o se anula). ⚠️ `correlacion.js` existe SOLO en Swing, así que `es.js`
+  (gemelo) no puede importarlo: el 0,7 y las 60 sesiones van escritos
+  (`CORREL_ALTA_TXT`, `VENTANA_CORREL_TXT`) y `prueba-curso.mjs` los compara
+  con `correlacion.js` donde el archivo existe. En Intradía la lección y el
+  video dicen que esa app no la calcula y enseñan el aviso «Dos de tus pares se
+  mueven igual» de Avisos, que usa la medida de swing.
+- **m8-3 Cinco operaciones, una apuesta al dólar:** el dólar en el ranking y,
+  en Swing, la tarjeta del oro. Con los datos del 2026-11-20 ningún par pasaba
+  de 0,5 con el oro: el video lo dice tal cual y señala el mensaje de la
+  tarjeta.
+- ⚠️ Se quitó un ejemplo que esta memoria daba por bueno: «AUD/USD y NZD/USD no
+  comparten ninguna divisa» es FALSO, comparten el dólar (está escrito así en
+  la sección de la correlación del 2026-09-08). El aviso del Diario sí lo ve.
+
+## Los correos de permiso, enviados (2026-11-20)
+
+Néstor mandó los cinco correos de `notas/correos-permiso-noticias.md` y ninguna
+plataforma ha respondido. La lección m7-3 ya dice «se les pidió permiso por
+escrito, y mientras no lo den no están». `prueba-curso.mjs` falla si alguna
+lección dice que se concedió un permiso.
