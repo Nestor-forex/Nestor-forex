@@ -17437,3 +17437,31 @@ Néstor mandó los cinco correos de `notas/correos-permiso-noticias.md` y ningun
 plataforma ha respondido. La lección m7-3 ya dice «se les pidió permiso por
 escrito, y mientras no lo den no están». `prueba-curso.mjs` falla si alguna
 lección dice que se concedió un permiso.
+
+---
+
+# Módulo 9 del curso: «Del análisis a la operación» (2026-11-20). En las dos apps
+
+Tres lecciones en `src/lib/curso/es.js` (gemelo), con su video en CADA app:
+
+- **m9-1 Armar la tarjeta: la dirección la pones tú.** Los cuatro pasos del
+  Analizador; sin dirección la tarjeta solo dice «Elige COMPRA o VENTA para ver
+  los niveles» (se cita `an.motivo.sinLado`); los tres métodos de Stop-loss.
+- **m9-2 Revisar la tarjeta antes de decidir.** Cuatro preguntas que la misma
+  tarjeta contesta: R/B y lote (`RR_AVISO`), el freno del día, el calendario
+  de las dos divisas y «Mi diario» (abiertas que comparten divisa).
+- **m9-3 Tu forma de analizar: estilo y plantillas.** «¿Cómo operas?» y las
+  plantillas (`MAX_PLANTILLAS`); analizar siempre igual no hace ganar, hace
+  que los números del Diario hablen de una sola forma de operar.
+
+⚠️ Los números se LEEN del código: `ATR_SIMETRICO` (`MC.ATR_REVERSION ??
+MC.ATR_STOP`, cada app exporta la suya), `COJIN_ESTRUCTURA` (nuevo en
+`analizador.js`, lo usa `nivelesEstructura`), `RR_AVISO`, `MAX_PLANTILLAS` y
+`HERRAMIENTAS_DE_ESTILO`. `prueba-curso.mjs` lo comprueba, y también que el
+botón del método diga el mismo ATR que la lección.
+
+📌 **El banco de grabación guarda plantillas y estilo EN MEMORIA**
+(`usePlantillas` y `useEstilo` en `dobles.js`, añadidos a `DOBLADOS`): antes
+habría intentado escribir en el Firestore de verdad con un usuario de ejemplo.
+`?plantillas=ejemplo` arranca con dos de muestra y `?diario=chequeo` junta dos
+pérdidas de hoy con dos abiertas con el euro (EUR/CHF, EUR/CAD).
