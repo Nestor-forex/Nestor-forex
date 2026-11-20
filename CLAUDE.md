@@ -17351,3 +17351,35 @@ herramienta ATR (paso 4), y el rótulo del Stop-loss dejaba de cuadrar con la
 pantalla. Ahora `chip` busca el texto exacto y se queda con el ÚLTIMO. El video
 de herramientas `h-atr` se grabó con el fallo (su rótulo no dice nada falso,
 pero enseña cambiar de método): se puede regrabar.
+
+---
+
+# Módulo 6 del curso, el video del ATR y la tabla BID/ASK (2026-11-20). En las dos apps
+
+- **El video de herramientas `h-atr` se regrabó en las dos apps**: el viejo se
+  grabó con el fallo de `chip` (encendía el método «1,5 ATR a cada lado» en vez
+  de la herramienta ATR). Ahora el método se queda en «La de la app».
+- **Módulo 6 «Lo que cuesta operar»** en `src/lib/curso/es.js` (gemelo), con
+  sus videos en CADA app:
+  - **m6-1 El spread:** BID, ASK y spread; los números del ejemplo salen de
+    `spreadDe` de `scripts/lib/costes.mjs` (la MISMA tabla del banco de
+    pruebas), importada desde la lección.
+  - **m6-2 El swap:** de dónde sale, que la diferencia de tasas NO es el swap
+    del bróker, la noche triple, y la banda «apenas pesa» leída de
+    `UMBRAL_NEUTRO` (`tasas.js`).
+  - **m6-3 Por qué el mismo coste pesa distinto:** peso = spread ÷ Stop-loss y
+    acierto para empatar con 1:1 = (1 + peso) ÷ 2 (`aciertoParaEmpatar`,
+    exportada de `es.js` y comprobada en `prueba-curso.mjs`). En el video, con
+    los datos del 2026-11-20, el spread de EUR/USD se llevaba el 3,0 % del
+    Stop-loss en Swing y el 8,7 % en Intradía.
+  - ⚠️ No se escribe «los Stop-loss de swing pasan de 100 pips»: ese día el de
+    EUR/USD era de 46. Se dice que son «varias veces más largos» que los de
+    intradía, que es lo que sí se sostiene.
+- ⚠️⚠️ **La tabla «Lo que cuesta abrir la operación» decía «Compra» sobre el BID
+  y «Venta» sobre el ASK** (el punto de vista del bróker) en es, pt, fr, it,
+  ru, tr, ko, ar e hi, mientras el Analizador dice «el ASK, el que pagas al
+  comprar». Ahora esas nueve dicen **BID** y **ASK** (jerga, como RSI); en, de,
+  ja y zh ya usaban sus términos correctos. Lo destapó el rótulo del video de
+  m6-1, que contradecía la cabecera.
+- `grabar.mjs` (primo) gana `filaSpread` y `filaTasa`, que leen de la pantalla
+  la fila de un par en esas dos tarjetas.
