@@ -17625,3 +17625,18 @@ tenía `curso.html`; quien entraba por la web veía siempre los videos de Swing.
 - Direcciones: `nestor-forex.github.io/Nestor-forex/curso.html` (Swing) y
   `nestor-forex.github.io/Nestor-forex-intradia/curso.html` (Intradía).
 - ⚠️ Sigue siendo una PUERTA, no una caja fuerte.
+
+## Muestra con voces de Google Cloud (2026-11-21)
+
+Néstor creó el proyecto `nestor-forex-voz` (aparte del de Firebase), habilitó
+Cloud Text-to-Speech y guardó la llave como secreto `GOOGLE_TTS_KEY`, limitada
+a esa API. `voz/sintetizar-google.mjs` usa la MISMA tubería que Piper: el
+workflow «Generar la voz de los videos» tiene ahora la opción `motor` (google
+por defecto) y deja `voz/google-<voz>/<id>.ogg`.
+
+- La llave va en la cabecera `X-Goog-Api-Key`, nunca en la dirección.
+- Tope de 20.000 caracteres por corrida. La muestra gastó ~2.400 (nivel gratis:
+  1 millón al mes en Chirp 3 HD y Neural2).
+- Tres voces es-US: A `Chirp3-HD-Aoede` (mujer), B `Chirp3-HD-Charon` (hombre),
+  C `Neural2-A` (mujer, más barata). Se le mandaron m0-1 y m2-3-lote con las
+  tres. **No está elegida ninguna.** Falta la muestra de Azure.
