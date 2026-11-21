@@ -17486,3 +17486,31 @@ que ningún bróker deja abrir.
   vuelta y se leería «mayor que». Medido letra por letra en el navegador.
 - `prueba-analizador.mjs` bloque 10 (gemelo). Quitar `bajoMinimo` de la tarjeta
   o el aviso de la calculadora tumba 2.
+
+---
+
+# Módulo 10 del curso: «Practicar sin dinero» (2026-11-21). En las dos apps
+
+Tres lecciones en `src/lib/curso/es.js` (gemelo), con su video en CADA app:
+
+- **m10-1 Crear una operación de práctica:** desde la tarjeta del Analizador;
+  cómo decide la app (solo velas que empiezan después de crearla, la vela que
+  toca los dos niveles = perdida), el tope `MAX_ABIERTAS` y que una resuelta no
+  se borra. Cada cuánto se revisa depende de la app (Swing: barrido dos veces
+  al día; Intradía: cada hora).
+- **m10-2 El resultado en R, con lo que cuesta de verdad:** R, bruto contra
+  neto, spread (dentro de la entrada con MT5), swap por noche y el dinero. El
+  ejemplo se CALCULA con `costesPractica` sobre `EJEMPLO_PRACTICA` (exportado):
+  +1,50 − 0,04 − 0,04 = +1,42 R, dos noches en las dos apps.
+- **m10-3 Para qué sirve practicar, y lo que no demuestra:** el ± con pocas
+  operaciones (`margen`), la insignia, la tabla descargable y por qué practicar
+  no es operar con dinero.
+
+⚠️ **El 5 de la insignia va escrito** (`INSIGNIA_PRACTICA_TXT`): `insignias.js`
+importa `curso.js`, que importa `es.js`, así que importarlo haría un círculo.
+`prueba-curso.mjs` lo compara con `META.practica`.
+
+📌 El banco de grabación tiene `?practica=ejemplo` (`dobles.js`): cinco
+resueltas, una caducada y una abierta, con precios INVENTADOS que los rótulos
+dicen. Por eso m10-2 y m10-3 no abren gráficas; m10-1 crea una de verdad desde
+el Analizador con los datos del día y sí la abre.
