@@ -5,8 +5,9 @@
 //   2. construir el banco:       npx vite build --config scripts/videos/vite.config.js
 //   3. grabar:                   node scripts/videos/grabar.mjs <carpeta> m0-1 m1-2 …   (sin ids: todos)
 //
-// Cada video sale en `public/curso/videos/<id>.webm` y `.mp4`, sin voz: el
-// texto que explica va en el rótulo de abajo. La app es la de verdad, con los
+// Cada video sale en `public/curso/videos/<id>.webm` y `.mp4`. Desde el
+// 2026-11-21 llevan voz (Studio-B), que dice lo mismo que el rótulo de abajo:
+// ver `voz.mjs` y `--voz`. La app es la de verdad, con los
 // datos que publica la rama `datos` ese día; lo único inventado es el usuario
 // de ejemplo y sus operaciones (`dobles.js`), y el rótulo lo dice.
 //
