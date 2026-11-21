@@ -17640,3 +17640,25 @@ por defecto) y deja `voz/google-<voz>/<id>.ogg`.
 - Tres voces es-US: A `Chirp3-HD-Aoede` (mujer), B `Chirp3-HD-Charon` (hombre),
   C `Neural2-A` (mujer, más barata). Se le mandaron m0-1 y m2-3-lote con las
   tres. **No está elegida ninguna.** Falta la muestra de Azure.
+
+## Segunda muestra de Google: más voces y pronunciación natural (2026-11-21)
+
+Néstor eligió la **B (Charon, hombre)** de la primera muestra, pero le sonó
+«un poco robótica». Cambios para la segunda:
+
+- `paraVoz(texto, pron)`: con `pron = 'natural'` las palabras de trading en
+  inglés se dejan en inglés (stop loss, take profit, spread, swap, swing, buy,
+  sell, Forex) en vez de escribirse como suenan («stop los», «téik prófit»…).
+  Las siglas se siguen deletreando. `grabar.mjs --pronunciacion natural` la usa
+  **igual al apuntar los textos y al grabar**: el id del audio sale del texto
+  ya preparado, y con dos pronunciaciones distintas el rótulo se quedaría mudo.
+- Seis voces de hombre: Charon otra vez, Orus, Puck, Algenib, Iapetus (Chirp 3
+  HD) y Studio-B (la de estudio de Google, 160 USD por millón y 100.000
+  caracteres gratis al mes). Gastó ~4.000 caracteres.
+- Se quitaron de `textos.json` los 5 textos con la pronunciación vieja que ya
+  no se usan; sus audios siguen en las carpetas de la primera muestra.
+- Google tiene 48 voces es-US (log del workflow). **No hay voces de Colombia
+  en Google**; las de Colombia están en Azure.
+
+Lo que queda: que elija voz. Si ninguna le convence, Azure (voces de Colombia)
+o ElevenLabs (clonar su propia voz). Nada está publicado en la app.
