@@ -17578,3 +17578,30 @@ el workflow ya **no se dispara solo** al cambiar `textos.json` (solo a mano).
 para cambiar de motor basta con reescribir `sintetizar.py`. Lo recomendado es
 una voz neuronal de pago (Azure con las voces de Colombia, o Google Cloud TTS),
 con su llave como **secreto de GitHub**, nunca en el chat. No hay nada decidido.
+
+---
+
+# Módulo 12 del curso: «Medir tus propios números» (2026-11-21). En las dos apps
+
+Con este módulo el temario queda completo (0 a 12): `PROXIMOS` está vacío.
+
+- **m12-1 Traer tus operaciones del bróker:** exportar de MT4/MT5 o CSV, la app
+  no se conecta ni pide contraseñas, nada se guarda sin confirmar, entra el
+  NETO, no se repiten las que ya estaban. El ejemplo se CALCULA pasando
+  `CSV_EJEMPLO` por `leerOperaciones` (+40 − 3,20 − 1,50 = +35,30) y
+  `quitarRepetidas`. Dice que todavía no junta los cierres parciales.
+- **m12-2 Tus números por grupos:** cruces/dólar, compras/ventas, por par desde
+  `MINIMO_PARA_ENSEÑAR`, el ± de `margen()`, los lotes como contexto. Ejemplo
+  con `EJEMPLO_GRUPOS` (20 operaciones) pasado por `diagnostico()`; el
+  veredicto de los rangos sale de la cuenta (`GRUPOS_SE_TOCAN`).
+- **m12-3 Qué mirar y qué no concluir:** neto antes que acierto, el ±, no
+  quedarse con el mejor de muchos grupos, cada app su Diario. Ejemplo con
+  `EJEMPLO_ACIERTO` por `resumir()`: 70 % ±31 y −20 dólares.
+
+📌 Los videos usan las MISMAS operaciones de ejemplo que las lecciones
+(`?diario=grupos12` y `?diario=acierto` en `dobles.js` importan de `es.js`).
+m12-1 sube un informe CSV inventado con `setInputFiles` (la tarjeta de importar
+hay que abrirla antes) y se cancela sin guardar.
+
+📌 `filaGrupo` (grabar.mjs) ahora encuentra también la fila de un par, cuya
+etiqueta va en un `span`: sube hasta 3 padres buscando «N ops».
