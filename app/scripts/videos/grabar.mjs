@@ -1798,7 +1798,7 @@ async function grabar(datos, id, modo = null) {
   // El video empieza a grabarse al abrir la página: es el cero de los audios.
   const t0 = await p.evaluate(() => performance.timeOrigin)
   const dur = modo?.voz ? duraciones(modo.voz, await leerTextos()) : null
-  const r = rotuloConVoz(p, await ponerRotulo(p), dur)
+  const r = rotuloConVoz(p, await ponerRotulo(p), dur, modo?.pron)
   await escena.correr(p, r, datos)
   await r.terminar()
   await ctx.close()
@@ -1833,13 +1833,15 @@ if (args[0] === '--bajar') {
 } else if (args[0] === '--descripciones') {
   for (const [id, e] of Object.entries(ESCENAS)) console.log(id, '→', e.desc)
 } else {
-  // Opciones: --textos (apunta los rótulos para la voz) · --voz <voz> --salida <carpeta>.
+  // Opciones: --textos (apunta los rótulos para la voz) · --voz <voz> --salida <carpeta>
+  // · --pronunciacion fonetica|natural (la misma al apuntar y al grabar).
   const opc = {}
   const resto = []
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--textos') opc.textos = true
     else if (args[i] === '--voz') opc.voz = args[++i]
     else if (args[i] === '--salida') opc.salida = args[++i]
+    else if (args[i] === '--pronunciacion') opc.pron = args[++i]
     else resto.push(args[i])
   }
   if (opc.voz) exigir(opc.salida, 'la carpeta de salida (--salida) del video con voz')

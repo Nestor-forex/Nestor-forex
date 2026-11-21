@@ -57,12 +57,23 @@ const PALABRAS = [
   [/\bpips?\b/gi, (m) => (m.toLowerCase() === 'pip' ? 'pip' : 'pips')],
 ]
 
+// Pronunciación «natural» (2026-11-21, segunda muestra de Google): las voces
+// Chirp 3 HD leen bien las palabras en inglés del trading, y escritas «como
+// suenan» («stop los», «téik prófit», «espred») salían forzadas. Aquí se dejan
+// en inglés; las siglas se siguen deletreando y lo demás no cambia.
+const NATURAL = {
+  'stop los': 'stop loss', 'téik prófit': 'take profit', bai: 'buy', sel: 'sell',
+  fórex: 'Forex', suing: 'swing', espred: 'spread', suap: 'swap',
+}
+export const PRONUNCIACIONES = ['fonetica', 'natural']
+
 // Cómo se pronuncia un rótulo. No cambia el contenido, solo la lectura.
-export function paraVoz(texto) {
+export function paraVoz(texto, pron = 'fonetica') {
+  if (!PRONUNCIACIONES.includes(pron)) throw new Error(`Pronunciación desconocida: ${pron}`)
   let t = String(texto)
   // Un par de divisas: «EUR/USD» → «euro dólar».
   t = t.replace(/\b([A-Z]{3})\/([A-Z]{3})\b/g, (m, a, b) => (DIVISA[a] && DIVISA[b] ? `${DIVISA[a]} ${DIVISA[b]}` : m))
-  for (const [re, por] of PALABRAS) t = t.replace(re, por)
+  for (const [re, por] of PALABRAS) t = t.replace(re, pron === 'natural' && typeof por === 'string' && NATURAL[por] ? NATURAL[por] : por)
   // Una cantidad en dólares: «$10.00» o «10 USD» → «10 dólares».
   t = t.replace(/\$\s?(\d+(?:[.,]\d+)?)/g, '$1 dólares')
   t = t.replace(/(\d)\s?USD\b/g, '$1 dólares')
@@ -112,7 +123,9 @@ export function duraciones(voz, lista) {
 
 // Envuelve el rótulo: apunta cuándo sale cada frase y, con voz, deja cada una
 // en pantalla al menos lo que dura su audio.
-export function rotuloConVoz(p, ponerTexto, dur = null) {
+// `pron` tiene que ser la MISMA al apuntar los textos y al grabar con voz:
+// el id del audio sale del texto ya preparado.
+export function rotuloConVoz(p, ponerTexto, dur = null, pron = 'fonetica') {
   const log = []
   let hasta = 0
   const r = async (texto) => {
@@ -120,7 +133,7 @@ export function rotuloConVoz(p, ponerTexto, dur = null) {
     if (falta > 0) await p.waitForTimeout(falta)
     await ponerTexto(texto)
     const t = Date.now()
-    const voz = paraVoz(texto)
+    const voz = paraVoz(texto, pron)
     const id = idVoz(voz)
     log.push({ t, texto, voz, id })
     const s = dur?.get(id)

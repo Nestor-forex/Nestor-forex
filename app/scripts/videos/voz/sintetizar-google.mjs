@@ -24,9 +24,16 @@ import { fileURLToPath } from 'node:url'
 const AQUI = fileURLToPath(new URL('./', import.meta.url))
 const API = 'https://texttospeech.googleapis.com/v1'
 // Español de Estados Unidos, que es el acento latino que ofrece Google.
-// Dos de la familia buena (Chirp 3 HD, 30 USD por millón pasado el nivel
-// gratis) y una de la familia más barata (Neural2, 16 USD), para comparar.
-export const VOCES = ['es-US-Chirp3-HD-Aoede', 'es-US-Chirp3-HD-Charon', 'es-US-Neural2-A']
+// Segunda muestra (2026-11-21): Néstor eligió Charon (hombre) de la primera,
+// pero le sonó algo robótica. Van Charon otra vez, cuatro voces de hombre más
+// de la familia Chirp 3 HD (30 USD por millón pasado el nivel gratis) y una
+// Studio (la de estudio de Google, 160 USD por millón; nivel gratis de 100.000
+// caracteres al mes). Las de la primera muestra (Aoede, Neural2-A) ya tienen
+// sus audios y no se vuelven a pedir.
+export const VOCES = [
+  'es-US-Chirp3-HD-Charon', 'es-US-Chirp3-HD-Orus', 'es-US-Chirp3-HD-Puck',
+  'es-US-Chirp3-HD-Algenib', 'es-US-Chirp3-HD-Iapetus', 'es-US-Studio-B',
+]
 export const TOPE = 20000
 
 export const carpetaDe = (voz) => `google-${voz}`

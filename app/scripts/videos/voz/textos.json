@@ -12,10 +12,6 @@
   "texto": "Nada de lo que ves aquí es una señal para copiar."
  },
  {
-  "id": "10f96bdaf835",
-  "texto": "Las direcciones, stop los y téik prófit que salen son experimentos: la app los anota y los resuelve con precios reales."
- },
- {
   "id": "4faa9a8e1ca0",
   "texto": "Cada experimento necesita 150 operaciones reales antes de que su número signifique algo."
  },
@@ -36,23 +32,27 @@
   "texto": "Tu perfil: 1000 dólares y 1 por ciento por operación. Arriesgas 10 dólares."
  },
  {
-  "id": "b8dafd6c9614",
-  "texto": "Pon el stop los a 25 pips."
- },
- {
-  "id": "4c8acd428bb1",
-  "texto": "stop los a 25 pips, 0,04 lotes."
- },
- {
-  "id": "4bacbcdf848b",
-  "texto": "Ahora aleja el stop los a 50 pips."
- },
- {
-  "id": "54447a26b86c",
-  "texto": "stop los a 50 pips, 0,02 lotes."
- },
- {
   "id": "098345ca4e0d",
   "texto": "El lote cambió. Lo que arriesgas, no: siguen siendo 10 dólares."
+ },
+ {
+  "id": "e5fb7e2664c4",
+  "texto": "Las direcciones, stop loss y take profit que salen son experimentos: la app los anota y los resuelve con precios reales."
+ },
+ {
+  "id": "83ef6bbf4bd6",
+  "texto": "Pon el stop loss a 25 pips."
+ },
+ {
+  "id": "e509a83cb67c",
+  "texto": "stop loss a 25 pips, 0,04 lotes."
+ },
+ {
+  "id": "7745416c9103",
+  "texto": "Ahora aleja el stop loss a 50 pips."
+ },
+ {
+  "id": "ad284e06c2b9",
+  "texto": "stop loss a 50 pips, 0,02 lotes."
  }
 ]
