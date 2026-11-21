@@ -77,7 +77,8 @@ export function paraVoz(texto, pron = 'fonetica') {
   // Una cantidad en dólares: «$10.00» o «10 USD» → «10 dólares».
   t = t.replace(/\$\s?(\d+(?:[.,]\d+)?)/g, '$1 dólares')
   t = t.replace(/(\d)\s?USD\b/g, '$1 dólares')
-  t = t.replace(/\bUSD\b/g, 'dólares')
+  // Suelta, la sigla es la moneda: «EUR va primero y USD segundo» → «dólar».
+  t = t.replace(/\bUSD\b/g, 'dólar')
   t = t.replace(/\b([A-Z]{3})\b/g, (m) => DIVISA[m] ?? m)
   // Miles con punto (1.000) → sin punto; decimales con punto (0.04) → con coma.
   t = t.replace(/\b(\d{1,3})((?:\.\d{3})+)(?![\d.,])(?=\s+(?:dólares|operaciones|velas|días|horas))/g, (m, a, b) => a + b.replace(/\./g, ''))
@@ -88,6 +89,10 @@ export function paraVoz(texto, pron = 'fonetica') {
   // Una palabra en mayúsculas para resaltarla se lee como palabra, no letra a letra.
   t = t.replace(/\b[A-ZÁÉÍÓÚÑ]{4,}\b/g, (w) => w.toLowerCase())
   t = t.replace(/(\d)\s?%/g, '$1 por ciento')
+  // Signos que una voz puede leer mal o saltarse: «±17» y «−0,04» (el menos
+  // tipográfico, no el guion).
+  t = t.replace(/±\s?/g, 'más o menos ')
+  t = t.replace(/−\s?(?=\d)/g, 'menos ')
   t = t.replace(/\s*→\s*/g, ', ')
   t = t.replace(/[«»“”"]/g, '')
   t = t.replace(/…/g, '.')
@@ -110,9 +115,14 @@ export async function apuntarTextos(rotulos) {
 }
 
 // Duración en segundos de cada audio de una voz: Map(id → s).
+// Se guarda por voz: con cientos de textos, medirlos todos en cada video
+// costaba minutos de ffprobe.
+const MEDIDAS = new Map()
 export function duraciones(voz, lista) {
-  const dur = new Map()
+  if (!MEDIDAS.has(voz)) MEDIDAS.set(voz, new Map())
+  const dur = MEDIDAS.get(voz)
   for (const { id } of lista) {
+    if (dur.has(id)) continue
     const f = join(CARPETA_VOZ, voz, `${id}.ogg`)
     if (!existsSync(f)) continue
     const s = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString().trim())

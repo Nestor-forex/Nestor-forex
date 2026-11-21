@@ -24,6 +24,10 @@ on:
         type: choice
         options: [google, piper]
         default: google
+      tope:
+        description: 'Máximo de caracteres en esta corrida (Google cobra por carácter; tope duro 150000)'
+        type: string
+        default: '20000'
 
 permissions:
   contents: write
@@ -35,7 +39,7 @@ concurrency:
 jobs:
   voz:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - name: Instalar ffmpeg
@@ -48,6 +52,7 @@ jobs:
         if: inputs.motor == 'google'
         env:
           GOOGLE_TTS_KEY: ${{ secrets.GOOGLE_TTS_KEY }}
+          TOPE_CARACTERES: ${{ inputs.tope }}
         run: node app/scripts/videos/voz/sintetizar-google.mjs
       - uses: actions/setup-python@v5
         if: inputs.motor == 'piper'

@@ -24,17 +24,15 @@ import { fileURLToPath } from 'node:url'
 const AQUI = fileURLToPath(new URL('./', import.meta.url))
 const API = 'https://texttospeech.googleapis.com/v1'
 // Español de Estados Unidos, que es el acento latino que ofrece Google.
-// Segunda muestra (2026-11-21): Néstor eligió Charon (hombre) de la primera,
-// pero le sonó algo robótica. Van Charon otra vez, cuatro voces de hombre más
-// de la familia Chirp 3 HD (30 USD por millón pasado el nivel gratis) y una
-// Studio (la de estudio de Google, 160 USD por millón; nivel gratis de 100.000
-// caracteres al mes). Las de la primera muestra (Aoede, Neural2-A) ya tienen
-// sus audios y no se vuelven a pedir.
-export const VOCES = [
-  'es-US-Chirp3-HD-Charon', 'es-US-Chirp3-HD-Orus', 'es-US-Chirp3-HD-Puck',
-  'es-US-Chirp3-HD-Algenib', 'es-US-Chirp3-HD-Iapetus', 'es-US-Studio-B',
-]
-export const TOPE = 20000
+// ✅ ELEGIDA (2026-11-21): Néstor oyó seis voces de hombre con la
+// pronunciación «natural» y eligió Studio-B, la voz de estudio de Google
+// (160 USD por millón de caracteres; nivel gratis de 100.000 al mes, a
+// confirmar en la factura de Google). Los audios de las otras voces de las
+// dos muestras se borraron: siguen en el historial de git.
+export const VOCES = ['es-US-Studio-B']
+// Tope por corrida. Por defecto 20.000; el workflow deja subirlo a mano para
+// generar el curso entero de una vez, y nunca por encima de 150.000.
+export const TOPE = Math.min(150000, Number(process.env.TOPE_CARACTERES) || 20000)
 
 export const carpetaDe = (voz) => `google-${voz}`
 
