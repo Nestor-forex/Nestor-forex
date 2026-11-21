@@ -17465,3 +17465,24 @@ botón del método diga el mismo ATR que la lección.
 habría intentado escribir en el Firestore de verdad con un usuario de ejemplo.
 `?plantillas=ejemplo` arranca con dos de muestra y `?diario=chequeo` junta dos
 pérdidas de hoy con dos abiertas con el euro (EUR/CHF, EUR/CAD).
+
+---
+
+# El lote por debajo de 0,01 ahora se avisa (2026-11-21). En las dos apps
+
+Salió grabando el video de m9-1: con el Stop-loss lejos, el Analizador decía
+«Lote · riesgo 0.00 · $10.00», o sea que se arriesgaban 10 dólares con un lote
+que ningún bróker deja abrir.
+
+- `calcularLote` (`calc.js`, gemelo) devuelve `bajoMinimo` (lote < `LOTE_MINIMO`
+  = 0,01) y `riesgoMinimoUsd` (lo que se arriesga con 0,01 lotes). El Analizador
+  lo lleva en `a.lote`.
+- El Analizador y la calculadora enseñan `< 0.01` en ámbar y el aviso
+  `calc.bajoMinimo` (13 idiomas): no se puede abrir así, y con 0,01 lotes se
+  arriesgarían $X, más de lo que se quería.
+- Al anotar en el Diario no se rellena ese lote, la práctica no guarda un lote
+  por debajo del mínimo y el `.txt` exportado lo dice.
+- En la calculadora `< 0.01` va aislado (LRI/PDI): en árabe el `<` se daría la
+  vuelta y se leería «mayor que». Medido letra por letra en el navegador.
+- `prueba-analizador.mjs` bloque 10 (gemelo). Quitar `bajoMinimo` de la tarjeta
+  o el aviso de la calculadora tumba 2.
