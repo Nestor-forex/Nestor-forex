@@ -57,16 +57,28 @@ const PALABRAS = [
   [/\bpips?\b/gi, (m) => (m.toLowerCase() === 'pip' ? 'pip' : 'pips')],
 ]
 
+// Pronunciación «natural» (2026-11-21, segunda muestra de Google): las voces
+// Chirp 3 HD leen bien las palabras en inglés del trading, y escritas «como
+// suenan» («stop los», «téik prófit», «espred») salían forzadas. Aquí se dejan
+// en inglés; las siglas se siguen deletreando y lo demás no cambia.
+const NATURAL = {
+  'stop los': 'stop loss', 'téik prófit': 'take profit', bai: 'buy', sel: 'sell',
+  fórex: 'Forex', suing: 'swing', espred: 'spread', suap: 'swap',
+}
+export const PRONUNCIACIONES = ['fonetica', 'natural']
+
 // Cómo se pronuncia un rótulo. No cambia el contenido, solo la lectura.
-export function paraVoz(texto) {
+export function paraVoz(texto, pron = 'fonetica') {
+  if (!PRONUNCIACIONES.includes(pron)) throw new Error(`Pronunciación desconocida: ${pron}`)
   let t = String(texto)
   // Un par de divisas: «EUR/USD» → «euro dólar».
   t = t.replace(/\b([A-Z]{3})\/([A-Z]{3})\b/g, (m, a, b) => (DIVISA[a] && DIVISA[b] ? `${DIVISA[a]} ${DIVISA[b]}` : m))
-  for (const [re, por] of PALABRAS) t = t.replace(re, por)
+  for (const [re, por] of PALABRAS) t = t.replace(re, pron === 'natural' && typeof por === 'string' && NATURAL[por] ? NATURAL[por] : por)
   // Una cantidad en dólares: «$10.00» o «10 USD» → «10 dólares».
   t = t.replace(/\$\s?(\d+(?:[.,]\d+)?)/g, '$1 dólares')
   t = t.replace(/(\d)\s?USD\b/g, '$1 dólares')
-  t = t.replace(/\bUSD\b/g, 'dólares')
+  // Suelta, la sigla es la moneda: «EUR va primero y USD segundo» → «dólar».
+  t = t.replace(/\bUSD\b/g, 'dólar')
   t = t.replace(/\b([A-Z]{3})\b/g, (m) => DIVISA[m] ?? m)
   // Miles con punto (1.000) → sin punto; decimales con punto (0.04) → con coma.
   t = t.replace(/\b(\d{1,3})((?:\.\d{3})+)(?![\d.,])(?=\s+(?:dólares|operaciones|velas|días|horas))/g, (m, a, b) => a + b.replace(/\./g, ''))
@@ -77,6 +89,10 @@ export function paraVoz(texto) {
   // Una palabra en mayúsculas para resaltarla se lee como palabra, no letra a letra.
   t = t.replace(/\b[A-ZÁÉÍÓÚÑ]{4,}\b/g, (w) => w.toLowerCase())
   t = t.replace(/(\d)\s?%/g, '$1 por ciento')
+  // Signos que una voz puede leer mal o saltarse: «±17» y «−0,04» (el menos
+  // tipográfico, no el guion).
+  t = t.replace(/±\s?/g, 'más o menos ')
+  t = t.replace(/−\s?(?=\d)/g, 'menos ')
   t = t.replace(/\s*→\s*/g, ', ')
   t = t.replace(/[«»“”"]/g, '')
   t = t.replace(/…/g, '.')
@@ -99,9 +115,14 @@ export async function apuntarTextos(rotulos) {
 }
 
 // Duración en segundos de cada audio de una voz: Map(id → s).
+// Se guarda por voz: con cientos de textos, medirlos todos en cada video
+// costaba minutos de ffprobe.
+const MEDIDAS = new Map()
 export function duraciones(voz, lista) {
-  const dur = new Map()
+  if (!MEDIDAS.has(voz)) MEDIDAS.set(voz, new Map())
+  const dur = MEDIDAS.get(voz)
   for (const { id } of lista) {
+    if (dur.has(id)) continue
     const f = join(CARPETA_VOZ, voz, `${id}.ogg`)
     if (!existsSync(f)) continue
     const s = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString().trim())
@@ -112,7 +133,9 @@ export function duraciones(voz, lista) {
 
 // Envuelve el rótulo: apunta cuándo sale cada frase y, con voz, deja cada una
 // en pantalla al menos lo que dura su audio.
-export function rotuloConVoz(p, ponerTexto, dur = null) {
+// `pron` tiene que ser la MISMA al apuntar los textos y al grabar con voz:
+// el id del audio sale del texto ya preparado.
+export function rotuloConVoz(p, ponerTexto, dur = null, pron = 'fonetica') {
   const log = []
   let hasta = 0
   const r = async (texto) => {
@@ -120,7 +143,7 @@ export function rotuloConVoz(p, ponerTexto, dur = null) {
     if (falta > 0) await p.waitForTimeout(falta)
     await ponerTexto(texto)
     const t = Date.now()
-    const voz = paraVoz(texto)
+    const voz = paraVoz(texto, pron)
     const id = idVoz(voz)
     log.push({ t, texto, voz, id })
     const s = dur?.get(id)

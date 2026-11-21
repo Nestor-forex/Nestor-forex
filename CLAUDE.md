@@ -17625,3 +17625,70 @@ tenía `curso.html`; quien entraba por la web veía siempre los videos de Swing.
 - Direcciones: `nestor-forex.github.io/Nestor-forex/curso.html` (Swing) y
   `nestor-forex.github.io/Nestor-forex-intradia/curso.html` (Intradía).
 - ⚠️ Sigue siendo una PUERTA, no una caja fuerte.
+
+## Muestra con voces de Google Cloud (2026-11-21)
+
+Néstor creó el proyecto `nestor-forex-voz` (aparte del de Firebase), habilitó
+Cloud Text-to-Speech y guardó la llave como secreto `GOOGLE_TTS_KEY`, limitada
+a esa API. `voz/sintetizar-google.mjs` usa la MISMA tubería que Piper: el
+workflow «Generar la voz de los videos» tiene ahora la opción `motor` (google
+por defecto) y deja `voz/google-<voz>/<id>.ogg`.
+
+- La llave va en la cabecera `X-Goog-Api-Key`, nunca en la dirección.
+- Tope de 20.000 caracteres por corrida. La muestra gastó ~2.400 (nivel gratis:
+  1 millón al mes en Chirp 3 HD y Neural2).
+- Tres voces es-US: A `Chirp3-HD-Aoede` (mujer), B `Chirp3-HD-Charon` (hombre),
+  C `Neural2-A` (mujer, más barata). Se le mandaron m0-1 y m2-3-lote con las
+  tres. **No está elegida ninguna.** Falta la muestra de Azure.
+
+## Segunda muestra de Google: más voces y pronunciación natural (2026-11-21)
+
+Néstor eligió la **B (Charon, hombre)** de la primera muestra, pero le sonó
+«un poco robótica». Cambios para la segunda:
+
+- `paraVoz(texto, pron)`: con `pron = 'natural'` las palabras de trading en
+  inglés se dejan en inglés (stop loss, take profit, spread, swap, swing, buy,
+  sell, Forex) en vez de escribirse como suenan («stop los», «téik prófit»…).
+  Las siglas se siguen deletreando. `grabar.mjs --pronunciacion natural` la usa
+  **igual al apuntar los textos y al grabar**: el id del audio sale del texto
+  ya preparado, y con dos pronunciaciones distintas el rótulo se quedaría mudo.
+- Seis voces de hombre: Charon otra vez, Orus, Puck, Algenib, Iapetus (Chirp 3
+  HD) y Studio-B (la de estudio de Google, 160 USD por millón y 100.000
+  caracteres gratis al mes). Gastó ~4.000 caracteres.
+- Se quitaron de `textos.json` los 5 textos con la pronunciación vieja que ya
+  no se usan; sus audios siguen en las carpetas de la primera muestra.
+- Google tiene 48 voces es-US (log del workflow). **No hay voces de Colombia
+  en Google**; las de Colombia están en Azure.
+
+Lo que queda: que elija voz. Si ninguna le convence, Azure (voces de Colombia)
+o ElevenLabs (clonar su propia voz). Nada está publicado en la app.
+
+# La voz Studio-B en todos los videos del curso (2026-11-21). En las dos apps
+
+Néstor eligió la **6 de la segunda muestra: Google `es-US-Studio-B`, con la
+pronunciación «natural»** (stop loss, take profit, spread, swap y swing en
+inglés; las siglas deletreadas). Pidió aplicarla a todos los videos del curso
+de las dos apps.
+
+- **Una sola tubería, en Swing.** `textos.json` de Swing junta los rótulos de
+  las dos apps (439 textos únicos, 38.422 caracteres). El workflow «Generar la
+  voz de los videos» los convirtió en audio en una corrida (input `tope`, máximo
+  150.000). La llave `GOOGLE_TTS_KEY` vive solo en el repositorio de Swing.
+- **Coste:** 38.422 caracteres de voz Studio, dentro del nivel gratis de
+  100.000 al mes (a confirmar en la factura de Google). Pasado eso, 160 USD por
+  millón: regrabar el curso entero costaría unos 6 USD.
+- **Intradía guarda una copia de sus 349 audios** en
+  `app/scripts/videos/voz/google-es-US-Studio-B/`, con un `LEEME.md` que
+  explica cómo regrabar. `voz.mjs` pasa a ser GEMELO: el mismo rótulo tiene que
+  dar el mismo id de audio en las dos apps.
+- `grabar.mjs --voz <voz>` **sin `--salida`** sustituye el video del curso.
+  Sin ids, graba solo las escenas de ESA app (el oro, el COT y la correlación
+  son solo de Swing; antes Intradía intentaba grabarlas y fallaba).
+- `paraVoz` cambió antes de apuntar los textos: **«USD» suelto se lee «dólar»**
+  (decía «y dólares segundo»), **«±» se lee «más o menos»** y **«−» delante de
+  un número, «menos»**. Cambiar `paraVoz` cambia los ids: los textos y la
+  grabación tienen que hacerse con la MISMA versión y la MISMA carpeta de datos.
+- El reproductor del curso ya **no va silenciado** y las 60 descripciones dicen
+  «Video con voz».
+- Se borraron los audios de las voces de las dos muestras; siguen en el
+  historial de git.

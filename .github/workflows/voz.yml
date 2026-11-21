@@ -1,4 +1,7 @@
-# Genera la voz de los videos del curso con Piper (2026-11-21, MUESTRA).
+# Genera la voz de los videos del curso (2026-11-21, MUESTRA).
+#
+# Dos motores: `google` (Google Cloud Text-to-Speech, con el secreto
+# GOOGLE_TTS_KEY; sintetizar-google.mjs) y `piper` (gratis, sin llave).
 #
 # ⚠️ PIPER SE DESCARTÓ el mismo día: Néstor la oyó y suena robótica para el
 # nivel de las apps. Por eso ya no se dispara solo al cambiar `textos.json`:
@@ -15,6 +18,16 @@ name: Generar la voz de los videos
 
 on:
   workflow_dispatch:
+    inputs:
+      motor:
+        description: 'Con qué voces: google o piper'
+        type: choice
+        options: [google, piper]
+        default: google
+      tope:
+        description: 'Máximo de caracteres en esta corrida (Google cobra por carácter; tope duro 150000)'
+        type: string
+        default: '20000'
 
 permissions:
   contents: write
@@ -26,18 +39,30 @@ concurrency:
 jobs:
   voz:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+      - name: Instalar ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - uses: actions/setup-node@v4
+        if: inputs.motor == 'google'
+        with:
+          node-version: '20'
+      - name: Convertir los textos en audio (Google)
+        if: inputs.motor == 'google'
+        env:
+          GOOGLE_TTS_KEY: ${{ secrets.GOOGLE_TTS_KEY }}
+          TOPE_CARACTERES: ${{ inputs.tope }}
+        run: node app/scripts/videos/voz/sintetizar-google.mjs
       - uses: actions/setup-python@v5
+        if: inputs.motor == 'piper'
         with:
           python-version: '3.11'
-      - name: Instalar Piper y ffmpeg
+      - name: Convertir los textos en audio (Piper)
+        if: inputs.motor == 'piper'
         run: |
           pip install piper-tts==1.3.0
-          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
-      - name: Convertir los textos en audio
-        run: python -I app/scripts/videos/voz/sintetizar.py
+          python -I app/scripts/videos/voz/sintetizar.py
       - name: Guardar los audios en la rama
         run: |
           git config user.name "github-actions[bot]"
