@@ -211,7 +211,34 @@ queda como la ventaja de tenerlo siempre a mano.
 
 Sin voz por ahora, con el texto escrito encima; Néstor tiene ideas para la voz.
 Se graban con Playwright sobre la app de verdad y se guardan en
-`app/public/curso/videos/` de swing en dos formatos (WebM y MP4: el iPhone no
-abre WebM y el Chromium de las pruebas no abre MP4). Las dos apps los piden a
-la página de swing (`URL_VIDEOS` en `curso.js`). El primero: `m2-3-lote`
+`app/public/curso/videos/` en dos formatos (WebM y MP4: el iPhone no abre
+WebM y el Chromium de las pruebas no abre MP4). El primero: `m2-3-lote`
 (20 s, 140-150 KB), en la lección «El lote sale del Stop-loss».
+
+📌 **Desde el 2026-11-20 cada app tiene SUS videos**, grabados sobre su propia
+pantalla y guardados en su propio repositorio (`URL_VIDEOS` sale de `APP`). Lo
+de arriba («las dos apps los piden a la página de swing») ya no es verdad.
+
+## 9. El estado al 2026-11-21: el temario está COMPLETO
+
+Módulos 0 a 12 (39 lecciones) con su video en cada app, y 23 videos de
+herramientas (20 en Intradía: el COT, el oro y la correlación solo existen en
+Swing). `PROXIMOS` está vacío. Lo que queda no es contenido:
+
+1. **La voz.** Piper se descartó por robótico. Precios mirados el 2026-11-21
+   (lista oficial de cada empresa, EE. UU.):
+   - **Azure (Microsoft):** voces neuronales **$15 por millón de caracteres**,
+     neuronales HD **$22**; gratis **500.000 caracteres al mes** (nivel F0,
+     solo neuronales). Tiene voces de Colombia (es-CO).
+   - **Google Cloud:** Chirp 3 HD **$30 por millón** (1 millón gratis al mes),
+     Neural2 **$16** (1 millón gratis), WaveNet y estándar **$4** (4 millones
+     gratis). Pide tarjeta y cobra solo si se pasa del cupo.
+   - Todo el curso narrado son unos **75.000 caracteres** (≈650 por video ×
+     ~117 videos entre las dos apps), así que **cabe en el nivel gratis de las
+     dos** aun regrabando varias veces.
+   - La llave va como **secreto de GitHub**, nunca en el chat. Falta que
+     Néstor elija.
+2. **Los módulos gratis** para quien no se ha suscrito: se discuten al final.
+3. **La caja fuerte**: mientras los repositorios sean públicos el texto de las
+   lecciones se lee en GitHub (ver `pendientes-antes-de-publicar.md`).
+4. **La web enlaza solo el curso de Swing** (`curso.html` vive en esa app).
