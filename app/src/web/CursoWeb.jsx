@@ -19,6 +19,7 @@ import { useAuthUser } from '../lib/useAuthUser'
 import { firebaseListo } from '../lib/firebase'
 import { MODULOS, PROXIMOS } from '../lib/curso'
 import { PRECIO_SEGUIMIENTO_USD } from '../lib/laboratorio'
+import { NOMBRE_APP } from '../lib/identidad'
 
 const BASE = import.meta.env.BASE_URL
 // Capturas reales de lecciones, en `public/curso/`. Son la vista previa: se
@@ -33,6 +34,9 @@ function Cabecera({ t, onSalir }) {
       <div>
         <div className="eyebrow" style={{ fontSize: 11 }}>{t('cursoWeb.eyebrow')}</div>
         <h1 style={{ margin: '4px 0 0', fontSize: 26, fontWeight: 700 }}>{t('cursoWeb.titulo')}</h1>
+        {/* Cada app tiene su página del curso con SUS videos (2026-11-21): el
+            nombre dice cuál es. Es un nombre propio y no se traduce. */}
+        <div dir="ltr" style={{ marginTop: 4, fontSize: 13, fontWeight: 600, color: 'var(--cta)' }}>{NOMBRE_APP}</div>
       </div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <a className="btn-ghost" href={BASE} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>{t('cursoWeb.abrirApp')}</a>

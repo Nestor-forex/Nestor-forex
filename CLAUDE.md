@@ -17605,3 +17605,23 @@ hay que abrirla antes) y se cancela sin guardar.
 
 📌 `filaGrupo` (grabar.mjs) ahora encuentra también la fila de un par, cuya
 etiqueta va en un `span`: sube hasta 3 padres buscando «N ops».
+
+---
+
+# La página web del curso también en Intradía (2026-11-21)
+
+Néstor: «hazme lo de intradía igual que swing con su página». Antes solo Swing
+tenía `curso.html`; quien entraba por la web veía siempre los videos de Swing.
+
+- `curso.html`, `src/web/main-curso.jsx`, `src/web/CursoWeb.jsx` y
+  `scripts/prueba-curso-web.mjs` pasan a ser **GEMELOS**. El `vite.config.js`
+  de Intradía compila las dos puertas, igual que el de Swing.
+- Bajo el título sale `NOMBRE_APP` (de `identidad.js`): las dos páginas son
+  iguales y sin eso no se sabría cuál es cuál.
+- Los 15 textos `cursoWeb.*` se copiaron a los 13 diccionarios de Intradía.
+- **Las capturas de vista previa (`public/curso/vista-*.png`) son de CADA
+  app**: las de Intradía se hicieron con el banco de grabación (mismas tres
+  lecciones, 784×768, con el acento dorado).
+- Direcciones: `nestor-forex.github.io/Nestor-forex/curso.html` (Swing) y
+  `nestor-forex.github.io/Nestor-forex-intradia/curso.html` (Intradía).
+- ⚠️ Sigue siendo una PUERTA, no una caja fuerte.

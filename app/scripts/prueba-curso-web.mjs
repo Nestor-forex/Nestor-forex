@@ -2,8 +2,8 @@
 //
 //   node scripts/prueba-curso-web.mjs
 //
-// Solo en la app de swing: la página web del curso vive aquí y las dos apps
-// comparten el curso (lecciones, progreso y videos).
+// En las dos apps (gemelo): cada una tiene su página web del curso, con las
+// mismas lecciones y el mismo progreso, y cada una con SUS videos.
 
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'

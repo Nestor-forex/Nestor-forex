@@ -1,8 +1,9 @@
 // La página web del curso (curso.html), para computador, portátil y tableta.
 //
-// ⚠️ Es la MISMA app de swing compilada con otra puerta de entrada: usa la
-// misma cuenta, las mismas reglas de Firestore y las mismas lecciones
-// (`lib/curso/es.js`). Nunca dos copias del curso.
+// ⚠️ Es la MISMA app compilada con otra puerta de entrada: usa la misma
+// cuenta, las mismas reglas de Firestore y las mismas lecciones
+// (`lib/curso/es.js`). Nunca dos copias del curso. Cada app tiene la suya
+// (desde el 2026-11-21 también Intradía), con SUS videos.
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '../index.css'

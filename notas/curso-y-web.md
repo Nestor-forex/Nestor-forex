@@ -241,4 +241,7 @@ Swing). `PROXIMOS` está vacío. Lo que queda no es contenido:
 2. **Los módulos gratis** para quien no se ha suscrito: se discuten al final.
 3. **La caja fuerte**: mientras los repositorios sean públicos el texto de las
    lecciones se lee en GitHub (ver `pendientes-antes-de-publicar.md`).
-4. **La web enlaza solo el curso de Swing** (`curso.html` vive en esa app).
+4. ~~La web enlaza solo el curso de Swing.~~ **Hecho el 2026-11-21:** Intradía
+   tiene su propia página, `https://nestor-forex.github.io/Nestor-forex-intradia/curso.html`,
+   con sus videos y sus tres capturas de vista previa (con el dorado de esa
+   app). El nombre de la app sale bajo el título para que se sepa cuál es.
