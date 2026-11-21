@@ -17567,3 +17567,14 @@ app/scripts/videos/voz/sintetizar.py  Piper → <voz>/<id>.ogg (corre en Actions
 cambia y hay que volver a pasar por el paso 1.
 ⚠️ **Antes de publicar una voz hay que leer su licencia** (MODEL_CARD de cada voz
 en el repositorio de voces de Piper). No se ha leído.
+
+## ❌ Piper DESCARTADO: suena robótico (2026-11-21)
+
+Néstor oyó las tres voces y las rechazó: «las voces son muy robóticas… sería
+de mala presentación para las apps». Tiene razón. Se quitaron los 42 audios y
+el workflow ya **no se dispara solo** al cambiar `textos.json` (solo a mano).
+
+**La tubería se queda** (`voz.mjs`, `textos.json`, la mezcla en `grabar.mjs`):
+para cambiar de motor basta con reescribir `sintetizar.py`. Lo recomendado es
+una voz neuronal de pago (Azure con las voces de Colombia, o Google Cloud TTS),
+con su llave como **secreto de GitHub**, nunca en el chat. No hay nada decidido.

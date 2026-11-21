@@ -1,21 +1,20 @@
 # Genera la voz de los videos del curso con Piper (2026-11-21, MUESTRA).
 #
+# ⚠️ PIPER SE DESCARTÓ el mismo día: Néstor la oyó y suena robótica para el
+# nivel de las apps. Por eso ya no se dispara solo al cambiar `textos.json`:
+# queda solo el botón, y la tubería (textos → audio → mezcla) espera a una voz
+# neuronal de pago. Para cambiar de voz basta con cambiar `sintetizar.py`.
+#
 # Desde las sesiones de programación no se pueden bajar los modelos de voz, así
 # que esto corre aquí: lee `app/scripts/videos/voz/textos.json`, convierte en
 # audio los textos que todavía no tienen y los deja en la misma rama. No toca
 # la app, ni la rama `datos`, ni gasta créditos de Twelve Data. Sin secretos:
 # Piper es gratis.
 #
-# Se dispara solo cuando cambia `textos.json` (o a mano). El commit que hace
-# este workflow no vuelve a dispararlo: los empujes con GITHUB_TOKEN no
-# arrancan workflows.
 name: Generar la voz de los videos
 
 on:
   workflow_dispatch:
-  push:
-    branches: ['claude/**']
-    paths: ['app/scripts/videos/voz/textos.json']
 
 permissions:
   contents: write
