@@ -17514,3 +17514,24 @@ importa `curso.js`, que importa `es.js`, así que importarlo haría un círculo.
 resueltas, una caducada y una abierta, con precios INVENTADOS que los rótulos
 dicen. Por eso m10-2 y m10-3 no abren gráficas; m10-1 crea una de verdad desde
 el Analizador con los datos del día y sí la abre.
+
+---
+
+# Módulo 11 del curso: «Un número que significa algo» (2026-11-21). En las dos apps
+
+- **m11-1 Acertar no es lo mismo que ganar:** acierto para no perder =
+  1 ÷ (1 + R/B), leído de `aciertoDeEquilibrio` (`laboratorio.js`, el mismo
+  número que enseña el laboratorio). El video lee el R/B de la tarjeta del
+  Analizador y lo cambia con el método simétrico.
+- **m11-2 Cuándo dos números son distintos de verdad:** dos porcentajes solo
+  son distintos si sus rangos (± incluido) no se tocan. El ejemplo 60 contra 42
+  cambia de veredicto entre 25 y 150 operaciones, y la prueba lo comprueba. El
+  video usa `?diario=grupos` y el aviso real de «lleva N de las 150».
+- **m11-3 El número que se elige después de mirar:** backtest contra registro
+  hacia adelante, sobreajuste y el contador del laboratorio. El caso con fecha
+  (reversión: 54 % en el backtest de cinco años, 42 % con 57 operaciones
+  reales a mediados de noviembre de 2026) va escrito y dice su fecha.
+
+📌 En el video m11-3, si las dos pruebas del laboratorio salen en positivo ese
+día, sale un rótulo más que dice que justo ahí cuesta no creerle. Con los datos
+de Swing del 2026-11-21 salieron positivas; con los de Intradía, negativas.
