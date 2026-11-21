@@ -17662,3 +17662,33 @@ Néstor eligió la **B (Charon, hombre)** de la primera muestra, pero le sonó
 
 Lo que queda: que elija voz. Si ninguna le convence, Azure (voces de Colombia)
 o ElevenLabs (clonar su propia voz). Nada está publicado en la app.
+
+# La voz Studio-B en todos los videos del curso (2026-11-21). En las dos apps
+
+Néstor eligió la **6 de la segunda muestra: Google `es-US-Studio-B`, con la
+pronunciación «natural»** (stop loss, take profit, spread, swap y swing en
+inglés; las siglas deletreadas). Pidió aplicarla a todos los videos del curso
+de las dos apps.
+
+- **Una sola tubería, en Swing.** `textos.json` de Swing junta los rótulos de
+  las dos apps (439 textos únicos, 38.422 caracteres). El workflow «Generar la
+  voz de los videos» los convirtió en audio en una corrida (input `tope`, máximo
+  150.000). La llave `GOOGLE_TTS_KEY` vive solo en el repositorio de Swing.
+- **Coste:** 38.422 caracteres de voz Studio, dentro del nivel gratis de
+  100.000 al mes (a confirmar en la factura de Google). Pasado eso, 160 USD por
+  millón: regrabar el curso entero costaría unos 6 USD.
+- **Intradía guarda una copia de sus 349 audios** en
+  `app/scripts/videos/voz/google-es-US-Studio-B/`, con un `LEEME.md` que
+  explica cómo regrabar. `voz.mjs` pasa a ser GEMELO: el mismo rótulo tiene que
+  dar el mismo id de audio en las dos apps.
+- `grabar.mjs --voz <voz>` **sin `--salida`** sustituye el video del curso.
+  Sin ids, graba solo las escenas de ESA app (el oro, el COT y la correlación
+  son solo de Swing; antes Intradía intentaba grabarlas y fallaba).
+- `paraVoz` cambió antes de apuntar los textos: **«USD» suelto se lee «dólar»**
+  (decía «y dólares segundo»), **«±» se lee «más o menos»** y **«−» delante de
+  un número, «menos»**. Cambiar `paraVoz` cambia los ids: los textos y la
+  grabación tienen que hacerse con la MISMA versión y la MISMA carpeta de datos.
+- El reproductor del curso ya **no va silenciado** y las 60 descripciones dicen
+  «Video con voz».
+- Se borraron los audios de las voces de las dos muestras; siguen en el
+  historial de git.
