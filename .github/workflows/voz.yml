@@ -1,0 +1,48 @@
+# Genera la voz de los videos del curso con Piper (2026-11-21, MUESTRA).
+#
+# ⚠️ PIPER SE DESCARTÓ el mismo día: Néstor la oyó y suena robótica para el
+# nivel de las apps. Por eso ya no se dispara solo al cambiar `textos.json`:
+# queda solo el botón, y la tubería (textos → audio → mezcla) espera a una voz
+# neuronal de pago. Para cambiar de voz basta con cambiar `sintetizar.py`.
+#
+# Desde las sesiones de programación no se pueden bajar los modelos de voz, así
+# que esto corre aquí: lee `app/scripts/videos/voz/textos.json`, convierte en
+# audio los textos que todavía no tienen y los deja en la misma rama. No toca
+# la app, ni la rama `datos`, ni gasta créditos de Twelve Data. Sin secretos:
+# Piper es gratis.
+#
+name: Generar la voz de los videos
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: voz-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  voz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar Piper y ffmpeg
+        run: |
+          pip install piper-tts==1.3.0
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Convertir los textos en audio
+        run: python -I app/scripts/videos/voz/sintetizar.py
+      - name: Guardar los audios en la rama
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/scripts/videos/voz
+          if git diff --cached --quiet; then echo "No hay audios nuevos."; exit 0; fi
+          git commit -m "Voz de los videos: audios nuevos"
+          git push

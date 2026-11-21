@@ -17535,3 +17535,46 @@ el Analizador con los datos del día y sí la abre.
 📌 En el video m11-3, si las dos pruebas del laboratorio salen en positivo ese
 día, sale un rótulo más que dice que justo ahí cuesta no creerle. Con los datos
 de Swing del 2026-11-21 salieron positivas; con los de Intradía, negativas.
+
+---
+
+# Voz en los videos: MUESTRA con Piper (2026-11-21). Solo Swing, sin publicar
+
+Néstor preguntó si los videos podían llevar voz que diga lo que dice el rótulo.
+Se hizo una muestra con **Piper** (voz gratis que corre sin internet), con dos
+videos (m0-1 y m2-3-lote) y tres voces: es_MX-ald-medium, es_MX-claude-high y
+es_AR-daniela-high. **Los videos con voz NO están en la app**: se le mandaron
+para que elija.
+
+```
+app/scripts/videos/voz.mjs            paraVoz · rotuloConVoz · mezclar
+app/scripts/videos/voz/textos.json    lo que dice cada rótulo, ya para leerse
+app/scripts/videos/voz/sintetizar.py  Piper → <voz>/<id>.ogg (corre en Actions)
+.github/workflows/voz.yml             se dispara al cambiar textos.json
+```
+
+1. `grabar.mjs --textos <datos> <ids>` graba y apunta los rótulos.
+2. Al empujar `textos.json`, el workflow genera los audios y los commitea en la
+   misma rama (desde estas sesiones Hugging Face está bloqueado: los modelos solo
+   se bajan en Actions).
+3. `grabar.mjs --voz <voz> --salida <carpeta> <datos> <ids>`: cada rótulo se
+   queda lo que dura su audio, y la voz se pega en el momento en que salió.
+
+⚠️ **La voz dice lo mismo que el rótulo.** `paraVoz` solo cambia cómo se lee
+(«EUR/USD» → «euro dólar», «Stop-loss» → «stop los», decimales con coma, 1:1,5 →
+«1 a 1,5»). Un rótulo sin audio se queda mudo y se avisa.
+⚠️ **Los rótulos se leen de la pantalla**, así que con datos de otro día el texto
+cambia y hay que volver a pasar por el paso 1.
+⚠️ **Antes de publicar una voz hay que leer su licencia** (MODEL_CARD de cada voz
+en el repositorio de voces de Piper). No se ha leído.
+
+## ❌ Piper DESCARTADO: suena robótico (2026-11-21)
+
+Néstor oyó las tres voces y las rechazó: «las voces son muy robóticas… sería
+de mala presentación para las apps». Tiene razón. Se quitaron los 42 audios y
+el workflow ya **no se dispara solo** al cambiar `textos.json` (solo a mano).
+
+**La tubería se queda** (`voz.mjs`, `textos.json`, la mezcla en `grabar.mjs`):
+para cambiar de motor basta con reescribir `sintetizar.py`. Lo recomendado es
+una voz neuronal de pago (Azure con las voces de Colombia, o Google Cloud TTS),
+con su llave como **secreto de GitHub**, nunca en el chat. No hay nada decidido.
