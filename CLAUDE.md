@@ -17692,3 +17692,75 @@ de las dos apps.
   «Video con voz».
 - Se borraron los audios de las voces de las dos muestras; siguen en el
   historial de git.
+
+---
+
+# El modo «Paso a paso» (2026-11-22). En las dos apps
+
+Néstor lo pidió para que un principiante no tenga que adivinar qué mirar
+primero: las herramientas en el orden en que se usan, de la fuerza de las
+divisas a una operación armada. Vio una muestra, dijo «construye en las dos
+apps y fusiona», y pidió **recordar cómo estaba todo por si quiere volver**.
+
+## ⚠️ CÓMO VOLVER A COMO ESTABA, si no le gusta
+
+La última versión SIN el Paso a paso es **Swing `a864b94`** e **Intradía
+`c1866b5`** (las dos `main` justo antes de este cambio). Pero no hace falta
+volver a ellas: el modo es **una pieza aparte** y las pestañas de siempre no se
+tocaron. Para quitarlo basta con:
+
+1. borrar `<EntradaPasoAPaso … />` y el bloque `tab === 'pasos'` de `App.jsx`
+   (en las dos apps), y el estado `inicioAnalizador` con las tres props que se
+   le pasan a `AnalizadorTab`;
+2. borrar `src/lib/pasoAPaso.js`, `src/components/PasoAPaso.jsx` y
+   `scripts/prueba-paso-a-paso.mjs`, y sus tres líneas en `gemelos.mjs`;
+3. si se quiere, quitar `parInicial`/`ladoInicial` de `AnalizadorTab.jsx` y el
+   bloque `pasos` de los 13 diccionarios (no estorban si se dejan).
+
+## Qué es
+
+Tarjeta «Paso a paso → Empezar» arriba del Barrido. Abre nueve pasos:
+
+| | pregunta | de dónde sale |
+|---|---|---|
+| 0 | ¿Puedo operar hoy? | `GuardianRiesgo` (tu freno) |
+| 1 | ¿Qué divisas están fuertes y cuáles débiles? | el ranking de fuerza |
+| 2 | ¿Con cuál la combino? | `paresCon`: la persona elige fuerte, débil y par |
+| 3 | ¿Viene alguna noticia? | `noticiasDelPar` (calendario, 48 h) |
+| 4 | ¿Cuánto cuesta? | spread del puente y lado del swap (`difDePar`) |
+| 5 | ¿Qué dice el gráfico? | la ficha del Analizador |
+| 6 | ¿Ya tengo una apuesta igual? | Diario abierto y correlación (solo Swing) |
+| 7 | Armar la operación | la persona elige COMPRA o VENTA |
+| 8 | Decidir | Analizador para practicar o anotar · «Hoy no opero» |
+
+Cada paso enlaza su lección del curso.
+
+## Las decisiones que no hay que ablandar
+
+⚠️ **ORDENA, NO ELIGE.** El par y la dirección arrancan vacíos y los pone la
+persona. El paso 2 dice qué dirección va a favor de la fuerza y cuál en contra,
+con la medición de las señales de la app al lado (−0,04 en Swing, −0,10 en
+Intradía, leída de `medicion.js`).
+
+⚠️ **EL PASO 7 USA LA MEDIDA NEUTRA (1,5 ATR a cada lado), no la geometría de
+la app.** Con la de la app, el día de la prueba salió un R/B de 1:13,86 en
+AUD/USD (stop de 32 pips pegado al mínimo y objetivo de 448). Es un número
+verdadero de esa geometría y engañaría a un principiante. En el Analizador se
+puede cambiar el método.
+
+⚠️ **«Hoy no opero» es una salida tan válida como las otras**, y está a la vista.
+
+⚠️ **No hay ningún número nuevo**: todo sale de funciones que ya existían
+(`GuardianRiesgo`, `nivelesDe`, `correlacionDe`, `difDePar`, `proximos`).
+
+## Lo que también se hizo ese día
+
+- **Lección m4-4** «Combinar una divisa fuerte con una débil, y elegir tú la
+  dirección», con video y voz en las dos apps (PR #215 / #155).
+- **Lecciones gratis en la web del curso**: módulos 0 y 2 enteros y la primera
+  lección de cada uno de los demás (16 de 38), sin guardar avance.
+- **El correo para Paddle**, reescrito tras la observación de Néstor: las apps
+  son ante todo una plataforma de información estructurada, formación y
+  educación; los experimentos van contados, pero como lo que son
+  (`notas/correo-paddle.md`). ⚠️ La política de Paddle prohíbe «trading
+  signals and strategies»: por eso se pregunta antes y por escrito.

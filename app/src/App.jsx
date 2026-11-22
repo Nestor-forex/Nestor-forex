@@ -25,6 +25,7 @@ import { useEstilo } from './lib/useEstilo'
 import MiEstilo from './components/MiEstilo'
 import SetupDetalle from './components/SetupDetalle'
 import AnalizadorTab from './components/AnalizadorTab'
+import PasoAPaso, { EntradaPasoAPaso } from './components/PasoAPaso'
 import { useT } from './lib/i18n'
 import DiarioTab from './components/DiarioTab'
 import CalculadoraTab from './components/CalculadoraTab'
@@ -42,6 +43,7 @@ import { useCot } from './lib/useCot'
 import { useOro } from './lib/useOro'
 import { decidirModo, filtrarMercado, guardarModo, leerModo, resumenVista } from './lib/vistaPares'
 import { useAvisos } from './lib/useAvisos'
+import { leerPerfil } from './lib/perfilRiesgo'
 import { PAIR_NAMES } from './lib/pairs'
 
 // La clave con la que se recuerda qué setup está abierto en la pantalla de
@@ -98,6 +100,9 @@ export default function App() {
 
   const [screen, setScreen] = useState('splash')
   const [tab, setTab] = useState('barrido')
+  // Lo que el «Paso a paso» le pasa al Analizador (par y dirección ya elegidos).
+  // `n` cambia en cada salto para que el Analizador arranque de nuevo con ellos.
+  const [inicioAnalizador, setInicioAnalizador] = useState(null)
   const [msgAuth, setMsgAuth] = useState('')
   // Setup abierto en la pantalla de detalle, guardado por nombre + lado + regla
   // en vez de por objeto: así, si el barrido se recarga, el detalle se
@@ -263,6 +268,7 @@ export default function App() {
             <main className="nf-main" style={{ flex: 1, padding: '18px 18px 96px' }}>
               {tab === 'barrido' && (
                 <>
+                  <EntradaPasoAPaso onEmpezar={() => { setTab('pasos'); window.scrollTo?.(0, 0) }} />
                   {filtroPares}
                   {miEstilo.sabido && <MiEstilo estilo={miEstilo.estilo} guardar={miEstilo.guardar} />}
                   <BarridoTab
@@ -377,6 +383,9 @@ export default function App() {
               )}
               {tab === 'analizar' && (
                 <AnalizadorTab
+                  key={inicioAnalizador?.n ?? 0}
+                  parInicial={inicioAnalizador?.par ?? null}
+                  ladoInicial={inicioAnalizador?.lado ?? null}
                   fichas={mercado.fichas}
                   ratesUSD={mercado.ratesUSD}
                   uid={authUser.uid}
@@ -394,6 +403,24 @@ export default function App() {
                   vela={mercado.ultima}
                   onPracticar={practica.crear}
                   onVerPractica={() => setTab('diario')}
+                />
+              )}
+              {tab === 'pasos' && (
+                <PasoAPaso
+                  monedas={mercado.monedas}
+                  pares={mercado.pares}
+                  fichas={mercado.fichas}
+                  cal={calendario}
+                  trades={diario.trades}
+                  perfil={leerPerfil(perfil?.perfilRiesgo)}
+                  correlaciones={mercado.correlaciones}
+                  quotes={mt5.quotes}
+                  onIr={(destino) => { setTab(destino); window.scrollTo?.(0, 0) }}
+                  onAnalizar={(par, lado) => {
+                    setInicioAnalizador((x) => ({ par, lado, n: (x?.n ?? 0) + 1 }))
+                    setTab('analizar')
+                    window.scrollTo?.(0, 0)
+                  }}
                 />
               )}
               {tab === 'curso' && <Curso uid={authUser.uid} ficha={perfil} onIr={(destino) => { setTab(destino); window.scrollTo?.(0, 0) }} />}
