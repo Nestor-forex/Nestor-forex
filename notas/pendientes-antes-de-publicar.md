@@ -58,16 +58,12 @@ Se discuten **de último**. Recordárselo.
 
 ## 5. El curso completo
 
-- Faltan los módulos 4 a 12 (temario en `notas/curso-y-web.md`).
-- **Un video por cada cosa**: cada lección, cada herramienta, métrica e
-  indicador, con ejemplos de cómo usarla (lo pidió Néstor el 2026-11-19).
-  Desde el 2026-11-20 las **10 lecciones** (módulos 0 a 3) tienen el suyo,
-  grabado en CADA app (los de Intradía muestran Intradía). Los de
-  herramientas están COMPLETOS desde el 2026-11-20: 21 en Swing y 18 en
-  Intradía (el COT, el oro y la correlación solo existen en Swing). «Mi perfil
-  de riesgo» y «Tu freno de hoy» tienen video como lecciones (módulos 2 y 3).
-  Si se añade una herramienta nueva, lleva su video.
-  Faltan los demás de herramientas y los de los módulos 4 a 12.
+✅ **Hecho (2026-11-21):** los 13 módulos (0 a 12, 39 lecciones), un video
+por lección y por herramienta en CADA app (60 en Swing, 57 en Intradía), y
+todos con la voz Studio-B que eligió Néstor. Si se añade una herramienta o una
+lección nueva, lleva su video con voz.
+
+Falta:
 - El recorrido guiado dentro de la app la primera vez que alguien entra.
 
 ## 6. La página web de venta (landing) — va la última
