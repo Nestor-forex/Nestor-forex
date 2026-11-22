@@ -84,6 +84,11 @@ Falta:
 - Que el robot de vencimientos también ABRA cuando haya un pago confirmado.
 - Venezuela, siempre manual (Binance / Pago Móvil).
 - El servicio de seguimiento hacia adelante (3 USD/mes) se cobra a mano.
+- **Paddle, APLAZADO hasta el lanzamiento** (Néstor, 2026-11-22: «dejemos lo
+  de Paddle para cuando ya lancemos las apps»). Todo lo averiguado está en
+  `notas/correo-paddle.md`: por qué Mercado Pago no le convence (impuestos al
+  vender en otros países), lo que prohíbe la política de Paddle, la carta
+  lista y cómo se manda. Cuando pregunte por los pagos, se retoma desde ahí.
 
 ## 8. Cierres parciales al importar del bróker
 
