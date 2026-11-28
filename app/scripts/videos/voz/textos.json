@@ -1834,5 +1834,25 @@
  {
   "id": "801b7df14ee1",
   "texto": "Por eso el Analizador no elige la dirección de dólar australiano yen: espera a que la elijas tú."
+ },
+ {
+  "id": "386f80a09599",
+  "texto": "En el Analizador es la misma cuenta. Se elige una dirección cualquiera, solo para ver los números."
+ },
+ {
+  "id": "11bd40c1f53a",
+  "texto": "Con los datos de hoy, el stop loss de euro dólar queda a 87 pips."
+ },
+ {
+  "id": "7c7f9fbe5075",
+  "texto": "La tarjeta hace la misma cuenta con tu perfil: le sale 0,01 lotes, lo más cerca de 10 dólares que se puede con lotes de 0,01."
+ },
+ {
+  "id": "e81100300a87",
+  "texto": "Con los datos de hoy, el stop loss de euro dólar queda a 17 pips."
+ },
+ {
+  "id": "24763566b8a0",
+  "texto": "La tarjeta hace la misma cuenta con tu perfil: le sale 0,06 lotes, lo más cerca de 10 dólares que se puede con lotes de 0,01."
  }
 ]
