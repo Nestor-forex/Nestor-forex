@@ -170,7 +170,7 @@ export function analisisParaQwen(a) {
     ...a,
     precio: r(a.precio, d),
     niveles: n ? { sl: r(n.sl, d), tp: r(n.tp, d), pipRiesgo: r(n.pipRiesgo, 0), pipBeneficio: r(n.pipBeneficio, 0), rr: r(n.rr, 2) } : n,
-    lote: a.lote ? { lote: r(a.lote.lote, 2), riesgoUsd: r(a.lote.riesgoUsd, 2), valorPip: r(a.lote.valorPip, 2) } : a.lote,
+    lote: a.lote ? { lote: r(a.lote.lote, 2), riesgoUsd: r(a.lote.riesgoUsd, 2), valorPip: r(a.lote.valorPip, 2), moneda: a.lote.moneda ?? 'USD' } : a.lote,
     herramientas: hh,
   }
 }

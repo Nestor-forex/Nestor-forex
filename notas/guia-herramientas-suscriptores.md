@@ -61,17 +61,23 @@ y te avisan cuando te acercas a tu límite.
 **Paso a paso:**
 
 1. Abre la pestaña **Riesgo**.
-2. En **Capital de la cuenta (USD)** escribe cuánto dinero tienes en tu cuenta
-   de trading.
-3. En **Riesgo por operación** toca uno de los tres botones —**Conservador**
+2. En **Moneda de tu cuenta en el bróker** toca **Dólares (USD)** o **Euros
+   (EUR)**: la moneda en que tu bróker te lleva la cuenta. Todo lo que es
+   dinero en las apps (el capital, el riesgo, los frenos, el Diario y el dinero
+   de la práctica) va en esa moneda. Los experimentos no cambian: se miden en
+   pips y en R, que valen igual en las dos. Si cambias de moneda, lo que ya
+   anotaste en el Diario no se convierte.
+3. En **Capital de la cuenta** escribe cuánto dinero tienes en tu cuenta
+   de trading, en la moneda que elegiste.
+4. En **Riesgo por operación** toca uno de los tres botones —**Conservador**
    (1 %), **Moderado** (2 %) o **Agresivo** (3 %)— o escribe tu propio
    porcentaje (**Personalizado**, entre 0,1 % y 10 %).
-4. En **Pérdida máxima en un día (%)** escribe cuánto estás dispuesto a perder
+5. En **Pérdida máxima en un día (%)** escribe cuánto estás dispuesto a perder
    como mucho en un día. La app propone 3 %.
-5. En **Pérdidas seguidas antes de parar** escribe cuántas pérdidas seguidas
+6. En **Pérdidas seguidas antes de parar** escribe cuántas pérdidas seguidas
    aguantas antes de dejar de operar ese día. La app propone 3.
-6. Toca **Guardar mi perfil**. Debajo verás el resumen: cuánto arriesgas por
-   operación en dólares, tu freno del día y tus pérdidas seguidas.
+7. Toca **Guardar mi perfil**. Debajo verás el resumen: cuánto arriesgas por
+   operación en tu moneda, tu freno del día y tus pérdidas seguidas.
 
 **Ejemplo:** capital de 1.000 USD, riesgo Moderado (2 %), pérdida máxima del día
 3 %, 3 pérdidas seguidas. La app entiende: *arriesgo 20 USD por operación, y

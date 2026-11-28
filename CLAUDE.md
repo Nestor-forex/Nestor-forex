@@ -17764,3 +17764,51 @@ puede cambiar el método.
   educación; los experimentos van contados, pero como lo que son
   (`notas/correo-paddle.md`). ⚠️ La política de Paddle prohíbe «trading
   signals and strategies»: por eso se pregunta antes y por escrito.
+
+---
+
+# La moneda de la cuenta: dólares o euros (2026-11-22). En las dos apps
+
+Néstor: quien tenga la cuenta del bróker en euros tiene que poder trabajar en
+euros, y que «absolutamente todo» lo que es dinero en las apps vaya en esa
+moneda.
+
+```
+src/lib/monedaCuenta.js     MONEDAS_CUENTA, monedaDe, dinero, factorDesdeDolar   GEMELO (nuevo)
+scripts/prueba-moneda.mjs   ~30 comprobaciones                                  GEMELO (nuevo)
+src/lib/perfilRiesgo.js     + `moneda` (opcional; sin ella, dólares)            GEMELO
+src/lib/calc.js             calcularLote({ …, moneda })                         GEMELO
+firestore.rules             `perfilRiesgo.moneda` y `practica.moneda`           GEMELO
+```
+
+Se elige en «Mi perfil de riesgo» (y la calculadora deja cambiarla para un
+cálculo suelto). Pasan a esa moneda: el lote y el riesgo (calculadora y
+Analizador), los dos frenos del día, los rótulos del Diario, el dinero de la
+práctica y la tabla que se descarga (columna nueva «Moneda»).
+
+⚠️ **Lo que NO cambia, a propósito:** experimentos, historial y mediciones van
+en pips y en R, que valen igual en las dos monedas.
+
+⚠️ **La conversión sale de las MISMAS tasas del barrido** (`ratesUSD`, unidades
+de cada divisa por dólar): el pip en euros es el pip en dólares × `tasas.EUR`.
+Sin la tasa del euro no hay lote: nunca una tasa inventada.
+
+⚠️ **Los nombres `riesgoUsd`, `riesgoMinimoUsd`, `usdNeto` y `frenoEnDolares` se
+quedaron por compatibilidad** (la práctica guarda `riesgoUsd` en Firestore),
+pero ahora van EN LA MONEDA DE LA CUENTA. La práctica guarda además `moneda`,
+y el total de dinero solo suma las operaciones de la moneda que se usa ahora;
+las de antes, sin el campo, eran dólares.
+
+⚠️ **Lo ya anotado en el Diario no se convierte** al cambiar de moneda (no se
+sabe en qué moneda se escribió). La pantalla lo dice.
+
+⚠️ **Hay que publicar las reglas de Firestore** (Actions → «Publicar las
+reglas de Firestore», casilla «aplicar»), o guardar el perfil en euros dice
+«falta activar el permiso». Un perfil en dólares guarda igual que antes.
+
+📌 `prueba-moneda.mjs` falla si una pantalla vuelve a escribir «$» a mano. Al
+estrenarla cazó uno que se me escapaba: el neto de «Mi diario» dentro del
+Analizador. Y la lección m2-3 dice ahora que el valor del pip depende también
+de la moneda de la cuenta.
+
+📌 El banco de grabación acepta `?moneda=EUR` para el perfil de ejemplo.

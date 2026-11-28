@@ -1,5 +1,31 @@
 # Correo para preguntarle a Paddle si aceptan las apps (2026-11-22, segunda versión)
 
+> ⏸️ **APLAZADO HASTA EL LANZAMIENTO.** Néstor, 2026-11-22: «mejor dejemos lo
+> de Paddle para cuando ya lancemos las apps, pero guarda todo lo relacionado a
+> Paddle para cuando te pregunte y retomemos ese tema de los pagos». La carta
+> NO se ha mandado. Cuando se retome, todo lo necesario está en este archivo.
+
+## Todo lo que se sabe de Paddle, para retomarlo
+
+- **Por qué Paddle:** Néstor cree que Mercado Pago no le sirve para vender en
+  otros países por los impuestos. Paddle es «comerciante registrado»: cobra en
+  su nombre y se encarga de los impuestos en más de 300 mercados.
+- **El riesgo:** su política (13 de abril de 2026) prohíbe «investment or
+  financial advice, including trading signals and strategies» y los productos
+  financieros regulados. Las apps enseñan experimentos con dirección, Stop-loss
+  y Take-profit: si los ven como señales, pueden rechazar la cuenta o cerrarla
+  con el dinero dentro. Por eso se pregunta ANTES y por escrito.
+- **Cómo se manda:** no hay correo de ventas público. Se usa el formulario de
+  **paddle.com/demo** (botón «Reserva una demostración»), pegando la carta en el
+  cuadro de texto. `sellers@paddle.com` es solo para quien ya tiene cuenta.
+- **Qué falta preguntar también:** si una persona natural de Colombia puede
+  vender y recibir el dinero en un banco colombiano (va en la carta).
+- **Plan B si dicen que no:** la carta pregunta si aceptarían las apps sin los
+  experimentos. Esa decisión sería de Néstor.
+- **Lo que hay que revisar al retomarlo:** los números del curso dentro de la
+  carta (13 módulos, 38 lecciones el 2026-11-22) y la política de Paddle, que
+  puede haber cambiado.
+
 > **Lo manda Néstor desde su correo.** Si contestan, se guarda aquí la fecha,
 > quién contestó y qué dijeron, ANTES de construir nada sobre Paddle.
 
@@ -32,10 +58,11 @@ prohíbe, en «Trading and financial services/advice»:
 
 ## A dónde se manda
 
-Por el formulario de contacto de ventas de su página (en paddle.com, el botón
-«Contact sales» o «Talk to sales»). ⚠️ Desde estas sesiones su página está
-bloqueada y no se pudo comprobar la dirección exacta: hay que buscarla en
-paddle.com.
+Por el formulario de **paddle.com/demo** (en la portada, el botón negro
+«Reserva una demostración»): se rellenan los datos y la carta va en el cuadro
+de texto grande. Si el formulario no tiene cuadro de texto, se manda igual y se
+responde con la carta al correo que mande ventas. No hay un correo de ventas
+público; `sellers@paddle.com` es para quien ya tiene cuenta.
 
 ## El correo (en inglés, porque Paddle trabaja en inglés)
 
