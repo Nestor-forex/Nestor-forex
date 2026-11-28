@@ -1867,10 +1867,13 @@ async function grabar(datos, id, modo = null) {
   const tmp = join(datos, '..', `grabando-${id}`)
   await rm(tmp, { recursive: true, force: true })
   const reloj = escena.reloj ? await escena.reloj(datos) : null
+  // Las duraciones de los audios se miden ANTES de abrir el navegador: son
+  // cientos de archivos, y medirlos con el video ya grabando dejaba la app
+  // quieta en el Barrido casi medio minuto al principio de cada video.
+  const dur = modo?.voz ? duraciones(modo.voz, await leerTextos()) : null
   const { b, ctx, p, errores } = await abrir(chromium, { datos, video: tmp, consulta: escena.consulta || '', reloj })
   // El video empieza a grabarse al abrir la página: es el cero de los audios.
   const t0 = await p.evaluate(() => performance.timeOrigin)
-  const dur = modo?.voz ? duraciones(modo.voz, await leerTextos()) : null
   const r = rotuloConVoz(p, await ponerRotulo(p), dur, modo?.pron)
   await escena.correr(p, r, datos)
   await r.terminar()

@@ -17812,3 +17812,39 @@ Analizador. Y la lección m2-3 dice ahora que el valor del pip depende también
 de la moneda de la cuenta.
 
 📌 El banco de grabación acepta `?moneda=EUR` para el perfil de ejemplo.
+
+---
+
+# La lección del lote, rehecha (2026-11-28). En las dos apps
+
+Lo acordado con Néstor el 2026-11-22, tras la crítica de otra IA al video m2-3:
+
+- **La frase nueva abre la lección**: «Un lote mal calculado te puede vaciar la
+  cuenta aunque aciertes más de lo que fallas. Un lote bien calculado hace que
+  cada error te cueste exactamente lo que decidiste.» La vieja («la mayoría de
+  las cuentas se pierden por el tamaño del lote, no por la dirección») era una
+  verdad a medias, dicho por él.
+- **El ejemplo que lo demuestra se CALCULA** (`ACIERTOS_LOTE = 6` en `es.js`):
+  6 aciertos de 10 USD contra 4 fallos de 30 USD = −60 USD. `prueba-curso.mjs`
+  exige que salgan más aciertos que fallos y aun así un neto negativo.
+- **La idea del «profesional informado»**, dicha sin prometer: la calculadora y
+  el Analizador hacen la cuenta; la lección es para entender de dónde sale el
+  número y usarlo tal cual en el bróker.
+- **El video añade la misma cuenta en el Analizador**, con los datos reales del
+  día. El lote de la tarjeta viene redondeado a 0,01, y el rótulo lo dice así
+  («lo más cerca de 10 USD que se puede con lotes de 0,01») en vez de afirmar que
+  arriesga exactamente lo pedido.
+
+## El aviso pequeño en la esquina de TODOS los videos
+
+`AVISO_ESQUINA` en `banco.mjs` (gemelo): «Formación · no es una señal», pegado
+encima del rótulo, a la derecha, durante todo el video. Se mueve con el rótulo
+porque el rótulo cambia de alto. **Solo lo llevan los videos grabados desde hoy**
+(m2-3-lote y m0-1 en las dos apps); los demás lo tendrán cuando se regraben.
+
+## ⚠️ Un fallo de la grabadora que dejaba el principio quieto
+
+`duraciones()` mide con ffprobe los ~470 audios, y se llamaba con el video YA
+grabando: el primer video de cada tanda empezaba con 20-27 segundos de la app
+quieta en el Barrido (en el m0-1 de las dos apps desde el 2026-11-21). Ahora se
+mide antes de abrir el navegador. m0-1 se regrabó en las dos apps.
