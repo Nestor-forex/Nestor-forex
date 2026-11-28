@@ -17848,3 +17848,26 @@ porque el rótulo cambia de alto. **Solo lo llevan los videos grabados desde hoy
 grabando: el primer video de cada tanda empezaba con 20-27 segundos de la app
 quieta en el Barrido (en el m0-1 de las dos apps desde el 2026-11-21). Ahora se
 mide antes de abrir el navegador. m0-1 se regrabó en las dos apps.
+
+# Dos videos sin voz y tres con el arranque mudo, arreglados (2026-11-28). En las dos apps
+
+Néstor pidió que «todos los videos del curso» tuvieran la voz Studio-B. Ya la
+tenían, pero medido uno por uno (con `silencedetect` de ffmpeg) salieron fallos:
+
+- **m7-1 y m7-2 (el calendario) estaban MUDOS en las dos apps.** El cero de los
+  audios se medía con `performance.timeOrigin` de la página, y esas escenas fijan
+  el reloj del navegador en otra fecha (`reloj`): la voz quedaba días después del
+  final del video. Ahora `abrir()` (banco.mjs, gemelo) mide `t0` con `Date.now()`
+  de Node justo antes de abrir la página.
+- **m2-2, m4-4 (y m10-2 en Intradía) empezaban con 20-28 s mudos**: eran los
+  primeros de su tanda con el fallo de `duraciones()` ya arreglado.
+- **`paraVoz` leía las horas como relaciones riesgo/beneficio**: «11:30 p. m.» →
+  «11 a 30», «21:00 UTC» → «21 a 00» y «Prueba 1: 114» → «Prueba 1 a 114» (m11-3).
+  Las horas (con a. m., p. m. o UTC detrás) se leen antes, y la relación solo sin
+  espacio detrás de los dos puntos. Nueva `scripts/prueba-voz.mjs`.
+
+Regrabados con los datos del 2026-11-28: m7-1, m7-2, m2-2, m4-4 y m11-3 en las
+dos apps, y m10-2 en Intradía (20 frases nuevas, ~1.700 caracteres de Google).
+
+📌 **Para comprobar la voz de un video, medirla, no suponerla**: una pista de
+audio que existe puede estar en silencio entero (−91 dB de media).
